@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetchContent } from '@/lib/content/content-api'
+import { fetchContent } from '@/lib/content-api'
 import { RichText } from '@/components/RichText'
 import { format, parseISO, isValid } from 'date-fns'
 

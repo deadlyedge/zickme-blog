@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetchContent } from '@/lib/content/content-api'
+import { fetchContent } from '@/lib/content-api'
 import AnimateOnMount from '@/components/AnimateOnMount'
 import { format, parseISO, isValid } from 'date-fns'
 

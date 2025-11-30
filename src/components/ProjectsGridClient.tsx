@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { ProjectViewModel } from '@/lib/content/content-api'
+import type { ProjectViewModel } from '@/lib/content-api'
 
 type Props = {
 	projects: ProjectViewModel[]

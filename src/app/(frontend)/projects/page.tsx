@@ -1,7 +1,7 @@
-import { fetchContent } from '@/lib/content/content-api'
+import { fetchContent } from '@/lib/content-api'
 // import Link from 'next/link'
 import Image from 'next/image'
-import ProjectsGridClient from './ProjectsGridClient'
+import ProjectsGridClient from '../../../components/ProjectsGridClient'
 import { format, parseISO, isValid } from 'date-fns'
 
 const formatMonthYear = (value: string) => {

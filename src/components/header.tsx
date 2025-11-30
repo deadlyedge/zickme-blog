@@ -1,4 +1,4 @@
-import { ProfileViewModel } from '@/lib/content/content-api'
+import { ProfileViewModel } from '@/lib/content-api'
 import Link from 'next/link'
 
 type HeaderProps = { profile: ProfileViewModel | null }
