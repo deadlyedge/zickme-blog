@@ -12,14 +12,13 @@
 		"lint": "eslint"
 	},
 	"dependencies": {
-		"@elysiajs/eden": "^1.4.5",
 		"@payloadcms/db-postgres": "^3.65.0",
 		"@payloadcms/next": "^3.65.0",
 		"@payloadcms/richtext-lexical": "^3.65.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"elysia": "^1.4.16",
-		"graphql": "^16.8.1",
+		"date-fns": "^4.1.0",
+		"graphql": "^16.12.0",
 		"lucide-react": "^0.555.0",
 		"next": "^16.0.5",
 		"payload": "^3.65.0",
