@@ -12,6 +12,28 @@ export const Projects: CollectionConfig = {
 			required: true,
 		},
 		{
+			name: 'slug',
+			type: 'text',
+			required: true,
+			admin: {
+				description: 'URL友好的标识符',
+				position: 'sidebar',
+			},
+			hooks: {
+				beforeValidate: [
+					({ data }) => {
+						if (data?.title && !data.slug) {
+							return data.title
+								.toLowerCase()
+								.replace(/[^a-z0-9]+/g, '-')
+								.replace(/^-|-$/g, '')
+						}
+						return data?.slug
+					},
+				],
+			},
+		},
+		{
 			name: 'description',
 			type: 'textarea',
 			required: true,

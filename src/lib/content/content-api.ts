@@ -1,15 +1,21 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import type { Config } from '@/payload-types'
-import { getCoverUrl, safeExtract } from '@/lib/utils'
+import { safeExtract } from '@/lib/utils'
 
 type PostDocument = Config['collections']['posts']
 type ProjectDocument = Config['collections']['projects']
 type ProfileDocument = Config['collections']['profile']
-type TagDocument = Config['collections']['tags']
+// type TagDocument = Config['collections']['tags']
 
 export type SocialLink = {
-	platform: 'GitHub' | 'LinkedIn' | 'Twitter' | 'Instagram' | 'YouTube' | 'Other'
+	platform:
+		| 'GitHub'
+		| 'LinkedIn'
+		| 'Twitter'
+		| 'Instagram'
+		| 'YouTube'
+		| 'Other'
 	url: string
 	username?: string | null
 }
@@ -36,8 +42,10 @@ export type BlogPostViewModel = {
 }
 
 export type ProjectViewModel = {
+	slug: string
 	title: string
 	description: string
+	longDescription?: ProjectDocument['longDescription'] | null
 	technologies: {
 		name: string
 		url?: string | null
@@ -71,7 +79,9 @@ export type ContentResponse = {
 	blogPosts: BlogPostViewModel[]
 }
 
-const mapProfile = (profile: ProfileDocument | null): ProfileViewModel | null => {
+const mapProfile = (
+	profile: ProfileDocument | null
+): ProfileViewModel | null => {
 	if (!profile) {
 		return null
 	}
@@ -87,25 +97,29 @@ const mapProfile = (profile: ProfileDocument | null): ProfileViewModel | null =>
 		email: profile.email ?? null,
 		website: profile.website ?? null,
 		socialLinks: profile.socialLinks ?? [],
-		skills: profile.skills?.map(skill => ({
-			category: skill.category,
-			technologies: skill.technologies ?? []
-		})) ?? []
+		skills:
+			profile.skills?.map((skill) => ({
+				category: skill.category,
+				technologies: skill.technologies ?? [],
+			})) ?? [],
 	}
 }
 
 const mapProject = (project: ProjectDocument): ProjectViewModel => {
-	const images = project.images?.map(img => {
-		const image = safeExtract(img.image)
-		return {
-			url: image?.url ?? null,
-			caption: img.caption ?? null
-		}
-	}) ?? []
+	const images =
+		project.images?.map((img) => {
+			const image = safeExtract(img.image)
+			return {
+				url: image?.url ?? null,
+				caption: img.caption ?? null,
+			}
+		}) ?? []
 
 	return {
+		slug: project.slug ?? project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
 		title: project.title,
 		description: project.description,
+		longDescription: project.longDescription ?? null,
 		technologies: project.technologies ?? [],
 		images,
 		demoUrl: project.demoUrl ?? null,
@@ -120,17 +134,23 @@ const mapBlogPost = (post: PostDocument): BlogPostViewModel => {
 	const featuredImage = safeExtract(post.featuredImage)
 
 	// 处理 tags，可能是 number[] 或 Tag[]，需要安全提取
-	const tags = post.tags?.map(tag => {
-		if (typeof tag === 'number') {
-			// 如果是 number，说明 depth 不够，返回空对象或跳过
-			return null
-		}
-		return {
-			name: tag.name,
-			slug: tag.slug,
-			color: tag.color ?? null
-		}
-	}).filter((tag): tag is { name: string; slug: string; color: string | null } => tag !== null) ?? []
+	const tags =
+		post.tags
+			?.map((tag) => {
+				if (typeof tag === 'number') {
+					// 如果是 number，说明 depth 不够，返回空对象或跳过
+					return null
+				}
+				return {
+					name: tag.name,
+					slug: tag.slug,
+					color: tag.color ?? null,
+				}
+			})
+			.filter(
+				(tag): tag is { name: string; slug: string; color: string | null } =>
+					tag !== null
+			) ?? []
 
 	return {
 		title: post.title,
@@ -138,7 +158,7 @@ const mapBlogPost = (post: PostDocument): BlogPostViewModel => {
 		excerpt: post.excerpt ?? null,
 		publishedAt: post.publishedAt ?? null,
 		featuredImageUrl: featuredImage?.url ?? null,
-		tags
+		tags,
 	}
 }
 

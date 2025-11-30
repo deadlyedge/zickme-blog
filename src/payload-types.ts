@@ -214,6 +214,10 @@ export interface Profile {
 export interface Project {
   id: number;
   title: string;
+  /**
+   * URL友好的标识符
+   */
+  slug: string;
   description: string;
   longDescription?: {
     root: {
@@ -507,6 +511,7 @@ export interface ProfileSelect<T extends boolean = true> {
  */
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
+  slug?: T;
   description?: T;
   longDescription?: T;
   technologies?:
