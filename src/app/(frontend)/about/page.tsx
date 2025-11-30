@@ -1,20 +1,10 @@
 import Image from 'next/image'
 // import Link from 'next/link'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { fetchProfile } from '@/lib/content-providers'
 import { safeExtract } from '@/lib/utils'
 
 export default async function AboutPage() {
-	const payloadConfig = await config
-	const payload = await getPayload({ config: payloadConfig })
-
-	const profile = await payload.find({
-		collection: 'profile',
-		limit: 1,
-		depth: 2,
-	})
-
-	const profileData = profile.docs[0]
+	const profileData = await fetchProfile()
 
 	if (!profileData) {
 		return <div>暂无个人资料</div>

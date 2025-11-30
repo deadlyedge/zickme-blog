@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetchContent } from '@/lib/content-api'
+import { fetchContent } from '@/lib/content-providers'
 import { RichText } from '@/components/RichText'
 import { format, parseISO, isValid } from 'date-fns'
 
@@ -11,23 +11,17 @@ const formatMonthYear = (value?: string | null) => {
 	return format(date, 'MMM yyyy')
 }
 
-const slugify = (value: string) =>
-	value
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/(^-|-$)/g, '')
-
-type Props = {
+type ProjectPageProps = {
 	params: Promise<{
 		slug: string
 	}>
 }
 
-export default async function ProjectPage({ params }: Props) {
+export default async function ProjectPage({ params }: ProjectPageProps) {
 	const { slug } = await params
 	const { projects } = await fetchContent()
 
-	const project = projects.find((p) => slugify(p.title) === slug)
+	const project = projects.find((p) => p.slug === slug)
 
 	if (!project) {
 		return (
@@ -65,7 +59,7 @@ export default async function ProjectPage({ params }: Props) {
 						{project.title}
 					</h1>
 					<div className="mt-4 flex flex-wrap items-center gap-3">
-						{project.technologies.map((t) => (
+						{project.technologies?.map((t) => (
 							<span
 								key={t.name}
 								className="text-xs rounded-full bg-amber-50 px-2 py-1 text-amber-700 border border-amber-100">

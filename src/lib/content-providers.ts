@@ -1,6 +1,6 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import type { Config, Tag, Profile, Post, Project } from '@/payload-types'
+import type { Profile, Post, Project } from '@/payload-types'
 import { safeExtract } from '@/lib/utils'
 
 // type PostDocument = Config['collections']['posts']
@@ -9,7 +9,7 @@ import { safeExtract } from '@/lib/utils'
 // type TagDocument = Config['collections']['tags']
 
 // 使用继承生成type
-export type SocialLink = NonNullable<Profile['socialLinks']>[0]
+// export type SocialLink = NonNullable<Profile['socialLinks']>[0]
 
 // export type Skill = Omit<NonNullable<Profile['skills']>[0], 'technologies'> & {
 // 	technologies: NonNullable<NonNullable<Profile['skills']>[0]['technologies']>
@@ -27,13 +27,13 @@ export type SocialLink = NonNullable<Profile['socialLinks']>[0]
 // 	username?: string | null
 // }
 
-export type Skill = {
-	category: string
-	technologies: {
-		name: string
-		level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
-	}[]
-}
+// export type Skill = {
+// 	category: string
+// 	technologies: {
+// 		name: string
+// 		level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
+// 	}[]
+// }
 
 export type TagViewModel = {
 	name: string

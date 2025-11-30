@@ -1,4 +1,4 @@
-import { fetchContent } from '@/lib/content-api'
+import { fetchProjects } from '@/lib/content-providers'
 // import Link from 'next/link'
 import Image from 'next/image'
 import ProjectsGridClient from '../../../components/ProjectsGridClient'
@@ -17,7 +17,7 @@ const formatMonthYear = (value: string) => {
  * - Titles over images, soft gradient overlays, strong spacing rhythm
  */
 export default async function ProjectsPage() {
-	const { projects } = await fetchContent()
+	const projects = await fetchProjects()
 
 	if (!projects || projects.length === 0) {
 		return (
@@ -78,7 +78,7 @@ export default async function ProjectsPage() {
 							<p className="text-slate-600">{featured.description}</p>
 
 							<div className="flex flex-wrap gap-3">
-								{featured.technologies.map((t) => (
+								{featured.technologies?.map((t) => (
 									<span
 										key={t.name}
 										className="text-xs rounded-full bg-amber-50 px-3 py-1 text-amber-700 border border-amber-100">

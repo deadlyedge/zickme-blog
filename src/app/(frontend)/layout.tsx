@@ -1,6 +1,6 @@
 import { Header } from '@/components/Header'
 import './globals.css'
-import { fetchContent } from '@/lib/content-api'
+import { fetchContent } from '@/lib/content-providers'
 
 export const metadata = {
 	description:

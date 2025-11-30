@@ -1,4 +1,4 @@
-import { ProfileViewModel } from '@/lib/content-api'
+import { ProfileViewModel } from '@/lib/content-providers'
 import Link from 'next/link'
 
 type HeaderProps = { profile: ProfileViewModel | null }
@@ -22,11 +22,16 @@ export const Header = ({ profile }: HeaderProps) => {
 						className="text-sm text-slate-600 hover:text-slate-900">
 						Blog
 					</Link>
-					<a
+					<Link
+						href="/about"
+						className="text-sm text-slate-600 hover:text-slate-900">
+						Contact
+					</Link>
+					{/* <a
 						href={profile?.website ?? '#'}
 						className="ml-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 hover:shadow transition">
 						Contact
-					</a>
+					</a> */}
 				</nav>
 			</div>
 		</header>

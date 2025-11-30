@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetchContent } from '@/lib/content-api'
+import { fetchContent } from '@/lib/content-providers'
 import AnimateOnMount from '@/components/AnimateOnMount'
 import { format, parseISO, isValid } from 'date-fns'
 
@@ -29,7 +29,6 @@ export default async function HomePage() {
 
 	return (
 		<main className="min-h-screen bg-linear-to-b from-white via-slate-50 to-slate-50 text-slate-900 antialiased">
-
 			<div className="mx-auto max-w-7xl px-6 py-24">
 				{/* HERO (juice-style visual) */}
 				<section className="relative overflow-hidden">
@@ -135,7 +134,7 @@ export default async function HomePage() {
 									</p>
 
 									<div className="mt-4 flex flex-wrap gap-2">
-										{project.technologies.map((t) => (
+										{project.technologies?.map((t) => (
 											<span
 												key={t.name}
 												className="text-xs rounded-full bg-amber-50 px-2 py-1 text-amber-700 border border-amber-100">
@@ -171,8 +170,8 @@ export default async function HomePage() {
 											<Image
 												src={post.featuredImageUrl}
 												alt={post.title}
-                        width={144}
-                        height={96}
+												width={144}
+												height={96}
 												className="object-cover"
 											/>
 										</div>
