@@ -1,24 +1,31 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import type { Config } from '@/payload-types'
+import type { Config, Tag, Profile, Post, Project } from '@/payload-types'
 import { safeExtract } from '@/lib/utils'
 
-type PostDocument = Config['collections']['posts']
-type ProjectDocument = Config['collections']['projects']
-type ProfileDocument = Config['collections']['profile']
+// type PostDocument = Config['collections']['posts']
+// type ProjectDocument = Config['collections']['projects']
+// type ProfileDocument = Config['collections']['profile']
 // type TagDocument = Config['collections']['tags']
 
-export type SocialLink = {
-	platform:
-		| 'GitHub'
-		| 'LinkedIn'
-		| 'Twitter'
-		| 'Instagram'
-		| 'YouTube'
-		| 'Other'
-	url: string
-	username?: string | null
-}
+// 使用继承生成type
+export type SocialLink = NonNullable<Profile['socialLinks']>[0]
+
+// export type Skill = Omit<NonNullable<Profile['skills']>[0], 'technologies'> & {
+// 	technologies: NonNullable<NonNullable<Profile['skills']>[0]['technologies']>
+// }
+
+// export type SocialLink = {
+// 	platform:
+// 		| 'GitHub'
+// 		| 'LinkedIn'
+// 		| 'Twitter'
+// 		| 'Instagram'
+// 		| 'YouTube'
+// 		| 'Other'
+// 	url: string
+// 	username?: string | null
+// }
 
 export type Skill = {
 	category: string
@@ -28,50 +35,36 @@ export type Skill = {
 	}[]
 }
 
-export type BlogPostViewModel = {
-	title: string
+export type TagViewModel = {
+	name: string
 	slug: string
-	excerpt: string | null
-	publishedAt: string | null
-	featuredImageUrl: string | null
-	tags: {
-		name: string
-		slug: string
-		color?: string | null
-	}[]
+	color: string | null
 }
 
-export type ProjectViewModel = {
-	slug: string
-	title: string
-	description: string
-	longDescription?: ProjectDocument['longDescription'] | null
-	technologies: {
-		name: string
-		url?: string | null
-	}[]
+export type BlogPostViewModel = Omit<Post, 'tags'> & {
+	featuredImageUrl: string | null
+	tags: TagViewModel[]
+}
+
+export type ProjectViewModel = Omit<Project, 'images'> & {
 	images: {
 		url: string | null
 		caption?: string | null
 	}[]
-	demoUrl?: string | null
-	sourceUrl?: string | null
-	featured?: boolean | null
-	startDate?: string | null
-	endDate?: string | null
 }
 
 export type ProfileViewModel = {
-	name: string
-	title: string
-	bio: string
 	avatarUrl: string | null
-	location?: string | null
-	email?: string | null
-	website?: string | null
-	socialLinks: SocialLink[]
-	skills: Skill[]
-}
+	// name: string
+	// title: string
+	// bio: string
+	// avatarUrl: string | null
+	// location?: string | null
+	// email?: string | null
+	// website?: string | null
+	// socialLinks: SocialLink[]
+	// skills: Skill[]
+} & Profile
 
 export type ContentResponse = {
 	profile: ProfileViewModel | null
@@ -79,9 +72,7 @@ export type ContentResponse = {
 	blogPosts: BlogPostViewModel[]
 }
 
-const mapProfile = (
-	profile: ProfileDocument | null
-): ProfileViewModel | null => {
+const mapProfile = (profile: Profile | null): ProfileViewModel | null => {
 	if (!profile) {
 		return null
 	}
@@ -89,23 +80,18 @@ const mapProfile = (
 	const avatar = safeExtract(profile.avatar)
 
 	return {
-		name: profile.name,
-		title: profile.title,
-		bio: profile.bio,
+		...profile,
 		avatarUrl: avatar?.url ?? null,
-		location: profile.location ?? null,
-		email: profile.email ?? null,
-		website: profile.website ?? null,
-		socialLinks: profile.socialLinks ?? [],
-		skills:
-			profile.skills?.map((skill) => ({
-				category: skill.category,
-				technologies: skill.technologies ?? [],
-			})) ?? [],
+		// socialLinks: profile.socialLinks ?? [],
+		// skills:
+		// 	profile.skills?.map((skill) => ({
+		// 		category: skill.category,
+		// 		technologies: skill.technologies ?? [],
+		// 	})) ?? [],
 	}
 }
 
-const mapProject = (project: ProjectDocument): ProjectViewModel => {
+const mapProject = (project: Project): ProjectViewModel => {
 	const images =
 		project.images?.map((img) => {
 			const image = safeExtract(img.image)
@@ -116,21 +102,12 @@ const mapProject = (project: ProjectDocument): ProjectViewModel => {
 		}) ?? []
 
 	return {
-		slug: project.slug ?? project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-		title: project.title,
-		description: project.description,
-		longDescription: project.longDescription ?? null,
-		technologies: project.technologies ?? [],
+		...project,
 		images,
-		demoUrl: project.demoUrl ?? null,
-		sourceUrl: project.sourceUrl ?? null,
-		featured: project.featured ?? null,
-		startDate: project.startDate ?? null,
-		endDate: project.endDate ?? null,
 	}
 }
 
-const mapBlogPost = (post: PostDocument): BlogPostViewModel => {
+const mapBlogPost = (post: Post): BlogPostViewModel => {
 	const featuredImage = safeExtract(post.featuredImage)
 
 	// 处理 tags，可能是 number[] 或 Tag[]，需要安全提取
@@ -144,58 +121,78 @@ const mapBlogPost = (post: PostDocument): BlogPostViewModel => {
 				return {
 					name: tag.name,
 					slug: tag.slug,
-					color: tag.color ?? null,
+					color: tag.color,
 				}
 			})
-			.filter(
-				(tag): tag is { name: string; slug: string; color: string | null } =>
-					tag !== null
-			) ?? []
+			.filter((tag): tag is TagViewModel => tag !== null) ?? []
 
 	return {
-		title: post.title,
-		slug: post.slug,
-		excerpt: post.excerpt ?? null,
-		publishedAt: post.publishedAt ?? null,
+		...post,
 		featuredImageUrl: featuredImage?.url ?? null,
 		tags,
 	}
 }
 
-export const fetchContent = async (): Promise<ContentResponse> => {
+export const fetchProfile = async (): Promise<ProfileViewModel | null> => {
 	const payload = await getPayload({
 		config: configPromise,
 	})
 
-	const [profileResult, projectsResult, postsResult] = await Promise.all([
-		payload.find({
-			collection: 'profile',
-			limit: 1,
-			sort: '-createdAt',
-			depth: 2,
-		}),
-		payload.find({
-			collection: 'projects',
-			sort: '-createdAt',
-			limit: 10,
-			depth: 2,
-		}),
-		payload.find({
-			collection: 'posts',
-			where: {
-				status: {
-					equals: 'published',
-				},
+	const profileResult = await payload.find({
+		collection: 'profile',
+		limit: 1,
+		sort: '-createdAt',
+		depth: 2,
+	})
+
+	return mapProfile(profileResult.docs[0] ?? null)
+}
+
+export const fetchProjects = async (): Promise<ProjectViewModel[]> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const projectsResult = await payload.find({
+		collection: 'projects',
+		sort: '-createdAt',
+		limit: 10,
+		depth: 2,
+	})
+
+	return projectsResult.docs.map(mapProject)
+}
+
+export const fetchBlogPosts = async (): Promise<BlogPostViewModel[]> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const postsResult = await payload.find({
+		collection: 'posts',
+		where: {
+			status: {
+				equals: 'published',
 			},
-			sort: '-publishedAt',
-			limit: 6,
-			depth: 2,
-		}),
+		},
+		sort: '-publishedAt',
+		limit: 6,
+		depth: 2,
+	})
+
+	return postsResult.docs.map(mapBlogPost)
+}
+
+export const fetchContent = async (): Promise<ContentResponse> => {
+	const [profile, projects, blogPosts] = await Promise.all([
+		fetchProfile(),
+		fetchProjects(),
+		fetchBlogPosts(),
 	])
 
 	return {
-		profile: mapProfile(profileResult.docs[0] ?? null),
-		projects: projectsResult.docs.map(mapProject),
-		blogPosts: postsResult.docs.map(mapBlogPost),
+		profile,
+		projects,
+		blogPosts,
 	}
 }
