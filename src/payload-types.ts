@@ -69,9 +69,10 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
-    resumeProfile: ResumeProfile;
-    resumeEntries: ResumeEntry;
-    blogPosts: BlogPost;
+    profile: Profile;
+    projects: Project;
+    posts: Post;
+    tags: Tag;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -81,9 +82,10 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    resumeProfile: ResumeProfileSelect<false> | ResumeProfileSelect<true>;
-    resumeEntries: ResumeEntriesSelect<false> | ResumeEntriesSelect<true>;
-    blogPosts: BlogPostsSelect<false> | BlogPostsSelect<true>;
+    profile: ProfileSelect<false> | ProfileSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -167,26 +169,38 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "resumeProfile".
+ * via the `definition` "profile".
  */
-export interface ResumeProfile {
+export interface Profile {
   id: number;
   name: string;
-  role: string;
-  tagline?: string | null;
+  /**
+   * 职位头衔
+   */
+  title: string;
+  bio: string;
+  avatar?: (number | null) | Media;
   location?: string | null;
-  contactEmail?: string | null;
-  intro?: string | null;
+  email?: string | null;
+  website?: string | null;
+  socialLinks?:
+    | {
+        platform: 'GitHub' | 'LinkedIn' | 'Twitter' | 'Instagram' | 'YouTube' | 'Other';
+        url: string;
+        username?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   skills?:
     | {
-        skill: string;
-        id?: string | null;
-      }[]
-    | null;
-  links?:
-    | {
-        label: string;
-        url: string;
+        category: string;
+        technologies?:
+          | {
+              name: string;
+              level?: ('beginner' | 'intermediate' | 'advanced' | 'expert') | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -195,58 +209,129 @@ export interface ResumeProfile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "resumeEntries".
+ * via the `definition` "projects".
  */
-export interface ResumeEntry {
+export interface Project {
   id: number;
   title: string;
-  company?: string | null;
-  sectionType: 'experience' | 'education' | 'project' | 'skill';
-  startDate: string;
-  endDate?: string | null;
-  location?: string | null;
-  summary?: string | null;
-  highlights?:
+  description: string;
+  longDescription?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  technologies?:
     | {
-        item?: string | null;
+        name: string;
+        url?: string | null;
         id?: string | null;
       }[]
     | null;
-  url?: string | null;
+  images?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
-   * Lower values render before higher values.
+   * 演示地址
    */
-  order: number;
-  status: 'draft' | 'published';
+  demoUrl?: string | null;
+  /**
+   * 源码地址
+   */
+  sourceUrl?: string | null;
+  /**
+   * 设为精选项目
+   */
+  featured?: boolean | null;
+  startDate?: string | null;
+  endDate?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "blogPosts".
+ * via the `definition` "posts".
  */
-export interface BlogPost {
+export interface Post {
   id: number;
+  /**
+   * 博客文章标题
+   */
   title: string;
   /**
-   * Used to build the canonical blog URL.
+   * URL友好的标识符
    */
   slug: string;
-  summary: string;
-  content?: string | null;
-  publishedAt: string;
-  cover?: (number | null) | Media;
   /**
-   * Approximate minutes required to read the post.
+   * 文章内容，支持Markdown
    */
-  readingTime?: number | null;
-  tags?:
-    | {
-        tag: string;
-        id?: string | null;
-      }[]
-    | null;
-  status: 'draft' | 'published' | 'archived';
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * 文章摘要（可选）
+   */
+  excerpt?: string | null;
+  /**
+   * 特色图片
+   */
+  featuredImage?: (number | null) | Media;
+  /**
+   * 文章标签
+   */
+  tags?: (number | Tag)[] | null;
+  status: 'draft' | 'published';
+  /**
+   * 发布日期
+   */
+  publishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  /**
+   * 标签名称
+   */
+  name: string;
+  /**
+   * URL友好的标识符
+   */
+  slug: string;
+  /**
+   * 标签颜色 (可选)
+   */
+  color?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -283,16 +368,20 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'resumeProfile';
-        value: number | ResumeProfile;
+        relationTo: 'profile';
+        value: number | Profile;
       } | null)
     | ({
-        relationTo: 'resumeEntries';
-        value: number | ResumeEntry;
+        relationTo: 'projects';
+        value: number | Project;
       } | null)
     | ({
-        relationTo: 'blogPosts';
-        value: number | BlogPost;
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -378,74 +467,95 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "resumeProfile_select".
+ * via the `definition` "profile_select".
  */
-export interface ResumeProfileSelect<T extends boolean = true> {
+export interface ProfileSelect<T extends boolean = true> {
   name?: T;
-  role?: T;
-  tagline?: T;
+  title?: T;
+  bio?: T;
+  avatar?: T;
   location?: T;
-  contactEmail?: T;
-  intro?: T;
+  email?: T;
+  website?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        username?: T;
+        id?: T;
+      };
   skills?:
     | T
     | {
-        skill?: T;
+        category?: T;
+        technologies?:
+          | T
+          | {
+              name?: T;
+              level?: T;
+              id?: T;
+            };
         id?: T;
       };
-  links?:
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  longDescription?: T;
+  technologies?:
     | T
     | {
-        label?: T;
+        name?: T;
         url?: T;
         id?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "resumeEntries_select".
- */
-export interface ResumeEntriesSelect<T extends boolean = true> {
-  title?: T;
-  company?: T;
-  sectionType?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  demoUrl?: T;
+  sourceUrl?: T;
+  featured?: T;
   startDate?: T;
   endDate?: T;
-  location?: T;
-  summary?: T;
-  highlights?:
-    | T
-    | {
-        item?: T;
-        id?: T;
-      };
-  url?: T;
-  order?: T;
-  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "blogPosts_select".
+ * via the `definition` "posts_select".
  */
-export interface BlogPostsSelect<T extends boolean = true> {
+export interface PostsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  summary?: T;
   content?: T;
-  publishedAt?: T;
-  cover?: T;
-  readingTime?: T;
-  tags?:
-    | T
-    | {
-        tag?: T;
-        id?: T;
-      };
+  excerpt?: T;
+  featuredImage?: T;
+  tags?: T;
   status?: T;
+  publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  color?: T;
   updatedAt?: T;
   createdAt?: T;
 }

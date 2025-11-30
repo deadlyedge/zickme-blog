@@ -8,6 +8,8 @@
 		"build": "next build",
 		"start": "next start",
 		"generate:types": "payload generate:types",
+		"generate:importmap": "payload generate:importmap",
+		"db:migrate": "payload migrate:latest",
 		"db:fresh": "payload migrate:fresh",
 		"lint": "eslint"
 	},
