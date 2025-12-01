@@ -11,6 +11,7 @@
 		"generate:importmap": "payload generate:importmap",
 		"db:migrate": "payload migrate:latest",
 		"db:fresh": "payload migrate:fresh",
+		"db:seed": "bun run src/seed.ts",
 		"lint": "eslint"
 	},
 	"dependencies": {
