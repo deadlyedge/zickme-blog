@@ -2,6 +2,7 @@ import Image from 'next/image'
 // import Link from 'next/link'
 import { fetchProfile } from '@/lib/content-providers'
 import { safeExtract } from '@/lib/utils'
+import { GlobeIcon, MailIcon } from 'lucide-react'
 
 // 每5分钟重新验证一次
 export const revalidate = 300
@@ -39,11 +40,16 @@ export default async function AboutPage() {
 						<p className="mb-2">📍 {profileData.location}</p>
 					)}
 
-					{profileData.email && <p className="mb-2">📧 {profileData.email}</p>}
+					{profileData.email && (
+						<p className="mb-2 flex gap-1">
+							<MailIcon />
+							{profileData.email}
+						</p>
+					)}
 
 					{profileData.website && (
-						<p className="mb-6">
-							🌐{' '}
+						<p className="mb-6 flex gap-1">
+							<GlobeIcon />
 							<a
 								href={profileData.website}
 								className="text-primary hover:underline">

@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { generateSlug } from '../lib/utils'
 
 export const Tags: CollectionConfig = {
 	slug: 'tags',
@@ -26,10 +27,7 @@ export const Tags: CollectionConfig = {
 				beforeValidate: [
 					({ data }) => {
 						if (data?.name && !data.slug) {
-							return data.name
-								.toLowerCase()
-								.replace(/[^a-z0-9]+/g, '-')
-								.replace(/^-|-$/g, '')
+							return generateSlug(data.name)
 						}
 						return data?.slug
 					},
