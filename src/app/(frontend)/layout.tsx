@@ -2,7 +2,7 @@ import { fetchContent } from '@/lib/content-providers'
 import './globals.css'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Header } from '@/components/Header'
+import { HeaderNav } from '@/components/Header'
 
 export const metadata = {
 	description:
@@ -19,7 +19,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 		<html lang="en">
 			<body>
 				<main className="min-h-screen bg-linear-to-b from-white via-slate-50 to-slate-50 text-slate-900 antialiased">
-					<Header profile={profile} />
+					<HeaderNav profile={profile} />
 					<ScrollArea className="h-[calc(100vh-4rem)] overflow-y-auto">
 						{children}
 					</ScrollArea>

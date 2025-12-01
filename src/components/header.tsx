@@ -1,9 +1,9 @@
 import { ProfileViewModel } from '@/lib/content-providers'
 import Link from 'next/link'
 
-type HeaderProps = { profile: ProfileViewModel | null }
+type HeaderNavProps = { profile: ProfileViewModel | null }
 
-export const Header = ({ profile }: HeaderProps) => {
+export const HeaderNav = ({ profile }: HeaderNavProps) => {
 	return (
 		<header className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
 			<div className="mx-auto max-w-7xl px-6 py-3 h-16 flex items-center justify-between">
