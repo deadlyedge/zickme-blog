@@ -4,7 +4,25 @@ import './globals.css'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderNav } from '@/components/HeaderNav'
-import { cn } from '@/lib/utils'
+import { Funnel_Display, Noto_Sans_SC, Noto_Serif_SC } from 'next/font/google'
+
+const notoSans = Noto_Sans_SC({
+	variable: '--font-noto-sans-sc',
+	subsets: ['latin'],
+	weight: ['400'],
+})
+
+const notoSerifSC = Noto_Serif_SC({
+	variable: '--font-noto-serif-sc',
+	subsets: ['latin'],
+	weight: ['400'],
+})
+
+const funnelDisplay = Funnel_Display({
+	variable: '--font-funnel',
+	subsets: ['latin'],
+	weight: ['300', '600', '800'],
+})
 
 export const metadata: Metadata = {
 	description:
@@ -25,10 +43,11 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
 	return (
 		<html lang="en">
-			<body className={cn('min-h-screen antialiased')}>
+			<body
+				className={`${notoSans.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
 				<main className="">
 					<HeaderNav profile={profile} />
-					<ScrollArea className="h-[calc(100vh-4rem)] overflow-y-auto">
+					<ScrollArea className="h-svh overflow-y-auto">
 						{children}
 					</ScrollArea>
 				</main>

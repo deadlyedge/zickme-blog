@@ -37,8 +37,8 @@
 	--sidebar-border: hsl(0 0% 83%);
 	--sidebar-ring: hsl(247 74% 64%);
 
-	--font-sans: Montserrat, sans-serif;
-	--font-serif: Playfair Display, serif;
+	--font-sans: Funnel Display, Noto Sans SC;
+	--font-serif: Noto Serif, Noto Serif SC;
 	--font-mono: Source Code Pro, monospace;
 
 	--radius: 0.5rem;
@@ -114,6 +114,9 @@
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
+	}
+	html {
+		font-family: theme(fontFamily.serif);
 	}
 	body {
 		@apply bg-background text-foreground;

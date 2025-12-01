@@ -1,3 +1,9 @@
+import {
+	Funnel_Display,
+	Noto_Sans,
+	Noto_Serif,
+	Noto_Serif_SC,
+} from 'next/font/google'
 import { clsx, type ClassValue } from 'clsx'
 import { parseISO, isValid, format } from 'date-fns'
 import { twMerge } from 'tailwind-merge'
@@ -60,4 +66,37 @@ export function generateSlug(title: string): string {
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/^-|-$/g, '')
 	}
+}
+
+const notoSerif = Noto_Serif({
+	variable: '--font-noto-serif',
+	subsets: ['latin'],
+})
+
+const notoSans = Noto_Sans({
+	variable: '--font-noto-sans',
+	subsets: ['latin'],
+	weight: ['400'],
+})
+
+const notoSerifSC = Noto_Serif_SC({
+	variable: '--font-noto-serif-sc',
+	subsets: ['latin'],
+	weight: ['400'],
+})
+
+const funnelDisplay = Funnel_Display({
+	variable: '--font-funnel',
+	subsets: ['latin'],
+	weight: ['300', '600', '800'],
+})
+
+/**
+ * 全局字体工具
+ */
+export const fonts = {
+	noto: notoSerif.className,
+	funnel: funnelDisplay.className,
+	sans: notoSans.className,
+	notoSC: notoSerifSC.className,
 }

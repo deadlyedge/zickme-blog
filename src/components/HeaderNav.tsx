@@ -1,31 +1,37 @@
+'use client'
+
 import { ProfileViewModel } from '@/lib/content-providers'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 type HeaderNavProps = { profile: ProfileViewModel | null }
 
 export const HeaderNav = ({ profile }: HeaderNavProps) => {
+	const pathname = usePathname()
+
 	return (
 		<header className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
 			<div className="mx-auto max-w-7xl px-6 py-3 h-16 flex items-center justify-between">
-				<Link href="/" className="text-lg font-semibold tracking-tight">
+				<Link href="/" className={cn("text-lg font-semibold tracking-tight", pathname === '/' && 'text-primary')}>
 					{profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'}
 				</Link>
 
-				<nav className="flex items-center gap-6">
+				<nav className='flex items-center gap-6 font-bold font-sans text-base'>
 					<Link
 						href="/projects"
-						className="text-sm text-slate-600 hover:text-slate-900">
-						Projects
+						className={cn("text-slate-600 hover:text-slate-900", pathname.startsWith('/projects') && 'text-primary')}>
+						projects
 					</Link>
 					<Link
 						href="/blog"
-						className="text-sm text-slate-600 hover:text-slate-900">
-						Blog
+						className={cn("text-slate-600 hover:text-slate-900", pathname.startsWith('/blog') && 'text-primary')}>
+						blog
 					</Link>
 					<Link
 						href="/about"
-						className="text-sm text-slate-600 hover:text-slate-900">
-						Contact
+						className={cn("text-slate-600 hover:text-slate-900", pathname.startsWith('/about') && 'text-primary')}>
+						contact
 					</Link>
 					{/* <a
 						href={profile?.website ?? '#'}
