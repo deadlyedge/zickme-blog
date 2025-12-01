@@ -2,7 +2,7 @@ import { fetchContent } from '@/lib/content-providers'
 import './globals.css'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { HeaderNav } from '@/components/Header'
+import { HeaderNav } from '@/components/HeaderNav'
 
 export const metadata = {
 	description:
