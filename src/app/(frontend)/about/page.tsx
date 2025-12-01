@@ -3,6 +3,9 @@ import Image from 'next/image'
 import { fetchProfile } from '@/lib/content-providers'
 import { safeExtract } from '@/lib/utils'
 
+// 每5分钟重新验证一次
+export const revalidate = 300
+
 export default async function AboutPage() {
 	const profileData = await fetchProfile()
 

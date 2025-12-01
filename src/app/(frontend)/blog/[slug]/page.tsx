@@ -9,6 +9,9 @@ interface PageProps {
 	params: Promise<{ slug: string }>
 }
 
+// 每1分钟重新验证一次，因为博客文章可能更新更频繁
+export const revalidate = 60
+
 export default async function BlogPostPage({ params }: PageProps) {
 	const { slug } = await params
 

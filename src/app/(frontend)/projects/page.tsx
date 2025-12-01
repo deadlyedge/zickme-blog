@@ -11,6 +11,10 @@ import { Badge } from '@/components/ui/badge'
  * - Large hero, prominent featured case, dense image-first grid
  * - Titles over images, soft gradient overlays, strong spacing rhythm
  */
+
+// 每5分钟重新验证一次
+export const revalidate = 300
+
 export default async function ProjectsPage() {
 	const projects = await fetchProjects()
 

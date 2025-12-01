@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zickme Blog
 
-## Getting Started
+这是一个基于 [Next.js](https://nextjs.org) 和 [Payload CMS](https://payloadcms.com) 构建的个人博客项目。
 
-First, run the development server:
+## 功能特性
+
+- 📝 博客文章管理
+- 🚀 项目展示
+- 🏷️ 标签过滤
+- 📱 响应式设计
+- 🔍 SEO 优化
+
+## 技术栈
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Backend**: Payload CMS
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+
+## 本地开发
+
+### 环境要求
+
+- Node.js 24+
+- ~~npm / yarn / pnpm~~ / bun
+
+### 安装依赖
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+### 环境变量
+创建一个 `.env` 文件，添加以下环境变量：
+
+```env
+# use https://payloadsecret.com :)
+PAYLOAD_SECRET="FmEDmfgMH8qJf5/y7cjJNB947VN32J4nVQ7Co020ymE="
+
+DATABASE_URL="postgresql://xxxxx"
+
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
+
+如果是生产环境：
+```env
+# 在上面的基础上
+BLOB_READ_WRITE_TOKEN="xxxxxxxxxxxxxxxxxxxxxx"
+```
+
+### 启动开发服务器
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000) 查看前端，[http://localhost:3000/admin](http://localhost:3000/admin) 访问管理后台。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 项目结构
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── (frontend)/      # 前端页面
+│   └── (payload)/       # Payload CMS 管理后台
+├── collections/         # Payload 内容集合
+├── components/          # React 组件
+└── lib/                 # 工具函数
+```
 
-## Learn More
+## 部署
 
-To learn more about Next.js, take a look at the following resources:
+该项目配置为部署到 Vercel。推送代码到主分支将自动触发部署。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 许可证
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT License

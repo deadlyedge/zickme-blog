@@ -17,6 +17,10 @@ import { formatPublishedDate } from '@/lib/utils'
  * - 图片遮罩与渐变更柔和
  * - 更一致的间距与更紧凑的排版
  */
+
+// 每5分钟重新验证一次，确保内容及时更新
+export const revalidate = 300
+
 export default async function HomePage() {
 	const data = await fetchContent()
 	const { profile, projects, blogPosts } = data
