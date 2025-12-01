@@ -9,7 +9,7 @@
 		"start": "next start",
 		"generate:types": "payload generate:types",
 		"generate:importmap": "payload generate:importmap",
-		"db:migrate": "payload migrate:latest",
+		"db:migrate": "payload migrate:create",
 		"db:fresh": "payload migrate:fresh",
 		"db:seed": "bun run src/seed.ts",
 		"lint": "eslint"
@@ -27,7 +27,7 @@
 		"date-fns": "^4.1.0",
 		"graphql": "^16.12.0",
 		"lucide-react": "^0.555.0",
-		"motion": "^12.23.24",
+		"motion": "^12.23.25",
 		"next": "^16.0.6",
 		"payload": "^3.65.0",
 		"pinyin": "^4.0.0",

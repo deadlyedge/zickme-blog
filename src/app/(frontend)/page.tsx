@@ -12,11 +12,12 @@ export default async function HomePage() {
 	const { profile, projects, blogPosts } = data
 
 	return (
-		<div className="mx-auto max-w-7xl px-6 py-24">
+		<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 			<Hero profile={profile} />
+			{/* <MotionTest /> */}
 
 			{/* PROJECTS GRID */}
-			<section className="mt-20">
+			<section className="pt-16 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
 				<div className="flex items-baseline justify-between">
 					<h2 className="text-3xl font-semibold">Projects</h2>
 					<Link

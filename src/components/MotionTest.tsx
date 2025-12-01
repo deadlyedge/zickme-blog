@@ -9,23 +9,15 @@ type HeroProps = {
 	profile: ProfileViewModel | null
 }
 
-const blockVariantsH: Variants = {
-	offscreen: {
-		opacity: 0,
-		x: 120,
-		transition: {
-			type: 'spring',
-			bounce: 0.2,
-			duration: 0.4,
-		},
-	},
+const blockVariants: Variants = {
+	offscreen: { opacity: 0, x: 120 },
 	onscreen: {
 		opacity: 1,
 		x: 0,
 		transition: {
 			type: 'tween',
 			bounce: 0.8,
-			duration: 1,
+			duration: 2,
 		},
 	},
 }
@@ -33,30 +25,34 @@ const blockVariantsH: Variants = {
 export const Hero = ({ profile }: HeroProps) => {
 	return (
 		<section className="relative overflow-hidden">
-			<div className="absolute top-36 left-16 flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl">
-				<div className="text-6xl font-bold text-white">🏀</div>
-			</div>
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
-			<div className="mx-auto w-full flex max-w-7xl flex-col px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh]">
+			<div className="mx-auto flex max-w-7xl flex-col px-6 py-24 bg-[#67a657] h-[260vh]">
 				{/* 背景 JUICE：单独一个 scroll 动画块 */}
 				<motion.div
 					className="relative mb-24 flex flex-1 items-start justify-center"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.5, once: false }}
-					variants={blockVariantsH}>
-					<span className="pointer-events-none text-8xl sm:text-[12rem] leading-none font-extrabold">
+					variants={{
+						offscreen: { opacity: 0, y: 120 },
+						onscreen: {
+							opacity: 0.2,
+							y: 0,
+							transition: { duration: 0.8, ease: 'easeOut' },
+						},
+					}}>
+					<span className="pointer-events-none text-[18rem] leading-none font-extrabold text-cream">
 						JUICE
 					</span>
 				</motion.div>
 
 				{/* 1. 顶部 pill */}
 				<motion.div
-					className="my-40 flex justify-center"
+					className="mb-24 flex justify-center"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
+					variants={blockVariants}>
 					<a
 						href="#"
 						className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-medium text-slate-900 shadow-sm">
@@ -70,8 +66,8 @@ export const Hero = ({ profile }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
-					<h2 className="max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty">
+					variants={blockVariants}>
+					<h2 className="max-w-xl text-[3.2rem] leading-tight font-extrabold text-slate-900 lg:text-[4rem]">
 						THE CREATIVE AGENCY THAT LOVES TO SHOW OFF A THING OR TWO.
 					</h2>
 				</motion.div>
@@ -82,22 +78,22 @@ export const Hero = ({ profile }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
-					<p className="max-w-lg text-slate-900/90 text-2xl">
+					variants={blockVariants}>
+					<p className="max-w-lg text-slate-900/90">
 						{profile?.bio ??
 							'We craft impactful digital experiences for ambitious brands.'}
 					</p>
 				</motion.div>
 
 				{/* 4–6. 按钮 / 标签 / 次按钮 也拆成三个块 */}
-				<div className="grid flex-1 gap-12 md:grid-cols-4">
+				<div className="grid flex-1 gap-12 md:grid-cols-3">
 					{/* 4. 主按钮 */}
 					<motion.div
 						className="flex items-center justify-start"
 						initial="offscreen"
 						whileInView="onscreen"
 						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
+						variants={blockVariants}>
 						<Link
 							href="/projects"
 							className="inline-flex items-center gap-3 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg hover:opacity-95 transition">
@@ -111,7 +107,7 @@ export const Hero = ({ profile }: HeroProps) => {
 						initial="offscreen"
 						whileInView="onscreen"
 						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
+						variants={blockVariants}>
 						<span className="text-xs tracking-widest text-slate-900/80">
 							WORK • WEB • BRANDING
 						</span>
@@ -123,7 +119,7 @@ export const Hero = ({ profile }: HeroProps) => {
 						initial="offscreen"
 						whileInView="onscreen"
 						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
+						variants={blockVariants}>
 						<a
 							href={profile?.website ?? '#'}
 							className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 px-4 py-3 text-sm font-medium text-slate-900/90 hover:bg-white/10 transition"
