@@ -1,5 +1,6 @@
 // storage-adapter-import-placeholder
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -32,10 +33,21 @@ export default buildConfig({
 	db: postgresAdapter({
 		pool: {
 			connectionString: process.env.DATABASE_URL || '',
+			max: 10,
 		},
 	}),
 	sharp,
 	plugins: [
 		// storage-adapter-placeholder
+		vercelBlobStorage({
+			enabled: true,
+			collections: {
+				[Media.slug]: {
+					prefix: 'media',
+					allowClientUpload: true,
+				},
+			},
+			token: process.env.BLOB_READ_WRITE_TOKEN || '',
+		}),
 	],
 })
