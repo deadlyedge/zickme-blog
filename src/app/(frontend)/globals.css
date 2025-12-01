@@ -122,32 +122,4 @@
 	[role='button']:not(:disabled) {
 		cursor: pointer;
 	}
-	/* .markdown {
-		@apply prose;
-	}
-	.markdown a {
-		@apply underline text-secondary-foreground hover:text-primary;
-	} */
-}
-
-/* width */
-::-webkit-scrollbar {
-	width: 6px;
-	height: 4px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-	background: var(--background);
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-	background: var(--primary);
-	border-radius: 5px;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-	background: var(--destructive);
 }

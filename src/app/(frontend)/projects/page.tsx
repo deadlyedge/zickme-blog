@@ -2,13 +2,8 @@ import { fetchProjects } from '@/lib/content-providers'
 // import Link from 'next/link'
 import Image from 'next/image'
 import ProjectsGridClient from '../../../components/ProjectsGridClient'
-import { format, parseISO, isValid } from 'date-fns'
-
-const formatMonthYear = (value: string) => {
-	const date = parseISO(value)
-	if (!isValid(date)) return value
-	return format(date, 'MMM yyyy')
-}
+import { formatPublishedDate } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 /**
  * Strict visual refactor of Projects page to match juice.agency/work
@@ -34,9 +29,9 @@ export default async function ProjectsPage() {
 	// const others = projects.filter((p) => p !== featured)
 
 	return (
-		<main className="min-h-screen bg-white text-slate-900 antialiased">
+		<main className="pt-16">
 			{/* HERO */}
-			<section className="mx-auto max-w-7xl px-6 pt-24 pb-12">
+			<section className="mx-auto max-w-7xl p-6">
 				<div className="max-w-3xl">
 					<h1 className="text-6xl font-extrabold leading-tight">Projects</h1>
 					<p className="mt-6 text-xl text-slate-600">
@@ -79,11 +74,11 @@ export default async function ProjectsPage() {
 
 							<div className="flex flex-wrap gap-3">
 								{featured.technologies?.map((t) => (
-									<span
+									<Badge
 										key={t.name}
-										className="text-xs rounded-full bg-amber-50 px-3 py-1 text-amber-700 border border-amber-100">
+										className="bg-amber-50 text-amber-700 border-amber-100">
 										{t.name}
-									</span>
+									</Badge>
 								))}
 							</div>
 
@@ -108,7 +103,7 @@ export default async function ProjectsPage() {
 								)}
 								<span className="text-sm text-slate-500">
 									{featured.startDate
-										? formatMonthYear(featured.startDate)
+										? formatPublishedDate(featured.startDate)
 										: ''}
 								</span>
 							</div>

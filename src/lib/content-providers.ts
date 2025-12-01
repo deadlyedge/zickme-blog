@@ -3,38 +3,6 @@ import { getPayload } from 'payload'
 import type { Profile, Post, Project } from '@/payload-types'
 import { safeExtract } from '@/lib/utils'
 
-// type PostDocument = Config['collections']['posts']
-// type ProjectDocument = Config['collections']['projects']
-// type ProfileDocument = Config['collections']['profile']
-// type TagDocument = Config['collections']['tags']
-
-// 使用继承生成type
-// export type SocialLink = NonNullable<Profile['socialLinks']>[0]
-
-// export type Skill = Omit<NonNullable<Profile['skills']>[0], 'technologies'> & {
-// 	technologies: NonNullable<NonNullable<Profile['skills']>[0]['technologies']>
-// }
-
-// export type SocialLink = {
-// 	platform:
-// 		| 'GitHub'
-// 		| 'LinkedIn'
-// 		| 'Twitter'
-// 		| 'Instagram'
-// 		| 'YouTube'
-// 		| 'Other'
-// 	url: string
-// 	username?: string | null
-// }
-
-// export type Skill = {
-// 	category: string
-// 	technologies: {
-// 		name: string
-// 		level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
-// 	}[]
-// }
-
 export type TagViewModel = {
 	name: string
 	slug: string
@@ -42,6 +10,11 @@ export type TagViewModel = {
 }
 
 export type BlogPostViewModel = Omit<Post, 'tags'> & {
+	featuredImageUrl: string | null
+	tags: TagViewModel[]
+}
+
+export type BlogPostDetailViewModel = Omit<Post, 'tags' | 'featuredImage'> & {
 	featuredImageUrl: string | null
 	tags: TagViewModel[]
 }
@@ -55,15 +28,6 @@ export type ProjectViewModel = Omit<Project, 'images'> & {
 
 export type ProfileViewModel = {
 	avatarUrl: string | null
-	// name: string
-	// title: string
-	// bio: string
-	// avatarUrl: string | null
-	// location?: string | null
-	// email?: string | null
-	// website?: string | null
-	// socialLinks: SocialLink[]
-	// skills: Skill[]
 } & Profile
 
 export type ContentResponse = {
@@ -82,12 +46,6 @@ const mapProfile = (profile: Profile | null): ProfileViewModel | null => {
 	return {
 		...profile,
 		avatarUrl: avatar?.url ?? null,
-		// socialLinks: profile.socialLinks ?? [],
-		// skills:
-		// 	profile.skills?.map((skill) => ({
-		// 		category: skill.category,
-		// 		technologies: skill.technologies ?? [],
-		// 	})) ?? [],
 	}
 }
 
@@ -108,6 +66,32 @@ const mapProject = (project: Project): ProjectViewModel => {
 }
 
 const mapBlogPost = (post: Post): BlogPostViewModel => {
+	const featuredImage = safeExtract(post.featuredImage)
+
+	// 处理 tags，可能是 number[] 或 Tag[]，需要安全提取
+	const tags =
+		post.tags
+			?.map((tag) => {
+				if (typeof tag === 'number') {
+					// 如果是 number，说明 depth 不够，返回空对象或跳过
+					return null
+				}
+				return {
+					name: tag.name,
+					slug: tag.slug,
+					color: tag.color,
+				}
+			})
+			.filter((tag): tag is TagViewModel => tag !== null) ?? []
+
+	return {
+		...post,
+		featuredImageUrl: featuredImage?.url ?? null,
+		tags,
+	}
+}
+
+const mapBlogPostDetail = (post: Post): BlogPostDetailViewModel => {
 	const featuredImage = safeExtract(post.featuredImage)
 
 	// 处理 tags，可能是 number[] 或 Tag[]，需要安全提取
@@ -168,19 +152,73 @@ export const fetchBlogPosts = async (): Promise<BlogPostViewModel[]> => {
 		config: configPromise,
 	})
 
+	// const where: Record<string, any> = {
+	// 	status: {
+	// 		equals: 'published',
+	// 	},
+	// }
+
+	// // 如果提供了标签slug，则添加标签过滤条件
+	// if (tagSlug) {
+	// 	where.tags = {
+	// 		slug: {
+	// 			equals: tagSlug,
+	// 		},
+	// 	}
+	// }
+
 	const postsResult = await payload.find({
 		collection: 'posts',
-		where: {
-			status: {
-				equals: 'published',
-			},
-		},
+		// where,
 		sort: '-publishedAt',
 		limit: 6,
 		depth: 2,
 	})
 
 	return postsResult.docs.map(mapBlogPost)
+}
+
+export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPostDetailViewModel | null> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const postsResult = await payload.find({
+		collection: 'posts',
+		where: {
+			slug: {
+				equals: slug,
+			},
+			status: {
+				equals: 'published',
+			},
+		},
+		depth: 2,
+	})
+
+	const post = postsResult.docs[0]
+	if (!post) {
+		return null
+	}
+
+	return mapBlogPostDetail(post)
+}
+
+export const fetchTags = async (): Promise<TagViewModel[]> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const tagsResult = await payload.find({
+		collection: 'tags',
+		sort: 'name',
+	})
+
+	return tagsResult.docs.map(tag => ({
+		name: tag.name,
+		slug: tag.slug,
+		color: tag.color ?? null,
+	}))
 }
 
 export const fetchContent = async (): Promise<ContentResponse> => {

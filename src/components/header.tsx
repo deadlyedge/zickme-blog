@@ -5,10 +5,10 @@ type HeaderProps = { profile: ProfileViewModel | null }
 
 export const Header = ({ profile }: HeaderProps) => {
 	return (
-		<header className="sticky top-0 z-40 bg-white/60 backdrop-blur-sm border-b">
-			<div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between">
+		<header className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
+			<div className="mx-auto max-w-7xl px-6 py-3 h-16 flex items-center justify-between">
 				<Link href="/" className="text-lg font-semibold tracking-tight">
-					{profile?.name ?? 'Your Name'}
+					{profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'}
 				</Link>
 
 				<nav className="flex items-center gap-6">

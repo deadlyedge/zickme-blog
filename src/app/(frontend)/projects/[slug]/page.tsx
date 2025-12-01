@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { fetchContent } from '@/lib/content-providers'
 import { RichText } from '@/components/RichText'
 import { format, parseISO, isValid } from 'date-fns'
+import { Badge } from '@/components/ui/badge'
 
 const formatMonthYear = (value?: string | null) => {
 	if (!value) return ''
@@ -44,8 +45,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	}
 
 	return (
-		<main className="min-h-screen bg-white text-slate-900">
-			<div className="mx-auto max-w-7xl px-6 py-20">
+		<main className="pt-16">
+			<div className="mx-auto max-w-7xl p-6">
 				<nav className="mb-6">
 					<Link
 						href="/projects"
@@ -60,16 +61,49 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					</h1>
 					<div className="mt-4 flex flex-wrap items-center gap-3">
 						{project.technologies?.map((t) => (
-							<span
+							<Badge
 								key={t.name}
-								className="text-xs rounded-full bg-amber-50 px-2 py-1 text-amber-700 border border-amber-100">
-								{t.name}
-							</span>
+								className="bg-amber-50 text-amber-700 border-amber-100">
+								{t.url ? (
+									<a
+										href={t.url}
+										target="_blank"
+										rel="noreferrer"
+										className="hover:underline">
+										{t.name}
+									</a>
+								) : (
+									t.name
+								)}
+							</Badge>
 						))}
-						{project.startDate && (
+						{(project.startDate || project.endDate) && (
 							<span className="text-sm text-slate-500 ml-2">
-								{formatMonthYear(project.startDate)}
+								{project.startDate && project.endDate
+									? `${formatMonthYear(project.startDate)} - ${formatMonthYear(project.endDate)}`
+									: project.startDate
+										? `Started ${formatMonthYear(project.startDate)}`
+										: project.endDate
+											? `Ended ${formatMonthYear(project.endDate)}`
+											: ''}
 							</span>
+						)}
+					</div>
+
+					{/* Project metadata */}
+					<div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+						<span>
+							Created {new Date(project.createdAt).toLocaleDateString()}
+						</span>
+						{project.updatedAt !== project.createdAt && (
+							<span>
+								Updated {new Date(project.updatedAt).toLocaleDateString()}
+							</span>
+						)}
+						{project.featured && (
+							<Badge variant="secondary" className="text-xs">
+								Featured
+							</Badge>
 						)}
 					</div>
 				</header>

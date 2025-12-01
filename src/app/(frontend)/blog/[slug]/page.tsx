@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { fetchBlogPostBySlug } from '@/lib/content-providers'
 import { RichText } from '@/components/RichText'
-import { safeExtract } from '@/lib/utils'
+import { formatPublishedDate } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 interface PageProps {
 	params: Promise<{ slug: string }>
@@ -11,37 +11,22 @@ interface PageProps {
 
 export default async function BlogPostPage({ params }: PageProps) {
 	const { slug } = await params
-	const payloadConfig = await config
-	const payload = await getPayload({ config: payloadConfig })
 
-	const posts = await payload.find({
-		collection: 'posts',
-		where: {
-			slug: {
-				equals: slug,
-			},
-			status: {
-				equals: 'published',
-			},
-		},
-		depth: 2,
-	})
+	const post = await fetchBlogPostBySlug(slug)
 
-	if (!posts.docs.length) {
+	if (!post) {
 		notFound()
 	}
 
-	const post = posts.docs[0]
-
 	return (
-		<div className="container mx-auto px-4 py-16 max-w-4xl">
+		<div className="mx-auto p-6 pt-24 max-w-4xl">
 			<article>
 				<header className="mb-8">
 					<h1 className="text-4xl font-bold mb-4">{post.title}</h1>
 
-					{post.featuredImage && (
+					{post.featuredImageUrl && (
 						<Image
-							src={safeExtract(post.featuredImage)?.url || ''}
+							src={post.featuredImageUrl}
 							alt={post.title}
 							width={800}
 							height={400}
@@ -49,21 +34,22 @@ export default async function BlogPostPage({ params }: PageProps) {
 						/>
 					)}
 
-					<div className="flex flex-wrap gap-2 mb-4">
-						{post.tags?.map((tag) => {
-							const t = safeExtract(tag)
-							if (!t) return null
-							return (
-								<span key={t.id} className="bg-secondary px-3 py-1 rounded">
-									{t.name}
-								</span>
-							)
-						})}
+					<div className="flex flex-wrap gap-1 mb-2">
+						{post.tags?.map((tag) => (
+							<Badge
+								key={tag.slug}
+								className="bg-secondary"
+								style={{
+									backgroundColor: tag.color || undefined,
+									color: tag.color ? '#fff' : undefined,
+								}}>
+								{tag.name}
+							</Badge>
+						))}
 					</div>
 
 					<time className="text-muted-foreground">
-						发布于{' '}
-						{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+						发布于 {formatPublishedDate(post.publishedAt || post.createdAt)}
 					</time>
 				</header>
 
