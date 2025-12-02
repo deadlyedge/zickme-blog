@@ -3,10 +3,11 @@
 import { ProfileViewModel } from '@/lib/content-providers'
 import Link from 'next/link'
 import * as motion from 'motion/react-client'
-import type { Variants } from 'motion/react'
+import type { MotionValue, Variants } from 'motion/react'
 
 type HeroProps = {
 	profile: ProfileViewModel | null
+	scale: MotionValue<number>
 }
 
 const blockVariantsH: Variants = {
@@ -30,14 +31,18 @@ const blockVariantsH: Variants = {
 	},
 }
 
-export const Hero = ({ profile }: HeroProps) => {
+export const Hero = ({ profile, scale }: HeroProps) => {
 	return (
-		<section className="relative overflow-hidden">
-			<div className="absolute top-36 left-16 flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl">
-				<div className="text-6xl font-bold text-white">🏀</div>
-			</div>
+		<section className="overflow-hidden">
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
-			<div className="mx-auto w-full flex max-w-7xl flex-col px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh]">
+			<div className="mx-auto w-full flex max-w-7xl flex-col px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh] relative">
+				<div className="fixed top-36 left-16 ">
+					<motion.div
+						className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl"
+						style={{ scale }}>
+						<div className="text-6xl font-bold text-white">🏀</div>
+					</motion.div>
+				</div>
 				{/* 背景 JUICE：单独一个 scroll 动画块 */}
 				<motion.div
 					className="relative mb-24 flex flex-1 items-start justify-center"
@@ -135,7 +140,7 @@ export const Hero = ({ profile }: HeroProps) => {
 				</div>
 
 				{/* 7. 右侧插画：放在最底部，最后一个进入/退出 */}
-				<motion.div
+				{/* <motion.div
 					className="mt-20 flex justify-center lg:justify-end"
 					initial="offscreen"
 					whileInView="onscreen"
@@ -156,7 +161,7 @@ export const Hero = ({ profile }: HeroProps) => {
 					<div className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl">
 						<div className="text-6xl font-bold text-white">🏀</div>
 					</div>
-				</motion.div>
+				</motion.div> */}
 			</div>
 		</section>
 	)

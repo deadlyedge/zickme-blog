@@ -126,3 +126,25 @@
 		cursor: pointer;
 	}
 }
+
+/* width */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+	background: var(--background);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+	background: var(--muted);
+	border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+	background: var(--primary);
+}

@@ -12,7 +12,7 @@ export const HeaderNav = ({ profile }: HeaderNavProps) => {
 	const pathname = usePathname()
 
 	return (
-		<header className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
+		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
 			<div className="mx-auto max-w-7xl px-6 py-3 h-16 flex items-center justify-between">
 				<Link
 					href="/"
@@ -23,7 +23,7 @@ export const HeaderNav = ({ profile }: HeaderNavProps) => {
 					{profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'}
 				</Link>
 
-				<nav className="flex items-center gap-6 font-bold font-sans text-base">
+				<nav className="flex items-center font-bold font-sans text-base">
 					<Button
 						asChild
 						variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
@@ -49,6 +49,6 @@ export const HeaderNav = ({ profile }: HeaderNavProps) => {
 					</a> */}
 				</nav>
 			</div>
-		</header>
+		</nav>
 	)
 }
