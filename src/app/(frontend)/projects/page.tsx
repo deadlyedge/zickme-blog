@@ -51,11 +51,12 @@ export default async function ProjectsPage() {
 					<div className="lg:col-span-8 order-2 lg:order-1">
 						<div className="relative rounded-3xl overflow-hidden shadow-2xl">
 							{featured.images[0]?.url ? (
-								<div className="w-full aspect-video bg-slate-100">
+								<div className="relative w-full aspect-video bg-slate-100">
 									<Image
 										src={featured.images[0].url}
 										alt={featured.title}
 										fill
+										sizes="(max-width: 768px) 100vw, 50vw"
 										className="object-cover transition-transform duration-500"
 									/>
 									<div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent pointer-events-none" />

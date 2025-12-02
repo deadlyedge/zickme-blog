@@ -1,13 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
 import type { BlogPostViewModel, TagViewModel } from '@/lib/content-providers'
-import { cn, formatPublishedDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
-import { Badge } from './ui/badge'
+import { BlogPostCard } from './BlogPostCard'
 
 type Props = {
 	posts: BlogPostViewModel[]
@@ -20,7 +18,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 	const filteredPosts = useMemo(() => {
 		if (activeTag === 'All') return posts
 		return posts.filter((post) =>
-			post.tags?.some((tag) => tag.slug === activeTag)
+			post.tags?.some((tag) => tag.slug === activeTag),
 		)
 	}, [posts, activeTag])
 
@@ -35,7 +33,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 						className={cn(
 							activeTag === 'All'
 								? 'bg-primary text-primary-foreground'
-								: 'bg-secondary hover:bg-secondary/80'
+								: 'bg-secondary hover:bg-secondary/80',
 						)}>
 						全部文章
 					</Button>
@@ -47,7 +45,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 							className={cn(
 								activeTag === tag.slug
 									? 'bg-primary text-primary-foreground'
-									: 'bg-secondary hover:bg-secondary/80'
+									: 'bg-secondary hover:bg-secondary/80',
 							)}
 							style={{
 								backgroundColor:
@@ -67,39 +65,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 
 			<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{filteredPosts.map((post) => (
-					<Link href={`/blog/${post.slug}`} key={post.id}>
-						<article className="bg-card rounded-lg overflow-hidden shadow">
-							{post.featuredImageUrl && (
-								<Image
-									src={post.featuredImageUrl}
-									alt={post.title}
-									width={400}
-									height={200}
-									className="w-full h-48 object-cover"
-								/>
-							)}
-							<div className="p-6">
-								<h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-								<p className="text-muted-foreground mb-4">{post.excerpt}</p>
-								<div className="flex flex-wrap gap-1 mb-2">
-									{post.tags?.map((tag) => (
-										<Badge
-											key={tag.slug}
-											className="bg-secondary"
-											style={{
-												backgroundColor: tag.color || undefined,
-												color: tag.color ? '#fff' : undefined,
-											}}>
-											{tag.name}
-										</Badge>
-									))}
-								</div>
-								<time className="text-sm text-muted-foreground">
-									{formatPublishedDate(post.publishedAt || post.createdAt)}
-								</time>
-							</div>
-						</article>{' '}
-					</Link>
+					<BlogPostCard key={post.id} post={post} />
 				))}
 			</div>
 

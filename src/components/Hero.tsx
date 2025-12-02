@@ -1,9 +1,12 @@
 'use client'
 
 import { ProfileViewModel } from '@/lib/content-providers'
-import Link from 'next/link'
 import * as motion from 'motion/react-client'
-import type { MotionValue, Variants } from 'motion/react'
+import { useMotionValueEvent } from 'motion/react'
+import type { MotionStyle, MotionValue, Variants } from 'motion/react'
+import { useState } from 'react'
+import { cn } from '@/lib/utils'
+import CurvedLoop from './ui/effects/CurvedLoop'
 
 type HeroProps = {
 	profile: ProfileViewModel | null
@@ -32,32 +35,58 @@ const blockVariantsH: Variants = {
 }
 
 export const Hero = ({ profile, scale }: HeroProps) => {
+	const [scaleValue, setScaleValue] = useState(0)
+	useMotionValueEvent(scale, 'change', (value) => {
+		setScaleValue(value)
+	})
+
+	const style: MotionStyle = {
+		scale: scaleValue < 0.5 ? 1 - scaleValue : 0.8,
+		opacity: scaleValue < 0.5 ? 1 - scaleValue * 2 : 1,
+		x: scaleValue * 200,
+		y: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 100,
+		rotate: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 360 * 2,
+	}
 	return (
 		<section className="overflow-hidden">
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
-			<div className="mx-auto w-full flex max-w-7xl flex-col px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh] relative">
-				<div className="fixed top-36 left-16 ">
+			<div className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh]">
+				<div
+					className={cn(
+						'fixed top-36 left-36 z-0 select-none',
+						scaleValue > 0.5 ? '-z-10' : '',
+					)}>
 					<motion.div
 						className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl"
-						style={{ scale }}>
+						style={style}>
 						<div className="text-6xl font-bold text-white">🏀</div>
 					</motion.div>
 				</div>
 				{/* 背景 JUICE：单独一个 scroll 动画块 */}
 				<motion.div
-					className="relative mb-24 flex flex-1 items-start justify-center"
+					className="flex flex-1 items-start justify-center z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.5, once: false }}
 					variants={blockVariantsH}>
-					<span className="pointer-events-none text-8xl sm:text-[12rem] leading-none font-extrabold">
-						JUICE
+					<span className="pointer-events-none text-6xl leading-none font-extrabold">
+						{profile?.name || 'JUICE'}
+					</span>
+				</motion.div>
+				<motion.div
+					className="flex flex-1 items-start justify-center z-10"
+					initial="offscreen"
+					whileInView="onscreen"
+					viewport={{ amount: 0.5, once: false }}
+					variants={blockVariantsH}>
+					<span className="pointer-events-none text-4xl leading-none font-bold">
+						{profile?.title || 'JUICE'}
 					</span>
 				</motion.div>
 
 				{/* 1. 顶部 pill */}
 				<motion.div
-					className="my-40 flex justify-center"
+					className="flex justify-center z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
@@ -71,19 +100,19 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 
 				{/* 2. 标题 */}
 				<motion.div
-					className="mb-20 flex justify-start"
+					className="flex justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}>
-					<h2 className="max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty">
-						THE CREATIVE AGENCY THAT LOVES TO SHOW OFF A THING OR TWO.
+					<h2 className="max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty uppercase">
+						A good design is not just a design, it is a future.
 					</h2>
 				</motion.div>
 
 				{/* 3. 段落 */}
 				<motion.div
-					className="mb-20 flex justify-start"
+					className="flex justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
@@ -95,73 +124,20 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 				</motion.div>
 
 				{/* 4–6. 按钮 / 标签 / 次按钮 也拆成三个块 */}
-				<div className="grid flex-1 gap-12 md:grid-cols-4">
-					{/* 4. 主按钮 */}
-					<motion.div
-						className="flex items-center justify-start"
-						initial="offscreen"
-						whileInView="onscreen"
-						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
-						<Link
-							href="/projects"
-							className="inline-flex items-center gap-3 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white shadow-lg hover:opacity-95 transition">
-							View projects
-						</Link>
-					</motion.div>
-
-					{/* 5. 标签 */}
-					<motion.div
-						className="flex items-center justify-start"
-						initial="offscreen"
-						whileInView="onscreen"
-						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
-						<span className="text-xs tracking-widest text-slate-900/80">
-							WORK • WEB • BRANDING
-						</span>
-					</motion.div>
-
-					{/* 6. 次按钮 */}
-					<motion.div
-						className="flex items-center justify-start"
-						initial="offscreen"
-						whileInView="onscreen"
-						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
-						<a
-							href={profile?.website ?? '#'}
-							className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 px-4 py-3 text-sm font-medium text-slate-900/90 hover:bg-white/10 transition"
-							target="_blank"
-							rel="noreferrer">
-							Visit website
-						</a>
-					</motion.div>
-				</div>
-
-				{/* 7. 右侧插画：放在最底部，最后一个进入/退出 */}
-				{/* <motion.div
-					className="mt-20 flex justify-center lg:justify-end"
+				{/* 5. 标签 */}
+				<motion.div
+					className="flex h-40 items-center justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
-					viewport={{ amount: 0.2, once: false }}
-					variants={{
-						offscreen: { opacity: 0, x: -80, scale: 0.8 },
-						onscreen: {
-							opacity: 1,
-							x: 0,
-							scale: 1,
-							transition: {
-								type: 'spring',
-								bounce: 0.5,
-								duration: 1.8,
-							},
-						},
-					}}>
-					<div className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl">
-						<div className="text-6xl font-bold text-white">🏀</div>
-					</div>
-				</motion.div> */}
+					viewport={{ amount: 0.7, once: false }}
+					variants={blockVariantsH}>
+					<CurvedLoop
+						marqueeText="THINKING • DESIGN • BRANDING • PRODUCT • "
+						speed={1}
+						curveAmount={300}
+						className='fill-lime-700'
+					/>
+				</motion.div>
 			</div>
 		</section>
 	)

@@ -1,12 +1,12 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
 import { ContentResponse } from '@/lib/content-providers'
-import { formatPublishedDate } from '@/lib/utils'
 import { Hero } from './Hero'
+import { ProjectCard } from './ProjectCard'
+import { BlogPostCard } from './BlogPostCard'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
@@ -47,46 +47,8 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 					</div>
 
 					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{projects.map((project) => (
-							<Link key={project.title} href={`/projects/${project.slug}`}>
-								<article className="group rounded-2xl overflow-hidden border bg-white shadow-sm hover:shadow-2xl transition-transform transform hover:-translate-y-3 duration-300">
-									<div className="relative aspect-16/10 bg-slate-100">
-										{project.images[0]?.url ? (
-											<>
-												<Image
-													src={project.images[0].url}
-													alt={project.title}
-													fill
-													className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-												/>
-												<div className="absolute inset-0 bg-linear-to-t from-black/28 via-transparent to-transparent pointer-events-none" />
-											</>
-										) : null}
-										{project.featured && (
-											<div className="absolute left-4 bottom-4 rounded-full bg-amber-600 px-3 py-1 text-xs text-white">
-												Featured
-											</div>
-										)}
-									</div>
-
-									<div className="p-6">
-										<h3 className="text-lg font-semibold">{project.title}</h3>
-										<p className="mt-2 text-sm text-slate-600 line-clamp-3">
-											{project.description}
-										</p>
-
-										<div className="mt-4 flex flex-wrap gap-2">
-											{project.technologies?.map((t) => (
-												<span
-													key={t.name}
-													className="text-xs rounded-full bg-amber-50 px-2 py-1 text-amber-700 border border-amber-100">
-													{t.name}
-												</span>
-											))}
-										</div>
-									</div>
-								</article>{' '}
-							</Link>
+						{projects.slice(0, 3).map((project) => (
+							<ProjectCard key={project.id} project={project} />
 						))}
 					</div>
 				</section>
@@ -102,40 +64,9 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 						</Link>
 					</div>
 
-					<div className="mt-6 grid gap-6 md:grid-cols-2">
-						{blogPosts.map((post) => (
-							<Link href={`/blog/${post.slug}`} key={post.slug}>
-								<article className="rounded-2xl overflow-hidden border bg-white shadow-sm transition hover:shadow-md">
-									<div className="flex gap-6 p-6">
-										{post.featuredImageUrl && (
-											<div className="w-36 h-24 bg-slate-100 rounded overflow-hidden">
-												<Image
-													src={post.featuredImageUrl}
-													alt={post.title}
-													width={144}
-													height={96}
-													className="object-cover"
-												/>
-											</div>
-										)}
-										<div>
-											<p className="text-xs text-slate-500">
-												{post.publishedAt
-													? formatPublishedDate(post.publishedAt)
-													: 'Draft'}
-											</p>
-											<h3 className="mt-1 text-lg font-semibold">
-												{post.title}
-											</h3>
-											{post.excerpt && (
-												<p className="mt-2 text-sm text-slate-600 line-clamp-3">
-													{post.excerpt}
-												</p>
-											)}
-										</div>
-									</div>
-								</article>{' '}
-							</Link>
+					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+						{blogPosts.slice(0, 3).map((post) => (
+							<BlogPostCard key={post.id} post={post} />
 						))}
 					</div>
 				</section>
