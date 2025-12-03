@@ -20,12 +20,12 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
 				<div className="relative bg-slate-100">
 					<Link href={`/projects/${project.slug}`}>
 						{project.images?.[0]?.url ? (
-							<div className="relative w-full bg-slate-100">
+							<div className="relative w-full aspect-4/3 bg-slate-100">
 								<Image
 									src={project.images[0].url || ''}
 									alt={project.title}
-									width={600}
-									height={400}
+									fill
+									sizes="(max-width: 700px) 100vw, (max-width: 1024px) 50vw, 33vw"
 									className="object-cover"
 								/>
 							</div>

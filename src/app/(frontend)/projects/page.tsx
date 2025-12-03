@@ -32,7 +32,7 @@ export default async function ProjectsPage() {
 	// const others = projects.filter((p) => p !== featured)
 
 	return (
-		<main className="pt-16">
+		<div className="pt-16 overflow-y-auto h-svh">
 			{/* HERO */}
 			<section className="mx-auto max-w-7xl p-6">
 				<div className="max-w-3xl">
@@ -55,8 +55,8 @@ export default async function ProjectsPage() {
 										src={featured.images[0].url}
 										alt={featured.title}
 										fill
-										sizes="(max-width: 768px) 100vw, 50vw"
-										className="object-cover transition-transform duration-500"
+										sizes="(max-width: 700px) 100vw, 80vw"
+										className="object-cover"
 									/>
 									<div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent pointer-events-none" />
 								</div>
@@ -70,9 +70,7 @@ export default async function ProjectsPage() {
 
 					<div className="lg:col-span-4 order-1 lg:order-2">
 						<div className="space-y-6">
-							<p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-								Featured case
-							</p>
+							<p className="text-xs uppercase text-slate-500">Featured case</p>
 							<h2 className="text-3xl font-extrabold">{featured.title}</h2>
 							<p className="text-slate-600">{featured.description}</p>
 
@@ -120,6 +118,6 @@ export default async function ProjectsPage() {
 			<section className="mx-auto max-w-7xl px-6 pb-32">
 				<ProjectsGridClient projects={projects} />
 			</section>
-		</main>
+		</div>
 	)
 }

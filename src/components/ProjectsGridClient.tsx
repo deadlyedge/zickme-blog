@@ -40,6 +40,7 @@ export default function ProjectsGridClient({ projects }: Props) {
 
 	return (
 		<div>
+			<p className="text-muted">按标签过滤</p>
 			<ButtonGroup className="mb-4 flex-wrap space-y-2">
 				{categories.map((c) => (
 					<Button

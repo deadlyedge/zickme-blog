@@ -24,44 +24,37 @@ export default function BlogGridClient({ posts, tags }: Props) {
 
 	return (
 		<div>
-			<div className="mb-8">
-				<h2 className="text-lg font-semibold mb-4">按标签过滤</h2>
-				<ButtonGroup>
+			<p className="text-muted">按标签过滤</p>
+			<ButtonGroup className="mb-4 flex-wrap space-y-2">
+				<Button
+					size="sm"
+					onClick={() => setActiveTag('All')}
+					className={cn(
+						activeTag === 'All'
+							? 'bg-primary text-primary-foreground'
+							: 'bg-secondary hover:bg-secondary/80',
+					)}>
+					全部文章
+				</Button>
+				{tags.map((tag) => (
 					<Button
 						size="sm"
-						onClick={() => setActiveTag('All')}
+						key={tag.slug}
+						onClick={() => setActiveTag(tag.slug)}
 						className={cn(
-							activeTag === 'All'
+							activeTag === tag.slug
 								? 'bg-primary text-primary-foreground'
-								: 'bg-secondary hover:bg-secondary/80',
-						)}>
-						全部文章
+								: 'hover:bg-[white] hover:text-(--tag-color) bg-(--tag-color) text-white',
+						)}
+						style={
+							{
+								'--tag-color': tag.color,
+							} as React.CSSProperties
+						}>
+						{tag.name}
 					</Button>
-					{tags.map((tag) => (
-						<Button
-							size="sm"
-							key={tag.slug}
-							onClick={() => setActiveTag(tag.slug)}
-							className={cn(
-								activeTag === tag.slug
-									? 'bg-primary text-primary-foreground'
-									: 'bg-secondary hover:bg-secondary/80',
-							)}
-							style={{
-								backgroundColor:
-									activeTag === tag.slug ? undefined : tag.color || undefined,
-								color:
-									activeTag === tag.slug
-										? undefined
-										: tag.color
-											? '#fff'
-											: undefined,
-							}}>
-							{tag.name}
-						</Button>
-					))}
-				</ButtonGroup>
-			</div>
+				))}
+			</ButtonGroup>
 
 			<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{filteredPosts.map((post) => (
