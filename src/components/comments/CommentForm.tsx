@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { useCreateComment } from '@/hooks/useComments'
+import { createComment } from '@/lib/actions/comments'
 import { Button } from '@/components/ui/button'
 
 interface CommentFormProps {
@@ -23,11 +23,10 @@ export function CommentForm({
 	const [content, setContent] = useState('')
 	const [name, setName] = useState('')
 	const [email, setEmail] = useState('') // Store but maybe not mandatory if we just want name
+	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const pathname = usePathname()
-
-	const createCommentMutation = useCreateComment()
 
 	useEffect(() => {
 		if (autoFocus && textareaRef.current) {
@@ -39,24 +38,27 @@ export function CommentForm({
 		e.preventDefault()
 		if (!content.trim()) return
 
+		setIsSubmitting(true)
 		setError(null)
 
-		try {
-			await createCommentMutation.mutateAsync({
-				content,
-				docId,
-				docType,
-				parentId,
-				authorName: name || 'Anonymous',
-				authorEmail: email,
-				path: pathname || '/',
-			})
+		const result = await createComment({
+			content,
+			docId,
+			docType,
+			parentId,
+			authorName: name || 'Anonymous',
+			authorEmail: email,
+			path: pathname || '/',
+		})
 
+		setIsSubmitting(false)
+
+		if (result.success) {
 			setContent('')
 			// Keep name/email for convenience?
 			if (onSuccess) onSuccess()
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Failed to post comment')
+		} else {
+			setError(result.error || 'Failed to post comment')
 		}
 	}
 
@@ -97,10 +99,10 @@ export function CommentForm({
 			<div className="flex justify-end">
 				<Button
 					type="submit"
-					disabled={createCommentMutation.isPending || !content.trim()}
+					disabled={isSubmitting || !content.trim()}
 					variant={parentId ? 'secondary' : 'default'}
 					className={parentId ? 'h-8 text-xs' : ''}>
-					{createCommentMutation.isPending ? 'Posting...' : parentId ? 'Reply' : 'Post Comment'}
+					{isSubmitting ? 'Posting...' : parentId ? 'Reply' : 'Post Comment'}
 				</Button>
 			</div>
 		</form>

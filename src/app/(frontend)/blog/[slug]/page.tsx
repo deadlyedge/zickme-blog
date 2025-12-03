@@ -1,41 +1,68 @@
 import { notFound } from 'next/navigation'
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-import { getQueryClient } from '@/lib/react-query'
-import { BlogPostPageClient } from '@/components/BlogPostPageClient'
+import Image from 'next/image'
 import { fetchBlogPostBySlug } from '@/lib/content-providers'
-import { getComments } from '@/lib/actions/comments'
+import { RichText } from '@/components/RichText'
+import { formatPublishedDate } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { CommentsSection } from '@/components/comments'
 
 interface PageProps {
 	params: Promise<{ slug: string }>
 }
 
+// 每5分钟重新验证一次，因为博客文章可能更新更频繁
+export const revalidate = 300
+
 export default async function BlogPostPage({ params }: PageProps) {
 	const { slug } = await params
-	const queryClient = getQueryClient()
 
-	// Check if post exists
 	const post = await fetchBlogPostBySlug(slug)
+
 	if (!post) {
 		notFound()
 	}
 
-	// Prefetch blog post data
-	await queryClient.prefetchQuery({
-		queryKey: ['blog-post', slug],
-		queryFn: () => fetchBlogPostBySlug(slug),
-		staleTime: 10 * 60 * 1000,
-	})
-
-	// Prefetch comments data
-	await queryClient.prefetchQuery({
-		queryKey: ['comments', 'posts', post.id],
-		queryFn: () => getComments(post.id, 'posts'),
-		staleTime: 2 * 60 * 1000,
-	})
-
 	return (
-		<HydrationBoundary state={dehydrate(queryClient)}>
-			<BlogPostPageClient slug={slug} />
-		</HydrationBoundary>
+		<div className="mx-auto p-6 pt-24 max-w-4xl">
+			<article>
+				<header className="mb-8">
+					<h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+
+					{post.featuredImageUrl && (
+						<Image
+							src={post.featuredImageUrl}
+							alt={post.title}
+							width={800}
+							height={400}
+							className="rounded-lg mb-6"
+						/>
+					)}
+
+					<div className="flex flex-wrap gap-1 mb-2">
+						{post.tags?.map((tag) => (
+							<Badge
+								key={tag.slug}
+								className="bg-secondary"
+								style={{
+									backgroundColor: tag.color || undefined,
+									color: tag.color ? '#fff' : undefined,
+								}}>
+								{tag.name}
+							</Badge>
+						))}
+					</div>
+
+					<time className="text-muted-foreground">
+						发布于 {formatPublishedDate(post.publishedAt || post.createdAt)}
+					</time>
+				</header>
+
+				<div className="prose prose-lg max-w-none">
+					<RichText value={post.content} />
+				</div>
+			</article>
+
+            <CommentsSection docId={post.id} docType="posts" />
+		</div>
 	)
 }
