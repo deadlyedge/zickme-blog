@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { generateSlug } from '../lib/utils'
+import { generateSlug } from '../lib/slug'
 
 export const Projects: CollectionConfig = {
 	slug: 'projects',

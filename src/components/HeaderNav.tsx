@@ -8,7 +8,7 @@ import { useProfile } from '@/hooks/useProfile'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
-	const { data: profile, isLoading } = useProfile()
+	// const { data: profile, isLoading } = useProfile()
 
 	return (
 		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
@@ -19,7 +19,8 @@ export const HeaderNav = () => {
 						'text-lg font-semibold tracking-tight',
 						pathname === '/' && 'text-primary',
 					)}>
-					{profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'}
+					{/* {profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'} */}
+					zick.me
 				</Link>
 
 				<nav className="flex items-center font-bold font-sans text-base">
