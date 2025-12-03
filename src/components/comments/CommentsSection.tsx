@@ -1,24 +1,26 @@
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { getQueryClient } from '@/lib/react-query'
+import { CommentsSectionClient } from './CommentsSectionClient'
 import { getComments } from '@/lib/actions/comments'
-import { CommentList } from './CommentList'
-import { CommentForm } from './CommentForm'
 
 interface CommentsSectionProps {
-  docId: number
-  docType: 'posts' | 'projects'
+	docId: number
+	docType: 'posts' | 'projects'
 }
 
 export async function CommentsSection({ docId, docType }: CommentsSectionProps) {
-  const comments = await getComments(docId, docType)
+	const queryClient = getQueryClient()
 
-  return (
-    <section className="py-12 max-w-2xl mx-auto border-t border-slate-100 mt-12">
-      <h2 className="text-2xl font-bold mb-8 text-slate-900">Comments</h2>
-      
-      <div className="mb-12">
-         <CommentForm docId={docId} docType={docType} />
-      </div>
+	// Prefetch comments data
+	await queryClient.prefetchQuery({
+		queryKey: ['comments', docType, docId],
+		queryFn: () => getComments(docId, docType),
+		staleTime: 2 * 60 * 1000, // 2 minutes
+	})
 
-      <CommentList comments={comments} docId={docId} docType={docType} />
-    </section>
-  )
+	return (
+		<HydrationBoundary state={dehydrate(queryClient)}>
+			<CommentsSectionClient docId={docId} docType={docType} />
+		</HydrationBoundary>
+	)
 }
