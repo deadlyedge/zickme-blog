@@ -1,14 +1,15 @@
 'use client'
 
+import { ProfileViewModel } from '@/lib/content-providers'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from './ui/button'
-import { useProfile } from '@/hooks/useProfile'
 
-export const HeaderNav = () => {
+type HeaderNavProps = { profile: ProfileViewModel | null }
+
+export const HeaderNav = ({ profile }: HeaderNavProps) => {
 	const pathname = usePathname()
-	const { data: profile, isLoading } = useProfile()
 
 	return (
 		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">

@@ -1,28 +1,19 @@
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-import { getQueryClient } from '@/lib/react-query'
-import { BlogPageClient } from '@/components/BlogPageClient'
 import { fetchBlogPosts, fetchTags } from '@/lib/content-providers'
+import BlogGridClient from '@/components/BlogGridClient'
+
+// 每5分钟重新验证一次
+export const revalidate = 300
 
 export default async function BlogPage() {
-	const queryClient = getQueryClient()
-
-	// Prefetch blog data
-	await Promise.all([
-		queryClient.prefetchQuery({
-			queryKey: ['blog-posts'],
-			queryFn: fetchBlogPosts,
-			staleTime: 5 * 60 * 1000,
-		}),
-		queryClient.prefetchQuery({
-			queryKey: ['tags'],
-			queryFn: fetchTags,
-			staleTime: 10 * 60 * 1000,
-		}),
-	])
+	const [posts, tags] = await Promise.all([fetchBlogPosts(), fetchTags()])
 
 	return (
-		<HydrationBoundary state={dehydrate(queryClient)}>
-			<BlogPageClient />
-		</HydrationBoundary>
+		<div className="pt-16 overflow-y-auto h-svh">
+			<div className="mx-auto max-w-7xl p-6">
+				<h1 className="text-4xl font-bold mb-8">博客文章</h1>
+
+				<BlogGridClient posts={posts} tags={tags} />
+			</div>
+		</div>
 	)
 }
