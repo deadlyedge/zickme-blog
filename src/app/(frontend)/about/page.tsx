@@ -4,8 +4,7 @@ import { fetchProfile } from '@/lib/content-providers'
 import { safeExtract } from '@/lib/utils'
 import { GlobeIcon, MailIcon } from 'lucide-react'
 
-// 每5分钟重新验证一次
-export const revalidate = 300
+export const revalidate = 3600 // 每小时重新验证一次
 
 export default async function AboutPage() {
 	const profileData = await fetchProfile()

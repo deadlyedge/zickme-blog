@@ -28,11 +28,6 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	return (
 		<div ref={scrollRef} id="page-scroll" className="h-svh overflow-y-auto">
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
-				{/* <motion.div
-					className="fixed top-20 left-0 right-0 h-2 bg-blue-500 z-10"
-					style={{ scaleX, transformOrigin: '0%' }}
-				/> */}
-				{/* <MotionTest scrollYProgress={scrollYProgress} /> */}
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* PROJECTS GRID */}
@@ -47,7 +42,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 					</div>
 
 					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{projects.slice(0, 3).map((project) => (
+						{projects.map((project) => (
 							<ProjectCard key={project.id} project={project} />
 						))}
 					</div>
@@ -65,7 +60,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 					</div>
 
 					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{blogPosts.slice(0, 3).map((post) => (
+						{blogPosts.map((post) => (
 							<BlogPostCard key={post.id} post={post} />
 						))}
 					</div>

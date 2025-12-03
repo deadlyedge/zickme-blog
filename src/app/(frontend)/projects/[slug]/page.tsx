@@ -18,8 +18,7 @@ type ProjectPageProps = {
 	}>
 }
 
-// 每5分钟重新验证一次
-export const revalidate = 300
+export const revalidate = 3600 // 每小时重新验证一次
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
 	const { slug } = await params

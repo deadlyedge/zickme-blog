@@ -178,7 +178,9 @@ export const fetchBlogPosts = async (): Promise<BlogPostViewModel[]> => {
 	return postsResult.docs.map(mapBlogPost)
 }
 
-export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPostDetailViewModel | null> => {
+export const fetchBlogPostBySlug = async (
+	slug: string,
+): Promise<BlogPostDetailViewModel | null> => {
 	const payload = await getPayload({
 		config: configPromise,
 	})
@@ -214,11 +216,42 @@ export const fetchTags = async (): Promise<TagViewModel[]> => {
 		sort: 'name',
 	})
 
-	return tagsResult.docs.map(tag => ({
+	return tagsResult.docs.map((tag) => ({
 		name: tag.name,
 		slug: tag.slug,
 		color: tag.color ?? null,
 	}))
+}
+
+export const fetchHomeContent = async (): Promise<ContentResponse> => {
+	const payload = await getPayload({ config: configPromise })
+
+	const [profileResult, projectsResult, postsResult] = await Promise.all([
+		payload.find({
+			collection: 'profile',
+			limit: 1,
+			sort: '-createdAt',
+			depth: 2,
+		}),
+		payload.find({
+			collection: 'projects',
+			sort: '-createdAt',
+			limit: 3, // 只获取首页需要的3个项目
+			depth: 2,
+		}),
+		payload.find({
+			collection: 'posts',
+			sort: '-publishedAt',
+			limit: 3, // 只获取首页需要的3个博客文章
+			depth: 2,
+		}),
+	])
+
+	return {
+		profile: mapProfile(profileResult.docs[0] ?? null),
+		projects: projectsResult.docs.map(mapProject),
+		blogPosts: postsResult.docs.map(mapBlogPost),
+	}
 }
 
 export const fetchContent = async (): Promise<ContentResponse> => {
