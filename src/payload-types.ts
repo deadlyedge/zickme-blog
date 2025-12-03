@@ -207,6 +207,26 @@ export interface Profile {
         id?: string | null;
       }[]
     | null;
+  /**
+   * 主页hero区域使用的标语文字
+   */
+  slogans?:
+    | {
+        /**
+         * 标语文字内容
+         */
+        text: string;
+        /**
+         * 字号大小
+         */
+        fontSize: 'text-2xl' | 'text-3xl' | 'text-4xl' | 'text-5xl' | 'text-6xl';
+        /**
+         * 文字颜色，支持 hex (#333, #333333), hsl(h,s%,l%), rgb(r,g,b)。留空使用默认颜色
+         */
+        color?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -506,6 +526,14 @@ export interface ProfileSelect<T extends boolean = true> {
               level?: T;
               id?: T;
             };
+        id?: T;
+      };
+  slogans?:
+    | T
+    | {
+        text?: T;
+        fontSize?: T;
+        color?: T;
         id?: T;
       };
   updatedAt?: T;

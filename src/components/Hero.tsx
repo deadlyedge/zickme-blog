@@ -47,10 +47,13 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 		y: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 100,
 		rotate: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 360 * 2,
 	}
+
+	const sloganList = profile?.slogans || []
+
 	return (
 		<section className="overflow-hidden">
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
-			<div className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[260vh]">
+			<div className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[300vh]">
 				<div
 					className={cn(
 						'fixed top-36 left-36 z-0 select-none',
@@ -86,27 +89,36 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 
 				{/* 1. 顶部 pill */}
 				<motion.div
+					id="slogan-0"
 					className="flex justify-center z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}>
 					<a
-						href="#"
+						href="#projects"
 						className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-medium text-slate-900 shadow-sm">
-						WE REBRANDED WITH PURPOSE. READ THE STORY →
+						{sloganList[0].text ||
+							'WE REBRANDED WITH PURPOSE. READ THE STORY →'}
 					</a>
 				</motion.div>
 
 				{/* 2. 标题 */}
 				<motion.div
+					id="slogan-1"
 					className="flex justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}>
-					<h2 className="max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty uppercase">
-						A good design is not just a design, it is a future.
+					<h2
+						className={cn(
+							'max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty uppercase',
+							sloganList[1].fontSize,
+							`text-${sloganList[1].color}`,
+						)}>
+						{sloganList[1].text ||
+							'A good design is not just a design, it is a future.'}
 					</h2>
 				</motion.div>
 
@@ -126,16 +138,19 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 				{/* 4–6. 按钮 / 标签 / 次按钮 也拆成三个块 */}
 				{/* 5. 标签 */}
 				<motion.div
+					id="slogan-2"
 					className="flex h-40 items-center justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}>
 					<CurvedLoop
-						marqueeText="THINKING • DESIGN • BRANDING • PRODUCT • "
+						marqueeText={
+							sloganList[2].text || 'We are a team of designers and developers.'
+						}
 						speed={1}
 						curveAmount={300}
-						className='fill-lime-700'
+						className="fill-lime-700"
 					/>
 				</motion.div>
 			</div>

@@ -31,7 +31,9 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* PROJECTS GRID */}
-				<section className="pt-16 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
+				<section
+					id="projects"
+					className="pt-16 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Projects</h2>
 						<Link
@@ -49,7 +51,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 				</section>
 
 				{/* LATEST POSTS */}
-				<section className="mt-20">
+				<section id="blog" className="mt-20 px-2">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest posts</h2>
 						<Link
