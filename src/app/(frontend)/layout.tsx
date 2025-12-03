@@ -6,10 +6,10 @@ import {
 	Noto_Serif_SC,
 } from 'next/font/google'
 import type { Metadata } from 'next'
-import { fetchContent } from '@/lib/content-providers'
 import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
+import { Providers } from '@/components/providers'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -25,7 +25,7 @@ const notoSans = Noto_Sans({
 const notoSerifSC = Noto_Serif_SC({
 	variable: '--font-noto-serif-sc',
 	subsets: ['latin'],
-	weight: ['400','800'],
+	weight: ['400', '800'],
 })
 const notoSansSC = Noto_Sans_SC({
 	variable: '--font-noto-sans-sc',
@@ -51,19 +51,21 @@ export const viewport = {
 	themeColor: '#000',
 }
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-	const { children } = props
-	const data = await fetchContent()
-	const { profile } = data
-
+export default function RootLayout({
+	children,
+}: {
+	children: React.ReactNode
+}) {
 	return (
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
-				<main className="">
-					<HeaderNav profile={profile} />
-					{children}
-				</main>
+				<Providers>
+					<main className="">
+						<HeaderNav />
+						{children}
+					</main>
+				</Providers>
 			</body>
 		</html>
 	)

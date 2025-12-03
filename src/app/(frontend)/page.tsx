@@ -1,10 +1,19 @@
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
+import { getQueryClient } from '@/lib/react-query'
 import { fetchHomeContent } from '@/lib/content-providers'
-import { HomeScrollArea } from '@/components/HomeScrollArea'
+import { HomePageClient } from '@/components/HomePageClient'
 
-export const revalidate = 3600 // 每小时重新验证一次，确保内容及时更新
+export default async function Home() {
+	const queryClient = getQueryClient()
+	await queryClient.prefetchQuery({
+		queryKey: ['home-content'],
+		queryFn: fetchHomeContent,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	})
 
-export default async function HomePage() {
-	const data = await fetchHomeContent()
-
-	return <HomeScrollArea data={data} />
+	return (
+		<HydrationBoundary state={dehydrate(queryClient)}>
+			<HomePageClient />
+		</HydrationBoundary>
+	)
 }
