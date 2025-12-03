@@ -4,6 +4,7 @@ import { fetchContent } from '@/lib/content-providers'
 import { RichText } from '@/components/RichText'
 import { format, parseISO, isValid } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
+import { CommentsSection } from '@/components/comments'
 
 const formatMonthYear = (value?: string | null) => {
 	if (!value) return ''
@@ -192,6 +193,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					)}
 				</section>
 			</div>
+
+            <div className="mx-auto max-w-7xl px-6 pb-12">
+                 <CommentsSection docId={project.id} docType="projects" />
+            </div>
 		</main>
 	)
 }

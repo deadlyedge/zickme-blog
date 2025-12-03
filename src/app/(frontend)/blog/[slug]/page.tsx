@@ -4,6 +4,7 @@ import { fetchBlogPostBySlug } from '@/lib/content-providers'
 import { RichText } from '@/components/RichText'
 import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { CommentsSection } from '@/components/comments'
 
 interface PageProps {
 	params: Promise<{ slug: string }>
@@ -60,6 +61,8 @@ export default async function BlogPostPage({ params }: PageProps) {
 					<RichText value={post.content} />
 				</div>
 			</article>
+
+            <CommentsSection docId={post.id} docType="posts" />
 		</div>
 	)
 }

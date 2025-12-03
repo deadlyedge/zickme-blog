@@ -73,6 +73,7 @@ export interface Config {
     projects: Project;
     posts: Post;
     tags: Tag;
+    comments: Comment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +87,7 @@ export interface Config {
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
+    comments: CommentsSelect<false> | CommentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -364,6 +366,50 @@ export interface Tag {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comments".
+ */
+export interface Comment {
+  id: number;
+  /**
+   * Comment content
+   */
+  content: string;
+  /**
+   * The post or project this comment belongs to
+   */
+  doc:
+    | {
+        relationTo: 'posts';
+        value: number | Post;
+      }
+    | {
+        relationTo: 'projects';
+        value: number | Project;
+      };
+  /**
+   * Parent comment for threaded replies
+   */
+  parent?: (number | null) | Comment;
+  author?: {
+    /**
+     * Linked registered user (optional)
+     */
+    user?: (number | null) | User;
+    /**
+     * Guest name (if not logged in)
+     */
+    name?: string | null;
+    /**
+     * Guest email (private, for notifications/gravatar)
+     */
+    email?: string | null;
+  };
+  status: 'published' | 'pending' | 'spam';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -409,6 +455,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tags';
         value: number | Tag;
+      } | null)
+    | ({
+        relationTo: 'comments';
+        value: number | Comment;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -595,6 +645,25 @@ export interface TagsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   color?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comments_select".
+ */
+export interface CommentsSelect<T extends boolean = true> {
+  content?: T;
+  doc?: T;
+  parent?: T;
+  author?:
+    | T
+    | {
+        user?: T;
+        name?: T;
+        email?: T;
+      };
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
