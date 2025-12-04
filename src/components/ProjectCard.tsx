@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 import { Badge } from './ui/badge'
 import { ProjectViewModel } from '@/lib/content-providers'
 import { formatPublishedDate } from '@/lib/utils'
+import { NavigationLink } from './NavigationLink'
 
 type ProjectCardProps = { project: ProjectViewModel }
 
@@ -18,7 +18,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
 			scale={1.05}>
 			<CardTiltContent className="rounded-2xl bg-card shadow-2xl overflow-hidden">
 				<div className="relative bg-slate-100">
-					<Link href={`/projects/${project.slug}`}>
+					<NavigationLink href={`/projects/${project.slug}`}>
 						{project.images?.[0]?.url ? (
 							<div className="relative w-full aspect-4/3 bg-slate-100">
 								<Image
@@ -34,7 +34,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
 								No image
 							</div>
 						)}
-					</Link>
+					</NavigationLink>
 					<div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 					<div className="absolute left-6 bottom-6 pointer-events-none">
 						<span className="text-xl font-bold text-gray-50 drop-shadow-[0px_0px_13px_rgba(255,243,184,0.8)]">

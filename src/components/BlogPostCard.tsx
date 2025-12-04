@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
@@ -6,6 +5,7 @@ import { Badge } from './ui/badge'
 import { BlogPostViewModel } from '@/lib/content-providers'
 import { formatPublishedDate } from '@/lib/utils'
 import { Button } from './ui/button'
+import { NavigationLink } from './NavigationLink'
 
 type BlogPostCardProps = { post: BlogPostViewModel }
 
@@ -18,7 +18,7 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 			scale={1.05}>
 			<CardTiltContent className="rounded-2xl bg-card shadow-2xl overflow-hidden">
 				<div className="relative bg-slate-100">
-					<Link href={`/blog/${post.slug}`}>
+					<NavigationLink href={`/blog/${post.slug}`}>
 						{post.featuredImageUrl ? (
 							<div className="relative w-full aspect-4/3 bg-slate-100">
 								<Image
@@ -34,7 +34,7 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 								No image
 							</div>
 						)}
-					</Link>
+					</NavigationLink>
 					<div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 					<div className="absolute left-6 bottom-6 pointer-events-none">
 						<span className="text-xl font-bold text-gray-50 drop-shadow-[0px_0px_13px_rgba(255,243,184,0.8)]">
@@ -63,7 +63,7 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 							{post.publishedAt && formatPublishedDate(post.publishedAt)}
 						</div>
 						<Button asChild>
-							<Link href={`/blog/${post.slug}`}>访问</Link>
+							<NavigationLink href={`/blog/${post.slug}`}>访问</NavigationLink>
 						</Button>
 					</div>
 				</div>
