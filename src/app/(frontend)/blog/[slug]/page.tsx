@@ -62,7 +62,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 				</div>
 			</article>
 
-            <CommentsSection docId={post.id} docType="posts" />
+			<CommentsSection docId={post.id} docType="posts" />
 		</div>
 	)
 }

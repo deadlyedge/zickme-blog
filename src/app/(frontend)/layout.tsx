@@ -6,10 +6,11 @@ import {
 	Noto_Serif_SC,
 } from 'next/font/google'
 import type { Metadata } from 'next'
-import { fetchContent } from '@/lib/content-providers'
+// import { fetchContent } from '@/lib/content-providers'
 import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
+import { PageTransition } from '@/components/PageTransition'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -51,18 +52,19 @@ export const viewport = {
 	themeColor: '#000',
 }
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-	const { children } = props
-	const data = await fetchContent()
-	const { profile } = data
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+	// const data = await fetchContent()
+	// const { profile } = data
 
 	return (
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
 				<main className="">
-					<HeaderNav profile={profile} />
-					{children}
+					<HeaderNav />
+					<PageTransition>
+						{children}
+					</PageTransition>
 				</main>
 			</body>
 		</html>

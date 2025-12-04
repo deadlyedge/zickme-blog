@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { generateSlug } from '../lib/utils'
+import { generateSlug } from '../lib/slug'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
@@ -23,6 +23,8 @@ export const Posts: CollectionConfig = {
       name: 'slug',
       type: 'text',
       required: true,
+      unique: true,
+      index: true,
       admin: {
         description: 'URL友好的标识符',
         position: 'sidebar',

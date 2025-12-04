@@ -194,9 +194,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 				</section>
 			</div>
 
-            <div className="mx-auto max-w-7xl px-6 pb-12">
-                 <CommentsSection docId={project.id} docType="projects" />
-            </div>
+			<div className="mx-auto max-w-7xl px-6 pb-12">
+				<CommentsSection docId={project.id} docType="projects" />
+			</div>
 		</main>
 	)
 }

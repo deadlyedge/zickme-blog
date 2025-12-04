@@ -1,14 +1,14 @@
 'use client'
 
-import { ProfileViewModel } from '@/lib/content-providers'
+// import { ProfileViewModel } from '@/lib/content-providers'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from './ui/button'
 
-type HeaderNavProps = { profile: ProfileViewModel | null }
+// type HeaderNavProps = { profile: ProfileViewModel | null }
 
-export const HeaderNav = ({ profile }: HeaderNavProps) => {
+export const HeaderNav = () => {
 	const pathname = usePathname()
 
 	return (
@@ -20,26 +20,27 @@ export const HeaderNav = ({ profile }: HeaderNavProps) => {
 						'text-lg font-semibold tracking-tight',
 						pathname === '/' && 'text-primary',
 					)}>
-					{profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'}
+					{/* {profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'} */}
+					zick.me
 				</Link>
 
 				<nav className="flex items-center font-bold font-sans text-base">
 					<Button
 						asChild
 						variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
-						className="font-bold">
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/projects">projects</Link>
 					</Button>
 					<Button
 						asChild
 						variant={pathname.startsWith('/blog') ? 'secondary' : 'link'}
-						className="font-bold">
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/blog">blog</Link>
 					</Button>
 					<Button
 						asChild
 						variant={pathname.startsWith('/about') ? 'secondary' : 'link'}
-						className="font-bold">
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/about">contact</Link>
 					</Button>
 					{/* <a

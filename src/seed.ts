@@ -1,19 +1,49 @@
 import { getPayload } from 'payload'
 import config from './payload.config'
+import fs from 'fs'
+import path from 'path'
 
 async function seed() {
 	const payload = await getPayload({ config })
 
 	try {
-		// 跳过媒体文件创建（需要实际文件）
-		// 使用模拟的媒体ID
-		// const createdMedia = [
-		// 	{ id: 1 },
-		// 	{ id: 2 },
-		// 	{ id: 3 },
-		// 	{ id: 4 },
-		// ]
-		// console.log('跳过媒体文件创建（需要实际文件），使用模拟ID')
+		// 创建媒体文件
+		console.log('创建媒体文件...')
+		const mediaFiles = [
+			{ filename: 'logo_512.png', alt: '网站Logo' },
+			{ filename: 'meFace_bigEyeball.jpg', alt: '头像照片' },
+			{ filename: '41S86019Z6L__AA240_.jpg', alt: '项目截图1' },
+			{ filename: '51790747.jpg', alt: '项目截图2' },
+			{ filename: '1729111.jpg', alt: '博客特色图片' },
+		]
+
+		const createdMedia = []
+		for (const mediaFile of mediaFiles) {
+			const filePath = path.join(process.cwd(), 'media', mediaFile.filename)
+			if (fs.existsSync(filePath)) {
+				const fileBuffer = fs.readFileSync(filePath)
+				const mimeType = mediaFile.filename.endsWith('.png') ? 'image/png' :
+				                mediaFile.filename.endsWith('.jpg') || mediaFile.filename.endsWith('.jpeg') ? 'image/jpeg' :
+				                mediaFile.filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
+
+				const created = await payload.create({
+					collection: 'media',
+					data: {
+						alt: mediaFile.alt,
+					},
+					file: {
+						data: fileBuffer,
+						name: mediaFile.filename,
+						mimetype: mimeType,
+						size: fileBuffer.length,
+					},
+				})
+				createdMedia.push(created)
+				console.log(`媒体文件创建成功: ${created.id} - ${mediaFile.filename}`)
+			} else {
+				console.log(`媒体文件不存在，跳过: ${mediaFile.filename}`)
+			}
+		}
 
 		// 创建标签
 		console.log('创建标签...')
@@ -76,6 +106,7 @@ async function seed() {
 				name: '张三',
 				title: '全栈开发者',
 				bio: '热爱编程，专注于Web开发和人工智能领域。',
+				avatar: createdMedia[1].id, // 使用头像照片
 				location: '北京',
 				email: 'xdream@gmail.com',
 				website: 'https://example.com',
@@ -100,14 +131,21 @@ async function seed() {
 						],
 					},
 				],
+				slogans: [
+					{ text: '代码改变世界', fontSize: 'text-4xl' as const, color: '#3b82f6' },
+					{ text: '持续学习，持续进步', fontSize: 'text-2xl' as const },
+					{ text: 'Full Stack Developer', fontSize: 'text-3xl' as const, color: '#10b981' },
+				],
 			},
 		]
 
+		const createdProfiles = []
 		for (const profile of profiles) {
 			const created = await payload.create({
 				collection: 'profile',
-				data: profile, // 移除avatar字段，因为媒体文件未实际创建
+				data: profile,
 			})
+			createdProfiles.push(created)
 			console.log(`个人资料创建成功: ${created.id}`)
 		}
 
@@ -118,16 +156,40 @@ async function seed() {
 				title: '个人博客网站',
 				slug: 'personal-blog-website',
 				description: '使用Next.js和Payload CMS构建的现代化个人博客网站。',
+				longDescription: {
+					root: {
+						type: 'root',
+						children: [
+							{
+								type: 'paragraph',
+								children: [
+									{
+										type: 'text',
+										text: '这是一个功能完整的个人博客网站，包含博客文章、项目展示、个人资料等多个模块。前端使用Next.js 14和TypeScript构建，后端使用Payload CMS管理内容。',
+									},
+								],
+								direction: 'ltr' as const,
+								format: '' as const,
+								indent: 0,
+								version: 1,
+							},
+						],
+						direction: 'ltr' as const,
+						format: '' as const,
+						indent: 0,
+						version: 1,
+					},
+				},
 				technologies: [
-					{ name: 'Next.js' },
-					{ name: 'Payload CMS' },
-					{ name: 'TypeScript' },
-					{ name: 'Tailwind CSS' },
+					{ name: 'Next.js', url: 'https://nextjs.org' },
+					{ name: 'Payload CMS', url: 'https://payloadcms.com' },
+					{ name: 'TypeScript', url: 'https://typescriptlang.org' },
+					{ name: 'Tailwind CSS', url: 'https://tailwindcss.com' },
 				],
-				// images: [  // 注释掉，因为媒体文件未实际创建
-				// 	{ image: createdMedia[0].id, caption: '网站首页截图' },
-				// 	{ image: createdMedia[1].id, caption: '博客页面截图' },
-				// ],
+				images: [
+					{ image: createdMedia[2].id, caption: '网站首页截图' },
+					{ image: createdMedia[3].id, caption: '博客页面截图' },
+				],
 				demoUrl: 'https://example.com',
 				sourceUrl: 'https://github.com/xdream/blog',
 				featured: true,
@@ -138,14 +200,38 @@ async function seed() {
 				title: '任务管理应用',
 				slug: 'task-management-app',
 				description: '一个简单高效的任务管理应用，支持团队协作。',
+				longDescription: {
+					root: {
+						type: 'root',
+						children: [
+							{
+								type: 'paragraph',
+								children: [
+									{
+										type: 'text',
+										text: '任务管理应用支持创建、编辑、删除任务，以及分配给团队成员。包含任务状态跟踪、截止日期提醒、团队协作功能。',
+									},
+								],
+								direction: 'ltr' as const,
+								format: '' as const,
+								indent: 0,
+								version: 1,
+							},
+						],
+						direction: 'ltr' as const,
+						format: '' as const,
+						indent: 0,
+						version: 1,
+					},
+				},
 				technologies: [
-					{ name: 'React' },
-					{ name: 'Node.js' },
-					{ name: 'MongoDB' },
+					{ name: 'React', url: 'https://reactjs.org' },
+					{ name: 'Node.js', url: 'https://nodejs.org' },
+					{ name: 'MongoDB', url: 'https://mongodb.com' },
 				],
-				// images: [  // 注释掉，因为媒体文件未实际创建
-				// 	{ image: createdMedia[0].id, caption: '应用界面截图' },
-				// ],
+				images: [
+					{ image: createdMedia[2].id, caption: '应用界面截图' },
+				],
 				demoUrl: 'https://todo-app.example.com',
 				sourceUrl: 'https://github.com/xdream/todo-app',
 				featured: false,
@@ -156,14 +242,38 @@ async function seed() {
 				title: '天气预报应用',
 				slug: 'weather-forecast-app',
 				description: '实时天气预报应用，提供准确的天气信息。',
+				longDescription: {
+					root: {
+						type: 'root',
+						children: [
+							{
+								type: 'paragraph',
+								children: [
+									{
+										type: 'text',
+										text: '天气预报应用集成OpenWeather API，提供当前天气、未来7天预报、空气质量等信息。包含漂亮的天气图标和图表展示。',
+									},
+								],
+								direction: 'ltr' as const,
+								format: '' as const,
+								indent: 0,
+								version: 1,
+							},
+						],
+						direction: 'ltr' as const,
+						format: '' as const,
+						indent: 0,
+						version: 1,
+					},
+				},
 				technologies: [
-					{ name: 'Vue.js' },
-					{ name: 'OpenWeather API' },
-					{ name: 'Chart.js' },
+					{ name: 'Vue.js', url: 'https://vuejs.org' },
+					{ name: 'OpenWeather API', url: 'https://openweathermap.org/api' },
+					{ name: 'Chart.js', url: 'https://chartjs.org' },
 				],
-				// images: [  // 注释掉，因为媒体文件未实际创建
-				// 	{ image: createdMedia[1].id, caption: '天气界面截图' },
-				// ],
+				images: [
+					{ image: createdMedia[3].id, caption: '天气界面截图' },
+				],
 				demoUrl: 'https://weather.example.com',
 				sourceUrl: 'https://github.com/xdream/weather-app',
 				featured: true,
@@ -213,6 +323,7 @@ async function seed() {
 					},
 				},
 				excerpt: '博客的第一篇文章，介绍博客的内容和方向。',
+				featuredImage: createdMedia[4].id, // 使用博客特色图片
 				tags: [createdTags[0].id, createdTags[2].id],
 				status: 'published' as const,
 				publishedAt: '2024-01-15',
@@ -245,7 +356,7 @@ async function seed() {
 					},
 				},
 				excerpt: '探索Next.js 16的新功能和改进。',
-				// featuredImage: createdMedia[3].id, // 注释掉，因为媒体文件未实际创建
+				featuredImage: createdMedia[4].id,
 				tags: [createdTags[1].id, createdTags[2].id],
 				status: 'published' as const,
 				publishedAt: '2024-02-01',
@@ -278,6 +389,7 @@ async function seed() {
 					},
 				},
 				excerpt: '学习TypeScript的最佳实践和技巧。',
+				featuredImage: createdMedia[4].id,
 				tags: [createdTags[3].id],
 				status: 'published' as const,
 				publishedAt: '2024-02-15',
@@ -315,12 +427,65 @@ async function seed() {
 			},
 		]
 
+		const createdPosts = []
 		for (const post of posts) {
 			const created = await payload.create({
 				collection: 'posts',
 				data: post,
 			})
+			createdPosts.push(created)
 			console.log(`博客文章创建成功: ${created.id}`)
+		}
+
+		// 创建评论
+		console.log('创建评论...')
+		const comments = [
+			{
+				content: '很棒的文章！学到了很多东西。',
+				doc: { relationTo: 'posts' as const, value: createdPosts[0].id },
+				author: {
+					name: '访客用户',
+					email: 'guest@example.com',
+				},
+				status: 'published' as const,
+			},
+			{
+				content: 'Next.js 16 的新特性确实很强大。',
+				doc: { relationTo: 'posts' as const, value: createdPosts[1].id },
+				author: {
+					user: createdUsers[1].id,
+					name: 'user1',
+					email: 'user1@example.com',
+				},
+				status: 'published' as const,
+			},
+			{
+				content: 'TypeScript 的类型系统确实能提高代码质量。',
+				doc: { relationTo: 'posts' as const, value: createdPosts[2].id },
+				author: {
+					user: createdUsers[2].id,
+					name: 'user2',
+					email: 'user2@example.com',
+				},
+				status: 'published' as const,
+			},
+			{
+				content: '这个项目看起来很不错！',
+				doc: { relationTo: 'projects' as const, value: createdProjects[0].id },
+				author: {
+					name: '项目爱好者',
+					email: 'fan@example.com',
+				},
+				status: 'pending' as const,
+			},
+		]
+
+		for (const comment of comments) {
+			const created = await payload.create({
+				collection: 'comments',
+				data: comment,
+			})
+			console.log(`评论创建成功: ${created.id}`)
 		}
 
 		console.log('所有测试数据创建完成！')
