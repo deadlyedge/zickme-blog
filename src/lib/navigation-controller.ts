@@ -64,8 +64,7 @@ export class NavigationController {
 			blogPosts: 'blogPosts' as const,
 			projects: 'projects' as const,
 			tags: 'tags' as const,
-			singleBlogPost: 'pageTransition' as const,
-			singleProject: 'pageTransition' as const,
+			singleContent: 'pageTransition' as const,
 		}
 		return mapping[cacheKey] as keyof ReturnType<
 			typeof useAppStore.getState
@@ -79,8 +78,7 @@ export class NavigationController {
 			blogPosts: 'blogPosts' as const,
 			projects: 'projects' as const,
 			tags: 'tags' as const,
-			singleBlogPost: 'blogPosts' as const,
-			singleProject: 'projects' as const,
+			singleContent: 'blogPosts' as const,
 		}
 		return mapping[cacheKey] as keyof ReturnType<
 			typeof useAppStore.getState

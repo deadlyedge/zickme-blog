@@ -22,46 +22,64 @@ export default function ProjectPage() {
 	const slug = params.slug as string
 
 	const {
-		singleProject: project,
+		getSingleProject,
 		preloading,
-		isCacheValid,
+		isSingleContentCached,
 		setSingleProject,
 		setPreloadingProject,
-		loadingStates
 	} = useAppStore()
 
-	const isLoading = preloading.project === slug || (loadingStates.pageTransition && !project)
+	const project = getSingleProject(slug)
+	const isLoading = preloading.project === slug
 
-	// 如果数据不在缓存中，加载它（作为fallback，以防预加载失败）
+	// 总是尝试加载数据（包括页面刷新时）
 	useEffect(() => {
 		async function loadProject() {
-			if (!project && !preloading.project && !isCacheValid('singleProject')) {
-				setPreloadingProject(slug)
-				try {
-					const response = await fetch(`/api/projects/${slug}`)
-					if (!response.ok) {
-						throw new Error('Failed to load project')
-					}
+			// 如果正在预加载，等待完成
+			if (preloading.project === slug) {
+				return
+			}
 
-					const projectData = await response.json()
-					setSingleProject(projectData)
-				} catch (error) {
-					console.error('Failed to load project:', error)
-				} finally {
-					setPreloadingProject(null)
+			// 如果数据已缓存，直接使用
+			if (isSingleContentCached('project', slug)) {
+				return
+			}
+
+			// 开始加载数据
+			setPreloadingProject(slug)
+			try {
+				const response = await fetch(`/api/projects/${slug}`)
+				if (!response.ok) {
+					if (response.status === 404) {
+						// 项目不存在，不要调用notFound()，让页面显示404状态
+						return
+					}
+					throw new Error('Failed to load project')
 				}
+
+				const projectData = await response.json()
+				setSingleProject(slug, projectData)
+			} catch (error) {
+				console.error('Failed to load project:', error)
+			} finally {
+				setPreloadingProject(null)
 			}
 		}
 
-		// 只有在真正没有数据且没有预加载时才加载
-		if (slug && !project && !preloading.project && !isCacheValid('singleProject')) {
+		if (slug) {
 			loadProject()
 		}
-	}, [slug, project, preloading.project, isCacheValid, setPreloadingProject, setSingleProject])
+	}, [
+		slug,
+		preloading.project,
+		isSingleContentCached,
+		setPreloadingProject,
+		setSingleProject,
+	])
 
 	if (isLoading) {
 		return (
-			<main className="pt-16">
+			<main className="pt-16 overflow-y-auto h-svh">
 				<div className="mx-auto max-w-7xl p-6">
 					<div className="animate-pulse">
 						<div className="h-8 bg-gray-200 rounded w-48 mb-6"></div>
@@ -85,12 +103,10 @@ export default function ProjectPage() {
 
 	if (!project) {
 		return (
-			<main className="min-h-screen flex items-center justify-center p-12">
+			<main className="overflow-y-auto h-svh flex items-center justify-center p-12">
 				<div className="max-w-3xl text-center">
 					<h1 className="text-3xl font-semibold">项目未找到</h1>
-					<p className="mt-4 text-slate-600">
-						我们找不到您要找的项目。
-					</p>
+					<p className="mt-4 text-slate-600">我们找不到您要找的项目。</p>
 					<div className="mt-6">
 						<Link
 							href="/projects"
@@ -104,7 +120,7 @@ export default function ProjectPage() {
 	}
 
 	return (
-		<main className="pt-16">
+		<main className="pt-16 overflow-y-auto h-svh">
 			<div className="mx-auto max-w-7xl p-6">
 				<nav className="mb-6">
 					<Link
