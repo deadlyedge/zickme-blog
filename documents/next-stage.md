@@ -223,3 +223,226 @@
 2. 有没有哪一块是你最想先改的（比如“导航体验”优先、还是“SEO 优先”）。
 
 我会根据你的选择，给一份 **按文件拆解的、接近可以直接 copy 的重构草稿**，这样你在 Act mode 里就可以快速落地。
+
+我先帮你梳理一下当前情况，然后给一个统一方案和具体重构步骤，你确认 OK 后，可以切到 ACT MODE，我再直接帮你改代码。
+
+## 现状分析
+
+1. **动态文章页：`src/app/(frontend)/blog/[slug]/page.tsx`**
+   ```ts
+   export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+     const { slug } = await params
+     const post = await fetchBlogPostBySlug(slug)
+
+     if (!post) {
+       return { title: '文章未找到' }
+     }
+
+     return {
+       title: post.title,
+       description: post.excerpt || `阅读 ${post.title}`,
+       openGraph: {
+         title: post.title,
+         description: post.excerpt || `阅读 ${post.title}`,
+         images: post.featuredImageUrl ? [{ url: post.featuredImageUrl }] : [],
+       },
+     }
+   }
+   ```
+
+2. **动态项目页：`src/app/(frontend)/projects/[slug]/page.tsx`**
+   ```ts
+   export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+     const { slug } = await params
+     const project = await fetchProjectBySlug(slug)
+
+     if (!project) {
+       return { title: '项目未找到' }
+     }
+
+     return {
+       title: project.title,
+       description: project.description || `查看项目 ${project.title}`,
+       openGraph: {
+         title: project.title,
+         description: project.description || `查看项目 ${project.title}`,
+         images: project.images?.[0]?.url ? [{ url: project.images[0].url }] : [],
+       },
+     }
+   }
+   ```
+
+3. **Payload Admin（自动生成）：`src/app/(payload)/admin/[[...segments]]/page.tsx`**
+
+   这里的 `generateMetadata` 是 Payload 自动生成的：
+   ```ts
+   export const generateMetadata = ({ params, searchParams }: Args): Promise<Metadata> =>
+     generatePageMetadata({ config, params, searchParams })
+   ```
+   这块你已经说明**不要动**，我们也会保持原样。
+
+4. **SEO 工具函数：`src/lib/seo.ts`**
+   ```ts
+   export function generateMetadata({
+     title,
+     description,
+     image,
+     url,
+   }: {
+     title: string
+     description?: string
+     image?: string
+     url?: string
+   }) {
+     const siteName = 'Your Name - Personal Blog'
+     const defaultDescription = 'Personal blog and portfolio website'
+
+     return {
+       title: `${title} | ${siteName}`,
+       description: description || defaultDescription,
+       openGraph: {
+         title: `${title} | ${siteName}`,
+         description: description || defaultDescription,
+         url,
+         siteName,
+         images: image ? [{ url: image }] : [],
+         type: 'website',
+       },
+       twitter: {
+         card: 'summary_large_image',
+         title: `${title} | ${siteName}`,
+         description: description || defaultDescription,
+         images: image ? [image] : [],
+       },
+     }
+   }
+   ```
+
+目前看下来：
+- 路由里的 `generateMetadata` 都是**手写重复结构**（title/description/openGraph），
+- `src/lib/seo.ts` 的 `generateMetadata` **还没被用上**，
+- 你希望：除了 Payload 自动生成那一个，其余页面的 `generateMetadata` 都统一用 `seo.ts` 的封装。
+
+---
+
+## 设计一个统一的 SEO / metadata 辅助 API（建议）
+
+为了既复用 `seo.ts`，又不和路由导出的 `generateMetadata` 冲突，我建议：
+
+1. **保持 `src/lib/seo.ts` 的导出名称不变**，但在页面里用别名导入：
+   ```ts
+   import { generateMetadata as buildMetadata } from '@/lib/seo'
+   ```
+
+2. 页面导出的 `generateMetadata` 只负责：
+   - 异步获取内容（post / project），
+   - 决定 title / description / image / url 文案，
+   - 然后调用 `buildMetadata({ title, description, image, url })` 返回。
+
+这样：
+- 站点级别的规则（站点名、默认描述、OpenGraph/twitter 结构）都在 `seo.ts`，
+- 每个页面只关注“这一页的 title / description / image 是什么”。
+
+### 示例重构方案
+
+#### 1）文章页 `blog/[slug]/page.tsx`
+
+```ts
+import { generateMetadata as buildMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const post = await fetchBlogPostBySlug(slug)
+
+  if (!post) {
+    return buildMetadata({
+      title: '文章未找到',
+      description: '你访问的文章不存在或已被删除',
+    }) as Metadata
+  }
+
+  return buildMetadata({
+    title: post.title,
+    description: post.excerpt || `阅读 ${post.title}`,
+    image: post.featuredImageUrl,
+    // url: `${process.env.NEXT_PUBLIC_SITE_URL}/blog/${slug}` // 如果你有这个 env，可以顺便统一
+  }) as Metadata
+}
+```
+
+#### 2）项目页 `projects/[slug]/page.tsx`
+
+```ts
+import { generateMetadata as buildMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const project = await fetchProjectBySlug(slug)
+
+  if (!project) {
+    return buildMetadata({
+      title: '项目未找到',
+      description: '你访问的项目不存在或已被删除',
+    }) as Metadata
+  }
+
+  const coverImage = project.images?.[0]?.url
+
+  return buildMetadata({
+    title: project.title,
+    description: project.description || `查看项目 ${project.title}`,
+    image: coverImage,
+    // url: `${process.env.NEXT_PUBLIC_SITE_URL}/projects/${slug}`
+  }) as Metadata
+}
+```
+
+> 说明：
+> - 目前 `src/lib/seo.ts` 返回的对象**类型上就是 `Metadata` 结构**，但文件本身没引入 `Metadata` 类型；
+> - 如果你希望类型更严谨，我们也可以顺手改一下 `seo.ts`：引入 `Metadata` 并把返回类型标成 `Metadata`。
+
+```ts
+// src/lib/seo.ts
+import type { Metadata } from 'next'
+
+export function generateMetadata({
+  title,
+  description,
+  image,
+  url,
+}: {
+  title: string
+  description?: string
+  image?: string
+  url?: string
+}): Metadata {
+  // ...保持实现不变
+}
+```
+
+---
+
+## 重构计划与步骤
+
+我建议的实际改动步骤是：
+
+1. **增强 `src/lib/seo.ts` 类型**（可选但推荐）
+   - 引入 `Metadata` 类型并把函数返回类型设为 `Metadata`；
+   - 可以顺便把 `siteName` / `defaultDescription` 抽成常量导出，方便别处复用。
+
+2. **重构 `blog/[slug]/page.tsx`**
+   - 导入 `generateMetadata as buildMetadata`；
+   - 在 `if (!post)` 和正常返回分支中，都改为调用 `buildMetadata`；
+   - 保持 `generateStaticParams` 逻辑不变。
+
+3. **重构 `projects/[slug]/page.tsx`**
+   - 同样导入 `buildMetadata` 并替换内部的元数据对象。
+
+4. **检查是否还有其他页面使用 `generateMetadata`**
+   - 比如 `(frontend)/page.tsx`, `about/page.tsx`, `blog/page.tsx`, `projects/page.tsx` 是否后续也要补上元信息；
+   - 如果你有计划为它们加 `generateMetadata`，可以直接用这个统一工具。
+
+5. **保留 Payload 自动生成的 `generateMetadata` 不动**
+   - `src/app/(payload)/admin/[[...segments]]/page.tsx` 继续完全交给 Payload 管。
+
+---

@@ -1,10 +1,17 @@
 import Image from 'next/image'
 // import Link from 'next/link'
 import { fetchProfile } from '@/lib/content-providers'
+import { buildMetadata } from '@/lib/seo'
+import { Metadata } from 'next'
 import { safeExtract } from '@/lib/utils'
 import { GlobeIcon, MailIcon } from 'lucide-react'
 
 export const revalidate = 3600 // 每小时重新验证一次
+
+export const metadata: Metadata = buildMetadata({
+	title: 'About',
+	description: 'Learn more about me and my background.',
+})
 
 export default async function AboutPage() {
 	const profileData = await fetchProfile()

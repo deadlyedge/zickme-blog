@@ -1,4 +1,9 @@
-export function generateMetadata({
+import type { Metadata } from 'next'
+
+export const siteName = 'xdream - Blog'
+export const defaultDescription = 'Personal blog and portfolio website'
+
+export function buildMetadata({
 	title,
 	description,
 	image,
@@ -8,10 +13,7 @@ export function generateMetadata({
 	description?: string
 	image?: string
 	url?: string
-}) {
-	const siteName = 'Your Name - Personal Blog'
-	const defaultDescription = 'Personal blog and portfolio website'
-
+}): Metadata {
 	return {
 		title: `${title} | ${siteName}`,
 		description: description || defaultDescription,

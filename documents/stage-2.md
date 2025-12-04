@@ -61,7 +61,8 @@
     *   ✅ `const isNavigating = useAppStore((state) => state.isNavigating)`
 
 3.  **UI 组件承载过多逻辑**
-    `NavigationLink` 组件内部直接处理了复杂的数据预加载 (Fetching) 逻辑，这本应是 Controller 或 Hook 的职责。
+    `NavigationLink` 组件内部直接处理了复杂的数据预加载 (Fetching) 逻辑，控制逻辑放到 hook 就够了，`NavigationLink` 继续作为“智能组件”调用这个 hook
+
 
 ### 优化方案：Slice 模式 + 原子化 Selectors
 

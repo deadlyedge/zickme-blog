@@ -3,6 +3,7 @@ import {
 	fetchBlogPostBySlug,
 	fetchAllBlogPostSlugs,
 } from '@/lib/content-providers'
+import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
@@ -30,20 +31,16 @@ export async function generateMetadata({
 	const post = await fetchBlogPostBySlug(slug)
 
 	if (!post) {
-		return {
+		return buildMetadata({
 			title: '文章未找到',
-		}
+		})
 	}
 
-	return {
+	return buildMetadata({
 		title: post.title,
 		description: post.excerpt || `阅读 ${post.title}`,
-		openGraph: {
-			title: post.title,
-			description: post.excerpt || `阅读 ${post.title}`,
-			images: post.featuredImageUrl ? [{ url: post.featuredImageUrl }] : [],
-		},
-	}
+		image: post.featuredImageUrl || undefined,
+	})
 }
 
 export async function generateStaticParams() {

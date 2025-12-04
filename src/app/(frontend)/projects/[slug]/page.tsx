@@ -3,6 +3,7 @@ import {
 	fetchProjectBySlug,
 	fetchAllProjectSlugs,
 } from '@/lib/content-providers'
+import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
@@ -30,20 +31,16 @@ export async function generateMetadata({
 	const project = await fetchProjectBySlug(slug)
 
 	if (!project) {
-		return {
+		return buildMetadata({
 			title: '项目未找到',
-		}
+		})
 	}
 
-	return {
+	return buildMetadata({
 		title: project.title,
 		description: project.description || `查看项目 ${project.title}`,
-		openGraph: {
-			title: project.title,
-			description: project.description || `查看项目 ${project.title}`,
-			images: project.images?.[0]?.url ? [{ url: project.images[0].url }] : [],
-		},
-	}
+		image: project.images?.[0]?.url || undefined,
+	})
 }
 
 export async function generateStaticParams() {
