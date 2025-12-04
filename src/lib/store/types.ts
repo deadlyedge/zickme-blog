@@ -15,6 +15,7 @@ export interface NavigationActions {
 	setNavigating: (navigating: boolean) => void
 	setCurrentPath: (path: string) => void
 	addToHistory: (path: string) => void
+	navigate: (path: string) => void
 }
 
 export interface CacheState {

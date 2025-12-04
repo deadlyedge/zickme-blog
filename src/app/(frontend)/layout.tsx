@@ -11,7 +11,6 @@ import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
 import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
-import { NavigationProvider } from '@/components/NavigationProvider'
 import { SmartCacheProvider } from '@/components/SmartCacheProvider'
 
 const notoSerif = Noto_Serif({
@@ -28,7 +27,7 @@ const notoSans = Noto_Sans({
 const notoSerifSC = Noto_Serif_SC({
 	variable: '--font-noto-serif-sc',
 	subsets: ['latin'],
-	weight: ['400','800'],
+	weight: ['400', '800'],
 })
 const notoSansSC = Noto_Sans_SC({
 	variable: '--font-noto-sans-sc',
@@ -54,7 +53,11 @@ export const viewport = {
 	themeColor: '#000',
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+	children,
+}: {
+	children: React.ReactNode
+}) {
 	// const data = await fetchContent()
 	// const { profile } = data
 
@@ -62,16 +65,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
-				<NavigationProvider>
-					<SmartCacheProvider>
-						<main className="">
-							<HeaderNav />
-							<AdvancedPageTransition>
-								{children}
-							</AdvancedPageTransition>
-						</main>
-					</SmartCacheProvider>
-				</NavigationProvider>
+				<SmartCacheProvider>
+					<main className="">
+						<HeaderNav />
+						<AdvancedPageTransition>{children}</AdvancedPageTransition>
+					</main>
+				</SmartCacheProvider>
 			</body>
 		</html>
 	)

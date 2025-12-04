@@ -6,7 +6,7 @@ export const createNavigationSlice: StateCreator<
 	[],
 	[],
 	NavigationState & NavigationActions
-> = (set) => ({
+> = (set, get) => ({
 	isNavigating: false,
 	currentPath: '/',
 	navigationHistory: ['/'],
@@ -21,4 +21,13 @@ export const createNavigationSlice: StateCreator<
 		set((state) => ({
 			navigationHistory: [...state.navigationHistory.slice(-9), path],
 		})),
+	navigate: (path: string) => {
+		const state = get()
+		if (path !== state.currentPath) {
+			set({ isNavigating: true })
+
+			// 延迟重置导航状态，给loading动画足够时间
+			setTimeout(() => set({ isNavigating: false }), 200)
+		}
+	},
 })

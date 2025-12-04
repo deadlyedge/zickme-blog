@@ -7,7 +7,9 @@ interface SmartCacheContextType {
 	isDataReady: boolean
 }
 
-const SmartCacheContext = createContext<SmartCacheContextType | undefined>(undefined)
+const SmartCacheContext = createContext<SmartCacheContextType | undefined>(
+	undefined,
+)
 
 export function SmartCacheProvider({ children }: { children: ReactNode }) {
 	const hasBlogPosts = useAppStore((state) => state.blogPosts.size > 0)
