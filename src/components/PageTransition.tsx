@@ -1,22 +1,20 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { useLayoutEffect, useState } from 'react'
+import { useNavigation } from './NavigationProvider'
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
-	const pathname = usePathname()
-	const [displayPath, setDisplayPath] = useState(pathname)
+	const { isNavigating } = useNavigation()
 
-	useLayoutEffect(() => {
-		if (pathname !== displayPath) {
-			// 短暂延迟以允许loading状态显示
-			const timer = setTimeout(() => setDisplayPath(pathname), 50)
-			return () => clearTimeout(timer)
-		}
-	}, [pathname, displayPath])
+	if (isNavigating) {
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+			</div>
+		)
+	}
 
 	return (
-		<div className="transition-all duration-200 ease-out">
+		<div className="transition-all duration-300 ease-in-out">
 			{children}
 		</div>
 	)

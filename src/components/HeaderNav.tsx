@@ -1,15 +1,14 @@
 'use client'
 
-// import { ProfileViewModel } from '@/lib/content-providers'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from './ui/button'
-
-// type HeaderNavProps = { profile: ProfileViewModel | null }
+import { useNavigation } from './NavigationProvider'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
+	const { isNavigating, navigate } = useNavigation()
 
 	return (
 		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
@@ -26,22 +25,34 @@ export const HeaderNav = () => {
 
 				<nav className="flex items-center font-bold font-sans text-base">
 					<Button
-						asChild
 						variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
-						className="font-bold transition-all duration-200 hover:scale-105">
-						<Link href="/projects">projects</Link>
+						className={cn(
+							"font-bold transition-all duration-200 hover:scale-105",
+							isNavigating && "opacity-50 cursor-not-allowed"
+						)}
+						onClick={() => navigate('/projects')}
+						disabled={isNavigating}>
+						projects
 					</Button>
 					<Button
-						asChild
 						variant={pathname.startsWith('/blog') ? 'secondary' : 'link'}
-						className="font-bold transition-all duration-200 hover:scale-105">
-						<Link href="/blog">blog</Link>
+						className={cn(
+							"font-bold transition-all duration-200 hover:scale-105",
+							isNavigating && "opacity-50 cursor-not-allowed"
+						)}
+						onClick={() => navigate('/blog')}
+						disabled={isNavigating}>
+						blog
 					</Button>
 					<Button
-						asChild
 						variant={pathname.startsWith('/about') ? 'secondary' : 'link'}
-						className="font-bold transition-all duration-200 hover:scale-105">
-						<Link href="/about">contact</Link>
+						className={cn(
+							"font-bold transition-all duration-200 hover:scale-105",
+							isNavigating && "opacity-50 cursor-not-allowed"
+						)}
+						onClick={() => navigate('/about')}
+						disabled={isNavigating}>
+						contact
 					</Button>
 					{/* <a
 						href={profile?.website ?? '#'}
