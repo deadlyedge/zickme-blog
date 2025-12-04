@@ -10,8 +10,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
-import { PageTransition } from '@/components/PageTransition'
+import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
 import { NavigationProvider } from '@/components/NavigationProvider'
+import { SmartCacheProvider } from '@/components/SmartCacheProvider'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -62,12 +63,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
 				<NavigationProvider>
-					<main className="">
-						<HeaderNav />
-						<PageTransition>
-							{children}
-						</PageTransition>
-					</main>
+					<SmartCacheProvider>
+						<main className="">
+							<HeaderNav />
+							<AdvancedPageTransition>
+								{children}
+							</AdvancedPageTransition>
+						</main>
+					</SmartCacheProvider>
 				</NavigationProvider>
 			</body>
 		</html>
