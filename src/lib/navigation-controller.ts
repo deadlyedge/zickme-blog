@@ -61,10 +61,12 @@ export class NavigationController {
 		cacheKey: keyof ReturnType<typeof useAppStore.getState>['lastFetched'],
 	) {
 		const mapping = {
-			blogPosts: 'blogPosts',
-			projects: 'projects',
-			tags: 'tags',
-		} as const
+			blogPosts: 'blogPosts' as const,
+			projects: 'projects' as const,
+			tags: 'tags' as const,
+			singleBlogPost: 'pageTransition' as const,
+			singleProject: 'pageTransition' as const,
+		}
 		return mapping[cacheKey] as keyof ReturnType<
 			typeof useAppStore.getState
 		>['loadingStates']
@@ -74,10 +76,12 @@ export class NavigationController {
 		cacheKey: keyof ReturnType<typeof useAppStore.getState>['lastFetched'],
 	) {
 		const mapping = {
-			blogPosts: 'blogPosts',
-			projects: 'projects',
-			tags: 'tags',
-		} as const
+			blogPosts: 'blogPosts' as const,
+			projects: 'projects' as const,
+			tags: 'tags' as const,
+			singleBlogPost: 'blogPosts' as const,
+			singleProject: 'projects' as const,
+		}
 		return mapping[cacheKey] as keyof ReturnType<
 			typeof useAppStore.getState
 		>['errorStates']

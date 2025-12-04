@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { BlogPostViewModel, ProjectViewModel, TagViewModel } from './content-providers'
+import type { BlogPostViewModel, ProjectViewModel, TagViewModel, BlogPostDetailViewModel } from './content-providers'
 
 interface NavigationState {
 	isNavigating: boolean
@@ -9,13 +9,27 @@ interface NavigationState {
 }
 
 interface CacheState {
+	// 列表数据
 	blogPosts: Map<string, BlogPostViewModel>
 	projects: Map<string, ProjectViewModel>
 	tags: TagViewModel[]
+
+	// 单篇内容数据
+	singleBlogPost: BlogPostDetailViewModel | null
+	singleProject: ProjectViewModel | null
+
 	lastFetched: {
 		blogPosts: number
 		projects: number
 		tags: number
+		singleBlogPost: number
+		singleProject: number
+	}
+
+	// 预加载状态
+	preloading: {
+		blogPost: string | null  // 正在预加载的blog slug
+		project: string | null   // 正在预加载的project slug
 	}
 }
 
@@ -43,8 +57,14 @@ interface AppState extends NavigationState, CacheState, UIState {
 	setBlogPosts: (posts: BlogPostViewModel[]) => void
 	setProjects: (projects: ProjectViewModel[]) => void
 	setTags: (tags: TagViewModel[]) => void
+	setSingleBlogPost: (post: BlogPostDetailViewModel | null) => void
+	setSingleProject: (project: ProjectViewModel | null) => void
 	getBlogPost: (slug: string) => BlogPostViewModel | undefined
 	getProject: (slug: string) => ProjectViewModel | undefined
+
+	// Preloading actions
+	setPreloadingBlog: (slug: string | null) => void
+	setPreloadingProject: (slug: string | null) => void
 
 	// Loading actions
 	setLoading: (key: keyof UIState['loadingStates'], loading: boolean) => void
@@ -69,10 +89,18 @@ export const useAppStore = create<AppState>()(
 			blogPosts: new Map(),
 			projects: new Map(),
 			tags: [],
+			singleBlogPost: null,
+			singleProject: null,
 			lastFetched: {
 				blogPosts: 0,
 				projects: 0,
 				tags: 0,
+				singleBlogPost: 0,
+				singleProject: 0,
+			},
+			preloading: {
+				blogPost: null,
+				project: null,
 			},
 
 			// UI state
@@ -119,8 +147,24 @@ export const useAppStore = create<AppState>()(
 				tags,
 				lastFetched: { ...state.lastFetched, tags: Date.now() }
 			})),
+			setSingleBlogPost: (post) => set((state) => ({
+				singleBlogPost: post,
+				lastFetched: { ...state.lastFetched, singleBlogPost: Date.now() }
+			})),
+			setSingleProject: (project) => set((state) => ({
+				singleProject: project,
+				lastFetched: { ...state.lastFetched, singleProject: Date.now() }
+			})),
 			getBlogPost: (slug) => get().blogPosts.get(slug),
 			getProject: (slug) => get().projects.get(slug),
+
+			// Preloading actions
+			setPreloadingBlog: (slug) => set((state) => ({
+				preloading: { ...state.preloading, blogPost: slug }
+			})),
+			setPreloadingProject: (slug) => set((state) => ({
+				preloading: { ...state.preloading, project: slug }
+			})),
 
 			// Loading actions
 			setLoading: (key, loading) => set((state) => ({
@@ -135,7 +179,15 @@ export const useAppStore = create<AppState>()(
 				blogPosts: new Map(),
 				projects: new Map(),
 				tags: [],
-				lastFetched: { blogPosts: 0, projects: 0, tags: 0 }
+				singleBlogPost: null,
+				singleProject: null,
+				lastFetched: {
+					blogPosts: 0,
+					projects: 0,
+					tags: 0,
+					singleBlogPost: 0,
+					singleProject: 0
+				}
 			}),
 			isCacheValid: (key, maxAge = CACHE_DURATION) => {
 				const lastFetched = get().lastFetched[key]

@@ -1,10 +1,14 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetchContent } from '@/lib/content-providers'
+import { useParams } from 'next/navigation'
+import { useEffect } from 'react'
 import { RichText } from '@/components/RichText'
 import { format, parseISO, isValid } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { CommentsSection } from '@/components/comments'
+import { useAppStore } from '@/lib/store'
 
 const formatMonthYear = (value?: string | null) => {
 	if (!value) return ''
@@ -13,33 +17,85 @@ const formatMonthYear = (value?: string | null) => {
 	return format(date, 'MMM yyyy')
 }
 
-type ProjectPageProps = {
-	params: Promise<{
-		slug: string
-	}>
-}
+export default function ProjectPage() {
+	const params = useParams()
+	const slug = params.slug as string
 
-export const revalidate = 3600 // 每小时重新验证一次
+	const {
+		singleProject: project,
+		preloading,
+		isCacheValid,
+		setSingleProject,
+		setPreloadingProject,
+		loadingStates
+	} = useAppStore()
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
-	const { slug } = await params
-	const { projects } = await fetchContent()
+	const isLoading = preloading.project === slug || (loadingStates.pageTransition && !project)
 
-	const project = projects.find((p) => p.slug === slug)
+	// 如果数据不在缓存中，加载它（作为fallback，以防预加载失败）
+	useEffect(() => {
+		async function loadProject() {
+			if (!project && !preloading.project && !isCacheValid('singleProject')) {
+				setPreloadingProject(slug)
+				try {
+					const response = await fetch(`/api/projects/${slug}`)
+					if (!response.ok) {
+						throw new Error('Failed to load project')
+					}
+
+					const projectData = await response.json()
+					setSingleProject(projectData)
+				} catch (error) {
+					console.error('Failed to load project:', error)
+				} finally {
+					setPreloadingProject(null)
+				}
+			}
+		}
+
+		// 只有在真正没有数据且没有预加载时才加载
+		if (slug && !project && !preloading.project && !isCacheValid('singleProject')) {
+			loadProject()
+		}
+	}, [slug, project, preloading.project, isCacheValid, setPreloadingProject, setSingleProject])
+
+	if (isLoading) {
+		return (
+			<main className="pt-16">
+				<div className="mx-auto max-w-7xl p-6">
+					<div className="animate-pulse">
+						<div className="h-8 bg-gray-200 rounded w-48 mb-6"></div>
+						<div className="h-12 bg-gray-200 rounded w-3/4 mb-4"></div>
+						<div className="flex gap-2 mb-4">
+							<div className="h-6 bg-gray-200 rounded w-16"></div>
+							<div className="h-6 bg-gray-200 rounded w-20"></div>
+						</div>
+						<div className="h-64 bg-gray-200 rounded mb-10"></div>
+						<div className="space-y-4">
+							<div className="h-4 bg-gray-200 rounded"></div>
+							<div className="h-4 bg-gray-200 rounded w-5/6"></div>
+							<div className="h-4 bg-gray-200 rounded w-4/6"></div>
+							<div className="h-4 bg-gray-200 rounded w-3/6"></div>
+						</div>
+					</div>
+				</div>
+			</main>
+		)
+	}
 
 	if (!project) {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-12">
 				<div className="max-w-3xl text-center">
-					<h1 className="text-3xl font-semibold">Project not found</h1>
+					<h1 className="text-3xl font-semibold">项目未找到</h1>
 					<p className="mt-4 text-slate-600">
-						We could not find the project you were looking for.
+						我们找不到您要找的项目。
 					</p>
 					<div className="mt-6">
 						<Link
 							href="/projects"
 							className="text-sm text-amber-600 hover:underline">
-							Back to projects
+							返回项目列表
 						</Link>
 					</div>
 				</div>
