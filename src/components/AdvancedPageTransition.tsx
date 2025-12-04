@@ -9,7 +9,8 @@ interface AdvancedPageTransitionProps {
 export function AdvancedPageTransition({
 	children,
 }: AdvancedPageTransitionProps) {
-	const { isNavigating, loadingStates } = useAppStore()
+	const isNavigating = useAppStore((state) => state.isNavigating)
+	const loadingStates = useAppStore((state) => state.loadingStates)
 
 	// 检查是否有任何数据正在加载
 	const isAnyLoading = Object.values(loadingStates).some((loading) => loading)

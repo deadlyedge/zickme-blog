@@ -17,8 +17,17 @@ type Props = {
  * - Single-select filter (like juice.agency)
  * - Smooth hover / transition styles using Tailwind utilities
  */
+import { useEffect } from 'react'
+import { useAppStore } from '@/lib/store'
+
 export default function ProjectsGridClient({ projects }: Props) {
 	const [active, setActive] = useState<string>('All')
+	const setProjects = useAppStore((state) => state.setProjects)
+
+	// Hydration for client cache
+	useEffect(() => {
+		setProjects(projects)
+	}, [projects, setProjects])
 
 	const categories = useMemo(() => {
 		const techs = new Set<string>()

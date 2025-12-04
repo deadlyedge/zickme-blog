@@ -1,6 +1,6 @@
 'use client'
 
-import { notFound, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
@@ -14,61 +14,19 @@ export default function BlogPostPage() {
 	const params = useParams()
 	const slug = params.slug as string
 
-	const {
-		getSingleBlogPost,
-		preloading,
-		isSingleContentCached,
-		setSingleBlogPost,
-		setPreloadingBlog,
-	} = useAppStore()
+	const getSingleBlogPost = useAppStore((state) => state.getSingleBlogPost)
+	const fetchBlogPost = useAppStore((state) => state.fetchBlogPost)
+	const preloadingBlogPost = useAppStore((state) => state.preloading.blogPost)
 
 	const post = getSingleBlogPost(slug)
-	const isLoading = preloading.blogPost === slug
+	const isLoading = preloadingBlogPost === slug
 
 	// 总是尝试加载数据（包括页面刷新时）
 	useEffect(() => {
-		async function loadPost() {
-			// 如果正在预加载，等待完成
-			if (preloading.blogPost === slug) {
-				return
-			}
-
-			// 如果数据已缓存，直接使用
-			if (isSingleContentCached('blog', slug)) {
-				return
-			}
-
-			// 开始加载数据
-			setPreloadingBlog(slug)
-			try {
-				const response = await fetch(`/api/blog/${slug}`)
-				if (!response.ok) {
-					if (response.status === 404) {
-						// 文章不存在，不要调用notFound()，让页面显示404状态
-						return
-					}
-					throw new Error('Failed to load post')
-				}
-
-				const postData = await response.json()
-				setSingleBlogPost(slug, postData)
-			} catch (error) {
-				console.error('Failed to load blog post:', error)
-			} finally {
-				setPreloadingBlog(null)
-			}
-		}
-
 		if (slug) {
-			loadPost()
+			fetchBlogPost(slug)
 		}
-	}, [
-		slug,
-		preloading.blogPost,
-		isSingleContentCached,
-		setPreloadingBlog,
-		setSingleBlogPost,
-	])
+	}, [slug, fetchBlogPost])
 
 	if (isLoading) {
 		return (

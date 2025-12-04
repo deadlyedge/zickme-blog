@@ -2,7 +2,7 @@ import { fetchBlogPosts, fetchTags } from '@/lib/content-providers'
 import BlogGridClient from '@/components/BlogGridClient'
 
 // 每5分钟重新验证一次
-export const revalidate = 300
+export const revalidate = 600
 
 export default async function BlogPage() {
 	const [posts, tags] = await Promise.all([fetchBlogPosts(), fetchTags()])

@@ -10,10 +10,12 @@ interface SmartCacheContextType {
 const SmartCacheContext = createContext<SmartCacheContextType | undefined>(undefined)
 
 export function SmartCacheProvider({ children }: { children: ReactNode }) {
-	const { blogPosts, projects, tags } = useAppStore()
+	const hasBlogPosts = useAppStore((state) => state.blogPosts.size > 0)
+	const hasProjects = useAppStore((state) => state.projects.size > 0)
+	const hasTags = useAppStore((state) => state.tags.length > 0)
 
 	// 检查是否所有关键数据都已加载
-	const isDataReady = blogPosts.size > 0 && projects.size > 0 && tags.length > 0
+	const isDataReady = hasBlogPosts && hasProjects && hasTags
 
 	return (
 		<SmartCacheContext.Provider value={{ isDataReady }}>

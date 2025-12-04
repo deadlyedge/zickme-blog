@@ -21,61 +21,19 @@ export default function ProjectPage() {
 	const params = useParams()
 	const slug = params.slug as string
 
-	const {
-		getSingleProject,
-		preloading,
-		isSingleContentCached,
-		setSingleProject,
-		setPreloadingProject,
-	} = useAppStore()
+	const getSingleProject = useAppStore((state) => state.getSingleProject)
+	const fetchProject = useAppStore((state) => state.fetchProject)
+	const preloadingProject = useAppStore((state) => state.preloading.project)
 
 	const project = getSingleProject(slug)
-	const isLoading = preloading.project === slug
+	const isLoading = preloadingProject === slug
 
 	// 总是尝试加载数据（包括页面刷新时）
 	useEffect(() => {
-		async function loadProject() {
-			// 如果正在预加载，等待完成
-			if (preloading.project === slug) {
-				return
-			}
-
-			// 如果数据已缓存，直接使用
-			if (isSingleContentCached('project', slug)) {
-				return
-			}
-
-			// 开始加载数据
-			setPreloadingProject(slug)
-			try {
-				const response = await fetch(`/api/projects/${slug}`)
-				if (!response.ok) {
-					if (response.status === 404) {
-						// 项目不存在，不要调用notFound()，让页面显示404状态
-						return
-					}
-					throw new Error('Failed to load project')
-				}
-
-				const projectData = await response.json()
-				setSingleProject(slug, projectData)
-			} catch (error) {
-				console.error('Failed to load project:', error)
-			} finally {
-				setPreloadingProject(null)
-			}
-		}
-
 		if (slug) {
-			loadProject()
+			fetchProject(slug)
 		}
-	}, [
-		slug,
-		preloading.project,
-		isSingleContentCached,
-		setPreloadingProject,
-		setSingleProject,
-	])
+	}, [slug, fetchProject])
 
 	if (isLoading) {
 		return (

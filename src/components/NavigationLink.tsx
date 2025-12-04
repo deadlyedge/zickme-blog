@@ -21,114 +21,34 @@ export function NavigationLink({
 	...props
 }: NavigationLinkProps) {
 	const router = useRouter()
-	const {
-		setNavigating,
-		setCurrentPath,
-		setPreloadingBlog,
-		setPreloadingProject,
-		setSingleBlogPost,
-		setSingleProject,
-		isSingleContentCached,
-		preloading,
-	} = useAppStore()
+	const setNavigating = useAppStore((state) => state.setNavigating)
+	const setCurrentPath = useAppStore((state) => state.setCurrentPath)
+	const fetchBlogPost = useAppStore((state) => state.fetchBlogPost)
+	const fetchProject = useAppStore((state) => state.fetchProject)
+	// const preloading = useAppStore((state) => state.preloading)
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [isPreloading, setIsPreloading] = useState(false)
 
 	const preloadData = useCallback(
-		async (path: string): Promise<boolean> => {
+		async (path: string) => {
 			// 检查是否是blog或project详情页
 			const blogMatch = path.match(/^\/blog\/(.+)$/)
 			const projectMatch = path.match(/^\/projects\/(.+)$/)
 
 			if (blogMatch) {
 				const slug = blogMatch[1]
-				// 检查是否已经在缓存中或正在预加载
-				if (isSingleContentCached('blog', slug)) {
-					return true // 数据已准备好
-				}
-
-				if (preloading.blogPost === slug) {
-					// 等待预加载完成
-					return new Promise((resolve) => {
-						const checkPreloading = () => {
-							if (preloading.blogPost !== slug) {
-								resolve(true)
-							} else {
-								setTimeout(checkPreloading, 100)
-							}
-						}
-						checkPreloading()
-					})
-				}
-
-				// 开始预加载
-				setPreloadingBlog(slug)
-				try {
-					const response = await fetch(`/api/blog/${slug}`)
-					if (response.ok) {
-						const postData = await response.json()
-						setSingleBlogPost(slug, postData)
-						return true
-					}
-					return false
-				} catch (error) {
-					console.error('Failed to preload blog post:', error)
-					return false
-				} finally {
-					setPreloadingBlog(null)
-				}
+				await fetchBlogPost(slug)
+				return
 			}
 
 			if (projectMatch) {
 				const slug = projectMatch[1]
-				// 检查是否已经在缓存中或正在预加载
-				if (isSingleContentCached('project', slug)) {
-					return true // 数据已准备好
-				}
-
-				if (preloading.project === slug) {
-					// 等待预加载完成
-					return new Promise((resolve) => {
-						const checkPreloading = () => {
-							if (preloading.project !== slug) {
-								resolve(true)
-							} else {
-								setTimeout(checkPreloading, 100)
-							}
-						}
-						checkPreloading()
-					})
-				}
-
-				// 开始预加载
-				setPreloadingProject(slug)
-				try {
-					const response = await fetch(`/api/projects/${slug}`)
-					if (response.ok) {
-						const projectData = await response.json()
-						setSingleProject(slug, projectData)
-						return true
-					}
-					return false
-				} catch (error) {
-					console.error('Failed to preload project:', error)
-					return false
-				} finally {
-					setPreloadingProject(null)
-				}
+				await fetchProject(slug)
+				return
 			}
-
-			// 不是详情页，直接返回true
-			return true
 		},
-		[
-			isSingleContentCached,
-			preloading,
-			setPreloadingBlog,
-			setPreloadingProject,
-			setSingleBlogPost,
-			setSingleProject,
-		],
+		[fetchBlogPost, fetchProject],
 	)
 
 	const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -139,22 +59,22 @@ export function NavigationLink({
 		setIsPreloading(true)
 		setNavigating(true)
 
-		try {
-			// 等待数据预加载完成
-			const dataReady = await preloadData(href)
+		// 立即触发路由跳转，Next.js 的 prefetching 会处理一部分，
+		// 而我们的 prefetchData 只是为了让 Zustand Store 提前有数据。
+		// 我们不想因为数据加载而阻塞页面跳转的直观感受（虽然我们用了 setNavigating 显示 loading）。
+		// 但为了利用 store 缓存，我们还是等待一下比较好。
 
-			if (dataReady) {
-				// 数据准备好后，设置路径并导航
-				setCurrentPath(href)
-				router.push(href)
-			} else {
-				// 数据加载失败，仍然尝试导航
-				setCurrentPath(href)
-				router.push(href)
-			}
+		try {
+			// 并行执行：数据获取和路由跳转准备
+			// 但实际上我们希望数据好了再跳转，或者利用 Suspense。
+			// 这里的逻辑是：先获取数据，如果很快就好，就跳转展示完整页面。
+			// 如果慢，loading state 会显示。
+
+			await preloadData(href)
+			setCurrentPath(href)
+			router.push(href)
 		} catch (error) {
 			console.error('Navigation error:', error)
-			// 即使出错也要导航
 			setCurrentPath(href)
 			router.push(href)
 		} finally {

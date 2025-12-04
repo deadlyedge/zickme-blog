@@ -8,7 +8,7 @@ import { useAppStore } from '@/lib/store'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
-	const { isNavigating } = useAppStore()
+	const isNavigating = useAppStore((state) => state.isNavigating)
 
 	return (
 		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
