@@ -169,7 +169,11 @@ export const fetchBlogPosts = async (): Promise<BlogPostViewModel[]> => {
 
 	const postsResult = await payload.find({
 		collection: 'posts',
-		// where,
+		where: {
+			status: {
+				equals: 'published',
+			},
+		},
 		sort: '-publishedAt',
 		limit: 6,
 		depth: 2,
@@ -204,6 +208,66 @@ export const fetchBlogPostBySlug = async (
 	}
 
 	return mapBlogPostDetail(post)
+}
+
+export const fetchAllBlogPostSlugs = async (): Promise<string[]> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const postsResult = await payload.find({
+		collection: 'posts',
+		where: {
+			status: {
+				equals: 'published',
+			},
+		},
+		select: {
+			slug: true,
+		},
+	})
+
+	return postsResult.docs.map((post) => post.slug)
+}
+
+export const fetchProjectBySlug = async (
+	slug: string,
+): Promise<ProjectViewModel | null> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const projectsResult = await payload.find({
+		collection: 'projects',
+		where: {
+			slug: {
+				equals: slug,
+			},
+		},
+		depth: 2,
+	})
+
+	const project = projectsResult.docs[0]
+	if (!project) {
+		return null
+	}
+
+	return mapProject(project)
+}
+
+export const fetchAllProjectSlugs = async (): Promise<string[]> => {
+	const payload = await getPayload({
+		config: configPromise,
+	})
+
+	const projectsResult = await payload.find({
+		collection: 'projects',
+		select: {
+			slug: true,
+		},
+	})
+
+	return projectsResult.docs.map((project) => project.slug)
 }
 
 export const fetchTags = async (): Promise<TagViewModel[]> => {
@@ -241,6 +305,11 @@ export const fetchHomeContent = async (): Promise<ContentResponse> => {
 		}),
 		payload.find({
 			collection: 'posts',
+			where: {
+				status: {
+					equals: 'published',
+				},
+			},
 			sort: '-publishedAt',
 			limit: 3, // 只获取首页需要的3个博客文章
 			depth: 2,

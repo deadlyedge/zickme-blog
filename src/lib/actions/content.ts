@@ -15,8 +15,11 @@ import configPromise from '@payload-config'
 import { safeExtract } from '@/lib/utils'
 import { Project } from '@/payload-types'
 
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 export async function fetchBlogPostsAction(): Promise<BlogPostViewModel[]> {
 	try {
+		if (isDevelopment) console.log('[Payload fetch]: blog posts')
 		return await fetchBlogPosts()
 	} catch (error) {
 		console.error('Error fetching blog posts:', error)
@@ -26,6 +29,7 @@ export async function fetchBlogPostsAction(): Promise<BlogPostViewModel[]> {
 
 export async function fetchProjectsAction(): Promise<ProjectViewModel[]> {
 	try {
+		if (isDevelopment) console.log('[Payload fetch]: projects')
 		return await fetchProjects()
 	} catch (error) {
 		console.error('Error fetching projects:', error)
@@ -35,6 +39,7 @@ export async function fetchProjectsAction(): Promise<ProjectViewModel[]> {
 
 export async function fetchTagsAction(): Promise<TagViewModel[]> {
 	try {
+		if (isDevelopment) console.log('[Payload fetch]: tags')
 		return await fetchTags()
 	} catch (error) {
 		console.error('Error fetching tags:', error)
@@ -46,6 +51,7 @@ export async function fetchBlogPostBySlugAction(
 	slug: string,
 ): Promise<BlogPostDetailViewModel | null> {
 	try {
+		if (isDevelopment) console.log(`[Payload fetch]: blog post "${slug}"`)
 		return await fetchBlogPostBySlug(slug)
 	} catch (error) {
 		console.error(`Error fetching blog post ${slug}:`, error)
@@ -57,6 +63,7 @@ export async function fetchProjectBySlugAction(
 	slug: string,
 ): Promise<ProjectViewModel | null> {
 	try {
+		if (isDevelopment) console.log(`[Payload fetch]: project "${slug}"`)
 		// We need to implement fetchProjectBySlug in content-providers or implement it here
 		// Checking content-providers.ts, there is no fetchProjectBySlug exported.
 		// So implementing it here similar to how it's likely implemented or reuse the logic.
