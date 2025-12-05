@@ -21,8 +21,8 @@ export function CommentForm({
 	autoFocus,
 }: CommentFormProps) {
 	const [content, setContent] = useState('')
-	const [name, setName] = useState('')
-	const [email, setEmail] = useState('') // Store but maybe not mandatory if we just want name
+	// const [name, setName] = useState('')
+	// const [email, setEmail] = useState('') // Store but maybe not mandatory if we just want name
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -46,8 +46,8 @@ export function CommentForm({
 			docId,
 			docType,
 			parentId,
-			authorName: name || 'Anonymous',
-			authorEmail: email,
+			// authorName: name || 'Anonymous',
+			// authorEmail: email,
 			path: pathname || '/',
 		})
 
@@ -64,7 +64,7 @@ export function CommentForm({
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
-			{!parentId && (
+			{/* {!parentId && (
 				<div className="flex gap-4">
 					<input
 						type="text"
@@ -81,7 +81,7 @@ export function CommentForm({
 						onChange={(e) => setEmail(e.target.value)}
 					/>
 				</div>
-			)}
+			)} */}
 
 			<div className="relative">
 				<textarea

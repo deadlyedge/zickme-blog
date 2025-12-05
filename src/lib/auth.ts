@@ -59,17 +59,6 @@ export const authApi = {
 		})
 	},
 
-	// 修改密码
-	async changePassword(
-		oldPassword: string,
-		newPassword: string,
-	): Promise<void> {
-		return apiCall('/change-password', {
-			method: 'POST',
-			body: JSON.stringify({ oldPassword, newPassword }),
-		})
-	},
-
 	// 更新账户信息
 	async updateProfile(
 		username: string,
@@ -105,90 +94,5 @@ export const authApi = {
 		return apiCall('/me', {
 			cache: 'no-store', // 确保每次请求都命中服务器，验证 HTTP-only cookie
 		})
-	},
-}
-
-// 认证状态管理
-export class AuthManager {
-	private static instance: AuthManager
-	private currentUser: User | null = null
-	private listeners: ((user: User | null) => void)[] = []
-
-	private constructor() {}
-
-	static getInstance(): AuthManager {
-		if (!AuthManager.instance) {
-			AuthManager.instance = new AuthManager()
-		}
-		return AuthManager.instance
-	}
-
-	// 检查认证状态
-	async checkAuth(): Promise<User | null> {
-		try {
-			const response = await authApi.getCurrentUser()
-			const user = response.user
-			this.setUser(user)
-			return user
-		} catch {
-			this.setUser(null)
-			return null
-		}
-	}
-
-	// 设置用户状态并通知监听器
-	private setUser(user: User | null) {
-		this.currentUser = user
-		this.listeners.forEach((listener) => listener(user))
-	}
-
-	// 获取当前用户
-	getCurrentUser(): User | null {
-		return this.currentUser
-	}
-
-	// 添加认证状态监听器
-	addAuthListener(listener: (user: User | null) => void) {
-		this.listeners.push(listener)
-		return () => {
-			this.listeners = this.listeners.filter((l) => l !== listener)
-		}
-	}
-
-	// 清除监听器
-	clearListeners() {
-		this.listeners = []
-	}
-}
-
-// 导出单例实例
-export const authManager = AuthManager.getInstance()
-
-// 客户端认证工具函数
-export const authUtils = {
-	// 检查是否是有效邮箱
-	isValidEmail(email: string): boolean {
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-		return emailRegex.test(email)
-	},
-
-	// 检查密码强度
-	isValidPassword(password: string): boolean {
-		return password.length >= 6
-	},
-
-	// 检查用户名格式
-	isValidUsername(username: string): boolean {
-		return username.length >= 3 && username.length <= 20
-	},
-
-	// 获取用户显示名称
-	getUserDisplayName(user: User): string {
-		return user.username || user.email || '用户'
-	},
-
-	// 检查是否已登录
-	isLoggedIn(): boolean {
-		return !!authManager.getCurrentUser()
 	},
 }

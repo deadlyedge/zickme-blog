@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
 import { useAppStore } from '@/lib/store'
+import { VALIDATION_RULES, VALIDATION_MESSAGES } from '@/constants'
 import {
 	Dialog,
 	DialogContent,
@@ -14,63 +15,110 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '@/components/ui/field'
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from '@/components/ui/input-group'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Mail, Lock, User, Key } from 'lucide-react'
 
-// 登录表单类型
-interface LoginForm {
-	email: string
-	password: string
-}
+// Zod schemas using constants
+const loginSchema = z.object({
+	email: z
+		.string()
+		.regex(VALIDATION_RULES.email.pattern, VALIDATION_MESSAGES.email.invalid),
+	password: z
+		.string()
+		.min(
+			VALIDATION_RULES.password.minLength,
+			VALIDATION_MESSAGES.password.minLength,
+		),
+})
 
-// 注册表单类型
-interface RegisterForm {
-	username: string
-	email: string
-	password: string
-	confirmPassword: string
-}
+const registerSchema = z
+	.object({
+		username: z
+			.string()
+			.min(
+				VALIDATION_RULES.username.minLength,
+				VALIDATION_MESSAGES.username.minLength,
+			)
+			.max(
+				VALIDATION_RULES.username.maxLength,
+				VALIDATION_MESSAGES.username.maxLength,
+			),
+		email: z
+			.string()
+			.regex(VALIDATION_RULES.email.pattern, VALIDATION_MESSAGES.email.invalid),
+		password: z
+			.string()
+			.min(
+				VALIDATION_RULES.password.minLength,
+				VALIDATION_MESSAGES.password.minLength,
+			),
+		confirmPassword: z
+			.string()
+			.min(1, VALIDATION_MESSAGES.confirmPassword.required),
+	})
+	.refine((data) => data.password === data.confirmPassword, {
+		message: VALIDATION_MESSAGES.confirmPassword.mismatch,
+		path: ['confirmPassword'],
+	})
 
-// 账户信息表单类型
-interface ProfileForm {
-	username: string
-	currentPassword: string
-	newPassword: string
-	confirmNewPassword: string
-}
-
-// 错误消息显示组件
-function ErrorMessage({
-	message,
-	className,
-}: {
-	message?: string
-	className?: string
-}) {
-	if (!message) return null
-	return (
-		<p className={cn('text-sm text-destructive mt-1', className)}>{message}</p>
+const profileSchema = z
+	.object({
+		username: z
+			.string()
+			.min(
+				VALIDATION_RULES.username.minLength,
+				VALIDATION_MESSAGES.username.minLength,
+			)
+			.max(
+				VALIDATION_RULES.username.maxLength,
+				VALIDATION_MESSAGES.username.maxLength,
+			),
+		currentPassword: z.string().optional(),
+		newPassword: z.string().optional(),
+		confirmNewPassword: z.string().optional(),
+	})
+	.refine(
+		(data) => !data.newPassword || data.confirmNewPassword === data.newPassword,
+		{
+			message: VALIDATION_MESSAGES.newPassword.mismatch,
+			path: ['confirmNewPassword'],
+		},
 	)
-}
+
+// 类型推断
+type LoginForm = z.infer<typeof loginSchema>
+type RegisterForm = z.infer<typeof registerSchema>
+type ProfileForm = z.infer<typeof profileSchema>
 
 // 登录表单组件
 function LoginForm() {
 	const { login, loading } = useAppStore()
 	const [loginError, setLoginError] = useState<string | undefined>(undefined)
 
-	const {
-		register,
-		handleSubmit,
-		formState: { errors },
-		reset,
-	} = useForm<LoginForm>()
+	const form = useForm<LoginForm>({
+		resolver: zodResolver(loginSchema),
+		defaultValues: {
+			email: '',
+			password: '',
+		},
+	})
 
 	const onSubmit = async (data: LoginForm) => {
 		try {
 			setLoginError(undefined)
 			await login(data.email, data.password)
-			reset()
+			form.reset()
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : '登录失败'
 			setLoginError(errorMessage)
@@ -78,44 +126,59 @@ function LoginForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="email"
-						placeholder="邮箱地址"
-						aria-invalid={!!errors.email}
-						{...register('email', {
-							required: '请输入邮箱地址',
-							pattern: {
-								value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-								message: '请输入有效的邮箱地址',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.email?.message || loginError} />
-			</div>
-
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="密码"
-						aria-invalid={!!errors.password}
-						{...register('password', {
-							required: '请输入密码',
-							minLength: {
-								value: 6,
-								message: '密码长度至少6位',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.password?.message} />
-			</div>
-
-			<Button type="submit" className="w-full" disabled={loading.login}>
+		<form id="login-form" onSubmit={form.handleSubmit(onSubmit)}>
+			<FieldGroup>
+				<Controller
+					name="email"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="login-email">邮箱地址</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Mail className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="login-email"
+									type="email"
+									placeholder="邮箱地址"
+									aria-invalid={fieldState.invalid}
+									autoComplete="email"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+				<Controller
+					name="password"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="login-password">密码</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Lock className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="login-password"
+									type="password"
+									placeholder="密码"
+									aria-invalid={fieldState.invalid}
+									autoComplete="current-password"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+			</FieldGroup>
+			{loginError && (
+				<p className="text-sm text-destructive mt-2">{loginError}</p>
+			)}
+			<Button type="submit" className="w-full mt-4" disabled={loading.login}>
 				{loading.login ? '登录中...' : '登录'}
 			</Button>
 		</form>
@@ -129,15 +192,15 @@ function RegisterForm() {
 		undefined,
 	)
 
-	const {
-		register,
-		handleSubmit,
-		control,
-		formState: { errors },
-		reset,
-	} = useForm<RegisterForm>()
-
-	const password = useWatch({ control, name: 'password' })
+	const form = useForm<RegisterForm>({
+		resolver: zodResolver(registerSchema),
+		defaultValues: {
+			username: '',
+			email: '',
+			password: '',
+			confirmPassword: '',
+		},
+	})
 
 	const onSubmit = async (data: RegisterForm) => {
 		try {
@@ -148,7 +211,7 @@ function RegisterForm() {
 				data.password,
 				data.confirmPassword,
 			)
-			reset()
+			form.reset()
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : '注册失败'
 			setRegisterError(errorMessage)
@@ -156,81 +219,107 @@ function RegisterForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="text"
-						placeholder="用户名"
-						aria-invalid={!!errors.username}
-						{...register('username', {
-							required: '请输入用户名',
-							minLength: {
-								value: 3,
-								message: '用户名长度至少3个字符',
-							},
-							maxLength: {
-								value: 20,
-								message: '用户名长度不能超过20个字符',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.username?.message} />
-			</div>
-
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="email"
-						placeholder="邮箱地址"
-						aria-invalid={!!errors.email}
-						{...register('email', {
-							required: '请输入邮箱地址',
-							pattern: {
-								value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-								message: '请输入有效的邮箱地址',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.email?.message || registerError} />
-			</div>
-
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="密码"
-						aria-invalid={!!errors.password}
-						{...register('password', {
-							required: '请输入密码',
-							minLength: {
-								value: 6,
-								message: '密码长度至少6位',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.password?.message} />
-			</div>
-
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="确认密码"
-						aria-invalid={!!errors.confirmPassword}
-						{...register('confirmPassword', {
-							required: '请确认密码',
-							validate: (value) => value === password || '两次输入的密码不一致',
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.confirmPassword?.message} />
-			</div>
-
-			<Button type="submit" className="w-full" disabled={loading.register}>
+		<form id="register-form" onSubmit={form.handleSubmit(onSubmit)}>
+			<FieldGroup>
+				<Controller
+					name="username"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="register-username">用户名</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<User className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="register-username"
+									type="text"
+									placeholder="用户名"
+									aria-invalid={fieldState.invalid}
+									autoComplete="username"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+				<Controller
+					name="email"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="register-email">邮箱地址</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Mail className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="register-email"
+									type="email"
+									placeholder="邮箱地址"
+									aria-invalid={fieldState.invalid}
+									autoComplete="email"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+				<Controller
+					name="password"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="register-password">密码</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Key className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="register-password"
+									type="password"
+									placeholder="密码"
+									aria-invalid={fieldState.invalid}
+									autoComplete="new-password"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+				<Controller
+					name="confirmPassword"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="register-confirm-password">
+								确认密码
+							</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Lock className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="register-confirm-password"
+									type="password"
+									placeholder="确认密码"
+									aria-invalid={fieldState.invalid}
+									autoComplete="new-password"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/>
+			</FieldGroup>
+			{registerError && (
+				<p className="text-sm text-destructive mt-2">{registerError}</p>
+			)}
+			<Button type="submit" className="w-full mt-4" disabled={loading.register}>
 				{loading.register ? '注册中...' : '注册'}
 			</Button>
 		</form>
@@ -244,27 +333,26 @@ function ProfileForm() {
 		undefined,
 	)
 
-	const {
-		register,
-		handleSubmit,
-		control,
-		formState: { errors },
-		reset,
-	} = useForm<ProfileForm>({
+	const form = useForm<ProfileForm>({
+		resolver: zodResolver(profileSchema),
 		defaultValues: {
 			username: user?.username || '',
+			currentPassword: '',
+			newPassword: '',
+			confirmNewPassword: '',
 		},
 	})
-
-	const newPassword = useWatch({ control, name: 'newPassword' })
 
 	const onSubmit = async (data: ProfileForm) => {
 		try {
 			setProfileError(undefined)
-			// 只在有新密码时才传递新密码参数
 			const newPasswordValue = data.newPassword || undefined
-			await updateProfile(data.username, data.currentPassword, newPasswordValue)
-			reset()
+			await updateProfile(
+				data.username,
+				data.currentPassword || '',
+				newPasswordValue,
+			)
+			form.reset()
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : '修改账户信息失败'
@@ -273,90 +361,121 @@ function ProfileForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-			<div>
-				<label className="text-sm font-medium text-gray-700 mb-1 block">
-					用户名
-				</label>
-				<InputGroup>
-					<InputGroupInput
-						type="text"
-						placeholder="用户名"
-						aria-invalid={!!errors.username}
-						{...register('username', {
-							required: '请输入用户名',
-							minLength: {
-								value: 3,
-								message: '用户名长度至少3个字符',
-							},
-							maxLength: {
-								value: 20,
-								message: '用户名长度不能超过20个字符',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.username?.message} />
-			</div>
-
-			{/* <div>
-				<label className="text-sm font-medium text-gray-700 mb-1 block">
-					当前密码 <span className="text-red-500">*</span>
-				</label>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="请输入当前密码以验证身份"
-						aria-invalid={!!errors.currentPassword}
-						{...register('currentPassword', {
-							required: '请输入当前密码',
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.currentPassword?.message} />
-			</div> */}
-
-			<div className="border-t pt-4">
-				<label className="text-sm font-medium text-gray-700 mb-1 block">
-					新密码（可选）
-				</label>
-				<p className="text-xs text-gray-500 mb-2">如不需要修改密码，请留空</p>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="新密码（可选）"
-						aria-invalid={!!errors.newPassword}
-						{...register('newPassword', {
-							minLength: {
-								value: 6,
-								message: '新密码长度至少6位',
-							},
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage message={errors.newPassword?.message} />
-			</div>
-
-			<div>
-				<InputGroup>
-					<InputGroupInput
-						type="password"
-						placeholder="确认新密码"
-						aria-invalid={!!errors.confirmNewPassword}
-						{...register('confirmNewPassword', {
-							validate: (value) =>
-								!newPassword ||
-								value === newPassword ||
-								'两次输入的新密码不一致',
-						})}
-					/>
-				</InputGroup>
-				<ErrorMessage
-					message={errors.confirmNewPassword?.message || profileError}
+		<form id="profile-form" onSubmit={form.handleSubmit(onSubmit)}>
+			<FieldGroup>
+				<Controller
+					name="username"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="profile-username">用户名</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<User className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="profile-username"
+									type="text"
+									placeholder="用户名"
+									aria-invalid={fieldState.invalid}
+									autoComplete="username"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
 				/>
-			</div>
-
-			<Button type="submit" className="w-full" disabled={loading.updateProfile}>
+				{/* <Controller
+					name="currentPassword"
+					control={form.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="profile-current-password">当前密码</FieldLabel>
+							<InputGroup>
+								<InputGroupAddon>
+									<Key className="size-4" />
+								</InputGroupAddon>
+								<InputGroupInput
+									{...field}
+									id="profile-current-password"
+									type="password"
+									placeholder="请输入当前密码以验证身份"
+									aria-invalid={fieldState.invalid}
+									autoComplete="current-password"
+								/>
+							</InputGroup>
+							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+						</Field>
+					)}
+				/> */}
+				<div className="border-t pt-4">
+					<Field>
+						<FieldLabel>新密码（可选）</FieldLabel>
+						<p className="text-xs text-muted-foreground mb-2">
+							如不需要修改密码，请留空
+						</p>
+						<Controller
+							name="newPassword"
+							control={form.control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<InputGroup>
+										<InputGroupAddon>
+											<Key className="size-4" />
+										</InputGroupAddon>
+										<InputGroupInput
+											{...field}
+											id="profile-new-password"
+											type="password"
+											placeholder="新密码（可选）"
+											aria-invalid={fieldState.invalid}
+											autoComplete="new-password"
+										/>
+									</InputGroup>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+					</Field>
+					<Controller
+						name="confirmNewPassword"
+						control={form.control}
+						render={({ field, fieldState }) => (
+							<Field data-invalid={fieldState.invalid}>
+								<FieldLabel htmlFor="profile-confirm-new-password">
+									确认新密码
+								</FieldLabel>
+								<InputGroup>
+									<InputGroupAddon>
+										<Lock className="size-4" />
+									</InputGroupAddon>
+									<InputGroupInput
+										{...field}
+										id="profile-confirm-new-password"
+										type="password"
+										placeholder="确认新密码"
+										aria-invalid={fieldState.invalid}
+										autoComplete="new-password"
+									/>
+								</InputGroup>
+								{fieldState.invalid && (
+									<FieldError errors={[fieldState.error]} />
+								)}
+							</Field>
+						)}
+					/>
+				</div>
+			</FieldGroup>
+			{profileError && (
+				<p className="text-sm text-destructive mt-2">{profileError}</p>
+			)}
+			<Button
+				type="submit"
+				className="w-full mt-4"
+				disabled={loading.updateProfile}>
 				{loading.updateProfile ? '保存中...' : '保存修改'}
 			</Button>
 		</form>

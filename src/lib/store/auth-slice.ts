@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand'
 import { AppState, AuthActions, AuthState } from './types'
-import { authApi, authUtils } from '@/lib/auth'
+import { authApi } from '@/lib/auth'
 
 export const createAuthSlice: StateCreator<
 	AppState,
@@ -10,7 +10,6 @@ export const createAuthSlice: StateCreator<
 > = (set, get) => ({
 	// 初始状态
 	user: null,
-	isAuthenticated: false,
 	isAuthModalOpen: false,
 	authModalView: 'login',
 	loading: {
@@ -28,19 +27,10 @@ export const createAuthSlice: StateCreator<
 		state.setError(null)
 
 		try {
-			// 表单验证
-			if (!authUtils.isValidEmail(email)) {
-				throw new Error('请输入有效的邮箱地址')
-			}
-			if (!authUtils.isValidPassword(password)) {
-				throw new Error('密码长度至少6位')
-			}
-
 			const { user } = await authApi.login(email, password)
 
 			set({
 				user,
-				isAuthenticated: true,
 				error: null,
 			})
 
@@ -59,32 +49,17 @@ export const createAuthSlice: StateCreator<
 		username: string,
 		email: string,
 		password: string,
-		confirmPassword: string,
+		// confirmPassword: string,
 	) => {
 		const state = get()
 		state.setLoading('register', true)
 		state.setError(null)
 
 		try {
-			// 表单验证
-			if (!authUtils.isValidUsername(username)) {
-				throw new Error('用户名长度必须在3-20个字符之间')
-			}
-			if (!authUtils.isValidEmail(email)) {
-				throw new Error('请输入有效的邮箱地址')
-			}
-			if (!authUtils.isValidPassword(password)) {
-				throw new Error('密码长度至少6位')
-			}
-			if (password !== confirmPassword) {
-				throw new Error('两次输入的密码不一致')
-			}
-
 			const { user } = await authApi.register(username, email, password)
 
 			set({
 				user,
-				isAuthenticated: true,
 				error: null,
 			})
 
@@ -109,7 +84,6 @@ export const createAuthSlice: StateCreator<
 
 			set({
 				user: null,
-				isAuthenticated: false,
 				error: null,
 			})
 		} catch (error) {
@@ -130,31 +104,18 @@ export const createAuthSlice: StateCreator<
 		state.setError(null)
 
 		try {
-			// 验证用户名
-			if (!authUtils.isValidUsername(username)) {
-				throw new Error('用户名长度必须在3-20个字符之间')
-			}
-
-			// 验证当前密码
-			// if (!currentPassword) {
-			// 	throw new Error('请输入当前密码')
-			// }
-
-			// 如果提供了新密码，验证密码强度
-			if (newPassword && !authUtils.isValidPassword(newPassword)) {
-				throw new Error('新密码长度至少6位')
+			const currentUser = get().user
+			if (!currentUser) {
+				throw new Error('用户未登录')
 			}
 
 			await authApi.updateProfile(username, currentPassword, newPassword)
 
 			// 更新本地用户信息
-			const currentUser = get().user
-			if (currentUser) {
-				set({
-					user: { ...currentUser, username },
-					error: null,
-				})
-			}
+			set({
+				user: { ...currentUser, username },
+				error: null,
+			})
 
 			// 修改成功后关闭Modal
 			state.closeAuthModal()
@@ -173,20 +134,19 @@ export const createAuthSlice: StateCreator<
 			const response = await authApi.getCurrentUser()
 
 			// Payload 的 /me 端点返回 { user: User, ... } 格式
-			const user = response && typeof response === 'object' && 'user' in response
-				? response.user
-				: response
+			const user =
+				response && typeof response === 'object' && 'user' in response
+					? response.user
+					: response
 
 			set({
 				user,
-				isAuthenticated: !!user,
 			})
 
 			return user
 		} catch {
 			set({
 				user: null,
-				isAuthenticated: false,
 			})
 			return null
 		}

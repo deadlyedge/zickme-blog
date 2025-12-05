@@ -100,12 +100,15 @@ export interface User {
 	id: string
 	username: string
 	email: string
+	profile: {
+		avatar: { url: string }
+		bio: string
+	}
 	[key: string]: unknown
 }
 
 export interface AuthState {
 	user: User | null
-	isAuthenticated: boolean
 	isAuthModalOpen: boolean
 	authModalView: 'login' | 'register' | 'profile'
 	loading: {
@@ -120,15 +123,24 @@ export interface AuthState {
 export interface AuthActions {
 	// 用户操作
 	login: (email: string, password: string) => Promise<void>
-	register: (username: string, email: string, password: string, confirmPassword: string) => Promise<void>
+	register: (
+		username: string,
+		email: string,
+		password: string,
+		confirmPassword: string,
+	) => Promise<void>
 	logout: () => Promise<void>
-	updateProfile: (username: string, currentPassword: string, newPassword?: string) => Promise<void>
+	updateProfile: (
+		username: string,
+		currentPassword: string,
+		newPassword?: string,
+	) => Promise<void>
 	checkAuth: () => Promise<User | null>
-	
+
 	// Modal 控制
 	openAuthModal: (view: 'login' | 'register' | 'profile') => void
 	closeAuthModal: () => void
-	
+
 	// 状态管理
 	setError: (error: string | null) => void
 	setLoading: (action: keyof AuthState['loading'], loading: boolean) => void

@@ -1,5 +1,6 @@
 import { isAdmin } from '@/lib/access'
 import type { CollectionConfig } from 'payload'
+import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants'
 
 export const Users: CollectionConfig = {
 	slug: 'users',
@@ -36,6 +37,16 @@ export const Users: CollectionConfig = {
 			type: 'text',
 			required: true,
 			unique: true,
+			validate: (value: string | string[] | null | undefined) => {
+				if (!value || typeof value !== 'string') return true // Let required handle this
+				if (value.length < VALIDATION_RULES.username.minLength) {
+					return VALIDATION_MESSAGES.username.minLength
+				}
+				if (value.length > VALIDATION_RULES.username.maxLength) {
+					return VALIDATION_MESSAGES.username.maxLength
+				}
+				return true
+			},
 			access: {
 				update: ({ req, doc }) => {
 					// Users can update their own username, admins can update any

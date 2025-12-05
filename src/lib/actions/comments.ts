@@ -3,7 +3,8 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { revalidatePath } from 'next/cache'
-import { Comment, Post, Project } from '@/payload-types'
+import { headers } from 'next/headers'
+import type { Comment } from '@/payload-types'
 
 export interface CommentWithReplies extends Comment {
 	replies?: CommentWithReplies[]
@@ -22,6 +23,7 @@ export type CreateCommentData = {
 
 export async function createComment(data: CreateCommentData) {
 	const payload = await getPayload({ config })
+	const { user } = await payload.auth({ headers: await headers() })
 
 	try {
 		const commentData: {
@@ -33,6 +35,7 @@ export async function createComment(data: CreateCommentData) {
 			author: {
 				name?: string
 				email?: string
+				user?: number
 			}
 			status: 'published' | 'pending' | 'spam'
 			parent?: number | null
@@ -43,8 +46,9 @@ export async function createComment(data: CreateCommentData) {
 				value: data.docId,
 			},
 			author: {
-				name: data.authorName,
-				email: data.authorEmail,
+				name: user?.username,
+				email: user?.email,
+				user: user?.id
 			},
 			status: 'published', // Default to published for now
 		}
@@ -76,7 +80,7 @@ export async function createComment(data: CreateCommentData) {
 				}
 
 				commentData.parent = data.parentId
-			} catch (error) {
+			} catch {
 				return { success: false, error: 'Parent comment not found' }
 			}
 		} else {
