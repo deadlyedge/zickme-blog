@@ -96,9 +96,49 @@ export interface UIActions {
 	setError: (key: keyof UIState['errorStates'], error: string | null) => void
 }
 
+export interface User {
+	id: string
+	username: string
+	email: string
+	[key: string]: unknown
+}
+
+export interface AuthState {
+	user: User | null
+	isAuthenticated: boolean
+	isAuthModalOpen: boolean
+	authModalView: 'login' | 'register' | 'profile'
+	loading: {
+		login: boolean
+		register: boolean
+		logout: boolean
+		updateProfile: boolean
+	}
+	error: string | null
+}
+
+export interface AuthActions {
+	// 用户操作
+	login: (email: string, password: string) => Promise<void>
+	register: (username: string, email: string, password: string, confirmPassword: string) => Promise<void>
+	logout: () => Promise<void>
+	updateProfile: (username: string, currentPassword: string, newPassword?: string) => Promise<void>
+	checkAuth: () => Promise<User | null>
+	
+	// Modal 控制
+	openAuthModal: (view: 'login' | 'register' | 'profile') => void
+	closeAuthModal: () => void
+	
+	// 状态管理
+	setError: (error: string | null) => void
+	setLoading: (action: keyof AuthState['loading'], loading: boolean) => void
+}
+
 export type AppState = NavigationState &
 	NavigationActions &
 	CacheState &
 	CacheActions &
 	UIState &
-	UIActions
+	UIActions &
+	AuthState &
+	AuthActions

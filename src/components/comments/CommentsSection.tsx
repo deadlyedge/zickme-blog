@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { getComments } from '@/lib/actions/comments'
+import { useAppStore } from '@/lib/store'
 import { CommentList } from './CommentList'
 import { CommentForm } from './CommentForm'
+import { Button } from '@/components/ui/button'
+import { authUtils } from '@/lib/auth'
 import type { CommentWithReplies } from '@/lib/actions/comments'
 
 interface CommentsSectionProps {
@@ -15,6 +18,15 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
   const [comments, setComments] = useState<CommentWithReplies[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  const {
+    user,
+    isAuthenticated,
+    openAuthModal,
+    logout,
+  } = useAppStore()
+
+
 
   useEffect(() => {
     async function loadComments() {
@@ -36,6 +48,28 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
     // 重新加载评论
     getComments(docId, docType).then(setComments).catch(console.error)
   }
+
+  const handleLoginClick = () => {
+    openAuthModal('login')
+  }
+
+  const handleRegisterClick = () => {
+    openAuthModal('register')
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  const handleEditProfile = () => {
+    openAuthModal('profile')
+  }
+
+
 
   if (loading) {
     return (
@@ -61,10 +95,67 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 
   return (
     <section className="py-12 max-w-2xl mx-auto border-t border-slate-100 mt-12">
-      <h2 className="text-2xl font-bold mb-8 text-slate-900">Comments</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold text-slate-900">Comments</h2>
+        
+        {/* 认证状态显示 */}
+        <div className="flex items-center gap-3">
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEditProfile}
+                className="text-sm text-blue-600 hover:text-blue-800 underline cursor-pointer transition-colors"
+              >
+                {authUtils.getUserDisplayName(user)}
+              </button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="text-xs h-7 px-2"
+              >
+                登出
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoginClick}
+                className="text-xs h-7 px-3"
+              >
+                登录
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleRegisterClick}
+                className="text-xs h-7 px-3"
+              >
+                注册
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
+      {/* 评论表单区域 */}
       <div className="mb-12">
-         <CommentForm docId={docId} docType={docType} onSuccess={handleCommentAdded} />
+        {isAuthenticated ? (
+          <CommentForm docId={docId} docType={docType} onSuccess={handleCommentAdded} />
+        ) : (
+          <div className="border border-dashed border-gray-200 rounded-lg p-8 text-center bg-gray-50">
+            <p className="text-gray-600 mb-4">登录后即可发表评论</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={handleLoginClick} variant="outline" size="sm">
+                立即登录
+              </Button>
+              <Button onClick={handleRegisterClick} size="sm">
+                创建账户
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <CommentList comments={comments} docId={docId} docType={docType} />

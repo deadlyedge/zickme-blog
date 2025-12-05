@@ -4,6 +4,7 @@ import { AppState } from './types'
 import { createNavigationSlice } from './navigation-slice'
 import { createContentSlice } from './content-slice'
 import { createUISlice } from './ui-slice'
+import { createAuthSlice } from './auth-slice'
 
 export const useAppStore = create<AppState>()(
 	devtools(
@@ -11,6 +12,7 @@ export const useAppStore = create<AppState>()(
 			...createNavigationSlice(...a),
 			...createContentSlice(...a),
 			...createUISlice(...a),
+			...createAuthSlice(...a),
 		}),
 		{ name: 'app-store' },
 	),

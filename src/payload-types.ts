@@ -134,6 +134,51 @@ export interface User {
   id: number;
   username: string;
   roles?: ('admin' | 'user')[] | null;
+  /**
+   * 用户是否被封禁
+   */
+  banned?: boolean | null;
+  /**
+   * 用户最近登录时间
+   */
+  lastLoginAt?: string | null;
+  /**
+   * 用户评论数量
+   */
+  commentsCount?: number | null;
+  /**
+   * 用户个人资料
+   */
+  profile?: {
+    /**
+     * 用户昵称
+     */
+    nickname?: string | null;
+    /**
+     * 用户头像
+     */
+    avatar?: (number | null) | Media;
+    /**
+     * 个人简介
+     */
+    bio?: string | null;
+    /**
+     * 所在地
+     */
+    location?: string | null;
+    /**
+     * 个人网站
+     */
+    website?: string | null;
+    /**
+     * GitHub用户名
+     */
+    github?: string | null;
+    /**
+     * Twitter用户名
+     */
+    twitter?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -509,6 +554,20 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   username?: T;
   roles?: T;
+  banned?: T;
+  lastLoginAt?: T;
+  commentsCount?: T;
+  profile?:
+    | T
+    | {
+        nickname?: T;
+        avatar?: T;
+        bio?: T;
+        location?: T;
+        website?: T;
+        github?: T;
+        twitter?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;

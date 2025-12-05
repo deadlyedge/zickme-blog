@@ -12,6 +12,8 @@ import './globals.css'
 import { HeaderNav } from '@/components/HeaderNav'
 import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
 import { SmartCacheProvider } from '@/components/SmartCacheProvider'
+import AuthModal from '@/components/auth/AuthModal'
+import AuthProvider from '@/components/AuthProvider'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -65,12 +67,15 @@ export default async function RootLayout({
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
-				<SmartCacheProvider>
-					<main className="">
-						<HeaderNav />
-						<AdvancedPageTransition>{children}</AdvancedPageTransition>
-					</main>
-				</SmartCacheProvider>
+				<AuthProvider>
+					<SmartCacheProvider>
+						<main className="">
+							<HeaderNav />
+							<AdvancedPageTransition>{children}</AdvancedPageTransition>
+						</main>
+						<AuthModal />
+					</SmartCacheProvider>
+				</AuthProvider>
 			</body>
 		</html>
 	)
