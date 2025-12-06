@@ -1,4 +1,3 @@
-import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -8,8 +7,7 @@ const nextConfig: NextConfig = {
 		remotePatterns: [{ protocol: 'https', hostname: 'cdn.juice.site' }],
 		// Keep unoptimized false to enable Next.js optimizations in supported envs.
 		// In development with relative /api/media URLs next/image will still work.
-		unoptimized: false,
 	},
 }
 
-export default withPayload(nextConfig)
+export default nextConfig
