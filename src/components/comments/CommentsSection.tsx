@@ -98,7 +98,8 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 								<Avatar>
 									<AvatarImage
 										src={
-											user.profile.avatar.url || 'https://github.com/shadcn.png'
+											user?.profile?.avatar?.url ||
+											'https://github.com/shadcn.png'
 										}
 										alt={user.username || '@shadcn'}
 									/>
