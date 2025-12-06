@@ -137,7 +137,7 @@ export const Comments: CollectionConfig = {
 							// 2. 获取这是谁写的评论
 							// email 字段在 author group 中，siblingData 即为 author 对象
 							// 或者使用 doc.author.user
-							const authorUser = doc?.author?.user || siblingData?.user
+							const authorUser = siblingData?.user || doc?.author?.user
 
 							// 3. 处理 user 可能是 ID 字符串或对象的情况
 							const authorId =

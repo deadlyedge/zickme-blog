@@ -101,7 +101,7 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 											user?.profile?.avatar?.url ||
 											'https://github.com/shadcn.png'
 										}
-										alt={user.username || '@shadcn'}
+										alt={user?.username || '@shadcn'}
 									/>
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
