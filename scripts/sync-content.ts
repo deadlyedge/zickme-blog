@@ -4,8 +4,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { marked } from 'marked'
 
-interface PostFrontmatter {
-	slug: string
+interface MarkdownFrontmatter {
 	title: string
 	excerpt?: string
 	image?: string
@@ -44,8 +43,8 @@ async function syncPosts() {
 	for (const slug of mdFiles) {
 		const filePath = path.join(postsDir, `${slug}.md`)
 		const content = await fs.readFile(filePath, 'utf8')
-		const { data: frontmatter, content: body } = matter(content) as {
-			data: PostFrontmatter
+		const { data: frontmatter, content: body } = matter(content) as unknown as {
+			data: MarkdownFrontmatter
 			content: string
 		}
 

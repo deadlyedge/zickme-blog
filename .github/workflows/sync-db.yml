@@ -9,24 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      
+      # Bun 安装（内置 Node 20 兼容）
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20'
+          bun-version: latest  # 或 1.1.30
 
       - name: Install dependencies
-        run: npm ci
+        run: bun ci  # 替换 npm ci，速度提升 5-10x
 
       - name: Sync to Neon
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          npx prisma generate
-          npx prisma db push
-          npx tsx scripts/sync-content.ts
+          bunx prisma generate
+          bunx prisma db push
+          bunx tsx scripts/sync-content.ts  # tsx 兼容 Bun，比 npx 快
 
-      - name: Sync to Neon
+      - name: Retry sync trigger
         uses: fjogeleit/http-request-action@v1
         with:
           url: 'https://api.github.com/repos/${{ github.repository }}/dispatches'

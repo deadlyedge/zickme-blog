@@ -142,6 +142,7 @@ export const PostScalarFieldEnum = {
   tags: 'tags',
   content: 'content',
   published: 'published',
+  deletedAt: 'deletedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
