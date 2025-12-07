@@ -13,6 +13,8 @@ async function main() {
 		console.error('❌ CLOUDINARY_API_KEY is not set')
 		process.exit(1)
 	}
+	// Log the configuration
+	console.log(cloudinary.config())
 
 	const files = await fs.readdir(IMAGES_DIR)
 	console.log('Found files:', files)
