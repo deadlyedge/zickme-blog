@@ -19,7 +19,10 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci && npm install tsx
+        run: npm i
+
+      - name: add tsx
+        run: npm install tsx
 
       - name: Upload images to Cloudinary
         env:
