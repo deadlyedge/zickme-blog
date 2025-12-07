@@ -15,17 +15,18 @@ jobs:
       #   uses: oven-sh/setup-bun@v2
       #   with:
       #     bun-version: latest  # 或 1.1.30
-
       # - name: Install dependencies
       #   run: bun ci  # 替换 npm ci，速度提升 5-10x
-
       - name: Upload images to Cloudinary
-        uses: emmanuelgautier/cloudinary-upload-action@v2.0 
-        env:
-          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        uses: emmanuelgautier/cloudinary-upload-action@v2.0
+        # env:
+        #   CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        #   CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+        #   CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         with:
-          images: 'content/images/**'  # 指定要上传的文件路径
+          images: 'content/images/**' # 指定要上传的文件路径
+          cloud-name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          api-key: ${{ secrets.CLOUDINARY_API_KEY }}
+          api-secret: ${{ secrets.CLOUDINARY_API_SECRET }}
         #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
         # run: bunx scripts/upload-to-cloudinary.ts
