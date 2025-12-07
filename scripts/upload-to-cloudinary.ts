@@ -11,7 +11,10 @@ async function main() {
 		api_secret: process.env.CLOUDINARY_API_SECRET,
 	})
 
-	console.log('cloud-name:', process.env.CLOUDINARY_CLOUD_NAME)
+	if (!process.env.CLOUDINARY_API_KEY) {
+		console.error('❌ CLOUDINARY_API_KEY is not set')
+		process.exit(1)
+	}
 
 	const files = await fs.readdir(IMAGES_DIR)
 	console.log('Found files:', files)
