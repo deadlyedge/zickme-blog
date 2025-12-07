@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
 	images: {
 		remotePatterns: [
 			{ protocol: 'https', hostname: 'cdn.juice.site' },
-			{ protocol: 'https', hostname: 'cloudinary.com' },
+			{ protocol: 'https', hostname: 'res.cloudinary.com' },
 		],
 	},
 }

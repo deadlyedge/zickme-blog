@@ -48,9 +48,9 @@ async function syncPosts() {
 			content: string
 		}
 
-		const imageUrl = frontmatter.image?.startsWith('./images/')
+		const imageUrl = frontmatter.image?.startsWith('../images/')
 			? frontmatter.image.replace(
-					'./images/',
+					'../images/',
 					'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
 				)
 			: frontmatter.image

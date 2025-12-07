@@ -25,15 +25,15 @@ async function main() {
 		if (!stat.isFile()) continue
 
 		const name = path.parse(file).name
-		const publicId = `myblog/${name}`
+		// const publicId = `myblog/${name}`
 
-		console.log(`Uploading ${file} → ${publicId}`)
+		console.log(`Uploading ${file} → ${name}`)
 
 		const res = await cloudinary.uploader.upload(fullPath, {
-			public_id: publicId,
+			public_id: name,
 			resource_type: 'image',
 			overwrite: true,
-			upload_preset: 'zickme-blog', // ⭐ 使用你这个 Signed preset
+			// upload_preset: 'zickme-blog', // ⭐ 使用你这个 Signed preset
 		})
 
 		console.log('Uploaded:', res.public_id, res.secure_url)
