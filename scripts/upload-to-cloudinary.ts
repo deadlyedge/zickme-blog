@@ -27,6 +27,7 @@ async function main() {
 			public_id: publicId,
 			overwrite: true,
 			resource_type: 'image',
+			upload_preset: 'zickme-blog',
 		})
 	}
 
