@@ -242,7 +242,7 @@ export default function ProjectClient({ initialProject }: ProjectClientProps) {
 			</div>
 
 			<div className="mx-auto max-w-7xl px-6 pb-12">
-				<CommentsSection docId={project.id} docType="projects" />
+				{/* <CommentsSection docId={project.id} docType="projects" /> */}
 			</div>
 		</main>
 	)

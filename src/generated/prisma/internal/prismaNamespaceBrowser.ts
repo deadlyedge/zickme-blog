@@ -55,6 +55,7 @@ export const ModelName = {
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
+  Tag: 'Tag',
   Post: 'Post',
   Comment: 'Comment'
 } as const
@@ -133,16 +134,32 @@ export const VerificationScalarFieldEnum = {
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
 
 
+export const TagScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  color: 'color',
+  background: 'background',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TagScalarFieldEnum = (typeof TagScalarFieldEnum)[keyof typeof TagScalarFieldEnum]
+
+
 export const PostScalarFieldEnum = {
   id: 'id',
+  type: 'type',
   slug: 'slug',
   title: 'title',
   excerpt: 'excerpt',
-  image: 'image',
-  tags: 'tags',
+  poster: 'poster',
   content: 'content',
-  published: 'published',
-  deletedAt: 'deletedAt',
+  status: 'status',
+  images: 'images',
+  sourceUrl: 'sourceUrl',
+  publishedAt: 'publishedAt',
+  archivedAt: 'archivedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -154,8 +171,10 @@ export const CommentScalarFieldEnum = {
   id: 'id',
   postId: 'postId',
   content: 'content',
-  author: 'author',
-  createdAt: 'createdAt'
+  status: 'status',
+  createdAt: 'createdAt',
+  authorId: 'authorId',
+  parentId: 'parentId'
 } as const
 
 export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
@@ -167,6 +186,14 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull'
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -183,4 +210,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull',
+  AnyNull: 'AnyNull'
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

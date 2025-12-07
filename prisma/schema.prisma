@@ -17,6 +17,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  comments      Comment[]
 
   @@unique([email])
   @@map("user")
@@ -70,30 +71,81 @@ model Verification {
   @@map("verification")
 }
 
-model Post {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  title     String
-  excerpt   String?
-  image     String?
-  tags      String[]
-  content   String
-  published DateTime
-  deletedAt DateTime? // 软删除时间戳
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+model Tag {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  slug       String  @unique
+  color      String?
+  background String?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts Post[]
+
+  @@index([slug])
+  @@map("tag")
+}
+
+model Post {
+  id      String     @id @default(cuid())
+  type    PostType   @default(BLOG)
+  slug    String     @unique
+  title   String
+  excerpt String?    @db.Text
+  poster  String?
+  content String?    @db.Text
+  status  StatusType @default(PUBLISHED) // 'draft' or 'published' for blog posts
+
+  // Project specific fields
+  images    Json? // Array of {image: string, caption?: string}
+  sourceUrl String?
+
+  publishedAt DateTime?
+  archivedAt  DateTime? // 软删除时间戳
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tags     Tag[]
   comments Comment[]
 
-  @@index([deletedAt])
+  @@index([type])
+  @@index([slug])
+  @@index([publishedAt])
+  @@index([status])
+  @@index([archivedAt])
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   postId    String
   content   String
-  author    String
-  createdAt DateTime @default(now())
+  status    StatusType @default(PUBLISHED) // 'published', 'pending', 'spam'
+  createdAt DateTime   @default(now())
 
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  parentId String?
+
+  author   User      @relation(fields: [authorId], references: [id])
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentThread", fields: [parentId], references: [id])
+  children Comment[] @relation("CommentThread")
+
+  @@index([postId])
+  @@index([status])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+enum PostType {
+  BLOG
+  PROJECT
+}
+
+enum StatusType {
+  PUBLISHED
+  DRAFT
+  ARCHIVED
+  PENDING
+  SPAM
 }

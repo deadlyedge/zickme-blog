@@ -126,7 +126,7 @@ export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
 					</div>
 				</article>
 
-				<CommentsSection docId={post.id} docType="posts" />
+				{/* <CommentsSection docId={post.id} docType="posts" /> */}
 			</div>
 		</div>
 	)
