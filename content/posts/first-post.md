@@ -15,4 +15,6 @@ try it myself. so what's wrong?
 
 i can't do it any more...
 
+interesting...
+
 ![内嵌图片](../images/curry_shot.jpg)
