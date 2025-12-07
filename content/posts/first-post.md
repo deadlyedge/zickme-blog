@@ -15,7 +15,7 @@ date: "2025-12-06"
 
 i can't do it any more...
 
-interesting...
+~~interesting...~~
 
 or not..
 
