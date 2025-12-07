@@ -23,4 +23,6 @@ take a look..
 
 let's see.
 
+suprise me.
+
 ![内嵌图片](../images/curry_shot.jpg)
