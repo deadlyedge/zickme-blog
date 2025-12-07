@@ -17,4 +17,6 @@ i can't do it any more...
 
 interesting...
 
+or not..
+
 ![内嵌图片](../images/curry_shot.jpg)
