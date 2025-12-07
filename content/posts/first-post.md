@@ -13,4 +13,6 @@ try again. and again. and again. and again. and again. and again..final.. one mo
 
 try it myself. so what's wrong?
 
+i can't do it any more...
+
 ![内嵌图片](../images/curry_shot.jpg)
