@@ -9,6 +9,6 @@ date: "2025-12-06"
 
 正文内容，支持 Markdown 语法...
 
-try again.
+try again. and again.
 
 ![内嵌图片](../images/curry_shot.jpg)
