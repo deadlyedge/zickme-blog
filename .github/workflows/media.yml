@@ -4,19 +4,24 @@ on:
     paths:
       - 'content/images/**'
       - 'content/posts/**'
+
 jobs:
-  upload:
+  upload-media:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload to Cloudinary
-        uses: cloudinary/actions@master
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest  # 或 1.1.30
+
+      - name: Install dependencies
+        run: bun ci  # 替换 npm ci，速度提升 5-10x
+
+      - name: Upload images to Cloudinary
         env:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-        with:
-          folder: 'myblog'
-          source: './content/images/*'
-          overwrite: true
+        run: bun run scripts/upload-to-cloudinary.ts
