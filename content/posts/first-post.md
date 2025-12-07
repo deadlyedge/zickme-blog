@@ -11,6 +11,6 @@ date: "2025-12-06"
 
 try again. and again. and again. and again. and again. and again..final.. one more hope.
 
-try it myself.
+try it myself. so what's wrong?
 
 ![内嵌图片](../images/curry_shot.jpg)
