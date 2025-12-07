@@ -21,15 +21,11 @@ jobs:
 
       - name: Upload images to Cloudinary
         uses: emmanuelgautier/cloudinary-upload-action@v2.0 
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         with:
-          cloud_name: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          api_key: ${{ secrets.CLOUDINARY_API_KEY }}
-          api_secret: ${{ secrets.CLOUDINARY_API_SECRET }}
-          # folder: 'your-folder-name'  # 可选：指定上传到 Cloudinary 的文件夹
           images: 'content/images/**'  # 指定要上传的文件路径
-        # env:
-        #   CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-        #   CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-        #   CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
         # run: bunx scripts/upload-to-cloudinary.ts
