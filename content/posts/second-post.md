@@ -6,6 +6,7 @@ tags:
   - about
   - feelings
 title: 我的第二篇文章
+date: "2025-12-08"
 ---
 
 # mongodb
