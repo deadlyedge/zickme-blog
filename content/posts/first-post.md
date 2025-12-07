@@ -19,4 +19,6 @@ interesting...
 
 or not..
 
+take a look..
+
 ![内嵌图片](../images/curry_shot.jpg)
