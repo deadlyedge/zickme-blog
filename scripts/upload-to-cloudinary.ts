@@ -9,7 +9,6 @@ async function main() {
 		cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
 		api_key: process.env.CLOUDINARY_API_KEY,
 		api_secret: process.env.CLOUDINARY_API_SECRET,
-		secure: true,
 	})
 
 	const files = await fs.readdir(IMAGES_DIR)
@@ -20,22 +19,25 @@ async function main() {
 		const stat = await fs.stat(fullPath)
 		if (!stat.isFile()) continue
 
-		const publicId = `myblog/${path.parse(file).name}`
+		const name = path.parse(file).name
+		const publicId = `myblog/${name}`
 
 		console.log(`Uploading ${file} → ${publicId}`)
 
-		await cloudinary.uploader.upload(fullPath, {
+		const res = await cloudinary.uploader.upload(fullPath, {
 			public_id: publicId,
-			overwrite: true,
 			resource_type: 'image',
-			upload_preset: 'zickme-blog',
+			overwrite: true,
+			upload_preset: 'zickme-blog', // ⭐ 使用你这个 Signed preset
 		})
+
+		console.log('Uploaded:', res.public_id, res.secure_url)
 	}
 
 	console.log('✅ Upload finished')
 }
 
 main().catch((err) => {
-	console.error(err)
+	console.error('❌ Upload failed', err)
 	process.exit(1)
 })
