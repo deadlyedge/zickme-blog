@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import BlogGridClient from '@/components/BlogGridClient'
 
 // 每5分钟重新验证一次
-export const revalidate = 600
+export const revalidate = 300
 
 export const metadata: Metadata = buildMetadata({
 	title: '博客文章',

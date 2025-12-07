@@ -5,7 +5,6 @@ import { useRef } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
 import { ContentResponse } from '@/lib/content-providers'
 import { Hero } from './Hero'
-import { ProjectCard } from './ProjectCard'
 import { BlogPostCard } from './BlogPostCard'
 
 type HomeScrollAreaProps = { data: ContentResponse }

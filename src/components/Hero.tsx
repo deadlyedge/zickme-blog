@@ -8,6 +8,12 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import CurvedLoop from './ui/effects/CurvedLoop'
 
+type Slogan = {
+	text: string
+	fontSize?: string
+	color?: string
+}
+
 type HeroProps = {
 	profile: SiteProfile | null
 	scale: MotionValue<number>
@@ -48,7 +54,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 		rotate: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 360 * 2,
 	}
 
-	const sloganList = (profile?.slogans as any[]) || [
+	const sloganList: Slogan[] = (profile?.slogans as Slogan[]) || [
 		{ text: 'WE REBRANDED WITH PURPOSE. READ THE STORY →' },
 		{
 			text: 'A good design is not just a design, it is a future.',
