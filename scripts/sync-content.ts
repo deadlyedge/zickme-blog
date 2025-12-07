@@ -79,7 +79,10 @@ async function syncPosts() {
 		if (frontmatter.tags && frontmatter.tags.length > 0) {
 			const tagConnections = frontmatter.tags.map((tagName: string) => ({
 				where: { name: tagName },
-				create: { name: tagName, slug: tagName.toLowerCase().replace(/\s+/g, '-') },
+				create: {
+					name: tagName,
+					slug: tagName.toLowerCase().replace(/\s+/g, '-'),
+				},
 			}))
 
 			await prisma.post.update({
@@ -96,13 +99,13 @@ async function syncPosts() {
 	}
 
 	// 3️⃣ 清理超过 7 天的删除文章 + 评论
-	await prisma.post.deleteMany({
-		where: {
-			archivedAt: {
-				lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 天前
-			},
-		},
-	})
+	// await prisma.post.deleteMany({
+	// 	where: {
+	// 		archivedAt: {
+	// 			lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 天前
+	// 		},
+	// 	},
+	// })
 
 	console.log('✅ 同步完成！')
 	await prisma.$disconnect()
