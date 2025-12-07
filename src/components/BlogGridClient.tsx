@@ -1,15 +1,15 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { BlogPostViewModel, TagViewModel } from '@/lib/content-providers'
+import type { Post, Tag } from '@/generated/prisma/client'
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
 import { BlogPostCard } from './BlogPostCard'
 
 type Props = {
-	posts: BlogPostViewModel[]
-	tags: TagViewModel[]
+	posts: Post[]
+	tags: Tag[]
 }
 
 import { useEffect } from 'react'
@@ -44,7 +44,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 	const filteredPosts = useMemo(() => {
 		if (activeTag === 'All') return posts
 		return posts.filter((post) =>
-			post.tags?.some((tag) => tag.slug === activeTag),
+			(post as any).tags?.some((tag: any) => tag.slug === activeTag),
 		)
 	}, [posts, activeTag])
 

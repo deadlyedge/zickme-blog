@@ -1,21 +1,13 @@
 import { StateCreator } from 'zustand'
 import { AppState, CacheActions, CacheState } from './types'
 import {
-	BlogPostViewModel,
-	ProjectViewModel,
-	// TagViewModel,
-	// BlogPostDetailViewModel,
-} from '../content-providers'
-import {
 	fetchBlogPostsAction,
-	fetchProjectsAction,
 	fetchTagsAction,
 	fetchBlogPostBySlugAction,
-	fetchProjectBySlugAction,
 } from '../actions/content'
+import type { Post } from '@/generated/prisma/client'
 
 const BLOG_CACHE_DURATION = 10 * 60 * 1000
-const PROJECT_CACHE_DURATION = 60 * 60 * 1000
 const DEFAULT_CACHE_DURATION = 5 * 60 * 1000
 
 export const createContentSlice: StateCreator<
@@ -25,39 +17,25 @@ export const createContentSlice: StateCreator<
 	CacheState & CacheActions
 > = (set, get) => ({
 	blogPosts: new Map(),
-	projects: new Map(),
 	tags: [],
 	singleBlogPosts: new Map(),
-	singleProjects: new Map(),
 	singleBlogPostTimestamps: new Map(),
-	singleProjectTimestamps: new Map(),
 	lastFetched: {
 		blogPosts: 0,
-		projects: 0,
 		tags: 0,
 		singleContent: 0,
 	},
 	preloading: {
 		blogPost: null,
-		project: null,
 	},
 
 	setBlogPosts: (posts) =>
 		set((state) => {
-			const map = new Map<string, BlogPostViewModel>()
+			const map = new Map<string, Post>()
 			posts.forEach((post) => map.set(post.slug, post))
 			return {
 				blogPosts: map,
 				lastFetched: { ...state.lastFetched, blogPosts: Date.now() },
-			}
-		}),
-	setProjects: (projects) =>
-		set((state) => {
-			const map = new Map<string, ProjectViewModel>()
-			projects.forEach((project) => map.set(project.slug, project))
-			return {
-				projects: map,
-				lastFetched: { ...state.lastFetched, projects: Date.now() },
 			}
 		}),
 	setTags: (tags) =>
@@ -77,24 +55,10 @@ export const createContentSlice: StateCreator<
 				lastFetched: { ...state.lastFetched, singleContent: Date.now() },
 			}
 		}),
-	setSingleProject: (slug, project) =>
-		set((state) => {
-			const projects = new Map(state.singleProjects)
-			projects.set(slug, project)
-			const timestamps = new Map(state.singleProjectTimestamps)
-			timestamps.set(slug, Date.now())
-			return {
-				singleProjects: projects,
-				singleProjectTimestamps: timestamps,
-				lastFetched: { ...state.lastFetched, singleContent: Date.now() },
-			}
-		}),
 
 	// Getters
 	getSingleBlogPost: (slug) => get().singleBlogPosts.get(slug),
-	getSingleProject: (slug) => get().singleProjects.get(slug),
 	getBlogPost: (slug) => get().blogPosts.get(slug),
-	getProject: (slug) => get().projects.get(slug),
 
 	// Async Thunks
 	fetchBlogPosts: async () => {
@@ -118,28 +82,6 @@ export const createContentSlice: StateCreator<
 		} finally {
 			set((state) => ({
 				loadingStates: { ...state.loadingStates, blogPosts: false },
-			}))
-		}
-	},
-
-	fetchProjects: async () => {
-		if (get().isCacheValid('projects', PROJECT_CACHE_DURATION)) return
-
-		set((state) => ({
-			loadingStates: { ...state.loadingStates, projects: true },
-			errorStates: { ...state.errorStates, projects: null },
-		}))
-
-		try {
-			const projects = await fetchProjectsAction()
-			get().setProjects(projects)
-		} catch (err) {
-			set((state) => ({
-				errorStates: { ...state.errorStates, projects: (err as Error).message },
-			}))
-		} finally {
-			set((state) => ({
-				loadingStates: { ...state.loadingStates, projects: false },
 			}))
 		}
 	},
@@ -188,47 +130,19 @@ export const createContentSlice: StateCreator<
 		}
 	},
 
-	fetchProject: async (slug: string) => {
-		if (get().isSingleContentCached('project', slug, PROJECT_CACHE_DURATION))
-			return
-
-		get().setPreloadingProject(slug)
-
-		try {
-			const project = await fetchProjectBySlugAction(slug)
-			if (project) {
-				get().setSingleProject(slug, project)
-			} else {
-				throw new Error('Not found')
-			}
-		} catch (err) {
-			console.error(err)
-		} finally {
-			get().setPreloadingProject(null)
-		}
-	},
-
 	setPreloadingBlog: (slug) =>
 		set((state) => ({
 			preloading: { ...state.preloading, blogPost: slug },
-		})),
-	setPreloadingProject: (slug) =>
-		set((state) => ({
-			preloading: { ...state.preloading, project: slug },
 		})),
 
 	clearCache: () =>
 		set({
 			blogPosts: new Map(),
-			projects: new Map(),
 			tags: [],
 			singleBlogPosts: new Map(),
-			singleProjects: new Map(),
 			singleBlogPostTimestamps: new Map(),
-			singleProjectTimestamps: new Map(),
 			lastFetched: {
 				blogPosts: 0,
-				projects: 0,
 				tags: 0,
 				singleContent: 0,
 			},
@@ -238,10 +152,7 @@ export const createContentSlice: StateCreator<
 		return Date.now() - lastFetched < maxAge
 	},
 	isSingleContentCached: (type, slug, maxAge = DEFAULT_CACHE_DURATION) => {
-		const timestamps =
-			type === 'blog'
-				? get().singleBlogPostTimestamps
-				: get().singleProjectTimestamps
+		const timestamps = get().singleBlogPostTimestamps
 		const lastFetched = timestamps.get(slug)
 		return Boolean(lastFetched && Date.now() - lastFetched < maxAge)
 	},

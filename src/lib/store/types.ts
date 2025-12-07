@@ -1,9 +1,4 @@
-import {
-	BlogPostViewModel,
-	ProjectViewModel,
-	TagViewModel,
-	BlogPostDetailViewModel,
-} from '../content-providers'
+import type { Post, Tag } from '@/generated/prisma/client'
 
 export interface NavigationState {
 	isNavigating: boolean
@@ -20,19 +15,15 @@ export interface NavigationActions {
 
 export interface CacheState {
 	// 列表数据
-	blogPosts: Map<string, BlogPostViewModel>
-	projects: Map<string, ProjectViewModel>
-	tags: TagViewModel[]
+	blogPosts: Map<string, Post>
+	tags: Tag[]
 
 	// 单篇内容数据 - 按 slug 缓存
-	singleBlogPosts: Map<string, BlogPostDetailViewModel>
-	singleProjects: Map<string, ProjectViewModel>
+	singleBlogPosts: Map<string, Post>
 	singleBlogPostTimestamps: Map<string, number>
-	singleProjectTimestamps: Map<string, number>
 
 	lastFetched: {
 		blogPosts: number
-		projects: number
 		tags: number
 		singleContent: number
 	}
@@ -40,30 +31,22 @@ export interface CacheState {
 	// 预加载状态
 	preloading: {
 		blogPost: string | null
-		project: string | null
 	}
 }
 
 export interface CacheActions {
-	setBlogPosts: (posts: BlogPostViewModel[]) => void
-	setProjects: (projects: ProjectViewModel[]) => void
-	setTags: (tags: TagViewModel[]) => void
-	setSingleBlogPost: (slug: string, post: BlogPostDetailViewModel) => void
-	setSingleProject: (slug: string, project: ProjectViewModel) => void
+	setBlogPosts: (posts: Post[]) => void
+	setTags: (tags: Tag[]) => void
+	setSingleBlogPost: (slug: string, post: Post) => void
 
-	getSingleBlogPost: (slug: string) => BlogPostDetailViewModel | undefined
-	getSingleProject: (slug: string) => ProjectViewModel | undefined
-	getBlogPost: (slug: string) => BlogPostViewModel | undefined
-	getProject: (slug: string) => ProjectViewModel | undefined
+	getSingleBlogPost: (slug: string) => Post | undefined
+	getBlogPost: (slug: string) => Post | undefined
 
 	fetchBlogPosts: () => Promise<void>
-	fetchProjects: () => Promise<void>
 	fetchTags: () => Promise<void>
 	fetchBlogPost: (slug: string) => Promise<void>
-	fetchProject: (slug: string) => Promise<void>
 
 	setPreloadingBlog: (slug: string | null) => void
-	setPreloadingProject: (slug: string | null) => void
 
 	clearCache: () => void
 	isCacheValid: (
@@ -71,7 +54,7 @@ export interface CacheActions {
 		maxAge?: number,
 	) => boolean
 	isSingleContentCached: (
-		type: 'blog' | 'project',
+		type: 'blog',
 		slug: string,
 		maxAge?: number,
 	) => boolean
@@ -80,13 +63,11 @@ export interface CacheActions {
 export interface UIState {
 	loadingStates: {
 		blogPosts: boolean
-		projects: boolean
 		tags: boolean
 		pageTransition: boolean
 	}
 	errorStates: {
 		blogPosts: string | null
-		projects: string | null
 		tags: string | null
 	}
 }
@@ -98,12 +79,12 @@ export interface UIActions {
 
 export interface User {
 	id: string
-	username: string
+	name?: string
 	email: string
-	profile: {
-		avatar: { url: string }
-		bio: string
-	}
+	emailVerified?: boolean
+	image?: string | null
+	createdAt?: Date
+	updatedAt?: Date
 	[key: string]: unknown
 }
 

@@ -5,6 +5,7 @@ import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
 import { safeExtract } from '@/lib/utils'
 import { GlobeIcon, MailIcon } from 'lucide-react'
+import type { SiteProfile } from '@/generated/prisma/client'
 
 export const revalidate = 3600 // 每小时重新验证一次
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default async function AboutPage() {
-	const profileData = await fetchProfile()
+	const profileData = await fetchProfile() as SiteProfile & { avatar?: { url: string } }
 
 	if (!profileData) {
 		return <div>暂无个人资料</div>
@@ -27,7 +28,7 @@ export default async function AboutPage() {
 					<div>
 						{profileData.avatar && (
 							<Image
-								src={safeExtract(profileData.avatar)?.url || ''}
+								src={profileData.avatar.url || ''}
 								alt={profileData.name}
 								width={300}
 								height={300}
@@ -65,9 +66,9 @@ export default async function AboutPage() {
 							</p>
 						)}
 
-						{profileData.socialLinks && (
+						{profileData.socialLinks && Array.isArray(profileData.socialLinks) && (
 							<div className="flex gap-4">
-								{profileData.socialLinks.map((link, index: number) => (
+								{profileData.socialLinks.map((link: any, index: number) => (
 									<a
 										key={index}
 										href={link.url}
@@ -82,17 +83,17 @@ export default async function AboutPage() {
 					</div>
 				</div>
 
-				{profileData.skills && (
+				{profileData.skills && Array.isArray(profileData.skills) && (
 					<section className="mt-16">
 						<h2 className="text-3xl font-bold mb-8">技能专长</h2>
 						<div className="grid md:grid-cols-2 gap-8">
-							{profileData.skills.map((skill, index: number) => (
+							{profileData.skills.map((skill: any, index: number) => (
 								<div key={index}>
 									<h3 className="text-lg font-semibold mb-4">
 										{skill.category}
 									</h3>
 									<div className="space-y-2">
-										{skill.technologies?.map((tech, techIndex: number) => (
+										{skill.technologies?.map((tech: any, techIndex: number) => (
 											<div key={techIndex} className="flex justify-between">
 												<span>{tech.name}</span>
 												<span className="text-muted-foreground">

@@ -1,14 +1,70 @@
-import { betterAuth } from 'better-auth'
-import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { prisma } from '@/lib/prisma'
-import { nextCookies } from 'better-auth/next-js'
+// Client-side auth API - compatibility layer for existing code
+// Using better-auth client for proper integration
+import { createAuthClient } from 'better-auth/client'
 
-export const auth = betterAuth({
-	database: prismaAdapter(prisma, {
-		provider: 'postgresql',
-	}),
-	emailAndPassword: {
-		enabled: true,
+const authClient = createAuthClient({
+	baseURL: typeof window !== 'undefined' ? window.location.origin : '',
+	fetchOptions: {
+		onRequest: (context) => {
+			return {
+				...context,
+				headers: {
+					...context.headers,
+				},
+			}
+		},
+		onResponse: (context) => {
+			return context
+		},
 	},
-	plugins: [nextCookies()], // make sure this is the last plugin in the array
 })
+
+export const authApi = {
+	login: async (email: string, password: string) => {
+		const result = await authClient.signIn.email({
+			email,
+			password,
+		})
+
+		if (result.error) {
+			throw new Error(result.error.message || 'Login failed')
+		}
+
+		return { user: result.data?.user }
+	},
+
+	register: async (username: string, email: string, password: string) => {
+		const result = await authClient.signUp.email({
+			email,
+			password,
+			name: username,
+		})
+
+		if (result.error) {
+			throw new Error(result.error.message || 'Registration failed')
+		}
+
+		return { user: result.data?.user }
+	},
+
+	logout: async () => {
+		const result = await authClient.signOut()
+
+		if (result.error) {
+			throw new Error(result.error.message || 'Logout failed')
+		}
+
+		return {}
+	},
+
+	updateProfile: async (username: string, currentPassword: string, newPassword?: string) => {
+		// Better-auth doesn't have built-in profile update
+		// This would need custom implementation
+		throw new Error('Profile update not implemented yet')
+	},
+
+	getCurrentUser: async () => {
+		const result = await authClient.getSession()
+		return result.data?.user || null
+	},
+}

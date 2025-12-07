@@ -13,11 +13,10 @@ const SmartCacheContext = createContext<SmartCacheContextType | undefined>(
 
 export function SmartCacheProvider({ children }: { children: ReactNode }) {
 	const hasBlogPosts = useAppStore((state) => state.blogPosts.size > 0)
-	const hasProjects = useAppStore((state) => state.projects.size > 0)
 	const hasTags = useAppStore((state) => state.tags.length > 0)
 
 	// 检查是否所有关键数据都已加载
-	const isDataReady = hasBlogPosts && hasProjects && hasTags
+	const isDataReady = hasBlogPosts && hasTags
 
 	return (
 		<SmartCacheContext.Provider value={{ isDataReady }}>

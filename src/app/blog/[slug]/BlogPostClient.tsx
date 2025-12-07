@@ -9,10 +9,10 @@ import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CommentsSection } from '@/components/comments'
 import { useAppStore } from '@/lib/store'
-import type { BlogPostDetailViewModel } from '@/lib/content-providers'
+import type { Post } from '@/generated/prisma/client'
 
 interface BlogPostClientProps {
-	initialPost?: BlogPostDetailViewModel
+	initialPost?: Post
 }
 
 export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
@@ -92,9 +92,9 @@ export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
 					<header className="mb-8">
 						<h1 className="text-4xl font-bold mb-4">{post.title}</h1>
 
-						{post.featuredImageUrl && (
+						{post.poster && (
 							<Image
-								src={post.featuredImageUrl}
+								src={post.poster}
 								alt={post.title}
 								width={800}
 								height={400}
@@ -103,7 +103,7 @@ export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
 						)}
 
 						<div className="flex flex-wrap gap-1 mb-2">
-							{post.tags?.map((tag) => (
+							{(post as any).tags?.map((tag: any) => (
 								<Badge
 									key={tag.slug}
 									className="bg-secondary"
@@ -117,12 +117,13 @@ export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
 						</div>
 
 						<time className="text-muted-foreground">
-							发布于 {formatPublishedDate(post.publishedAt || post.createdAt)}
+							发布于 {formatPublishedDate((post.publishedAt || post.createdAt).toISOString())}
 						</time>
 					</header>
 
 					<div className="prose prose-lg max-w-none">
-						<RichText value={post.content} />
+						{/* TODO: Convert content to proper format for RichText component */}
+						<div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
 					</div>
 				</article>
 

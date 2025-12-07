@@ -32,7 +32,7 @@ async function syncPosts() {
 			await prisma.post.updateMany({
 				where: { slug: dbSlug },
 				data: {
-					deletedAt: new Date(),
+					archivedAt: new Date(),
 					title: `[已删除] ${dbSlug}`,
 				},
 			})
@@ -60,22 +60,37 @@ async function syncPosts() {
 			update: {
 				title: frontmatter.title,
 				excerpt: frontmatter.excerpt,
-				image: imageUrl,
-				tags: frontmatter.tags,
+				poster: imageUrl,
 				content: await marked(body),
-				published: new Date(frontmatter.date),
-				deletedAt: null, // 恢复
+				publishedAt: new Date(frontmatter.date),
+				archivedAt: null, // 恢复
 			},
 			create: {
 				slug,
 				title: frontmatter.title,
 				excerpt: frontmatter.excerpt,
-				image: imageUrl,
-				tags: frontmatter.tags,
+				poster: imageUrl,
 				content: await marked(body),
-				published: new Date(frontmatter.date),
+				publishedAt: new Date(frontmatter.date),
 			},
 		})
+
+		// Handle tags separately - connect existing tags or create new ones
+		if (frontmatter.tags && frontmatter.tags.length > 0) {
+			const tagConnections = frontmatter.tags.map((tagName: string) => ({
+				where: { name: tagName },
+				create: { name: tagName, slug: tagName.toLowerCase().replace(/\s+/g, '-') },
+			}))
+
+			await prisma.post.update({
+				where: { slug },
+				data: {
+					tags: {
+						connectOrCreate: tagConnections,
+					},
+				},
+			})
+		}
 
 		console.log(`✅ 更新: ${slug}`)
 	}
@@ -83,7 +98,7 @@ async function syncPosts() {
 	// 3️⃣ 清理超过 7 天的删除文章 + 评论
 	await prisma.post.deleteMany({
 		where: {
-			deletedAt: {
+			archivedAt: {
 				lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 天前
 			},
 		},

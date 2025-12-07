@@ -336,7 +336,7 @@ function ProfileForm() {
 	const form = useForm<ProfileForm>({
 		resolver: zodResolver(profileSchema),
 		defaultValues: {
-			username: user?.username || '',
+			username: user?.name || '',
 			currentPassword: '',
 			newPassword: '',
 			confirmNewPassword: '',

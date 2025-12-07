@@ -2,12 +2,12 @@ import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 import { Badge } from './ui/badge'
-import { BlogPostViewModel } from '@/lib/content-providers'
+import type { Post } from '@/generated/prisma/client'
 import { formatPublishedDate } from '@/lib/utils'
 import { Button } from './ui/button'
 import { NavigationLink } from './NavigationLink'
 
-type BlogPostCardProps = { post: BlogPostViewModel }
+type BlogPostCardProps = { post: Post }
 
 export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 	return (
@@ -19,10 +19,10 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 			<CardTiltContent className="rounded-2xl bg-card shadow-2xl overflow-hidden">
 				<div className="relative bg-slate-100">
 					<NavigationLink href={`/blog/${post.slug}`}>
-						{post.featuredImageUrl ? (
+						{post.poster ? (
 							<div className="relative w-full aspect-4/3 bg-slate-100">
 								<Image
-									src={post.featuredImageUrl}
+									src={post.poster}
 									alt={post.title}
 									fill
 									sizes="(max-width: 700px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -41,7 +41,7 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 							{post.title}
 						</span>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{post.tags?.slice(0, 3).map((t) => (
+							{(post as any).tags?.slice(0, 3).map((t: any) => (
 								<Badge
 									key={t.slug}
 									style={{
@@ -60,7 +60,7 @@ export const BlogPostCard = ({ post }: BlogPostCardProps) => {
 
 					<div className="mt-4 flex items-center justify-between text-xs text-slate-500">
 						<div>
-							{post.publishedAt && formatPublishedDate(post.publishedAt)}
+							{post.publishedAt && formatPublishedDate(post.publishedAt.toISOString())}
 						</div>
 						<Button asChild>
 							<NavigationLink href={`/blog/${post.slug}`}>访问</NavigationLink>

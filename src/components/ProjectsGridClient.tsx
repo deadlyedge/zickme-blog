@@ -1,14 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { ProjectViewModel } from '@/lib/content-providers'
+// Project functionality removed - keeping file for future use
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
 import { ProjectCard } from './ProjectCard'
 
 type Props = {
-	projects: ProjectViewModel[]
+	projects: any[]
 }
 
 /**
@@ -22,17 +22,11 @@ import { useAppStore } from '@/lib/store'
 
 export default function ProjectsGridClient({ projects }: Props) {
 	const [active, setActive] = useState<string>('All')
-	const setProjects = useAppStore((state) => state.setProjects)
-
-	// Hydration for client cache
-	useEffect(() => {
-		setProjects(projects)
-	}, [projects, setProjects])
 
 	const categories = useMemo(() => {
 		const techs = new Set<string>()
 		projects.forEach((p) => {
-			p.technologies?.forEach((t) => {
+			p.technologies?.forEach((t: any) => {
 				if (t?.name) techs.add(t.name)
 			})
 		})
@@ -43,7 +37,7 @@ export default function ProjectsGridClient({ projects }: Props) {
 		if (active === 'All') return projects
 		if (active === 'Featured') return projects.filter((p) => !!p.featured)
 		return projects.filter((p) =>
-			p.technologies?.some((t) => t.name === active),
+			p.technologies?.some((t: any) => t.name === active),
 		)
 	}, [projects, active])
 

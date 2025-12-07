@@ -39,7 +39,7 @@ export async function generateMetadata({
 	return buildMetadata({
 		title: post.title,
 		description: post.excerpt || `阅读 ${post.title}`,
-		image: post.featuredImageUrl || undefined,
+		image: post.poster || undefined,
 	})
 }
 

@@ -12,7 +12,7 @@ type HomeScrollAreaProps = { data: ContentResponse }
 
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const scrollRef = useRef(null)
-	const { profile, projects, blogPosts } = data
+	const { profile, blogPosts } = data
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,
 		offset: ['0 0', '1 1'],
@@ -30,25 +30,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 				<Hero profile={profile} scale={scaleX} />
 
-				{/* PROJECTS GRID */}
-				<section
-					id="projects"
-					className="pt-16 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
-					<div className="flex items-baseline justify-between">
-						<h2 className="text-3xl font-semibold">Projects</h2>
-						<Link
-							href="/projects"
-							className="text-sm text-slate-500 hover:underline">
-							See full list
-						</Link>
-					</div>
 
-					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{projects.map((project) => (
-							<ProjectCard key={project.id} project={project} />
-						))}
-					</div>
-				</section>
 
 				{/* LATEST POSTS */}
 				<section id="blog" className="mt-20 px-2">

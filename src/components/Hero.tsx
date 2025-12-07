@@ -1,6 +1,6 @@
 'use client'
 
-import { ProfileViewModel } from '@/lib/content-providers'
+import type { SiteProfile } from '@/generated/prisma/client'
 import * as motion from 'motion/react-client'
 import { useMotionValueEvent } from 'motion/react'
 import type { MotionStyle, MotionValue, Variants } from 'motion/react'
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import CurvedLoop from './ui/effects/CurvedLoop'
 
 type HeroProps = {
-	profile: ProfileViewModel | null
+	profile: SiteProfile | null
 	scale: MotionValue<number>
 }
 
@@ -48,7 +48,15 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 		rotate: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 360 * 2,
 	}
 
-	const sloganList = profile?.slogans || []
+	const sloganList = (profile?.slogans as any[]) || [
+		{ text: 'WE REBRANDED WITH PURPOSE. READ THE STORY →' },
+		{
+			text: 'A good design is not just a design, it is a future.',
+			fontSize: 'text-3xl',
+			color: 'text-slate-900',
+		},
+		{ text: 'We are a team of designers and developers.' },
+	]
 
 	return (
 		<section className="overflow-hidden">

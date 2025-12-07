@@ -96,16 +96,16 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 						<div className="flex items-center gap-2">
 							<Button variant="link" onClick={handleEditProfile}>
 								<Avatar>
-									<AvatarImage
-										src={
-											user?.profile?.avatar?.url ||
-											'https://github.com/shadcn.png'
-										}
-										alt={user?.username || '@shadcn'}
+		<AvatarImage
+			src={
+				user?.image ||
+				'https://github.com/shadcn.png'
+			}
+			alt={user?.name || '@shadcn'}
 									/>
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
-								{user.username || '用户'}
+								{user.name || '用户'}
 							</Button>
 							<Button
 								variant="outline"

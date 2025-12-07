@@ -7,29 +7,21 @@ export function useNavigationPreload() {
 	const setNavigating = useAppStore((state) => state.setNavigating)
 	const setCurrentPath = useAppStore((state) => state.setCurrentPath)
 	const fetchBlogPost = useAppStore((state) => state.fetchBlogPost)
-	const fetchProject = useAppStore((state) => state.fetchProject)
 
 	const [isPreloading, setIsPreloading] = useState(false)
 
 	const preloadData = useCallback(
 		async (path: string) => {
-			// 检查是否是blog或project详情页
+			// 检查是否是blog详情页
 			const blogMatch = path.match(/^\/blog\/(.+)$/)
-			const projectMatch = path.match(/^\/projects\/(.+)$/)
 
 			if (blogMatch) {
 				const slug = blogMatch[1]
 				await fetchBlogPost(slug)
 				return
 			}
-
-			if (projectMatch) {
-				const slug = projectMatch[1]
-				await fetchProject(slug)
-				return
-			}
 		},
-		[fetchBlogPost, fetchProject],
+		[fetchBlogPost],
 	)
 
 	const preloadAndNavigate = useCallback(

@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand'
-import { AppState, AuthActions, AuthState } from './types'
+import { AppState, AuthActions, AuthState, User } from './types'
 import { authApi } from '@/lib/auth'
 
 export const createAuthSlice: StateCreator<
@@ -129,15 +129,9 @@ export const createAuthSlice: StateCreator<
 		}
 	},
 
-	checkAuth: async () => {
+	checkAuth: async (): Promise<User | null> => {
 		try {
-			const response = await authApi.getCurrentUser()
-
-			// Payload 的 /me 端点返回 { user: User, ... } 格式
-			const user =
-				response && typeof response === 'object' && 'user' in response
-					? response.user
-					: response
+			const user = await authApi.getCurrentUser() as User | null
 
 			set({
 				user,

@@ -390,7 +390,9 @@ export const ModelName = {
   Verification: 'Verification',
   Tag: 'Tag',
   Post: 'Post',
-  Comment: 'Comment'
+  Comment: 'Comment',
+  SiteProfile: 'SiteProfile',
+  Media: 'Media'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -406,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "tag" | "post" | "comment"
+    modelProps: "user" | "session" | "account" | "verification" | "tag" | "post" | "comment" | "siteProfile" | "media"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -928,6 +930,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SiteProfile: {
+      payload: Prisma.$SiteProfilePayload<ExtArgs>
+      fields: Prisma.SiteProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.SiteProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        findMany: {
+          args: Prisma.SiteProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>[]
+        }
+        create: {
+          args: Prisma.SiteProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        createMany: {
+          args: Prisma.SiteProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.SiteProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        update: {
+          args: Prisma.SiteProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.SiteProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteProfile>
+        }
+        groupBy: {
+          args: Prisma.SiteProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    Media: {
+      payload: Prisma.$MediaPayload<ExtArgs>
+      fields: Prisma.MediaFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MediaFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MediaFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        findFirst: {
+          args: Prisma.MediaFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MediaFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        findMany: {
+          args: Prisma.MediaFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>[]
+        }
+        create: {
+          args: Prisma.MediaCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        createMany: {
+          args: Prisma.MediaCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MediaCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>[]
+        }
+        delete: {
+          args: Prisma.MediaDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        update: {
+          args: Prisma.MediaUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        deleteMany: {
+          args: Prisma.MediaDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MediaUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MediaUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>[]
+        }
+        upsert: {
+          args: Prisma.MediaUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaPayload>
+        }
+        aggregate: {
+          args: Prisma.MediaAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMedia>
+        }
+        groupBy: {
+          args: Prisma.MediaGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MediaGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MediaCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MediaCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1071,6 +1221,40 @@ export const CommentScalarFieldEnum = {
 export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
 
 
+export const SiteProfileScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  title: 'title',
+  bio: 'bio',
+  location: 'location',
+  email: 'email',
+  website: 'website',
+  avatarId: 'avatarId',
+  socialLinks: 'socialLinks',
+  skills: 'skills',
+  slogans: 'slogans',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteProfileScalarFieldEnum = (typeof SiteProfileScalarFieldEnum)[keyof typeof SiteProfileScalarFieldEnum]
+
+
+export const MediaScalarFieldEnum = {
+  id: 'id',
+  filename: 'filename',
+  mimeType: 'mimeType',
+  filesize: 'filesize',
+  width: 'width',
+  height: 'height',
+  url: 'url',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1208,6 +1392,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -1310,6 +1508,8 @@ export type GlobalOmitConfig = {
   tag?: Prisma.TagOmit
   post?: Prisma.PostOmit
   comment?: Prisma.CommentOmit
+  siteProfile?: Prisma.SiteProfileOmit
+  media?: Prisma.MediaOmit
 }
 
 /* Types for Logging */

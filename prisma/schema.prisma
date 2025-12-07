@@ -149,3 +149,43 @@ enum StatusType {
   PENDING
   SPAM
 }
+
+model SiteProfile {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  bio       String   @db.Text
+  location  String?
+  email     String?
+  website   String?
+
+  avatarId String?
+  avatar   Media?  @relation(fields: [avatarId], references: [id])
+
+  socialLinks Json? // Array of {platform: string, url: string, username?: string}
+  skills      Json? // Array of {category: string, technologies: Array<{name: string, level?: string}>}
+  slogans     Json? // Array of {text: string, fontSize: string, color?: string}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("siteProfile")
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String?
+  mimeType  String?
+  filesize  Int?
+  width     Int?
+  height    Int?
+  url       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  siteProfiles SiteProfile[]
+
+  @@map("media")
+}

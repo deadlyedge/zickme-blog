@@ -2,11 +2,11 @@ import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 import { Badge } from './ui/badge'
-import { ProjectViewModel } from '@/lib/content-providers'
+// Project functionality removed - keeping file for future use
 import { formatPublishedDate } from '@/lib/utils'
 import { NavigationLink } from './NavigationLink'
 
-type ProjectCardProps = { project: ProjectViewModel }
+type ProjectCardProps = { project: any }
 
 export const ProjectCard = ({ project }: ProjectCardProps) => {
 	return (
@@ -41,7 +41,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
 							{project.title}
 						</span>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{project.technologies?.slice(0, 3).map((t) => (
+							{project.technologies?.slice(0, 3).map((t: any) => (
 								<Badge
 									key={t.name}
 									className="bg-amber-50 text-amber-700 border border-amber-100">

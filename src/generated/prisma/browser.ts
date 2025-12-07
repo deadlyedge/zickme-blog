@@ -52,3 +52,13 @@ export type Post = Prisma.PostModel
  * 
  */
 export type Comment = Prisma.CommentModel
+/**
+ * Model SiteProfile
+ * 
+ */
+export type SiteProfile = Prisma.SiteProfileModel
+/**
+ * Model Media
+ * 
+ */
+export type Media = Prisma.MediaModel

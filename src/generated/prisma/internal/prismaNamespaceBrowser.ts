@@ -57,7 +57,9 @@ export const ModelName = {
   Verification: 'Verification',
   Tag: 'Tag',
   Post: 'Post',
-  Comment: 'Comment'
+  Comment: 'Comment',
+  SiteProfile: 'SiteProfile',
+  Media: 'Media'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -178,6 +180,40 @@ export const CommentScalarFieldEnum = {
 } as const
 
 export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
+
+
+export const SiteProfileScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  title: 'title',
+  bio: 'bio',
+  location: 'location',
+  email: 'email',
+  website: 'website',
+  avatarId: 'avatarId',
+  socialLinks: 'socialLinks',
+  skills: 'skills',
+  slogans: 'slogans',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteProfileScalarFieldEnum = (typeof SiteProfileScalarFieldEnum)[keyof typeof SiteProfileScalarFieldEnum]
+
+
+export const MediaScalarFieldEnum = {
+  id: 'id',
+  filename: 'filename',
+  mimeType: 'mimeType',
+  filesize: 'filesize',
+  width: 'width',
+  height: 'height',
+  url: 'url',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
 
 
 export const SortOrder = {
