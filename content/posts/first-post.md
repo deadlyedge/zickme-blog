@@ -21,4 +21,6 @@ or not..
 
 take a look..
 
+let's see.
+
 ![内嵌图片](../images/curry_shot.jpg)
