@@ -16,10 +16,9 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm i
-
-      - name: add tsx
-        run: npm install tsx
+        run: |
+          npm i
+          npm install tsx
 
       - name: Sync to Neon
         env:
@@ -28,11 +27,3 @@ jobs:
           npx prisma generate
           npx prisma db push
           npx tsx scripts/sync-content.ts  # tsx 兼容 Bun，比 npx 快
-
-      - name: Retry sync trigger
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://api.github.com/repos/${{ github.repository }}/dispatches'
-          method: 'POST'
-          customHeaders: '{"Accept": "application/vnd.github.3.json"}'
-          data: '{"event_type": "retry-sync"}'
