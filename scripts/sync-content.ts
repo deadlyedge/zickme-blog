@@ -55,13 +55,19 @@ async function syncPosts() {
 				)
 			: frontmatter.image
 
+		// 替换正文中的图片地址
+		const processedBody = body.replace(
+			/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
+			(match, alt, src) => `![${alt}](https://res.cloudinary.com/zickme-blog/image/upload/myblog/${src})`,
+		)
+
 		await prisma.post.upsert({
 			where: { slug },
 			update: {
 				title: frontmatter.title,
 				excerpt: frontmatter.excerpt,
 				poster: imageUrl,
-				content: await marked(body),
+				content: await marked(processedBody),
 				publishedAt: new Date(frontmatter.date),
 				archivedAt: null, // 恢复
 			},
@@ -70,7 +76,7 @@ async function syncPosts() {
 				title: frontmatter.title,
 				excerpt: frontmatter.excerpt,
 				poster: imageUrl,
-				content: await marked(body),
+				content: await marked(processedBody),
 				publishedAt: new Date(frontmatter.date),
 			},
 		})
