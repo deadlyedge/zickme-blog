@@ -3,6 +3,8 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
+import { getGravatarProfile } from '../getGravatar'
+import { generateAvatarUri } from '../avatar'
 // import { redirect } from 'next/navigation'
 
 interface UpdateProfileData {
@@ -60,24 +62,43 @@ export async function updateProfile(data: UpdateProfileData) {
 			})
 		}
 
-		// Update user name
-		// await prisma.user.update({
-		// 	where: { id: userId },
-		// 	data: {
-		// 		name: data.username,
-		// 	},
-		// })
-
-		// TODO: Implement password change through better-auth
-		// Password changes require special handling with better-auth
-		// For now, only username updates are supported
-		if (data.newPassword) {
-			console.log('Password change requested but not yet implemented')
-		}
-
 		return { success: true }
 	} catch (error) {
 		console.error('Profile update error:', error)
+		throw new Error(error instanceof Error ? error.message : '更新失败')
+	}
+}
+
+export async function updateAvatar() {
+	try {
+		const headersList = await headers()
+		const session = await auth.api.getSession({
+			headers: headersList,
+		})
+
+		if (!session?.user?.id) {
+			throw new Error('未登录')
+		}
+
+		const userId = session.user.id
+		const { avatarUrl } = await getGravatarProfile({
+			email: session.user.email,
+		})
+		const bearAvatar = generateAvatarUri({
+			seed: session.user.name,
+			variant: 'croodles',
+		})
+
+		await prisma.user.update({
+			where: { id: userId },
+			data: {
+				image: avatarUrl || bearAvatar,
+			},
+		})
+
+		return { success: true }
+	} catch (error) {
+		console.error('Avatar update error:', error)
 		throw new Error(error instanceof Error ? error.message : '更新失败')
 	}
 }

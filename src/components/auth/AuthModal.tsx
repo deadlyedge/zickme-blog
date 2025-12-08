@@ -8,7 +8,7 @@ import * as z from 'zod'
 import { signIn, signUp, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from '@/constants'
-import { updateProfile } from '@/lib/actions/profile'
+import { updateAvatar, updateProfile } from '@/lib/actions/profile'
 import {
 	Dialog,
 	DialogContent,
@@ -86,7 +86,7 @@ const profileSchema = z
 				VALIDATION_RULES.username.maxLength,
 				VALIDATION_MESSAGES.username.maxLength,
 			),
-		currentPassword: z.string().optional(),
+		currentPassword: z.string(),
 		newPassword: z.string().optional(),
 		confirmNewPassword: z.string().optional(),
 	})
@@ -95,6 +95,14 @@ const profileSchema = z
 		{
 			message: VALIDATION_MESSAGES.newPassword.mismatch,
 			path: ['confirmNewPassword'],
+		},
+	)
+	.refine(
+		(data) =>
+			(!data.newPassword && !data.confirmNewPassword) || data.currentPassword,
+		{
+			message: '修改密码时必须输入当前密码',
+			path: ['currentPassword'],
 		},
 	)
 
@@ -130,6 +138,24 @@ function LoginForm({ onSuccess }: AuthFormProps) {
 
 			if (result.error) {
 				throw new Error(result.error.message || '登录失败')
+			}
+
+			// 登录成功后同步 Gravatar 头像
+			try {
+				// console.log('[login] 尝试同步 Gravatar 头像')
+				// const syncResponse = await fetch('/api/sync-gravatar', {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/json',
+				// 	},
+				// })
+
+				// const syncResult = await syncResponse.json()
+				await updateAvatar()
+				console.log('[login] Gravatar 同步成功')
+			} catch (syncError) {
+				console.error('[login] Gravatar 同步失败:', syncError)
+				// 不影响登录流程
 			}
 
 			onSuccess()
@@ -351,6 +377,7 @@ function RegisterForm({ onSuccess }: AuthFormProps) {
 function ProfileForm({ onSuccess }: AuthFormProps) {
 	const [formError, setFormError] = useState<string | undefined>(undefined)
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false)
 	const session = useSession()
 	const user = session.data?.user
 
@@ -364,6 +391,21 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 		},
 	})
 
+	// 监听新密码字段的变化，动态显示当前密码字段
+	useEffect(() => {
+		const subscription = form.watch((value, { name }) => {
+			if (name === 'newPassword' || name === 'confirmNewPassword') {
+				const newPassword = value.newPassword || ''
+				const confirmNewPassword = value.confirmNewPassword || ''
+				const shouldShow =
+					newPassword.length > 0 || confirmNewPassword.length > 0
+				setShowCurrentPassword(shouldShow)
+			}
+		})
+		return () => subscription.unsubscribe()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
 	const onSubmit = async (data: ProfileForm) => {
 		try {
 			setFormError(undefined)
@@ -375,6 +417,7 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 			})
 			onSuccess()
 			form.reset()
+			setShowCurrentPassword(false)
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : '修改账户信息失败'
@@ -468,33 +511,39 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 							</Field>
 						)}
 					/>
-					<Controller
-						name="currentPassword"
-						control={form.control}
-						render={({ field, fieldState }) => (
-							<Field data-invalid={fieldState.invalid}>
-								<FieldLabel htmlFor="profile-current-password">
-									当前密码
-								</FieldLabel>
-								<InputGroup>
-									<InputGroupAddon>
-										<Key className="size-4" />
-									</InputGroupAddon>
-									<InputGroupInput
-										{...field}
-										id="profile-current-password"
-										type="password"
-										placeholder="请输入当前密码以验证身份"
-										aria-invalid={fieldState.invalid}
-										autoComplete="current-password"
-									/>
-								</InputGroup>
-								{fieldState.invalid && (
-									<FieldError errors={[fieldState.error]} />
-								)}
-							</Field>
-						)}
-					/>
+					{showCurrentPassword ? (
+						<Controller
+							name="currentPassword"
+							control={form.control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor="profile-current-password">
+										当前密码
+									</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<Key className="size-4" />
+										</InputGroupAddon>
+										<InputGroupInput
+											{...field}
+											id="profile-current-password"
+											type="password"
+											placeholder="请输入当前密码以验证身份"
+											aria-invalid={fieldState.invalid}
+											autoComplete="current-password"
+										/>
+									</InputGroup>
+									{fieldState.invalid && (
+										<FieldError errors={[fieldState.error]} />
+									)}
+								</Field>
+							)}
+						/>
+					) : (
+						<p className="text-xs text-muted-foreground mt-2">
+							开始输入新密码后，将显示当前密码验证字段
+						</p>
+					)}
 				</div>
 			</FieldGroup>
 			{formError && (
