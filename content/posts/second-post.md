@@ -1,6 +1,6 @@
 ---
 slug: second-post
-image: ../images/meFace_bigEyeball.jpg
+image: ./images/meFace_bigEyeball.jpg
 tags:
   - Prisma
   - about
