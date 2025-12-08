@@ -19,11 +19,19 @@ if [ -z "$CHANGED_FILES" ]; then
 fi
 
 # 检查是否存在"非 content/ 路径"的变更
-NON_CONTENT_CHANGED=$(echo "$CHANGED_FILES" | while IFS= read -r file; do
-  if [[ "$file" != content/* ]]; then
-    echo "$file"
-  fi
-done)
+HAS_NON_CONTENT=false
+NON_CONTENT_CHANGED=""
+
+while IFS= read -r file; do
+  # 去除引号（git diff 可能添加引号包围特殊字符的文件名）
+  file=$(echo "$file" | sed 's/^"\(.*\)"$/\1/')
+  case "$file" in
+    content/*) ;;
+    *) HAS_NON_CONTENT=true
+       NON_CONTENT_CHANGED="$NON_CONTENT_CHANGED$file\n"
+       ;;
+  esac
+done <<< "$CHANGED_FILES"
 
 if [ -n "$NON_CONTENT_CHANGED" ]; then
   echo "✅ Build required (files outside content/ changed):"
