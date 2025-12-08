@@ -222,26 +222,24 @@ async function preCreateTags(
 		return
 	}
 
-	// 批量创建标签（忽略已存在的）
-	const tagCreates = Array.from(allTags).map((tagName: string) => ({
-		name: tagName,
-		slug: tagName.toLowerCase().replace(/\s+/g, '-'),
-	}))
-
-	await prisma.$transaction(async (tx) => {
-		for (const tagData of tagCreates) {
-			try {
-				await tx.tag.upsert({
-					where: { name: tagData.name },
-					update: {},
-					create: tagData,
-				})
-			} catch (error) {
-				console.warn(`⚠️ 标签创建失败: ${tagData.name}`, error)
-				// 继续处理其他标签，不要中断
+	// 逐个创建标签（避免事务超时）
+	for (const tagName of allTags) {
+		try {
+			const tagData = {
+				name: tagName,
+				slug: tagName.toLowerCase().replace(/\s+/g, '-'),
 			}
+
+			await prisma.tag.upsert({
+				where: { name: tagData.name },
+				update: {},
+				create: tagData,
+			})
+		} catch (error) {
+			console.warn(`⚠️ 标签创建失败: ${tagName}`, error)
+			// 继续处理其他标签，不要中断
 		}
-	})
+	}
 
 	console.log(`✅ 预创建完成: ${allTags.size} 个标签`)
 }
