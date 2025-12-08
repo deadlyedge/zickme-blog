@@ -36,7 +36,7 @@ interface SyncConfig {
 
 const DEFAULT_CONFIG: SyncConfig = {
 	dryRun: process.argv.includes('--dry-run'),
-	batchSize: 5, // 减少批量大小以避免事务超时
+	batchSize: 2, // 进一步减少批量大小到2，避免事务超时
 	deleteOld: !process.argv.includes('--no-delete'),
 	cloudinaryBaseUrl:
 		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
