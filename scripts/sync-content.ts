@@ -116,6 +116,50 @@ async function processMarkdownFile(
 }
 
 /**
+ * 预创建所有标签
+ */
+async function preCreateTags(
+	posts: ProcessedPost[],
+	config: SyncConfig,
+): Promise<void> {
+	const allTags = new Set<string>()
+	posts.forEach((post) => {
+		post.tags.forEach((tag) => allTags.add(tag))
+	})
+
+	if (allTags.size === 0) return
+
+	if (config.dryRun) {
+		console.log(`📋 [DRY RUN] 将预创建 ${allTags.size} 个标签:`)
+		allTags.forEach((tag) => console.log(`  - ${tag}`))
+		return
+	}
+
+	// 批量创建标签（忽略已存在的）
+	const tagCreates = Array.from(allTags).map((tagName: string) => ({
+		name: tagName,
+		slug: tagName.toLowerCase().replace(/\s+/g, '-'),
+	}))
+
+	await prisma.$transaction(async (tx) => {
+		for (const tagData of tagCreates) {
+			try {
+				await tx.tag.upsert({
+					where: { name: tagData.name },
+					update: {},
+					create: tagData,
+				})
+			} catch (error) {
+				console.warn(`⚠️ 标签创建失败: ${tagData.name}`, error)
+				// 继续处理其他标签，不要中断
+			}
+		}
+	})
+
+	console.log(`✅ 预创建完成: ${allTags.size} 个标签`)
+}
+
+/**
  * 批量同步文章到数据库
  */
 async function syncPostsToDatabase(
@@ -156,14 +200,10 @@ async function syncPostsToDatabase(
 					},
 				})
 
-				// Handle tags
+				// Handle tags - 现在标签已经预创建，直接连接
 				if (post.tags.length > 0) {
 					const tagConnections = post.tags.map((tagName: string) => ({
-						where: { name: tagName },
-						create: {
-							name: tagName,
-							slug: tagName.toLowerCase().replace(/\s+/g, '-'),
-						},
+						name: tagName,
 					}))
 
 					await tx.post.update({
@@ -171,7 +211,7 @@ async function syncPostsToDatabase(
 						data: {
 							tags: {
 								set: [], // 清除现有标签
-								connectOrCreate: tagConnections,
+								connect: tagConnections,
 							},
 						},
 					})
@@ -258,6 +298,9 @@ async function syncPosts(config: SyncConfig = DEFAULT_CONFIG) {
 		}
 
 		console.log(`✅ 成功处理 ${validPosts.length} 篇文章`)
+
+		// 预创建标签
+		await preCreateTags(validPosts, config)
 
 		// 同步到数据库
 		await syncPostsToDatabase(validPosts, config)
