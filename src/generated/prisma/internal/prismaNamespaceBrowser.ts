@@ -84,6 +84,8 @@ export const UserScalarFieldEnum = {
   email: 'email',
   emailVerified: 'emailVerified',
   image: 'image',
+  banned: 'banned',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -174,9 +176,14 @@ export const CommentScalarFieldEnum = {
   postId: 'postId',
   content: 'content',
   status: 'status',
+  edited: 'edited',
   createdAt: 'createdAt',
   authorId: 'authorId',
-  parentId: 'parentId'
+  parentId: 'parentId',
+  editedAt: 'editedAt',
+  editedBy: 'editedBy',
+  deleted: 'deleted',
+  deletedBy: 'deletedBy'
 } as const
 
 export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]

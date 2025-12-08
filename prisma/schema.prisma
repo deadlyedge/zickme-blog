@@ -8,19 +8,31 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  comments      Comment[]
+  id              String    @id
+  name            String
+  email           String
+  emailVerified   Boolean   @default(false)
+  image           String?
+  banned          Boolean   @default(false)
+  role            Role      @default(USER)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  sessions        Session[]
+  accounts        Account[]
+  comments        Comment[]
+  editedComments  Comment[] @relation("CommentEditedBy")
+  deletedComments Comment[] @relation("CommentDeletedBy")
 
   @@unique([email])
   @@map("user")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  USER
 }
 
 model Session {
@@ -121,15 +133,23 @@ model Comment {
   postId    String
   content   String
   status    StatusType @default(PUBLISHED) // 'published', 'pending', 'spam'
+  edited    Boolean    @default(false)
   createdAt DateTime   @default(now())
 
   authorId String
   parentId String?
 
-  author   User      @relation(fields: [authorId], references: [id])
-  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parent   Comment?  @relation("CommentThread", fields: [parentId], references: [id])
-  children Comment[] @relation("CommentThread")
+  editedAt  DateTime?
+  editedBy  String?
+  deleted   Boolean   @default(false)
+  deletedBy String?
+
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User      @relation(fields: [authorId], references: [id])
+  parent        Comment?  @relation("CommentThread", fields: [parentId], references: [id])
+  children      Comment[] @relation("CommentThread")
+  editedByUser  User?     @relation("CommentEditedBy", fields: [editedBy], references: [id])
+  deletedByUser User?     @relation("CommentDeletedBy", fields: [deletedBy], references: [id])
 
   @@index([postId])
   @@index([status])
@@ -151,13 +171,13 @@ enum StatusType {
 }
 
 model SiteProfile {
-  id        String   @id @default(cuid())
-  name      String
-  title     String
-  bio       String   @db.Text
-  location  String?
-  email     String?
-  website   String?
+  id       String  @id @default(cuid())
+  name     String
+  title    String
+  bio      String  @db.Text
+  location String?
+  email    String?
+  website  String?
 
   avatarId String?
   avatar   Media?  @relation(fields: [avatarId], references: [id])
@@ -173,13 +193,13 @@ model SiteProfile {
 }
 
 model Media {
-  id        String   @id @default(cuid())
-  filename  String?
-  mimeType  String?
-  filesize  Int?
-  width     Int?
-  height    Int?
-  url       String?
+  id       String  @id @default(cuid())
+  filename String?
+  mimeType String?
+  filesize Int?
+  width    Int?
+  height   Int?
+  url      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

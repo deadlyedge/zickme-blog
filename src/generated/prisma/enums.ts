@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const Role = {
+  ADMIN: 'ADMIN',
+  EDITOR: 'EDITOR',
+  USER: 'USER'
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]
+
+
 export const PostType = {
   BLOG: 'BLOG',
   PROJECT: 'PROJECT'

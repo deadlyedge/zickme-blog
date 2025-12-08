@@ -6,13 +6,13 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import type { Comment } from '@/generated/prisma/client'
 
-type CommentWithChildren = Comment & {
-	children: CommentWithChildren[]
+type CommentWithAuthor = Comment & {
 	author: {
 		id: string
 		name: string
 		email: string
 		image: string | null
+		banned: boolean
 	}
 }
 
@@ -24,6 +24,7 @@ export interface CommentWithReplies extends Comment {
 		name: string
 		email: string
 		image: string | null
+		banned: boolean
 	}
 }
 
@@ -95,16 +96,12 @@ export async function createComment(data: CreateCommentData) {
 	}
 }
 
-export async function getComments(
-	docId: string,
-	// docType: 'posts' | 'projects',
-) {
+export async function getComments(docId: string) {
 	try {
 		// Find the post first to ensure it exists
 		const post = await prisma.post.findFirst({
 			where: {
 				id: docId,
-				// type: docType === 'posts' ? 'BLOG' : 'PROJECT',
 			},
 		})
 
@@ -112,63 +109,53 @@ export async function getComments(
 			return []
 		}
 
-		// Fetch all comments for this post with nested children
-		const comments = await prisma.comment.findMany({
+		// Fetch all comments for this post in a single query
+		const allComments = await prisma.comment.findMany({
 			where: {
 				postId: docId,
 				status: 'PUBLISHED',
 			},
 			include: {
 				author: true,
-				children: {
-					include: {
-						author: true,
-						children: {
-							include: {
-								author: true,
-								children: {
-									include: {
-										author: true,
-										children: {
-											include: {
-												author: true,
-												children: {
-													include: {
-														author: true,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 			orderBy: {
 				createdAt: 'asc',
 			},
-		}) as CommentWithChildren[]
+		}) as CommentWithAuthor[]
 
-		// Build tree structure - only include root comments (those without parent)
-		const rootComments: CommentWithReplies[] = comments
-			.filter(comment => !comment.parentId)
-			.map(comment => ({
+		// Build tree structure in memory
+		const commentMap = new Map<string, CommentWithReplies>()
+		const rootComments: CommentWithReplies[] = []
+
+		// First pass: create all comment nodes
+		allComments.forEach(comment => {
+			commentMap.set(comment.id, {
 				...comment,
-				replies: buildRepliesTree(comment.children),
-			}))
+				replies: [],
+			})
+		})
+
+		// Second pass: build parent-child relationships
+		allComments.forEach(comment => {
+			const commentWithReplies = commentMap.get(comment.id)!
+
+			if (comment.parentId) {
+				const parent = commentMap.get(comment.parentId)
+				if (parent && parent.replies) {
+					parent.replies.push(commentWithReplies)
+				} else {
+					// Orphan comment (parent doesn't exist), treat as root
+					rootComments.push(commentWithReplies)
+				}
+			} else {
+				// Root comment
+				rootComments.push(commentWithReplies)
+			}
+		})
 
 		return rootComments
 	} catch (error) {
 		console.error('Error fetching comments:', error)
 		return []
 	}
-}
-
-function buildRepliesTree(comments: CommentWithChildren[]): CommentWithReplies[] {
-	return comments.map(comment => ({
-		...comment,
-		replies: buildRepliesTree(comment.children),
-	}))
 }
