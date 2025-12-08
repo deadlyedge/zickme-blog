@@ -1,19 +1,20 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import type { Post, Tag } from '@/generated/prisma/client'
+import { useMemo, useState, useEffect } from 'react'
+
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
 import { PostCard } from './PostCard'
 
+import { useAppStore } from '@/lib/store'
+import type { Tag } from '@/generated/prisma/client'
+import type { PostWithTags } from '@/lib/content-providers'
+
 type Props = {
-	posts: Post[]
+	posts: PostWithTags[]
 	tags: Tag[]
 }
-
-import { useEffect } from 'react'
-import { useAppStore } from '@/lib/store'
 
 export default function PostGridClient({ posts, tags }: Props) {
 	const [activeTag, setActiveTag] = useState<string>('All')
@@ -44,7 +45,7 @@ export default function PostGridClient({ posts, tags }: Props) {
 	const filteredPosts = useMemo(() => {
 		if (activeTag === 'All') return posts
 		return posts.filter((post) =>
-			(post as any).tags?.some((tag: any) => tag.slug === activeTag),
+			post.tags?.some((tag) => tag.slug === activeTag),
 		)
 	}, [posts, activeTag])
 

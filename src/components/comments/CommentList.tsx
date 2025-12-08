@@ -3,15 +3,13 @@ import { CommentItem } from './CommentItem'
 
 interface CommentListProps {
 	comments: CommentWithReplies[]
-	docId: number
-	docType: 'posts' | 'projects'
+	docId: string
 	depth?: number
 }
 
 export function CommentList({
 	comments,
 	docId,
-	docType,
 	depth = 0,
 }: CommentListProps) {
 	if (!comments || comments.length === 0) return null
@@ -23,7 +21,6 @@ export function CommentList({
 					key={comment.id}
 					comment={comment}
 					docId={docId}
-					docType={docType}
 					depth={depth}
 				/>
 			))}

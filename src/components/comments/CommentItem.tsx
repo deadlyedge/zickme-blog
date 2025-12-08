@@ -9,31 +9,20 @@ import { AnimatePresence, motion } from 'motion/react'
 
 interface CommentItemProps {
 	comment: CommentWithReplies
-	docId: number
-	docType: 'posts' | 'projects'
+	docId: string
 	depth: number
 }
 
 export function CommentItem({
 	comment,
 	docId,
-	docType,
 	depth,
 }: CommentItemProps) {
 	const [isReplying, setIsReplying] = useState(false)
 	const [isCollapsed, setIsCollapsed] = useState(false)
 	const hasReplies = comment.replies && comment.replies.length > 0
-	const isAuthorUser = !!comment.author?.user
 
-	// Automatically collapse if depth is too high to prevent squishing
-	// const maxDepth = 5
-	// const isDeeplyNested = depth >= maxDepth
-
-	// Flatten deeply nested replies visually by resetting indentation for them if needed
-	// For now we just stop indentation visually but keep structure
-
-	const authorName =
-		comment.author?.name || (isAuthorUser ? 'Registered User' : 'Anonymous')
+	const authorName = comment.author?.name || 'Anonymous'
 
 	return (
 		<div className={`group relative ${depth > 0 ? 'pl-4 md:pl-8' : ''}`}>
@@ -46,7 +35,7 @@ export function CommentItem({
 				<header className="flex items-center gap-2 text-sm mb-2">
 					<span className="font-medium text-slate-900">{authorName}</span>
 					<span className="text-slate-400 text-xs">•</span>
-					<time className="text-slate-400 text-xs" dateTime={comment.createdAt}>
+					<time className="text-slate-400 text-xs" dateTime={comment.createdAt.toISOString()}>
 						{formatDistanceToNow(new Date(comment.createdAt), {
 							addSuffix: true,
 						})}
@@ -83,7 +72,6 @@ export function CommentItem({
 									className="mt-4 overflow-hidden">
 									<CommentForm
 										docId={docId}
-										docType={docType}
 										parentId={comment.id}
 										onSuccess={() => setIsReplying(false)}
 										autoFocus
@@ -101,7 +89,6 @@ export function CommentItem({
 					<CommentList
 						comments={comment.replies!}
 						docId={docId}
-						docType={docType}
 						depth={depth + 1}
 					/>
 				</div>

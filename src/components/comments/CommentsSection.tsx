@@ -11,11 +11,11 @@ import type { CommentWithReplies } from '@/lib/actions/comments'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
 interface CommentsSectionProps {
-	docId: number
-	docType: 'posts' | 'projects'
+	docId: string
+	// docType: 'posts' | 'projects'
 }
 
-export function CommentsSection({ docId, docType }: CommentsSectionProps) {
+export function CommentsSection({ docId }: CommentsSectionProps) {
 	const [comments, setComments] = useState<CommentWithReplies[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -26,7 +26,7 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 		async function loadComments() {
 			try {
 				setLoading(true)
-				const commentsData = await getComments(docId, docType)
+				const commentsData = await getComments(docId)
 				setComments(commentsData)
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'Failed to load comments')
@@ -36,11 +36,11 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 		}
 
 		loadComments()
-	}, [docId, docType])
+	}, [docId])
 
 	const handleCommentAdded = () => {
 		// 重新加载评论
-		getComments(docId, docType).then(setComments).catch(console.error)
+		getComments(docId).then(setComments).catch(console.error)
 	}
 
 	const handleLoginClick = () => {
@@ -96,12 +96,9 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 						<div className="flex items-center gap-2">
 							<Button variant="link" onClick={handleEditProfile}>
 								<Avatar>
-		<AvatarImage
-			src={
-				user?.image ||
-				'https://github.com/shadcn.png'
-			}
-			alt={user?.name || '@shadcn'}
+									<AvatarImage
+										src={user?.image || 'https://github.com/shadcn.png'}
+										alt={user?.name || '@shadcn'}
 									/>
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
@@ -140,7 +137,6 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 				{!!user ? (
 					<CommentForm
 						docId={docId}
-						docType={docType}
 						onSuccess={handleCommentAdded}
 					/>
 				) : (
@@ -158,7 +154,7 @@ export function CommentsSection({ docId, docType }: CommentsSectionProps) {
 				)}
 			</div>
 
-			<CommentList comments={comments} docId={docId} docType={docType} />
+			<CommentList comments={comments} docId={docId} />
 		</section>
 	)
 }

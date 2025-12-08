@@ -1,95 +1,90 @@
 'use server'
 
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth.server'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import type { Comment } from '@/payload-types'
+import type { Comment } from '@/generated/prisma/client'
+
+type CommentWithChildren = Comment & {
+	children: CommentWithChildren[]
+	author: {
+		id: string
+		name: string
+		email: string
+		image: string | null
+	}
+}
 
 export interface CommentWithReplies extends Comment {
 	replies?: CommentWithReplies[]
 	depth?: number
+	author: {
+		id: string
+		name: string
+		email: string
+		image: string | null
+	}
 }
 
 export type CreateCommentData = {
 	content: string
-	docId: number
-	docType: 'posts' | 'projects'
-	parentId?: number
-	authorName?: string
-	authorEmail?: string
+	docId: string
+	parentId?: string
 	path: string
 }
 
 export async function createComment(data: CreateCommentData) {
-	const payload = await getPayload({ config })
-	const { user } = await payload.auth({ headers: await headers() })
-
 	try {
-		const commentData: {
-			content: string
-			doc: {
-				relationTo: 'posts' | 'projects'
-				value: number
-			}
-			author: {
-				name?: string
-				email?: string
-				user?: number
-			}
-			status: 'published' | 'pending' | 'spam'
-			parent?: number | null
-		} = {
-			content: data.content,
-			doc: {
-				relationTo: data.docType,
-				value: data.docId,
-			},
-			author: {
-				name: user?.username,
-				email: user?.email,
-				user: user?.id
-			},
-			status: 'published', // Default to published for now
+		// Get current user session
+		const session = await auth.api.getSession({
+			headers: await headers(),
+		})
+
+		if (!session?.user?.id) {
+			return { success: false, error: 'User not authenticated' }
 		}
 
-		// Only set parent if parentId is provided and valid
-		if (data.parentId && data.parentId > 0) {
-			// Verify that the parent comment exists and prevent circular references
-			try {
-				const parentComment = await payload.findByID({
-					collection: 'comments',
+		// Find the post by ID and type
+		const post = await prisma.post.findFirst({
+			where: {
+				id: data.docId,
+				// type: data.docType === 'posts' ? 'BLOG' : 'PROJECT',
+			},
+		})
+
+		if (!post) {
+			return { success: false, error: 'Post not found' }
+		}
+
+		// Validate parent comment if provided
+		let parentComment = null
+		if (data.parentId) {
+			parentComment = await prisma.comment.findFirst({
+				where: {
 					id: data.parentId,
-				})
+					postId: data.docId,
+				},
+			})
 
-				// Additional validation: ensure parent comment belongs to the same document
-				const parentDocRelationTo = parentComment.doc.relationTo
-				const parentDocValue =
-					typeof parentComment.doc.value === 'object'
-						? parentComment.doc.value.id
-						: parentComment.doc.value
-
-				if (
-					parentDocRelationTo !== data.docType ||
-					parentDocValue !== data.docId
-				) {
-					return {
-						success: false,
-						error: 'Parent comment does not belong to the same document',
-					}
-				}
-
-				commentData.parent = data.parentId
-			} catch {
+			if (!parentComment) {
 				return { success: false, error: 'Parent comment not found' }
 			}
-		} else {
-			commentData.parent = null
 		}
 
-		const comment = await payload.create({
-			collection: 'comments',
-			data: commentData,
+		// Create the comment
+		const comment = await prisma.comment.create({
+			data: {
+				content: data.content,
+				postId: data.docId,
+				authorId: session.user.id,
+				parentId: data.parentId || null,
+				status: 'PUBLISHED',
+			},
+			include: {
+				author: true,
+				parent: true,
+			},
 		})
 
 		revalidatePath(data.path)
@@ -101,73 +96,79 @@ export async function createComment(data: CreateCommentData) {
 }
 
 export async function getComments(
-	docId: number,
-	docType: 'posts' | 'projects',
+	docId: string,
+	// docType: 'posts' | 'projects',
 ) {
-	const payload = await getPayload({ config })
-
 	try {
-		// Fetch all comments for this document
-		const { docs } = await payload.find({
-			collection: 'comments',
+		// Find the post first to ensure it exists
+		const post = await prisma.post.findFirst({
 			where: {
-				'doc.value': {
-					equals: docId,
-				},
-				'doc.relationTo': {
-					equals: docType,
-				},
-				status: {
-					equals: 'published',
+				id: docId,
+				// type: docType === 'posts' ? 'BLOG' : 'PROJECT',
+			},
+		})
+
+		if (!post) {
+			return []
+		}
+
+		// Fetch all comments for this post with nested children
+		const comments = await prisma.comment.findMany({
+			where: {
+				postId: docId,
+				status: 'PUBLISHED',
+			},
+			include: {
+				author: true,
+				children: {
+					include: {
+						author: true,
+						children: {
+							include: {
+								author: true,
+								children: {
+									include: {
+										author: true,
+										children: {
+											include: {
+												author: true,
+												children: {
+													include: {
+														author: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
-			sort: 'createdAt',
-			depth: 1,
-			limit: 1000, // Reasonable limit for single load
-		})
+			orderBy: {
+				createdAt: 'asc',
+			},
+		}) as CommentWithChildren[]
 
-		// Build tree structure in memory
-		const commentMap = new Map<number, CommentWithReplies>()
-		const rootComments: CommentWithReplies[] = []
-
-		// First pass: create nodes
-		docs.forEach((doc) => {
-			// Explicitly cast doc to CommentWithReplies to handle the replies property
-			const node = doc as unknown as CommentWithReplies
-			node.replies = []
-			commentMap.set(doc.id, node)
-		})
-
-		// Second pass: link parents
-		docs.forEach((docRaw) => {
-			const doc = docRaw as unknown as Comment
-			const node = commentMap.get(doc.id)!
-
-			let parentId: number | undefined
-
-			if (doc.parent && typeof doc.parent === 'object' && 'id' in doc.parent) {
-				parentId = doc.parent.id
-			} else if (typeof doc.parent === 'number') {
-				parentId = doc.parent
-			}
-
-			if (parentId) {
-				const parent = commentMap.get(parentId)
-				if (parent) {
-					parent.replies = parent.replies || []
-					parent.replies.push(node)
-				} else {
-					// Orphan or root
-					rootComments.push(node)
-				}
-			} else {
-				rootComments.push(node)
-			}
-		})
+		// Build tree structure - only include root comments (those without parent)
+		const rootComments: CommentWithReplies[] = comments
+			.filter(comment => !comment.parentId)
+			.map(comment => ({
+				...comment,
+				replies: buildRepliesTree(comment.children),
+			}))
 
 		return rootComments
 	} catch (error) {
 		console.error('Error fetching comments:', error)
 		return []
 	}
+}
+
+function buildRepliesTree(comments: CommentWithChildren[]): CommentWithReplies[] {
+	return comments.map(comment => ({
+		...comment,
+		replies: buildRepliesTree(comment.children),
+	}))
 }

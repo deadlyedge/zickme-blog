@@ -6,16 +6,14 @@ import { createComment } from '@/lib/actions/comments'
 import { Button } from '@/components/ui/button'
 
 interface CommentFormProps {
-	docId: number
-	docType: 'posts' | 'projects'
-	parentId?: number
+	docId: string
+	parentId?: string
 	onSuccess?: () => void
 	autoFocus?: boolean
 }
 
 export function CommentForm({
 	docId,
-	docType,
 	parentId,
 	onSuccess,
 	autoFocus,
@@ -44,7 +42,6 @@ export function CommentForm({
 		const result = await createComment({
 			content,
 			docId,
-			docType,
 			parentId,
 			// authorName: name || 'Anonymous',
 			// authorEmail: email,

@@ -4,12 +4,10 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
-// import { RichText } from '@/components/RichText'
 import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-// import { CommentsSection } from '@/components/comments'
+import { CommentsSection } from '@/components/comments'
 import { useAppStore } from '@/lib/store'
-// import type { Post } from '@/generated/prisma/client'
 import { PostWithTags } from '@/lib/content-providers'
 
 // Post with tags included
@@ -133,7 +131,7 @@ export default function PostClient({ initialPost }: PostClientProps) {
 					</div>
 				</article>
 
-				{/* <CommentsSection docId={post.id} docType="posts" /> */}
+				<CommentsSection docId={post.id} />
 			</div>
 		</div>
 	)
