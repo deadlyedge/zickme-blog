@@ -4,15 +4,18 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
-import { RichText } from '@/components/RichText'
+// import { RichText } from '@/components/RichText'
 import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { CommentsSection } from '@/components/comments'
+// import { CommentsSection } from '@/components/comments'
 import { useAppStore } from '@/lib/store'
-import type { Post } from '@/generated/prisma/client'
+// import type { Post } from '@/generated/prisma/client'
+import { PostWithTags } from '@/lib/content-providers'
+
+// Post with tags included
 
 interface PostClientProps {
-	initialPost?: Post
+	initialPost?: PostWithTags
 }
 
 export default function PostClient({ initialPost }: PostClientProps) {
@@ -103,7 +106,7 @@ export default function PostClient({ initialPost }: PostClientProps) {
 						)}
 
 						<div className="flex flex-wrap gap-1 mb-2">
-							{(post as any).tags?.map((tag: any) => (
+							{post.tags?.map((tag) => (
 								<Badge
 									key={tag.slug}
 									className="bg-secondary"
@@ -117,7 +120,10 @@ export default function PostClient({ initialPost }: PostClientProps) {
 						</div>
 
 						<time className="text-muted-foreground">
-							发布于 {formatPublishedDate((post.publishedAt || post.createdAt).toISOString())}
+							发布于{' '}
+							{formatPublishedDate(
+								(post.publishedAt || post.createdAt).toISOString(),
+							)}
 						</time>
 					</header>
 

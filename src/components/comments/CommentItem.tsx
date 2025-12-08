@@ -5,7 +5,7 @@ import { type CommentWithReplies } from '@/lib/actions/comments'
 import { formatDistanceToNow } from 'date-fns'
 import { CommentForm } from './CommentForm'
 import { CommentList } from './CommentList'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'motion/react'
 
 interface CommentItemProps {
 	comment: CommentWithReplies

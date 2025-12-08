@@ -5,7 +5,7 @@ import {
 	fetchTagsAction,
 	fetchPostBySlugAction,
 } from '../actions/content'
-import type { Post } from '@/generated/prisma/client'
+import { PostWithTags } from '../content-providers'
 
 const BLOG_CACHE_DURATION = 1 * 60 * 1000
 const DEFAULT_CACHE_DURATION = 1 * 60 * 1000
@@ -31,7 +31,7 @@ export const createContentSlice: StateCreator<
 
 	setPosts: (posts) =>
 		set((state) => {
-			const map = new Map<string, Post>()
+			const map = new Map<string, PostWithTags>()
 			posts.forEach((post) => map.set(post.slug, post))
 			return {
 				posts: map,

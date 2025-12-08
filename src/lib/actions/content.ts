@@ -4,12 +4,13 @@ import {
 	fetchPosts,
 	fetchPostBySlug,
 	fetchTags,
+	PostWithTags,
 } from '../content-providers'
-import type { Post, Tag } from '@/generated/prisma/client'
+import type { Tag } from '@/generated/prisma/client'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-export async function fetchPostsAction(): Promise<Post[]> {
+export async function fetchPostsAction(): Promise<PostWithTags[]> {
 	try {
 		if (isDevelopment) console.log('[Prisma fetch]: blog posts')
 		return await fetchPosts()
@@ -31,7 +32,7 @@ export async function fetchTagsAction(): Promise<Tag[]> {
 
 export async function fetchPostBySlugAction(
 	slug: string,
-): Promise<Post | null> {
+): Promise<PostWithTags | null> {
 	try {
 		if (isDevelopment) console.log(`[Prisma fetch]: blog post "${slug}"`)
 		return await fetchPostBySlug(slug)

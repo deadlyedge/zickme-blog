@@ -1,4 +1,5 @@
-import type { Post, Tag } from '@/generated/prisma/client'
+import type { Tag } from '@/generated/prisma/client'
+import { PostWithTags } from '../content-providers'
 
 export interface NavigationState {
 	isNavigating: boolean
@@ -15,11 +16,11 @@ export interface NavigationActions {
 
 export interface CacheState {
 	// 列表数据
-	posts: Map<string, Post>
+	posts: Map<string, PostWithTags>
 	tags: Tag[]
 
 	// 单篇内容数据 - 按 slug 缓存
-	singlePosts: Map<string, Post>
+	singlePosts: Map<string, PostWithTags>
 	singlePostTimestamps: Map<string, number>
 
 	lastFetched: {
@@ -35,12 +36,12 @@ export interface CacheState {
 }
 
 export interface CacheActions {
-	setPosts: (posts: Post[]) => void
+	setPosts: (posts: PostWithTags[]) => void
 	setTags: (tags: Tag[]) => void
-	setSinglePost: (slug: string, post: Post) => void
+	setSinglePost: (slug: string, post: PostWithTags) => void
 
-	getSinglePost: (slug: string) => Post | undefined
-	getPost: (slug: string) => Post | undefined
+	getSinglePost: (slug: string) => PostWithTags | undefined
+	getPost: (slug: string) => PostWithTags | undefined
 
 	fetchPosts: () => Promise<void>
 	fetchTags: () => Promise<void>
