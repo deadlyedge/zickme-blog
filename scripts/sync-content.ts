@@ -36,7 +36,7 @@ interface SyncConfig {
 
 const DEFAULT_CONFIG: SyncConfig = {
 	dryRun: process.argv.includes('--dry-run'),
-	batchSize: 10,
+	batchSize: 5, // 减少批量大小以避免事务超时
 	deleteOld: !process.argv.includes('--no-delete'),
 	cloudinaryBaseUrl:
 		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
@@ -180,12 +180,15 @@ async function processMarkdownFile(
 			(match, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
 		)
 
+		// 在事务外部进行marked转换，减少事务时间
+		const htmlContent = await marked(processedBody)
+
 		return {
 			slug,
 			title,
 			excerpt: frontmatter.excerpt,
 			poster,
-			content: await marked(processedBody),
+			content: htmlContent,
 			publishedAt,
 			tags: frontmatter.tags || [],
 			type,
