@@ -18,8 +18,12 @@ if [ -z "$CHANGED_FILES" ]; then
   exit 1
 fi
 
-# 检查是否存在“非 content/ 路径”的变更
-NON_CONTENT_CHANGED=$(echo "$CHANGED_FILES" | grep -vE '^content/' || true)
+# 检查是否存在"非 content/ 路径"的变更
+NON_CONTENT_CHANGED=$(echo "$CHANGED_FILES" | while IFS= read -r file; do
+  if [[ "$file" != content/* ]]; then
+    echo "$file"
+  fi
+done)
 
 if [ -n "$NON_CONTENT_CHANGED" ]; then
   echo "✅ Build required (files outside content/ changed):"
