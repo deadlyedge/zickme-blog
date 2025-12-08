@@ -92,11 +92,12 @@ function processImageUrl(
 		const fileDir = path.dirname(filePath)
 		const relativeDir = path.relative(postsDir, fileDir)
 
-		// 构建Cloudinary publicId路径
+		// 构建Cloudinary publicId路径（与upload-to-cloudinary.ts保持一致）
 		const imageName = imagePath.replace('./images/', '').replace(/\.[^/.]+$/, '')
-		const publicIdPath = relativeDir ? `${relativeDir}-images-${imageName}` : `images-${imageName}`
+		const fullRelativePath = relativeDir ? `${relativeDir}/images/${imageName}` : `images/${imageName}`
+		const publicId = fullRelativePath.replace(/\//g, '-')
 
-		return `${config.cloudinaryBaseUrl}${publicIdPath}`
+		return `${config.cloudinaryBaseUrl}${publicId}`
 	}
 
 	return imagePath
@@ -169,8 +170,9 @@ async function processMarkdownFile(
 				const fileDir = path.dirname(filePath)
 				const relativeDir = path.relative(postsDir, fileDir)
 				const imageName = src.replace(/\.[^/.]+$/, '')
-				const publicIdPath = relativeDir ? `${relativeDir}-images-${imageName}` : `images-${imageName}`
-				return `![${alt}](${config.cloudinaryBaseUrl}${publicIdPath})`
+				const fullRelativePath = relativeDir ? `${relativeDir}/images/${imageName}` : `images/${imageName}`
+				const publicId = fullRelativePath.replace(/\//g, '-')
+				return `![${alt}](${config.cloudinaryBaseUrl}${publicId})`
 			},
 		)
 
