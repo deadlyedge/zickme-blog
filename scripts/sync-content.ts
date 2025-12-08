@@ -1,120 +1,288 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from '../src/lib/prisma'
 import matter from 'gray-matter'
-import fs from 'fs/promises'
-import path from 'path'
+import * as fsPromises from 'fs/promises'
+import * as path from 'path'
 import { marked } from 'marked'
+import { generateSlug } from '../src/lib/slug'
+import type { Stats } from 'fs'
 
 interface MarkdownFrontmatter {
-	title: string
+	title?: string
 	excerpt?: string
 	image?: string
-	tags: string[]
-	date: string
+	tags?: string[]
+	date?: string
+	slug?: string
 }
 
-async function syncPosts() {
-	console.log('🚀 开始双向同步...')
+interface ProcessedPost {
+	slug: string
+	title: string
+	excerpt?: string
+	poster?: string
+	content: string
+	publishedAt: Date
+	tags: string[]
+	fileStats: Stats
+}
 
-	const postsDir = path.join(process.cwd(), 'content/posts')
-	const mdFiles = (await fs.readdir(postsDir))
-		.filter((file) => file.endsWith('.md'))
-		.map((file) => file.replace('.md', ''))
+interface SyncConfig {
+	dryRun: boolean
+	batchSize: number
+	deleteOld: boolean
+	cloudinaryBaseUrl: string
+}
 
-	// 1️⃣ 先删除 Postgres 中不存在的文章（保留 7 天）
-	const dbSlugs = await prisma.post.findMany({ select: { slug: true } })
-	const dbSlugsSet = new Set(dbSlugs.map((p) => p.slug))
-	const mdSlugsSet = new Set(mdFiles)
+const DEFAULT_CONFIG: SyncConfig = {
+	dryRun: process.argv.includes('--dry-run'),
+	batchSize: 10,
+	deleteOld: !process.argv.includes('--no-delete'),
+	cloudinaryBaseUrl:
+		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
+}
 
-	for (const dbSlug of dbSlugsSet) {
-		if (!mdSlugsSet.has(dbSlug)) {
-			console.log(`🗑️  标记删除: ${dbSlug}`)
-			// 软删除：保留评论历史 7 天
-			await prisma.post.updateMany({
-				where: { slug: dbSlug },
-				data: {
-					archivedAt: new Date(),
-					title: `[已删除] ${dbSlug}`,
-				},
-			})
-		}
+/**
+ * 从文件名生成标题
+ */
+function generateTitleFromFileName(fileName: string): string {
+	return fileName.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+}
+
+/**
+ * 处理图片URL
+ */
+function processImageUrl(
+	imagePath: string | undefined,
+	config: SyncConfig,
+): string | undefined {
+	if (!imagePath) return undefined
+
+	if (imagePath.startsWith('../images/')) {
+		return imagePath.replace('../images/', config.cloudinaryBaseUrl)
 	}
 
-	// 2️⃣ 同步现有文章
-	for (const slug of mdFiles) {
-		const filePath = path.join(postsDir, `${slug}.md`)
-		const content = await fs.readFile(filePath, 'utf8')
+	return imagePath
+}
+
+/**
+ * 处理单个Markdown文件
+ */
+async function processMarkdownFile(
+	filePath: string,
+	config: SyncConfig,
+): Promise<ProcessedPost | null> {
+	try {
+		const [content, stats] = await Promise.all([
+			fsPromises.readFile(filePath, 'utf8'),
+			fsPromises.stat(filePath),
+		])
+
 		const { data: frontmatter, content: body } = matter(content) as unknown as {
 			data: MarkdownFrontmatter
 			content: string
 		}
 
-		const imageUrl = frontmatter.image?.startsWith('../images/')
-			? frontmatter.image.replace(
-					'../images/',
-					'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
-				)
-			: frontmatter.image
+		const fileName = path.basename(filePath, '.md')
+
+		// 智能字段生成
+		const title = frontmatter.title || generateTitleFromFileName(fileName)
+		const slug = frontmatter.slug || generateSlug(title)
+		const publishedAt = frontmatter.date
+			? new Date(frontmatter.date)
+			: stats.mtime
+
+		const poster = processImageUrl(frontmatter.image, config)
 
 		// 替换正文中的图片地址
 		const processedBody = body.replace(
 			/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
-			(match, alt, src) => `![${alt}](https://res.cloudinary.com/zickme-blog/image/upload/myblog/${src})`,
+			(match, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
 		)
 
-		await prisma.post.upsert({
-			where: { slug },
-			update: {
-				title: frontmatter.title,
-				excerpt: frontmatter.excerpt,
-				poster: imageUrl,
-				content: await marked(processedBody),
-				publishedAt: new Date(frontmatter.date),
-				archivedAt: null, // 恢复
-			},
-			create: {
-				slug,
-				title: frontmatter.title,
-				excerpt: frontmatter.excerpt,
-				poster: imageUrl,
-				content: await marked(processedBody),
-				publishedAt: new Date(frontmatter.date),
-			},
-		})
-
-		// Handle tags separately - connect existing tags or create new ones
-		if (frontmatter.tags && frontmatter.tags.length > 0) {
-			const tagConnections = frontmatter.tags.map((tagName: string) => ({
-				where: { name: tagName },
-				create: {
-					name: tagName,
-					slug: tagName.toLowerCase().replace(/\s+/g, '-'),
-				},
-			}))
-
-			await prisma.post.update({
-				where: { slug },
-				data: {
-					tags: {
-						connectOrCreate: tagConnections,
-					},
-				},
-			})
+		return {
+			slug,
+			title,
+			excerpt: frontmatter.excerpt,
+			poster,
+			content: await marked(processedBody),
+			publishedAt,
+			tags: frontmatter.tags || [],
+			fileStats: stats,
 		}
-
-		console.log(`✅ 更新: ${slug}`)
+	} catch (error) {
+		console.error(`❌ 处理文件失败 ${filePath}:`, error)
+		return null
 	}
-
-	// 3️⃣ 清理超过 7 天的删除文章 + 评论
-	// await prisma.post.deleteMany({
-	// 	where: {
-	// 		archivedAt: {
-	// 			lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 天前
-	// 		},
-	// 	},
-	// })
-
-	console.log('✅ 同步完成！')
-	await prisma.$disconnect()
 }
 
-syncPosts().catch(console.error)
+/**
+ * 批量同步文章到数据库
+ */
+async function syncPostsToDatabase(
+	posts: ProcessedPost[],
+	config: SyncConfig,
+): Promise<void> {
+	const batches = []
+	for (let i = 0; i < posts.length; i += config.batchSize) {
+		batches.push(posts.slice(i, i + config.batchSize))
+	}
+
+	for (const batch of batches) {
+		await prisma.$transaction(async (tx) => {
+			for (const post of batch) {
+				if (config.dryRun) {
+					console.log(`📋 [DRY RUN] 将同步: ${post.slug} - ${post.title}`)
+					continue
+				}
+
+				// Upsert post
+				await tx.post.upsert({
+					where: { slug: post.slug },
+					update: {
+						title: post.title,
+						excerpt: post.excerpt,
+						poster: post.poster,
+						content: post.content,
+						publishedAt: post.publishedAt,
+						archivedAt: null, // 恢复
+					},
+					create: {
+						slug: post.slug,
+						title: post.title,
+						excerpt: post.excerpt,
+						poster: post.poster,
+						content: post.content,
+						publishedAt: post.publishedAt,
+					},
+				})
+
+				// Handle tags
+				if (post.tags.length > 0) {
+					const tagConnections = post.tags.map((tagName: string) => ({
+						where: { name: tagName },
+						create: {
+							name: tagName,
+							slug: tagName.toLowerCase().replace(/\s+/g, '-'),
+						},
+					}))
+
+					await tx.post.update({
+						where: { slug: post.slug },
+						data: {
+							tags: {
+								set: [], // 清除现有标签
+								connectOrCreate: tagConnections,
+							},
+						},
+					})
+				}
+
+				console.log(`✅ 同步完成: ${post.slug}`)
+			}
+		})
+	}
+}
+
+/**
+ * 处理已删除的文章
+ */
+async function handleDeletedPosts(
+	existingSlugs: Set<string>,
+	config: SyncConfig,
+): Promise<void> {
+	if (!config.deleteOld) return
+
+	const dbSlugs = await prisma.post.findMany({
+		where: { archivedAt: null },
+		select: { slug: true },
+	})
+
+	const deletedSlugs = dbSlugs
+		.map((p) => p.slug)
+		.filter((slug) => !existingSlugs.has(slug))
+
+	if (deletedSlugs.length === 0) return
+
+	if (config.dryRun) {
+		console.log(`📋 [DRY RUN] 将标记删除 ${deletedSlugs.length} 篇文章:`)
+		deletedSlugs.forEach((slug) => console.log(`  - ${slug}`))
+		return
+	}
+
+	await prisma.$transaction(async (tx) => {
+		for (const slug of deletedSlugs) {
+			await tx.post.update({
+				where: { slug },
+				data: {
+					archivedAt: new Date(),
+					title: `[已删除] ${slug}`,
+				},
+			})
+			console.log(`🗑️ 标记删除: ${slug}`)
+		}
+	})
+}
+
+/**
+ * 主同步函数
+ */
+async function syncPosts(config: SyncConfig = DEFAULT_CONFIG) {
+	console.log('🚀 开始智能内容同步...')
+	console.log(
+		`配置: ${config.dryRun ? '预览模式' : '执行模式'}, 批量大小: ${config.batchSize}`,
+	)
+
+	const postsDir = path.join(process.cwd(), 'content/posts')
+
+	try {
+		// 获取所有Markdown文件
+		const mdFiles = (await fsPromises.readdir(postsDir))
+			.filter((file: string) => file.endsWith('.md'))
+			.map((file: string) => path.join(postsDir, file))
+
+		console.log(`📁 发现 ${mdFiles.length} 个Markdown文件`)
+
+		// 并行处理所有文件
+		const processedPosts = await Promise.all(
+			mdFiles.map((file) => processMarkdownFile(file, config)),
+		)
+
+		// 过滤掉处理失败的文件
+		const validPosts = processedPosts.filter(
+			(post): post is ProcessedPost => post !== null,
+		)
+
+		if (validPosts.length === 0) {
+			console.log('⚠️ 没有有效的文章可同步')
+			return
+		}
+
+		console.log(`✅ 成功处理 ${validPosts.length} 篇文章`)
+
+		// 同步到数据库
+		await syncPostsToDatabase(validPosts, config)
+
+		// 处理已删除的文章
+		const existingSlugs = new Set(validPosts.map((p: ProcessedPost) => p.slug))
+		await handleDeletedPosts(existingSlugs, config)
+
+		console.log('✅ 同步完成！')
+
+		if (config.dryRun) {
+			console.log('💡 使用 --dry-run 查看预览，移除参数执行实际同步')
+		}
+	} catch (error) {
+		console.error('❌ 同步失败:', error)
+		process.exit(1)
+	} finally {
+		await prisma.$disconnect()
+	}
+}
+
+// 如果直接运行此脚本
+if (require.main === module) {
+	syncPosts().catch(console.error)
+}
+
+export { syncPosts, DEFAULT_CONFIG }
+export type { SyncConfig, ProcessedPost }
