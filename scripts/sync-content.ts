@@ -23,6 +23,7 @@ interface ProcessedPost {
 	content: string
 	publishedAt: Date
 	tags: string[]
+	type: 'BLOG' | 'PROJECT'
 	fileStats: Stats
 }
 
@@ -48,20 +49,83 @@ function generateTitleFromFileName(fileName: string): string {
 	return fileName.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
+
+
 /**
- * 处理图片URL
+ * 根据文件路径判断文章类型
+ */
+function getPostType(filePath: string, postsDir: string): 'BLOG' | 'PROJECT' {
+	const relativePath = path.relative(postsDir, filePath)
+	if (relativePath.startsWith('blogs/')) return 'BLOG'
+	if (relativePath.startsWith('projects/')) return 'PROJECT'
+	return 'BLOG' // 默认值
+}
+
+/**
+ * 从文件路径生成slug，支持多级文件夹
+ */
+function generateSlugFromPath(filePath: string, postsDir: string): string {
+	const relativePath = path.relative(postsDir, filePath) // blogs/tech/前端开发.md
+	const pathWithoutExt = relativePath.replace(/\.md$/, '') // blogs/tech/前端开发
+	const pathParts = pathWithoutExt.split('/') // ['blogs', 'tech', '前端开发']
+
+	// 对每个路径部分进行slugify
+	const slugParts = pathParts.map(part => generateSlug(part))
+
+	return slugParts.join('-') // blogs-tech-前端开发
+}
+
+/**
+ * 处理图片URL，支持多级文件夹
  */
 function processImageUrl(
 	imagePath: string | undefined,
 	config: SyncConfig,
+	filePath: string,
+	postsDir: string,
 ): string | undefined {
 	if (!imagePath) return undefined
 
+	// 根据嵌套层级计算相对路径
+	const relativePath = path.relative(postsDir, filePath)
+	const depth = relativePath.split('/').length - 1 // 计算文件夹嵌套层级
+
+	// 构建正确的相对路径前缀
+	let relativePrefix = '../'
+	for (let i = 0; i < depth; i++) {
+		relativePrefix += '../'
+	}
+
 	if (imagePath.startsWith('../images/')) {
-		return imagePath.replace('../images/', config.cloudinaryBaseUrl)
+		return imagePath.replace('../images/', `${config.cloudinaryBaseUrl}`)
 	}
 
 	return imagePath
+}
+
+/**
+ * 递归扫描所有Markdown文件
+ */
+async function scanMarkdownFiles(dirPath: string): Promise<string[]> {
+	const files: string[] = []
+
+	async function scan(dir: string) {
+		const entries = await fsPromises.readdir(dir, { withFileTypes: true })
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name)
+
+			if (entry.isDirectory()) {
+				// 递归扫描子文件夹
+				await scan(fullPath)
+			} else if (entry.isFile() && entry.name.endsWith('.md')) {
+				files.push(fullPath)
+			}
+		}
+	}
+
+	await scan(dirPath)
+	return files
 }
 
 /**
@@ -70,6 +134,7 @@ function processImageUrl(
 async function processMarkdownFile(
 	filePath: string,
 	config: SyncConfig,
+	postsDir: string,
 ): Promise<ProcessedPost | null> {
 	try {
 		const [content, stats] = await Promise.all([
@@ -86,12 +151,21 @@ async function processMarkdownFile(
 
 		// 智能字段生成
 		const title = frontmatter.title || generateTitleFromFileName(fileName)
-		const slug = frontmatter.slug || generateSlug(title)
+		const slug = frontmatter.slug || generateSlugFromPath(filePath, postsDir)
+		const type = getPostType(filePath, postsDir)
 		const publishedAt = frontmatter.date
 			? new Date(frontmatter.date)
 			: stats.mtime
 
-		const poster = processImageUrl(frontmatter.image, config)
+		const poster = processImageUrl(frontmatter.image, config, filePath, postsDir)
+
+		// 根据嵌套层级调整图片相对路径
+		const relativePath = path.relative(postsDir, filePath)
+		const depth = relativePath.split('/').length - 1
+		let imagePrefix = '../'
+		for (let i = 0; i < depth; i++) {
+			imagePrefix += '../'
+		}
 
 		// 替换正文中的图片地址
 		const processedBody = body.replace(
@@ -107,6 +181,7 @@ async function processMarkdownFile(
 			content: await marked(processedBody),
 			publishedAt,
 			tags: frontmatter.tags || [],
+			type,
 			fileStats: stats,
 		}
 	} catch (error) {
@@ -188,6 +263,7 @@ async function syncPostsToDatabase(
 						poster: post.poster,
 						content: post.content,
 						publishedAt: post.publishedAt,
+						type: post.type,
 						archivedAt: null, // 恢复
 					},
 					create: {
@@ -197,6 +273,7 @@ async function syncPostsToDatabase(
 						poster: post.poster,
 						content: post.content,
 						publishedAt: post.publishedAt,
+						type: post.type,
 					},
 				})
 
@@ -275,16 +352,14 @@ async function syncPosts(config: SyncConfig = DEFAULT_CONFIG) {
 	const postsDir = path.join(process.cwd(), 'content/posts')
 
 	try {
-		// 获取所有Markdown文件
-		const mdFiles = (await fsPromises.readdir(postsDir))
-			.filter((file: string) => file.endsWith('.md'))
-			.map((file: string) => path.join(postsDir, file))
+		// 递归扫描所有Markdown文件
+		const mdFiles = await scanMarkdownFiles(postsDir)
 
 		console.log(`📁 发现 ${mdFiles.length} 个Markdown文件`)
 
 		// 并行处理所有文件
 		const processedPosts = await Promise.all(
-			mdFiles.map((file) => processMarkdownFile(file, config)),
+			mdFiles.map((file) => processMarkdownFile(file, config, postsDir)),
 		)
 
 		// 过滤掉处理失败的文件
