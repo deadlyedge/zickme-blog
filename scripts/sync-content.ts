@@ -76,7 +76,7 @@ function generateSlugFromPath(filePath: string, postsDir: string): string {
 }
 
 /**
- * 处理图片URL，支持多级文件夹
+ * 处理图片URL，根据文件位置找到对应的Cloudinary图片
  */
 function processImageUrl(
 	imagePath: string | undefined,
@@ -86,18 +86,17 @@ function processImageUrl(
 ): string | undefined {
 	if (!imagePath) return undefined
 
-	// 根据嵌套层级计算相对路径
-	const relativePath = path.relative(postsDir, filePath)
-	const depth = relativePath.split('/').length - 1 // 计算文件夹嵌套层级
+	// 新的引用格式：./images/xxx.jpg
+	if (imagePath.startsWith('./images/')) {
+		// 获取当前文件所在的文件夹
+		const fileDir = path.dirname(filePath)
+		const relativeDir = path.relative(postsDir, fileDir)
 
-	// 构建正确的相对路径前缀
-	let relativePrefix = '../'
-	for (let i = 0; i < depth; i++) {
-		relativePrefix += '../'
-	}
+		// 构建Cloudinary publicId路径
+		const imageName = imagePath.replace('./images/', '').replace(/\.[^/.]+$/, '')
+		const publicIdPath = relativeDir ? `${relativeDir}-images-${imageName}` : `images-${imageName}`
 
-	if (imagePath.startsWith('../images/')) {
-		return imagePath.replace('../images/', `${config.cloudinaryBaseUrl}`)
+		return `${config.cloudinaryBaseUrl}${publicIdPath}`
 	}
 
 	return imagePath
@@ -159,16 +158,24 @@ async function processMarkdownFile(
 
 		const poster = processImageUrl(frontmatter.image, config, filePath, postsDir)
 
-		// 根据嵌套层级调整图片相对路径
-		const relativePath = path.relative(postsDir, filePath)
-		const depth = relativePath.split('/').length - 1
-		let imagePrefix = '../'
-		for (let i = 0; i < depth; i++) {
-			imagePrefix += '../'
-		}
-
 		// 替换正文中的图片地址
-		const processedBody = body.replace(
+		let processedBody = body
+
+		// 处理新的 ./images/ 引用
+		processedBody = processedBody.replace(
+			/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g,
+			(match, alt, src) => {
+				// 获取当前文件所在的文件夹
+				const fileDir = path.dirname(filePath)
+				const relativeDir = path.relative(postsDir, fileDir)
+				const imageName = src.replace(/\.[^/.]+$/, '')
+				const publicIdPath = relativeDir ? `${relativeDir}-images-${imageName}` : `images-${imageName}`
+				return `![${alt}](${config.cloudinaryBaseUrl}${publicIdPath})`
+			},
+		)
+
+		// 兼容旧的 ../images/ 引用（过渡期支持）
+		processedBody = processedBody.replace(
 			/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
 			(match, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
 		)
