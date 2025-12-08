@@ -1,70 +1,84 @@
-// Client-side auth API - compatibility layer for existing code
-// Using better-auth client for proper integration
-import { createAuthClient } from 'better-auth/client'
+// Server-side auth configuration - only runs on server
+import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { prisma } from '@/lib/prisma'
+import { nextCookies } from 'better-auth/next-js'
+import { getGravatarProfile } from '@/lib/getGravatar'
 
-const authClient = createAuthClient({
-	baseURL: typeof window !== 'undefined' ? window.location.origin : '',
-	fetchOptions: {
-		onRequest: (context) => {
-			return {
-				...context,
-				headers: {
-					...context.headers,
-				},
+interface SignInContext {
+	user: {
+		id: string
+		email: string
+		image?: string | null
+		name?: string | null
+	}
+	account: unknown
+	profile?: unknown
+}
+
+export const auth = betterAuth({
+	database: prismaAdapter(prisma, {
+		provider: 'postgresql',
+	}),
+	emailAndPassword: {
+		enabled: true,
+		async onSignIn(context: SignInContext) {
+			// 首次登录时同步 Gravatar 头像
+			try {
+				const { user } = context
+				if (user.email && !user.image) {
+					const gravatarApiKey = process.env.GRAVATAR_API_KEY
+					if (gravatarApiKey) {
+						const { avatarUrl } = await getGravatarProfile({
+							email: user.email,
+						})
+						if (avatarUrl) {
+							await prisma.user.update({
+								where: { id: user.id },
+								data: { image: avatarUrl },
+							})
+						}
+					}
+				}
+				console.log(`[avatar added] ${user.email}`)
+			} catch (error: unknown) {
+				// 静默失败，不影响登录流程
+				const message = error instanceof Error ? error.message : String(error)
+				console.log('Gravatar sync skipped:', message)
 			}
 		},
-		onResponse: (context) => {
-			return context
-		},
 	},
+	// user: {
+	// 	fields: {
+	// 		name: 'name',
+	// 		email: 'email',
+	// 		emailVerified: 'emailVerified',
+	// 		image: 'image',
+	// 	},
+	// },
+	// account: {
+	// 	fields: {
+	// 		userId: 'userId',
+	// 		providerId: 'providerId',
+	// 		accountId: 'accountId',
+	// 		password: 'password',
+	// 	},
+	// },
+	// session: {
+	// 	fields: {
+	// 		userId: 'userId',
+	// 		expiresAt: 'expiresAt',
+	// 		token: 'token',
+	// 		ipAddress: 'ipAddress',
+	// 		userAgent: 'userAgent',
+	// 	},
+	// },
+	// verification: {
+	// 	fields: {
+	// 		identifier: 'identifier',
+	// 		value: 'value',
+	// 		expiresAt: 'expiresAt',
+	// 	},
+	// },
+	plugins: [nextCookies()], // make sure this is the last plugin in the array
 })
-
-export const authApi = {
-	login: async (email: string, password: string) => {
-		const result = await authClient.signIn.email({
-			email,
-			password,
-		})
-
-		if (result.error) {
-			throw new Error(result.error.message || 'Login failed')
-		}
-
-		return { user: result.data?.user }
-	},
-
-	register: async (username: string, email: string, password: string) => {
-		const result = await authClient.signUp.email({
-			email,
-			password,
-			name: username,
-		})
-
-		if (result.error) {
-			throw new Error(result.error.message || 'Registration failed')
-		}
-
-		return { user: result.data?.user }
-	},
-
-	logout: async () => {
-		const result = await authClient.signOut()
-
-		if (result.error) {
-			throw new Error(result.error.message || 'Logout failed')
-		}
-
-		return {}
-	},
-
-	updateProfile: async (username: string, currentPassword: string, newPassword?: string) => {
-		// Better-auth doesn't have built-in profile update
-		// This would need custom implementation
-		throw new Error('Profile update not implemented yet')
-	},
-
-	getCurrentUser: async () => {
-		const result = await authClient.getSession()
-		return result.data?.user || null
-	},
-}

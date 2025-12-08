@@ -5,8 +5,10 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
+import { signIn, signUp, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
 import { VALIDATION_RULES, VALIDATION_MESSAGES } from '@/constants'
+import { updateProfile } from '@/lib/actions/profile'
 import {
 	Dialog,
 	DialogContent,
@@ -97,14 +99,17 @@ const profileSchema = z
 	)
 
 // 类型推断
+type AuthTab = 'login' | 'register' | 'profile'
 type LoginForm = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
 type ProfileForm = z.infer<typeof profileSchema>
+interface AuthFormProps {
+	onSuccess: () => void
+}
 
-// 登录表单组件
-function LoginForm() {
-	const { login, loading } = useAppStore()
-	const [loginError, setLoginError] = useState<string | undefined>(undefined)
+function LoginForm({ onSuccess }: AuthFormProps) {
+	const [formError, setFormError] = useState<string | undefined>(undefined)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const form = useForm<LoginForm>({
 		resolver: zodResolver(loginSchema),
@@ -116,12 +121,24 @@ function LoginForm() {
 
 	const onSubmit = async (data: LoginForm) => {
 		try {
-			setLoginError(undefined)
-			await login(data.email, data.password)
+			setFormError(undefined)
+			setIsSubmitting(true)
+			const result = await signIn.email({
+				email: data.email,
+				password: data.password,
+			})
+
+			if (result.error) {
+				throw new Error(result.error.message || '登录失败')
+			}
+
+			onSuccess()
 			form.reset()
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : '登录失败'
-			setLoginError(errorMessage)
+			setFormError(errorMessage)
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -175,22 +192,19 @@ function LoginForm() {
 					)}
 				/>
 			</FieldGroup>
-			{loginError && (
-				<p className="text-sm text-destructive mt-2">{loginError}</p>
+			{formError && (
+				<p className="text-sm text-destructive mt-2">{formError}</p>
 			)}
-			<Button type="submit" className="w-full mt-4" disabled={loading.login}>
-				{loading.login ? '登录中...' : '登录'}
+			<Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+				{isSubmitting ? '登录中...' : '登录'}
 			</Button>
 		</form>
 	)
 }
 
-// 注册表单组件
-function RegisterForm() {
-	const { register: registerUser, loading } = useAppStore()
-	const [registerError, setRegisterError] = useState<string | undefined>(
-		undefined,
-	)
+function RegisterForm({ onSuccess }: AuthFormProps) {
+	const [formError, setFormError] = useState<string | undefined>(undefined)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const form = useForm<RegisterForm>({
 		resolver: zodResolver(registerSchema),
@@ -204,17 +218,25 @@ function RegisterForm() {
 
 	const onSubmit = async (data: RegisterForm) => {
 		try {
-			setRegisterError(undefined)
-			await registerUser(
-				data.username,
-				data.email,
-				data.password,
-				data.confirmPassword,
-			)
+			setFormError(undefined)
+			setIsSubmitting(true)
+			const result = await signUp.email({
+				name: data.username,
+				email: data.email,
+				password: data.password,
+			})
+
+			if (result.error) {
+				throw new Error(result.error.message || '注册失败')
+			}
+
+			onSuccess()
 			form.reset()
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : '注册失败'
-			setRegisterError(errorMessage)
+			setFormError(errorMessage)
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -316,22 +338,21 @@ function RegisterForm() {
 					)}
 				/>
 			</FieldGroup>
-			{registerError && (
-				<p className="text-sm text-destructive mt-2">{registerError}</p>
+			{formError && (
+				<p className="text-sm text-destructive mt-2">{formError}</p>
 			)}
-			<Button type="submit" className="w-full mt-4" disabled={loading.register}>
-				{loading.register ? '注册中...' : '注册'}
+			<Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+				{isSubmitting ? '注册中...' : '注册'}
 			</Button>
 		</form>
 	)
 }
-
 // 账户信息编辑表单组件
-function ProfileForm() {
-	const { updateProfile, loading, user } = useAppStore()
-	const [profileError, setProfileError] = useState<string | undefined>(
-		undefined,
-	)
+function ProfileForm({ onSuccess }: AuthFormProps) {
+	const [formError, setFormError] = useState<string | undefined>(undefined)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const session = useSession()
+	const user = session.data?.user
 
 	const form = useForm<ProfileForm>({
 		resolver: zodResolver(profileSchema),
@@ -345,18 +366,21 @@ function ProfileForm() {
 
 	const onSubmit = async (data: ProfileForm) => {
 		try {
-			setProfileError(undefined)
-			const newPasswordValue = data.newPassword || undefined
-			await updateProfile(
-				data.username,
-				data.currentPassword || '',
-				newPasswordValue,
-			)
+			setFormError(undefined)
+			setIsSubmitting(true)
+			await updateProfile({
+				username: data.username,
+				currentPassword: data.currentPassword,
+				newPassword: data.newPassword,
+			})
+			onSuccess()
 			form.reset()
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : '修改账户信息失败'
-			setProfileError(errorMessage)
+			setFormError(errorMessage)
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -386,29 +410,6 @@ function ProfileForm() {
 						</Field>
 					)}
 				/>
-				{/* <Controller
-					name="currentPassword"
-					control={form.control}
-					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="profile-current-password">当前密码</FieldLabel>
-							<InputGroup>
-								<InputGroupAddon>
-									<Key className="size-4" />
-								</InputGroupAddon>
-								<InputGroupInput
-									{...field}
-									id="profile-current-password"
-									type="password"
-									placeholder="请输入当前密码以验证身份"
-									aria-invalid={fieldState.invalid}
-									autoComplete="current-password"
-								/>
-							</InputGroup>
-							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-						</Field>
-					)}
-				/> */}
 				<div className="border-t pt-4">
 					<Field>
 						<FieldLabel>新密码（可选）</FieldLabel>
@@ -467,61 +468,115 @@ function ProfileForm() {
 							</Field>
 						)}
 					/>
+					<Controller
+						name="currentPassword"
+						control={form.control}
+						render={({ field, fieldState }) => (
+							<Field data-invalid={fieldState.invalid}>
+								<FieldLabel htmlFor="profile-current-password">
+									当前密码
+								</FieldLabel>
+								<InputGroup>
+									<InputGroupAddon>
+										<Key className="size-4" />
+									</InputGroupAddon>
+									<InputGroupInput
+										{...field}
+										id="profile-current-password"
+										type="password"
+										placeholder="请输入当前密码以验证身份"
+										aria-invalid={fieldState.invalid}
+										autoComplete="current-password"
+									/>
+								</InputGroup>
+								{fieldState.invalid && (
+									<FieldError errors={[fieldState.error]} />
+								)}
+							</Field>
+						)}
+					/>
 				</div>
 			</FieldGroup>
-			{profileError && (
-				<p className="text-sm text-destructive mt-2">{profileError}</p>
+			{formError && (
+				<p className="text-sm text-destructive mt-2">{formError}</p>
 			)}
-			<Button
-				type="submit"
-				className="w-full mt-4"
-				disabled={loading.updateProfile}>
-				{loading.updateProfile ? '保存中...' : '保存修改'}
+			<Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+				{isSubmitting ? '保存中...' : '保存修改'}
 			</Button>
 		</form>
 	)
 }
 
-// 主AuthModal组件
 export default function AuthModal() {
-	const { isAuthModalOpen, authModalView, closeAuthModal, error, user } =
-		useAppStore()
+	const { isAuthModalOpen, authModalView, closeAuthModal } = useAppStore()
+	const session = useSession()
+	const user = session.data?.user
+	const isLoggedIn = Boolean(user)
+	const [activeTab, setActiveTab] = useState<AuthTab>(authModalView)
 
-	const [activeTab, setActiveTab] = useState(authModalView)
-
-	// 同步modal view变化
 	useEffect(() => {
 		setActiveTab(authModalView)
 	}, [authModalView])
 
-	// 处理Tab切换
 	const handleTabChange = (value: string) => {
-		setActiveTab(value as 'login' | 'register' | 'profile')
+		setActiveTab(value as AuthTab)
 	}
 
-	const isLoggedIn = !!user
+	// const handleSignOut = async () => {
+	// 	setSignOutError(null)
+	// 	setIsSigningOut(true)
+
+	// 	try {
+	// 		const result = await signOut()
+	// 		if (result.error) {
+	// 			throw new Error(result.error.message || '登出失败')
+	// 		}
+	// 		closeAuthModal()
+	// 	} catch (error) {
+	// 		setSignOutError(error instanceof Error ? error.message : '登出失败')
+	// 	} finally {
+	// 		setIsSigningOut(false)
+	// 	}
+	// }
 
 	return (
 		<Dialog open={isAuthModalOpen} onOpenChange={closeAuthModal}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>{isLoggedIn ? '账户设置' : '用户认证'}</DialogTitle>
+					<DialogTitle>{isLoggedIn ? '账户信息' : '用户认证'}</DialogTitle>
 					<DialogDescription>
-						{isLoggedIn ? '修改您的用户名和密码' : '登录或注册账户来发表评论'}
+						{isLoggedIn
+							? '你已登录，随时在评论区发表想法或管理站点。'
+							: '登录或注册账户以发表评论'}
 					</DialogDescription>
 				</DialogHeader>
-
-				{error && (
-					<div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 text-destructive text-sm">
-						{error}
-					</div>
-				)}
-
 				<Tabs
 					value={activeTab}
 					onValueChange={handleTabChange}
 					className="w-full">
-					{!isLoggedIn ? (
+					{isLoggedIn ? (
+						<>
+							<TabsContent value="profile" className="mt-4">
+								<ProfileForm onSuccess={closeAuthModal} />
+							</TabsContent>
+							{/* 
+						<div className="space-y-4">
+							<p className="text-sm text-slate-700">
+								{user?.name || user?.email}
+							</p>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleSignOut}
+								disabled={isSigningOut}>
+								{isSigningOut ? '登出中...' : '登出'}
+							</Button>
+							{signOutError && (
+								<p className="text-sm text-destructive">{signOutError}</p>
+							)}
+						</div> */}
+						</>
+					) : (
 						<>
 							<TabsList className="grid w-full grid-cols-2">
 								<TabsTrigger value="login">登录</TabsTrigger>
@@ -529,17 +584,13 @@ export default function AuthModal() {
 							</TabsList>
 
 							<TabsContent value="login" className="mt-4">
-								<LoginForm />
+								<LoginForm onSuccess={closeAuthModal} />
 							</TabsContent>
 
 							<TabsContent value="register" className="mt-4">
-								<RegisterForm />
+								<RegisterForm onSuccess={closeAuthModal} />
 							</TabsContent>
 						</>
-					) : (
-						<TabsContent value="profile" className="mt-4">
-							<ProfileForm />
-						</TabsContent>
 					)}
 				</Tabs>
 			</DialogContent>

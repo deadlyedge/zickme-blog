@@ -6,9 +6,9 @@ import { useAppStore } from '@/lib/store'
 import { CommentList } from './CommentList'
 import { CommentForm } from './CommentForm'
 import { Button } from '@/components/ui/button'
-// import { authUtils } from '@/lib/auth'
 import type { CommentWithReplies } from '@/lib/actions/comments'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { signOut, useSession } from '@/lib/auth-client'
 
 interface CommentsSectionProps {
 	docId: string
@@ -20,7 +20,9 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
-	const { user, openAuthModal, logout } = useAppStore()
+	const openAuthModal = useAppStore((state) => state.openAuthModal)
+	const { data: session } = useSession()
+	const user = session?.user
 
 	useEffect(() => {
 		async function loadComments() {
@@ -51,16 +53,19 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 		openAuthModal('register')
 	}
 
+	const handleEditProfile = () => {
+		openAuthModal('profile')
+	}
+
 	const handleLogout = async () => {
 		try {
-			await logout()
+			const result = await signOut()
+			if (result.error) {
+				console.error('Logout error:', result.error.message || 'Logout failed')
+			}
 		} catch (error) {
 			console.error('Logout error:', error)
 		}
-	}
-
-	const handleEditProfile = () => {
-		openAuthModal('profile')
 	}
 
 	if (loading) {
@@ -93,16 +98,21 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 				{/* 认证状态显示 */}
 				<div className="flex items-center gap-3">
 					{!!user ? (
-						<div className="flex items-center gap-2">
-							<Button variant="link" onClick={handleEditProfile}>
+						<div className="flex items-center gap-3">
+							<Button
+								variant="link"
+								onClick={handleEditProfile}
+								className="flex items-center gap-2">
 								<Avatar>
 									<AvatarImage
 										src={user?.image || 'https://github.com/shadcn.png'}
-										alt={user?.name || '@shadcn'}
+										alt={user?.name || user?.email || '用户'}
 									/>
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
-								{user.name || '用户'}
+								<span className="text-sm font-medium">
+									{user.name || user.email || '用户'}
+								</span>
 							</Button>
 							<Button
 								variant="outline"
@@ -135,10 +145,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 			{/* 评论表单区域 */}
 			<div className="mb-12">
 				{!!user ? (
-					<CommentForm
-						docId={docId}
-						onSuccess={handleCommentAdded}
-					/>
+					<CommentForm docId={docId} onSuccess={handleCommentAdded} />
 				) : (
 					<div className="border border-dashed border-gray-200 rounded-lg p-8 text-center bg-gray-50">
 						<p className="text-gray-600 mb-4">登录后即可发表评论</p>
