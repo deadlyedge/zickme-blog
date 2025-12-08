@@ -1,9 +1,9 @@
 import { StateCreator } from 'zustand'
 import type { AppState, CacheActions, CacheState } from './types'
 import {
-	fetchBlogPostsAction,
+	fetchPostsAction,
 	fetchTagsAction,
-	fetchBlogPostBySlugAction,
+	fetchPostBySlugAction,
 } from '../actions/content'
 import type { Post } from '@/generated/prisma/client'
 
@@ -16,26 +16,26 @@ export const createContentSlice: StateCreator<
 	[],
 	CacheState & CacheActions
 > = (set, get) => ({
-	blogPosts: new Map(),
+	posts: new Map(),
 	tags: [],
-	singleBlogPosts: new Map(),
-	singleBlogPostTimestamps: new Map(),
+	singlePosts: new Map(),
+	singlePostTimestamps: new Map(),
 	lastFetched: {
-		blogPosts: 0,
+		posts: 0,
 		tags: 0,
 		singleContent: 0,
 	},
 	preloading: {
-		blogPost: null,
+		post: null,
 	},
 
-	setBlogPosts: (posts) =>
+	setPosts: (posts) =>
 		set((state) => {
 			const map = new Map<string, Post>()
 			posts.forEach((post) => map.set(post.slug, post))
 			return {
-				blogPosts: map,
-				lastFetched: { ...state.lastFetched, blogPosts: Date.now() },
+				posts: map,
+				lastFetched: { ...state.lastFetched, posts: Date.now() },
 			}
 		}),
 	setTags: (tags) =>
@@ -43,45 +43,45 @@ export const createContentSlice: StateCreator<
 			tags,
 			lastFetched: { ...state.lastFetched, tags: Date.now() },
 		})),
-	setSingleBlogPost: (slug, post) =>
+	setSinglePost: (slug, post) =>
 		set((state) => {
-			const blogPosts = new Map(state.singleBlogPosts)
-			blogPosts.set(slug, post)
-			const timestamps = new Map(state.singleBlogPostTimestamps)
+			const posts = new Map(state.singlePosts)
+			posts.set(slug, post)
+			const timestamps = new Map(state.singlePostTimestamps)
 			timestamps.set(slug, Date.now())
 			return {
-				singleBlogPosts: blogPosts,
-				singleBlogPostTimestamps: timestamps,
+				singlePosts: posts,
+				singlePostTimestamps: timestamps,
 				lastFetched: { ...state.lastFetched, singleContent: Date.now() },
 			}
 		}),
 
 	// Getters
-	getSingleBlogPost: (slug) => get().singleBlogPosts.get(slug),
-	getBlogPost: (slug) => get().blogPosts.get(slug),
+	getSinglePost: (slug) => get().singlePosts.get(slug),
+	getPost: (slug) => get().posts.get(slug),
 
 	// Async Thunks
-	fetchBlogPosts: async () => {
-		if (get().isCacheValid('blogPosts', BLOG_CACHE_DURATION)) return
+	fetchPosts: async () => {
+		if (get().isCacheValid('posts', BLOG_CACHE_DURATION)) return
 
 		set((state) => ({
-			loadingStates: { ...state.loadingStates, blogPosts: true },
-			errorStates: { ...state.errorStates, blogPosts: null },
+			loadingStates: { ...state.loadingStates, posts: true },
+			errorStates: { ...state.errorStates, posts: null },
 		}))
 
 		try {
-			const posts = await fetchBlogPostsAction()
-			get().setBlogPosts(posts)
+			const posts = await fetchPostsAction()
+			get().setPosts(posts)
 		} catch (err) {
 			set((state) => ({
 				errorStates: {
 					...state.errorStates,
-					blogPosts: (err as Error).message,
+					posts: (err as Error).message,
 				},
 			}))
 		} finally {
 			set((state) => ({
-				loadingStates: { ...state.loadingStates, blogPosts: false },
+				loadingStates: { ...state.loadingStates, posts: false },
 			}))
 		}
 	},
@@ -109,15 +109,15 @@ export const createContentSlice: StateCreator<
 		}
 	},
 
-	fetchBlogPost: async (slug: string) => {
+	fetchPost: async (slug: string) => {
 		if (get().isSingleContentCached('blog', slug, BLOG_CACHE_DURATION)) return
 
 		get().setPreloadingBlog(slug)
 
 		try {
-			const post = await fetchBlogPostBySlugAction(slug)
+			const post = await fetchPostBySlugAction(slug)
 			if (post) {
-				get().setSingleBlogPost(slug, post)
+				get().setSinglePost(slug, post)
 			} else {
 				// 可以选择设置一个 404 错误，或者什么都不做
 				throw new Error('Not found')
@@ -132,17 +132,17 @@ export const createContentSlice: StateCreator<
 
 	setPreloadingBlog: (slug) =>
 		set((state) => ({
-			preloading: { ...state.preloading, blogPost: slug },
+			preloading: { ...state.preloading, post: slug },
 		})),
 
 	clearCache: () =>
 		set({
-			blogPosts: new Map(),
+			posts: new Map(),
 			tags: [],
-			singleBlogPosts: new Map(),
-			singleBlogPostTimestamps: new Map(),
+			singlePosts: new Map(),
+			singlePostTimestamps: new Map(),
 			lastFetched: {
-				blogPosts: 0,
+				posts: 0,
 				tags: 0,
 				singleContent: 0,
 			},
@@ -152,7 +152,7 @@ export const createContentSlice: StateCreator<
 		return Date.now() - lastFetched < maxAge
 	},
 	isSingleContentCached: (type, slug, maxAge = DEFAULT_CACHE_DURATION) => {
-		const timestamps = get().singleBlogPostTimestamps
+		const timestamps = get().singlePostTimestamps
 		const lastFetched = timestamps.get(slug)
 		return Boolean(lastFetched && Date.now() - lastFetched < maxAge)
 	},

@@ -7,9 +7,9 @@ import { formatPublishedDate } from '@/lib/utils'
 import { Button } from './ui/button'
 import { NavigationLink } from './NavigationLink'
 
-type BlogPostCardProps = { post: Post }
+type PostCardProps = { post: Post }
 
-export const BlogPostCard = ({ post }: BlogPostCardProps) => {
+export const PostCard = ({ post }: PostCardProps) => {
 	return (
 		<CardTilt
 			key={post.slug}

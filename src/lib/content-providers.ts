@@ -8,7 +8,7 @@ if (typeof window !== 'undefined') {
 
 export type ContentResponse = {
 	profile: SiteProfile | null
-	blogPosts: Post[]
+	posts: Post[]
 }
 
 export const fetchProfile = async (): Promise<SiteProfile | null> => {
@@ -18,7 +18,7 @@ export const fetchProfile = async (): Promise<SiteProfile | null> => {
 	})
 }
 
-export const fetchBlogPosts = async (): Promise<Post[]> => {
+export const fetchPosts = async (): Promise<Post[]> => {
 	return prisma.post.findMany({
 		where: {
 			type: 'BLOG',
@@ -30,7 +30,7 @@ export const fetchBlogPosts = async (): Promise<Post[]> => {
 	})
 }
 
-export const fetchBlogPostBySlug = async (slug: string): Promise<Post | null> => {
+export const fetchPostBySlug = async (slug: string): Promise<Post | null> => {
 	return prisma.post.findFirst({
 		where: {
 			slug,
@@ -41,7 +41,7 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<Post | null> =>
 	})
 }
 
-export const fetchAllBlogPostSlugs = async (): Promise<string[]> => {
+export const fetchAllPostSlugs = async (): Promise<string[]> => {
 	const posts = await prisma.post.findMany({
 		where: {
 			type: 'BLOG',
@@ -62,7 +62,7 @@ export const fetchTags = async (): Promise<Tag[]> => {
 }
 
 export const fetchHomeContent = async (): Promise<ContentResponse> => {
-	const [profile, blogPosts] = await Promise.all([
+	const [profile, posts] = await Promise.all([
 		prisma.siteProfile.findFirst({
 			include: { avatar: true },
 			orderBy: { createdAt: 'desc' },
@@ -80,18 +80,18 @@ export const fetchHomeContent = async (): Promise<ContentResponse> => {
 
 	return {
 		profile,
-		blogPosts,
+		posts,
 	}
 }
 
 export const fetchContent = async (): Promise<ContentResponse> => {
-	const [profile, blogPosts] = await Promise.all([
+	const [profile, posts] = await Promise.all([
 		fetchProfile(),
-		fetchBlogPosts(),
+		fetchPosts(),
 	])
 
 	return {
 		profile,
-		blogPosts,
+		posts,
 	}
 }

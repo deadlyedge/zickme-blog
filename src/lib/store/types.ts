@@ -15,36 +15,36 @@ export interface NavigationActions {
 
 export interface CacheState {
 	// 列表数据
-	blogPosts: Map<string, Post>
+	posts: Map<string, Post>
 	tags: Tag[]
 
 	// 单篇内容数据 - 按 slug 缓存
-	singleBlogPosts: Map<string, Post>
-	singleBlogPostTimestamps: Map<string, number>
+	singlePosts: Map<string, Post>
+	singlePostTimestamps: Map<string, number>
 
 	lastFetched: {
-		blogPosts: number
+		posts: number
 		tags: number
 		singleContent: number
 	}
 
 	// 预加载状态
 	preloading: {
-		blogPost: string | null
+		post: string | null
 	}
 }
 
 export interface CacheActions {
-	setBlogPosts: (posts: Post[]) => void
+	setPosts: (posts: Post[]) => void
 	setTags: (tags: Tag[]) => void
-	setSingleBlogPost: (slug: string, post: Post) => void
+	setSinglePost: (slug: string, post: Post) => void
 
-	getSingleBlogPost: (slug: string) => Post | undefined
-	getBlogPost: (slug: string) => Post | undefined
+	getSinglePost: (slug: string) => Post | undefined
+	getPost: (slug: string) => Post | undefined
 
-	fetchBlogPosts: () => Promise<void>
+	fetchPosts: () => Promise<void>
 	fetchTags: () => Promise<void>
-	fetchBlogPost: (slug: string) => Promise<void>
+	fetchPost: (slug: string) => Promise<void>
 
 	setPreloadingBlog: (slug: string | null) => void
 
@@ -62,12 +62,12 @@ export interface CacheActions {
 
 export interface UIState {
 	loadingStates: {
-		blogPosts: boolean
+		posts: boolean
 		tags: boolean
 		pageTransition: boolean
 	}
 	errorStates: {
-		blogPosts: string | null
+		posts: string | null
 		tags: string | null
 	}
 }

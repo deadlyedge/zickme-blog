@@ -11,39 +11,39 @@ import { CommentsSection } from '@/components/comments'
 import { useAppStore } from '@/lib/store'
 import type { Post } from '@/generated/prisma/client'
 
-interface BlogPostClientProps {
+interface PostClientProps {
 	initialPost?: Post
 }
 
-export default function BlogPostClient({ initialPost }: BlogPostClientProps) {
+export default function PostClient({ initialPost }: PostClientProps) {
 	const params = useParams()
 	const slug = params.slug as string
 
-	const getSingleBlogPost = useAppStore((state) => state.getSingleBlogPost)
-	const fetchBlogPost = useAppStore((state) => state.fetchBlogPost)
-	const setSingleBlogPost = useAppStore((state) => state.setSingleBlogPost)
-	const preloadingBlogPost = useAppStore((state) => state.preloading.blogPost)
+	const getSinglePost = useAppStore((state) => state.getSinglePost)
+	const fetchPost = useAppStore((state) => state.fetchPost)
+	const setSinglePost = useAppStore((state) => state.setSinglePost)
+	const preloadingPost = useAppStore((state) => state.preloading.post)
 
 	// 使用 initialPost 作为主要数据源，如果 store 中有更新版本则使用
-	const cachedPost = getSingleBlogPost(slug)
+	const cachedPost = getSinglePost(slug)
 	const post = cachedPost || initialPost
-	const isLoading = preloadingBlogPost === slug
+	const isLoading = preloadingPost === slug
 
 	// 如果 store 中没有数据，用 initialPost 初始化
 	useEffect(() => {
-		if (initialPost && !getSingleBlogPost(slug)) {
-			console.log(`BlogPostClient [${slug}]: setting initial data from server`)
-			setSingleBlogPost(slug, initialPost)
+		if (initialPost && !getSinglePost(slug)) {
+			console.log(`PostClient [${slug}]: setting initial data from server`)
+			setSinglePost(slug, initialPost)
 		}
-	}, [initialPost, slug, setSingleBlogPost, getSingleBlogPost])
+	}, [initialPost, slug, setSinglePost, getSinglePost])
 
 	// 后台更新数据（用于获取最新内容）
 	useEffect(() => {
 		if (slug && !isLoading) {
-			console.log(`BlogPostClient [${slug}]: triggering background fetch`)
-			fetchBlogPost(slug)
+			console.log(`PostClient [${slug}]: triggering background fetch`)
+			fetchPost(slug)
 		}
-	}, [slug, fetchBlogPost, isLoading])
+	}, [slug, fetchPost, isLoading])
 
 	if (isLoading && !post) {
 		return (

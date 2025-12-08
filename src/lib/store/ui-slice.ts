@@ -8,14 +8,12 @@ export const createUISlice: StateCreator<
 	UIState & UIActions
 > = (set) => ({
 	loadingStates: {
-		blogPosts: false,
-		projects: false,
+		posts: false,
 		tags: false,
 		pageTransition: false,
 	},
 	errorStates: {
-		blogPosts: null,
-		projects: null,
+		posts: null,
 		tags: null,
 	},
 

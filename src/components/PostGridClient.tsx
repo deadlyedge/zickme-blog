@@ -5,7 +5,7 @@ import type { Post, Tag } from '@/generated/prisma/client'
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
-import { BlogPostCard } from './BlogPostCard'
+import { PostCard } from './PostCard'
 
 type Props = {
 	posts: Post[]
@@ -15,19 +15,19 @@ type Props = {
 import { useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 
-export default function BlogGridClient({ posts, tags }: Props) {
+export default function PostGridClient({ posts, tags }: Props) {
 	const [activeTag, setActiveTag] = useState<string>('All')
-	const setBlogPosts = useAppStore((state) => state.setBlogPosts)
+	const setPosts = useAppStore((state) => state.setPosts)
 	const setTags = useAppStore((state) => state.setTags)
-	// const storePostsMap = useAppStore((state) => state.blogPosts)
+	// const storePostsMap = useAppStore((state) => state.posts)
 
 	// 初始数据同步 (Hydration)
 	// 如果 Store 中没有数据，或者 Server Component 传来的数据更新，我们就更新 Store。
 	// 但为了简单和避免无限循环，我们只在 mount 时同步一次，将首屏数据灌入 store。
 	useEffect(() => {
-		setBlogPosts(posts)
+		setPosts(posts)
 		setTags(tags)
-	}, [posts, tags, setBlogPosts, setTags])
+	}, [posts, tags, setPosts, setTags])
 
 	// 优先使用 store 中的数据（如果有更新），但对于列表页 SSR 还是主要源。
 	// 这里我们为了实现 "Client Cache 优先" 的体验（例如从详情页回来时保持状态），
@@ -84,7 +84,7 @@ export default function BlogGridClient({ posts, tags }: Props) {
 
 			<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{filteredPosts.map((post) => (
-					<BlogPostCard key={post.id} post={post} />
+					<PostCard key={post.id} post={post} />
 				))}
 			</div>
 

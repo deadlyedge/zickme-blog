@@ -6,7 +6,7 @@ export function useNavigationPreload() {
 	const router = useRouter()
 	const setNavigating = useAppStore((state) => state.setNavigating)
 	const setCurrentPath = useAppStore((state) => state.setCurrentPath)
-	const fetchBlogPost = useAppStore((state) => state.fetchBlogPost)
+	const fetchPost = useAppStore((state) => state.fetchPost)
 
 	const [isPreloading, setIsPreloading] = useState(false)
 
@@ -17,11 +17,11 @@ export function useNavigationPreload() {
 
 			if (blogMatch) {
 				const slug = blogMatch[1]
-				await fetchBlogPost(slug)
+				await fetchPost(slug)
 				return
 			}
 		},
-		[fetchBlogPost],
+		[fetchPost],
 	)
 
 	const preloadAndNavigate = useCallback(

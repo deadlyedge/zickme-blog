@@ -5,13 +5,13 @@ import { useRef } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
 import { ContentResponse } from '@/lib/content-providers'
 import { Hero } from './Hero'
-import { BlogPostCard } from './BlogPostCard'
+import { PostCard } from './PostCard'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const scrollRef = useRef(null)
-	const { profile, blogPosts } = data
+	const { profile, posts } = data
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,
 		offset: ['0 0', '1 1'],
@@ -43,8 +43,8 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 					</div>
 
 					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{blogPosts.map((post) => (
-							<BlogPostCard key={post.id} post={post} />
+						{posts.map((post) => (
+							<PostCard key={post.id} post={post} />
 						))}
 					</div>
 				</section>

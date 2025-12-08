@@ -1,7 +1,7 @@
-import { fetchBlogPosts, fetchTags } from '@/lib/content-providers'
+import { fetchPosts, fetchTags } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
-import BlogGridClient from '@/components/BlogGridClient'
+import PostGridClient from '@/components/PostGridClient'
 
 // 每5分钟重新验证一次
 export const revalidate = 300
@@ -12,14 +12,14 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default async function BlogPage() {
-	const [posts, tags] = await Promise.all([fetchBlogPosts(), fetchTags()])
+	const [posts, tags] = await Promise.all([fetchPosts(), fetchTags()])
 
 	return (
 		<div className="pt-16 overflow-y-auto h-svh">
 			<div className="mx-auto max-w-7xl p-6">
 				<h1 className="text-4xl font-bold mb-8">博客文章</h1>
 
-				<BlogGridClient posts={posts} tags={tags} />
+				<PostGridClient posts={posts} tags={tags} />
 			</div>
 		</div>
 	)

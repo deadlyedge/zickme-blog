@@ -1,7 +1,7 @@
-import BlogPostClient from './BlogPostClient'
+import PostClient from './PostClient'
 import {
-	fetchBlogPostBySlug,
-	fetchAllBlogPostSlugs,
+	fetchPostBySlug,
+	fetchAllPostSlugs,
 } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
@@ -13,22 +13,22 @@ interface PageProps {
 	}>
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
+export default async function PostPage({ params }: PageProps) {
 	const { slug } = await params
-	const post = await fetchBlogPostBySlug(slug)
+	const post = await fetchPostBySlug(slug)
 
 	if (!post) {
 		notFound()
 	}
 
-	return <BlogPostClient initialPost={post} />
+	return <PostClient initialPost={post} />
 }
 
 export async function generateMetadata({
 	params,
 }: PageProps): Promise<Metadata> {
 	const { slug } = await params
-	const post = await fetchBlogPostBySlug(slug)
+	const post = await fetchPostBySlug(slug)
 
 	if (!post) {
 		return buildMetadata({
@@ -50,7 +50,7 @@ export async function generateStaticParams() {
 		return []
 	}
 
-	const slugs = await fetchAllBlogPostSlugs()
+	const slugs = await fetchAllPostSlugs()
 	return slugs.map((slug) => ({
 		slug,
 	}))
