@@ -23,4 +23,7 @@ jobs:
       - name: Sync to Neon
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx tsx scripts/sync-content.ts  # tsx 兼容 Bun，比 npx 快
+        run: |
+          npx prisma generate
+          npx prisma db push
+          npx tsx scripts/sync-content.ts  # tsx 兼容 Bun，比 npx 快
