@@ -88,7 +88,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 
 	return (
 		<div className="pt-16 overflow-y-auto h-svh">
-			<div className="mx-auto p-6 pt-24 max-w-4xl">
+			<div className="mx-auto p-6 max-w-4xl">
 				<article>
 					<header className="mb-8">
 						<h1 className="text-4xl font-bold mb-4">{post.title}</h1>
@@ -125,7 +125,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 						</time>
 					</header>
 
-					<div className="prose prose-lg max-w-none">
+					<div className="prose prose-lg prose-blog max-w-none">
 						{/* TODO: Convert content to proper format for RichText component */}
 						<div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
 					</div>

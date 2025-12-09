@@ -4,3 +4,5 @@
 - /posts的必要性，或者说/content的必要性
 - 直接在vscode中编辑.md文件会生成不带前缀‘./’的类似于(images/xxx.jpg)的链接，是否考虑覆盖处理
 - 文件路径自动生成tag
+- siteProfie 管理面板
+- 考虑是应该在前端渲染markdown，还是在后端转换html

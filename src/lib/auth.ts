@@ -22,26 +22,16 @@ export const auth = betterAuth({
 	}),
 	emailAndPassword: {
 		enabled: true,
-		// signIn: async (context: SignInContext) => {
-		// 	const { user } = context
-		// 	// On sign-in, if user has no image, try to fetch from Gravatar
-		// 	if (!user.image) {
-		// 		try {
-		// 			const { avatarUrl } = await getGravatarProfile({
-		// 				email: user.email,
-		// 			})
-		// 			if (avatarUrl) {
-		// 				await prisma.user.update({
-		// 					where: { id: user.id },
-		// 					data: { image: avatarUrl },
-		// 				})
-		// 				user.image = avatarUrl
-		// 			}
-		// 		} catch (error) {
-		// 			console.error('Error fetching Gravatar:', error)
-		// 		}
-		// 	}
-		// },
-		plugins: [nextCookies()], // make sure this is the last plugin in the array
+	},
+	plugins: [nextCookies()], // make sure this is the last plugin in the array
+	user: {
+		additionalFields: {
+			role: {
+				type: 'string',
+				required: false,
+				defaultValue: 'USER',
+				input: false, // 防止用户自己改
+			},
+		},
 	},
 })

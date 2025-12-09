@@ -148,3 +148,39 @@
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--primary);
 }
+
+/* 自定义 prose-blog 工具类 */
+@utility prose-blog {
+  @apply prose prose-lg max-w-[65ch];
+
+  /* 可以直接在这里写深度选择器 */
+  & :is(h1, h2, h3, h4) {
+    scroll-margin-top: 6rem;
+  }
+
+  & a {
+    text-decoration: none;
+    border-bottom: 1px solid rgba(37,99,235,0.3);
+  }
+
+  & a:hover {
+    border-bottom-color: rgba(37,99,235,0.8);
+  }
+
+  & img {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.25);
+  }
+
+  & code {
+    border-radius: 0.375rem;
+    padding: 0.15rem 0.35rem;
+    background-color: rgba(15,23,42,0.04);
+  }
+
+  & pre {
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    background-color: #020617;
+  }
+}

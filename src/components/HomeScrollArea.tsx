@@ -30,11 +30,11 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* LATEST PROJECTS */}
-				<section id="blog" className="mt-20 px-2">
+				<section id="projects" className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest projects</h2>
 						<Link
-							href="/blog"
+							href="/projects"
 							className="text-sm text-slate-500 hover:underline">
 							See all projects
 						</Link>
