@@ -179,6 +179,20 @@ zickme-blog/
    ```bash
    bun run content:check
    ```
+   
+   注意：如果使用obsidian编辑markdown文件，建议按以下配置：
+
+   ```json
+   # content/.obsidian/app.json
+   {
+   "newLinkFormat": "relative",
+   "attachmentFolderPath": "./images",
+   "useMarkdownLinks": true
+   }
+   ```
+
+   目前本app并未完全支持parse obsidian生成的 `"[](images/curry_dunk.webp)"` 
+   和vscode生成的 `![alt text](images/curry_dunk.webp)` ，使用中要注意。
 
 4. **同步到数据库**：
    ```bash
@@ -187,17 +201,17 @@ zickme-blog/
 
 ### 可用脚本
 
-| 脚本 | 说明 |
-|------|------|
-| `bun run dev` | 启动开发服务器 |
-| `bun run build` | 构建生产版本 |
-| `bun run start` | 启动生产服务器 |
-| `bun run content:check` | 检查内容格式 |
-| `bun run content:fix` | 自动修复内容格式 |
-| `bun run sync` | 同步内容到数据库 |
-| `bun run db:generate` | 生成 Prisma 客户端 |
-| `bun run db:migrate` | 运行数据库迁移 |
-| `bun run db:studio` | 打开 Prisma Studio |
+| 脚本                    | 说明               |
+| ----------------------- | ------------------ |
+| `bun run dev`           | 启动开发服务器     |
+| `bun run build`         | 构建生产版本       |
+| `bun run start`         | 启动生产服务器     |
+| `bun run content:check` | 检查内容格式       |
+| `bun run content:fix`   | 自动修复内容格式   |
+| `bun run sync`          | 同步内容到数据库   |
+| `bun run db:generate`   | 生成 Prisma 客户端 |
+| `bun run db:migrate`    | 运行数据库迁移     |
+| `bun run db:studio`     | 打开 Prisma Studio |
 
 ## 🎨 设计特色
 
