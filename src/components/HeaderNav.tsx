@@ -54,11 +54,6 @@ export const HeaderNav = () => {
 						disabled={isNavigating}>
 						<Link href="/about">contact</Link>
 					</Button>
-					{/* <a
-						href={profile?.website ?? '#'}
-						className="ml-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 hover:shadow transition">
-						Contact
-					</a> */}
 				</nav>
 			</div>
 		</nav>

@@ -16,7 +16,7 @@ type Props = {
 	tags: Tag[]
 }
 
-export default function PostGridClient({ posts, tags }: Props) {
+export function PostGridClient({ posts, tags }: Props) {
 	const [activeTag, setActiveTag] = useState<string>('All')
 	const setPosts = useAppStore((state) => state.setPosts)
 	const setTags = useAppStore((state) => state.setTags)

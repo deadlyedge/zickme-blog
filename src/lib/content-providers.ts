@@ -13,7 +13,8 @@ if (typeof window !== 'undefined') {
 
 export type ContentResponse = {
 	profile: SiteProfile | null
-	posts: PostWithTags[]
+	projects: PostWithTags[]
+	blog: PostWithTags[]
 }
 
 export type PostWithTags = Post & {
@@ -82,10 +83,19 @@ export const fetchTags = async (): Promise<Tag[]> => {
 }
 
 export const fetchHomeContent = async (): Promise<ContentResponse> => {
-	const [profile, posts] = await Promise.all([
+	const [profile, projects, blog] = await Promise.all([
 		prisma.siteProfile.findFirst({
 			include: { avatar: true },
 			orderBy: { createdAt: 'desc' },
+		}),
+		prisma.post.findMany({
+			where: {
+				type: 'PROJECT',
+				status: 'PUBLISHED',
+			},
+			include: { tags: true },
+			orderBy: { publishedAt: 'desc' },
+			take: 3,
 		}),
 		prisma.post.findMany({
 			where: {
@@ -100,15 +110,16 @@ export const fetchHomeContent = async (): Promise<ContentResponse> => {
 
 	return {
 		profile,
-		posts,
+		projects,
+		blog,
 	}
 }
 
-export const fetchContent = async (): Promise<ContentResponse> => {
-	const [profile, posts] = await Promise.all([fetchProfile(), fetchPosts()])
+// export const fetchContent = async (): Promise<ContentResponse> => {
+// 	const [profile, posts] = await Promise.all([fetchProfile(), fetchPosts()])
 
-	return {
-		profile,
-		posts,
-	}
-}
+// 	return {
+// 		profile,
+// 		posts,
+// 	}
+// }

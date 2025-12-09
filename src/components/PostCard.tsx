@@ -2,14 +2,17 @@ import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 import { Badge } from './ui/badge'
-import type { Post } from '@/generated/prisma/client'
 import { formatPublishedDate } from '@/lib/utils'
 import { Button } from './ui/button'
 import { NavigationLink } from './NavigationLink'
+import { PostWithTags } from '@/lib/content-providers'
+import { BookOpenIcon, CodeIcon } from 'lucide-react'
 
-type PostCardProps = { post: Post }
+type PostCardProps = { post: PostWithTags }
 
 export const PostCard = ({ post }: PostCardProps) => {
+	const route = post.type === 'PROJECT' ? '/projects/' : '/blog/'
+
 	return (
 		<CardTilt
 			key={post.slug}
@@ -18,7 +21,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 			scale={1.05}>
 			<CardTiltContent className="rounded-2xl bg-card shadow-2xl overflow-hidden">
 				<div className="relative bg-slate-100">
-					<NavigationLink href={`/blog/${post.slug}`}>
+					<NavigationLink href={`${route}${post.slug}`}>
 						{post.poster ? (
 							<div className="relative w-full aspect-4/3 bg-slate-100">
 								<Image
@@ -41,7 +44,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 							{post.title}
 						</span>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{(post as any).tags?.slice(0, 3).map((t: any) => (
+							{post.tags?.slice(0, 3).map((t) => (
 								<Badge
 									key={t.slug}
 									style={{
@@ -60,11 +63,25 @@ export const PostCard = ({ post }: PostCardProps) => {
 
 					<div className="mt-4 flex items-center justify-between text-xs text-slate-500">
 						<div>
-							{post.publishedAt && formatPublishedDate(post.publishedAt.toISOString())}
+							{post.publishedAt &&
+								formatPublishedDate(post.publishedAt.toISOString())}
 						</div>
-						<Button asChild>
-							<NavigationLink href={`/blog/${post.slug}`}>访问</NavigationLink>
-						</Button>
+						<div className="flex items-center gap-2">
+							{true && (
+								<Button variant="link" asChild>
+									<a href={`${route}${post.slug}`} target="_blank">
+										<CodeIcon />
+										source
+									</a>
+								</Button>
+							)}
+							<Button asChild>
+								<NavigationLink href={`${route}${post.slug}`}>
+									<BookOpenIcon />
+									访问
+								</NavigationLink>
+							</Button>
+						</div>
 					</div>
 				</div>
 			</CardTiltContent>

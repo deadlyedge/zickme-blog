@@ -1,7 +1,7 @@
 import { fetchPosts } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
-import PostGridClient from '@/components/PostGridClient'
+import { PostGridClient } from '@/components/PostGridClient'
 import type { Tag } from '@/generated/prisma/client'
 
 // 每5分钟重新验证一次
