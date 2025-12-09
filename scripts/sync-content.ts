@@ -1,4 +1,5 @@
 import { prisma } from '../src/lib/prisma'
+import { StatusType } from '../src/generated/prisma/enums'
 import matter from 'gray-matter'
 import * as fsPromises from 'fs/promises'
 import * as path from 'path'
@@ -10,9 +11,13 @@ interface MarkdownFrontmatter {
 	title?: string
 	excerpt?: string
 	image?: string
-	tags?: string[]
+	tags?: string[] | string
 	date?: string
 	slug?: string
+	status?: string
+	draft?: boolean
+	images?: Array<{ image: string; caption?: string }>
+	sourceUrl?: string
 }
 
 interface ProcessedPost {
@@ -24,6 +29,9 @@ interface ProcessedPost {
 	publishedAt: Date
 	tags: string[]
 	type: 'BLOG' | 'PROJECT'
+	status?: StatusType
+	images?: Array<{ image: string; caption?: string }>
+	sourceUrl?: string
 	fileStats: Stats
 }
 
@@ -43,21 +51,53 @@ const DEFAULT_CONFIG: SyncConfig = {
 }
 
 /**
+ * 转换状态字符串为StatusType枚举值
+ */
+function parseStatusType(
+	statusStr: string | undefined,
+	draft: boolean | undefined,
+): StatusType | undefined {
+	if (draft === true) return StatusType.DRAFT
+	if (statusStr) {
+		const upperStatus = statusStr.toUpperCase()
+		if (Object.values(StatusType).includes(upperStatus as StatusType)) {
+			return upperStatus as StatusType
+		}
+	}
+	return undefined // 默认为null，让数据库使用默认值PUBLISHED
+}
+
+/**
+ * 规范化标签数组
+ */
+function normalizeTags(tags: string[] | string | undefined): string[] {
+	if (!tags) return []
+	if (Array.isArray(tags)) return tags
+	if (typeof tags === 'string') {
+		// 支持逗号分隔的字符串标签
+		return tags
+			.split(',')
+			.map((tag) => tag.trim())
+			.filter((tag) => tag.length > 0)
+	}
+	return []
+}
+
+/**
  * 从文件名生成标题
  */
 function generateTitleFromFileName(fileName: string): string {
 	return fileName.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
-
-
 /**
  * 根据文件路径判断文章类型
  */
 function getPostType(filePath: string, postsDir: string): 'BLOG' | 'PROJECT' {
 	const relativePath = path.relative(postsDir, filePath)
-	if (relativePath.startsWith('blogs/')) return 'BLOG'
-	if (relativePath.startsWith('projects/')) return 'PROJECT'
+	const normalizedPath = relativePath.replace(/\\/g, '/')
+	if (normalizedPath.startsWith('blogs/')) return 'BLOG'
+	if (normalizedPath.startsWith('projects/')) return 'PROJECT'
 	return 'BLOG' // 默认值
 }
 
@@ -70,7 +110,7 @@ function generateSlugFromPath(filePath: string, postsDir: string): string {
 	const pathParts = pathWithoutExt.split('/') // ['blogs', 'tech', '前端开发']
 
 	// 对每个路径部分进行slugify
-	const slugParts = pathParts.map(part => generateSlug(part))
+	const slugParts = pathParts.map((part) => generateSlug(part))
 
 	return slugParts.join('-') // blogs-tech-前端开发
 }
@@ -93,8 +133,12 @@ function processImageUrl(
 		const relativeDir = path.relative(postsDir, fileDir)
 
 		// 构建Cloudinary publicId路径（与upload-to-cloudinary.ts保持一致）
-		const imageName = imagePath.replace('./images/', '').replace(/\.[^/.]+$/, '')
-		const fullRelativePath = relativeDir ? `${relativeDir}/images/${imageName}` : `images/${imageName}`
+		const imageName = imagePath
+			.replace('./images/', '')
+			.replace(/\.[^/.]+$/, '')
+		const fullRelativePath = relativeDir
+			? `${relativeDir}/images/${imageName}`
+			: `images/${imageName}`
 		const publicId = fullRelativePath.replace(/\//g, '-')
 
 		return `${config.cloudinaryBaseUrl}${publicId}`
@@ -157,7 +201,12 @@ async function processMarkdownFile(
 			? new Date(frontmatter.date)
 			: stats.mtime
 
-		const poster = processImageUrl(frontmatter.image, config, filePath, postsDir)
+		const poster = processImageUrl(
+			frontmatter.image,
+			config,
+			filePath,
+			postsDir,
+		)
 
 		// 替换正文中的图片地址
 		let processedBody = body
@@ -170,7 +219,9 @@ async function processMarkdownFile(
 				const fileDir = path.dirname(filePath)
 				const relativeDir = path.relative(postsDir, fileDir)
 				const imageName = src.replace(/\.[^/.]+$/, '')
-				const fullRelativePath = relativeDir ? `${relativeDir}/images/${imageName}` : `images/${imageName}`
+				const fullRelativePath = relativeDir
+					? `${relativeDir}/images/${imageName}`
+					: `images/${imageName}`
 				const publicId = fullRelativePath.replace(/\//g, '-')
 				return `![${alt}](${config.cloudinaryBaseUrl}${publicId})`
 			},
@@ -192,8 +243,11 @@ async function processMarkdownFile(
 			poster,
 			content: htmlContent,
 			publishedAt,
-			tags: frontmatter.tags || [],
+			tags: normalizeTags(frontmatter.tags),
 			type,
+			status: parseStatusType(frontmatter.status, frontmatter.draft),
+			images: frontmatter.images,
+			sourceUrl: frontmatter.sourceUrl,
 			fileStats: stats,
 		}
 	} catch (error) {
@@ -274,6 +328,9 @@ async function syncPostsToDatabase(
 						content: post.content,
 						publishedAt: post.publishedAt,
 						type: post.type,
+						status: post.status,
+						images: post.images,
+						sourceUrl: post.sourceUrl,
 						archivedAt: null, // 恢复
 					},
 					create: {
@@ -284,6 +341,9 @@ async function syncPostsToDatabase(
 						content: post.content,
 						publishedAt: post.publishedAt,
 						type: post.type,
+						status: post.status,
+						images: post.images,
+						sourceUrl: post.sourceUrl,
 					},
 				})
 

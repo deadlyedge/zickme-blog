@@ -1,13 +1,16 @@
 ---
-slug: second-post
-image: ./images/meFace_bigEyeball.jpg
+title: 我的第二篇文章
+date: '2025-12-08'
 tags:
   - Prisma
   - about
   - feelings
-title: 我的第二篇文章
-date: "2025-12-08"
+status: published
+excerpt: ''
+image: ./images/meFace_bigEyeball.jpg
 ---
+
+
 
 # mongodb
 

@@ -7,6 +7,8 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint",
+		"content:check": "bun run scripts/check-content.ts",
+		"content:fix": "bun run scripts/check-content.ts --fix",
 		"db:generate": "prisma generate",
 		"db:migrate": "prisma migrate dev",
 		"db:push": "prisma db push",
