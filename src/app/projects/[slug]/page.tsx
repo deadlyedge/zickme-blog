@@ -48,7 +48,7 @@ export async function generateStaticParams() {
 		return []
 	}
 
-	const slugs = await fetchAllPostSlugs('BLOG')
+	const slugs = await fetchAllPostSlugs('PROJECT')
 	return slugs.map((slug) => ({
 		slug,
 	}))

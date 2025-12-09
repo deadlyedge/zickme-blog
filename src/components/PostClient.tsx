@@ -16,7 +16,7 @@ interface PostClientProps {
 	initialPost?: PostWithTags
 }
 
-export default function PostClient({ initialPost }: PostClientProps) {
+export function PostClient({ initialPost }: PostClientProps) {
 	const params = useParams()
 	const slug = params.slug as string
 

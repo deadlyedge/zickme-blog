@@ -1,4 +1,4 @@
-import type { Tag } from '@/generated/prisma/client'
+import type { PostType, Tag } from '@/generated/prisma/client'
 import { PostWithTags } from '../content-providers'
 
 export interface NavigationState {
@@ -43,7 +43,7 @@ export interface CacheActions {
 	getSinglePost: (slug: string) => PostWithTags | undefined
 	getPost: (slug: string) => PostWithTags | undefined
 
-	fetchPosts: () => Promise<void>
+	fetchPosts: (type?: PostType) => Promise<void>
 	fetchTags: () => Promise<void>
 	fetchPost: (slug: string) => Promise<void>
 

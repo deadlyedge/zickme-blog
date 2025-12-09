@@ -75,7 +75,7 @@ export default function PostGridClient({ posts, tags }: Props) {
 						)}
 						style={
 							{
-								'--tag-color': tag.color,
+								'--tag-color': tag.color || 'var(--secondary)',
 							} as React.CSSProperties
 						}>
 						{tag.name}

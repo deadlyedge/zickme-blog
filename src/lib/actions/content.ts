@@ -6,14 +6,16 @@ import {
 	fetchTags,
 	PostWithTags,
 } from '../content-providers'
-import type { Tag } from '@/generated/prisma/client'
+import type { PostType, Tag } from '@/generated/prisma/client'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-export async function fetchPostsAction(): Promise<PostWithTags[]> {
+export async function fetchPostsAction(
+	type: PostType = 'BLOG',
+): Promise<PostWithTags[]> {
 	try {
 		if (isDevelopment) console.log('[Prisma fetch]: blog posts')
-		return await fetchPosts()
+		return await fetchPosts(type)
 	} catch (error) {
 		console.error('Error fetching blog posts:', error)
 		throw new Error('Failed to fetch blog posts')

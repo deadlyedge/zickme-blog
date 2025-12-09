@@ -1,26 +1,31 @@
-// import { fetchProjects } from '@/lib/content-providers'
-// import { buildMetadata } from '@/lib/seo'
-// import { Metadata } from 'next'
-// // import Link from 'next/link'
-// import Image from 'next/image'
-// import ProjectsGridClient from '../../components/ProjectsGridClient'
-// import { formatPublishedDate } from '@/lib/utils'
-// import { Badge } from '@/components/ui/badge'
+import { fetchPosts } from '@/lib/content-providers'
+import { buildMetadata } from '@/lib/seo'
+import { Metadata } from 'next'
+import PostGridClient from '@/components/PostGridClient'
+import type { Tag } from '@/generated/prisma/client'
 
-/**
- * Strict visual refactor of Projects page to match juice.agency/work
- * - Uses page-local Tailwind utilities only (no config changes)
- * - Large hero, prominent featured case, dense image-first grid
- * - Titles over images, soft gradient overlays, strong spacing rhythm
- */
+// 每5分钟重新验证一次
+export const revalidate = 300
 
-export const revalidate = 3600 // 每小时重新验证一次
+export const metadata: Metadata = buildMetadata({
+	title: '博客文章',
+	description: '浏览我的所有博客文章和教程',
+})
 
-// export const metadata: Metadata = buildMetadata({
-// 	title: 'Projects',
-// 	description: 'Selected case studies and project highlights — built with craft, clarity and measurable outcomes.',
-// })
+export default async function BlogPage() {
+	const posts = await fetchPosts('PROJECT')
+	const allTags = posts.flatMap((post) => post.tags ?? []) as Tag[]
+	const uniqueTags = Array.from(
+		new Map(allTags.map((tag) => [tag.id, tag])).values(),
+	) as Tag[]
 
-export default async function ProjectsPage() {
-	return <div className="pt-16 overflow-y-auto h-svh">hello Project </div>
+	return (
+		<div className="pt-16 overflow-y-auto h-svh">
+			<div className="mx-auto max-w-7xl p-6">
+				<h1 className="text-4xl font-bold mb-8">博客文章</h1>
+
+				<PostGridClient posts={posts} tags={uniqueTags} />
+			</div>
+		</div>
+	)
 }

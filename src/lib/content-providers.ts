@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import type { SiteProfile, Post, Tag } from '@/generated/prisma/client'
+import type {
+	SiteProfile,
+	Post,
+	Tag,
+	PostType,
+} from '@/generated/prisma/client'
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
@@ -29,10 +34,12 @@ export const fetchProfile = async (): Promise<SiteProfile | null> => {
 	})
 }
 
-export const fetchPosts = async (): Promise<PostWithTags[]> => {
+export const fetchPosts = async (
+	type: PostType = 'BLOG',
+): Promise<PostWithTags[]> => {
 	return prisma.post.findMany({
 		where: {
-			type: 'BLOG',
+			type,
 			status: 'PUBLISHED',
 		},
 		include: { tags: true },
@@ -47,17 +54,17 @@ export const fetchPostBySlug = async (
 	return prisma.post.findFirst({
 		where: {
 			slug,
-			type: 'BLOG',
+			// type: 'BLOG',
 			status: 'PUBLISHED',
 		},
 		include: { tags: true },
 	})
 }
 
-export const fetchAllPostSlugs = async (): Promise<string[]> => {
+export const fetchAllPostSlugs = async (type?: PostType): Promise<string[]> => {
 	const posts = await prisma.post.findMany({
 		where: {
-			type: 'BLOG',
+			type: type ?? 'BLOG',
 			status: 'PUBLISHED',
 		},
 		select: {

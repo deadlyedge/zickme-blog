@@ -6,6 +6,7 @@ import {
 	fetchPostBySlugAction,
 } from '../actions/content'
 import { PostWithTags } from '../content-providers'
+import { PostType } from '@/generated/prisma/client'
 
 const BLOG_CACHE_DURATION = 1 * 60 * 1000
 const DEFAULT_CACHE_DURATION = 1 * 60 * 1000
@@ -61,7 +62,7 @@ export const createContentSlice: StateCreator<
 	getPost: (slug) => get().posts.get(slug),
 
 	// Async Thunks
-	fetchPosts: async () => {
+	fetchPosts: async (type: PostType = 'BLOG') => {
 		if (get().isCacheValid('posts', BLOG_CACHE_DURATION)) return
 
 		set((state) => ({
@@ -70,7 +71,7 @@ export const createContentSlice: StateCreator<
 		}))
 
 		try {
-			const posts = await fetchPostsAction()
+			const posts = await fetchPostsAction(type)
 			get().setPosts(posts)
 		} catch (err) {
 			set((state) => ({
