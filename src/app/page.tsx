@@ -6,7 +6,7 @@ import { HomeScrollArea } from '@/components/HomeScrollArea'
 export const revalidate = 3600 // 每小时重新验证一次，确保内容及时更新
 
 export const metadata: Metadata = buildMetadata({
-	title: 'Home',
+	title: 'Zickme Home',
 	description: 'Welcome to my personal blog and portfolio website.',
 })
 
