@@ -29,10 +29,7 @@ export type PostWithTags = Post & {
 }
 
 export const fetchProfile = async (): Promise<SiteProfile | null> => {
-	return prisma.siteProfile.findFirst({
-		include: { avatar: true },
-		orderBy: { createdAt: 'desc' },
-	})
+	return prisma.siteProfile.findFirst()
 }
 
 export const fetchPosts = async (
@@ -84,10 +81,7 @@ export const fetchTags = async (): Promise<Tag[]> => {
 
 export const fetchHomeContent = async (): Promise<ContentResponse> => {
 	const [profile, projects, blog] = await Promise.all([
-		prisma.siteProfile.findFirst({
-			include: { avatar: true },
-			orderBy: { createdAt: 'desc' },
-		}),
+		prisma.siteProfile.findFirst(),
 		prisma.post.findMany({
 			where: {
 				type: 'PROJECT',

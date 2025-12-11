@@ -58,8 +58,7 @@ export const ModelName = {
   Tag: 'Tag',
   Post: 'Post',
   Comment: 'Comment',
-  SiteProfile: 'SiteProfile',
-  Media: 'Media'
+  SiteProfile: 'SiteProfile'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -197,7 +196,7 @@ export const SiteProfileScalarFieldEnum = {
   location: 'location',
   email: 'email',
   website: 'website',
-  avatarId: 'avatarId',
+  avatar: 'avatar',
   socialLinks: 'socialLinks',
   skills: 'skills',
   slogans: 'slogans',
@@ -206,21 +205,6 @@ export const SiteProfileScalarFieldEnum = {
 } as const
 
 export type SiteProfileScalarFieldEnum = (typeof SiteProfileScalarFieldEnum)[keyof typeof SiteProfileScalarFieldEnum]
-
-
-export const MediaScalarFieldEnum = {
-  id: 'id',
-  filename: 'filename',
-  mimeType: 'mimeType',
-  filesize: 'filesize',
-  width: 'width',
-  height: 'height',
-  url: 'url',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
 
 
 export const SortOrder = {

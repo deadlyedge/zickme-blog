@@ -79,8 +79,3 @@ export type Comment = Prisma.CommentModel
  * 
  */
 export type SiteProfile = Prisma.SiteProfileModel
-/**
- * Model Media
- * 
- */
-export type Media = Prisma.MediaModel

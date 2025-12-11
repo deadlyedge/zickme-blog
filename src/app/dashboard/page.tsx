@@ -18,6 +18,8 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { ButtonGroup } from '@/components/ui/button-group'
+import { EditProfile } from '@/components/dashboard/EditProfile'
 import Link from 'next/link'
 import { Users, MessageSquare, FileText, TrendingUp } from 'lucide-react'
 
@@ -35,7 +37,10 @@ export default async function DashboardPage() {
 			<div className="container mx-auto p-6 pt-24 space-y-8">
 				<div className="flex items-center justify-between">
 					<h1 className="text-3xl font-bold">仪表板</h1>
-					<Badge variant="secondary">管理员</Badge>
+					<ButtonGroup>
+						<EditProfile />
+						<Badge variant="secondary">管理员</Badge>
+					</ButtonGroup>
 				</div>
 
 				{/* 统计卡片 */}

@@ -9,7 +9,7 @@ export const revalidate = 300
 
 export const metadata: Metadata = buildMetadata({
 	title: '博客文章',
-	description: '浏览我的所有博客文章和教程',
+	description: '浏览我的所有博客文章',
 })
 
 export default async function BlogPage() {

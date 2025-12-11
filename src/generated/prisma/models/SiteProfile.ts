@@ -32,7 +32,7 @@ export type SiteProfileMinAggregateOutputType = {
   location: string | null
   email: string | null
   website: string | null
-  avatarId: string | null
+  avatar: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -45,7 +45,7 @@ export type SiteProfileMaxAggregateOutputType = {
   location: string | null
   email: string | null
   website: string | null
-  avatarId: string | null
+  avatar: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,7 +58,7 @@ export type SiteProfileCountAggregateOutputType = {
   location: number
   email: number
   website: number
-  avatarId: number
+  avatar: number
   socialLinks: number
   skills: number
   slogans: number
@@ -76,7 +76,7 @@ export type SiteProfileMinAggregateInputType = {
   location?: true
   email?: true
   website?: true
-  avatarId?: true
+  avatar?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -89,7 +89,7 @@ export type SiteProfileMaxAggregateInputType = {
   location?: true
   email?: true
   website?: true
-  avatarId?: true
+  avatar?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -102,7 +102,7 @@ export type SiteProfileCountAggregateInputType = {
   location?: true
   email?: true
   website?: true
-  avatarId?: true
+  avatar?: true
   socialLinks?: true
   skills?: true
   slogans?: true
@@ -191,7 +191,7 @@ export type SiteProfileGroupByOutputType = {
   location: string | null
   email: string | null
   website: string | null
-  avatarId: string | null
+  avatar: string | null
   socialLinks: runtime.JsonValue | null
   skills: runtime.JsonValue | null
   slogans: runtime.JsonValue | null
@@ -228,13 +228,12 @@ export type SiteProfileWhereInput = {
   location?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   email?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   website?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  avatarId?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
+  avatar?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   socialLinks?: Prisma.JsonNullableFilter<"SiteProfile">
   skills?: Prisma.JsonNullableFilter<"SiteProfile">
   slogans?: Prisma.JsonNullableFilter<"SiteProfile">
   createdAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
-  avatar?: Prisma.XOR<Prisma.MediaNullableScalarRelationFilter, Prisma.MediaWhereInput> | null
 }
 
 export type SiteProfileOrderByWithRelationInput = {
@@ -245,13 +244,12 @@ export type SiteProfileOrderByWithRelationInput = {
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarId?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   socialLinks?: Prisma.SortOrderInput | Prisma.SortOrder
   skills?: Prisma.SortOrderInput | Prisma.SortOrder
   slogans?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  avatar?: Prisma.MediaOrderByWithRelationInput
 }
 
 export type SiteProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -265,13 +263,12 @@ export type SiteProfileWhereUniqueInput = Prisma.AtLeast<{
   location?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   email?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   website?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  avatarId?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
+  avatar?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
   socialLinks?: Prisma.JsonNullableFilter<"SiteProfile">
   skills?: Prisma.JsonNullableFilter<"SiteProfile">
   slogans?: Prisma.JsonNullableFilter<"SiteProfile">
   createdAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
-  avatar?: Prisma.XOR<Prisma.MediaNullableScalarRelationFilter, Prisma.MediaWhereInput> | null
 }, "id">
 
 export type SiteProfileOrderByWithAggregationInput = {
@@ -282,7 +279,7 @@ export type SiteProfileOrderByWithAggregationInput = {
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarId?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar?: Prisma.SortOrderInput | Prisma.SortOrder
   socialLinks?: Prisma.SortOrderInput | Prisma.SortOrder
   skills?: Prisma.SortOrderInput | Prisma.SortOrder
   slogans?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -304,7 +301,7 @@ export type SiteProfileScalarWhereWithAggregatesInput = {
   location?: Prisma.StringNullableWithAggregatesFilter<"SiteProfile"> | string | null
   email?: Prisma.StringNullableWithAggregatesFilter<"SiteProfile"> | string | null
   website?: Prisma.StringNullableWithAggregatesFilter<"SiteProfile"> | string | null
-  avatarId?: Prisma.StringNullableWithAggregatesFilter<"SiteProfile"> | string | null
+  avatar?: Prisma.StringNullableWithAggregatesFilter<"SiteProfile"> | string | null
   socialLinks?: Prisma.JsonNullableWithAggregatesFilter<"SiteProfile">
   skills?: Prisma.JsonNullableWithAggregatesFilter<"SiteProfile">
   slogans?: Prisma.JsonNullableWithAggregatesFilter<"SiteProfile">
@@ -320,12 +317,12 @@ export type SiteProfileCreateInput = {
   location?: string | null
   email?: string | null
   website?: string | null
+  avatar?: string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  avatar?: Prisma.MediaCreateNestedOneWithoutSiteProfilesInput
 }
 
 export type SiteProfileUncheckedCreateInput = {
@@ -336,7 +333,7 @@ export type SiteProfileUncheckedCreateInput = {
   location?: string | null
   email?: string | null
   website?: string | null
-  avatarId?: string | null
+  avatar?: string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -352,12 +349,12 @@ export type SiteProfileUpdateInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  avatar?: Prisma.MediaUpdateOneWithoutSiteProfilesNestedInput
 }
 
 export type SiteProfileUncheckedUpdateInput = {
@@ -368,7 +365,7 @@ export type SiteProfileUncheckedUpdateInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -384,7 +381,7 @@ export type SiteProfileCreateManyInput = {
   location?: string | null
   email?: string | null
   website?: string | null
-  avatarId?: string | null
+  avatar?: string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -400,6 +397,7 @@ export type SiteProfileUpdateManyMutationInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -415,7 +413,7 @@ export type SiteProfileUncheckedUpdateManyInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -431,7 +429,7 @@ export type SiteProfileCountOrderByAggregateInput = {
   location?: Prisma.SortOrder
   email?: Prisma.SortOrder
   website?: Prisma.SortOrder
-  avatarId?: Prisma.SortOrder
+  avatar?: Prisma.SortOrder
   socialLinks?: Prisma.SortOrder
   skills?: Prisma.SortOrder
   slogans?: Prisma.SortOrder
@@ -447,7 +445,7 @@ export type SiteProfileMaxOrderByAggregateInput = {
   location?: Prisma.SortOrder
   email?: Prisma.SortOrder
   website?: Prisma.SortOrder
-  avatarId?: Prisma.SortOrder
+  avatar?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -460,196 +458,9 @@ export type SiteProfileMinOrderByAggregateInput = {
   location?: Prisma.SortOrder
   email?: Prisma.SortOrder
   website?: Prisma.SortOrder
-  avatarId?: Prisma.SortOrder
+  avatar?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-}
-
-export type SiteProfileListRelationFilter = {
-  every?: Prisma.SiteProfileWhereInput
-  some?: Prisma.SiteProfileWhereInput
-  none?: Prisma.SiteProfileWhereInput
-}
-
-export type SiteProfileOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
-export type SiteProfileCreateNestedManyWithoutAvatarInput = {
-  create?: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput> | Prisma.SiteProfileCreateWithoutAvatarInput[] | Prisma.SiteProfileUncheckedCreateWithoutAvatarInput[]
-  connectOrCreate?: Prisma.SiteProfileCreateOrConnectWithoutAvatarInput | Prisma.SiteProfileCreateOrConnectWithoutAvatarInput[]
-  createMany?: Prisma.SiteProfileCreateManyAvatarInputEnvelope
-  connect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-}
-
-export type SiteProfileUncheckedCreateNestedManyWithoutAvatarInput = {
-  create?: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput> | Prisma.SiteProfileCreateWithoutAvatarInput[] | Prisma.SiteProfileUncheckedCreateWithoutAvatarInput[]
-  connectOrCreate?: Prisma.SiteProfileCreateOrConnectWithoutAvatarInput | Prisma.SiteProfileCreateOrConnectWithoutAvatarInput[]
-  createMany?: Prisma.SiteProfileCreateManyAvatarInputEnvelope
-  connect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-}
-
-export type SiteProfileUpdateManyWithoutAvatarNestedInput = {
-  create?: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput> | Prisma.SiteProfileCreateWithoutAvatarInput[] | Prisma.SiteProfileUncheckedCreateWithoutAvatarInput[]
-  connectOrCreate?: Prisma.SiteProfileCreateOrConnectWithoutAvatarInput | Prisma.SiteProfileCreateOrConnectWithoutAvatarInput[]
-  upsert?: Prisma.SiteProfileUpsertWithWhereUniqueWithoutAvatarInput | Prisma.SiteProfileUpsertWithWhereUniqueWithoutAvatarInput[]
-  createMany?: Prisma.SiteProfileCreateManyAvatarInputEnvelope
-  set?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  disconnect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  delete?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  connect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  update?: Prisma.SiteProfileUpdateWithWhereUniqueWithoutAvatarInput | Prisma.SiteProfileUpdateWithWhereUniqueWithoutAvatarInput[]
-  updateMany?: Prisma.SiteProfileUpdateManyWithWhereWithoutAvatarInput | Prisma.SiteProfileUpdateManyWithWhereWithoutAvatarInput[]
-  deleteMany?: Prisma.SiteProfileScalarWhereInput | Prisma.SiteProfileScalarWhereInput[]
-}
-
-export type SiteProfileUncheckedUpdateManyWithoutAvatarNestedInput = {
-  create?: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput> | Prisma.SiteProfileCreateWithoutAvatarInput[] | Prisma.SiteProfileUncheckedCreateWithoutAvatarInput[]
-  connectOrCreate?: Prisma.SiteProfileCreateOrConnectWithoutAvatarInput | Prisma.SiteProfileCreateOrConnectWithoutAvatarInput[]
-  upsert?: Prisma.SiteProfileUpsertWithWhereUniqueWithoutAvatarInput | Prisma.SiteProfileUpsertWithWhereUniqueWithoutAvatarInput[]
-  createMany?: Prisma.SiteProfileCreateManyAvatarInputEnvelope
-  set?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  disconnect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  delete?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  connect?: Prisma.SiteProfileWhereUniqueInput | Prisma.SiteProfileWhereUniqueInput[]
-  update?: Prisma.SiteProfileUpdateWithWhereUniqueWithoutAvatarInput | Prisma.SiteProfileUpdateWithWhereUniqueWithoutAvatarInput[]
-  updateMany?: Prisma.SiteProfileUpdateManyWithWhereWithoutAvatarInput | Prisma.SiteProfileUpdateManyWithWhereWithoutAvatarInput[]
-  deleteMany?: Prisma.SiteProfileScalarWhereInput | Prisma.SiteProfileScalarWhereInput[]
-}
-
-export type SiteProfileCreateWithoutAvatarInput = {
-  id?: string
-  name: string
-  title: string
-  bio: string
-  location?: string | null
-  email?: string | null
-  website?: string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type SiteProfileUncheckedCreateWithoutAvatarInput = {
-  id?: string
-  name: string
-  title: string
-  bio: string
-  location?: string | null
-  email?: string | null
-  website?: string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type SiteProfileCreateOrConnectWithoutAvatarInput = {
-  where: Prisma.SiteProfileWhereUniqueInput
-  create: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput>
-}
-
-export type SiteProfileCreateManyAvatarInputEnvelope = {
-  data: Prisma.SiteProfileCreateManyAvatarInput | Prisma.SiteProfileCreateManyAvatarInput[]
-  skipDuplicates?: boolean
-}
-
-export type SiteProfileUpsertWithWhereUniqueWithoutAvatarInput = {
-  where: Prisma.SiteProfileWhereUniqueInput
-  update: Prisma.XOR<Prisma.SiteProfileUpdateWithoutAvatarInput, Prisma.SiteProfileUncheckedUpdateWithoutAvatarInput>
-  create: Prisma.XOR<Prisma.SiteProfileCreateWithoutAvatarInput, Prisma.SiteProfileUncheckedCreateWithoutAvatarInput>
-}
-
-export type SiteProfileUpdateWithWhereUniqueWithoutAvatarInput = {
-  where: Prisma.SiteProfileWhereUniqueInput
-  data: Prisma.XOR<Prisma.SiteProfileUpdateWithoutAvatarInput, Prisma.SiteProfileUncheckedUpdateWithoutAvatarInput>
-}
-
-export type SiteProfileUpdateManyWithWhereWithoutAvatarInput = {
-  where: Prisma.SiteProfileScalarWhereInput
-  data: Prisma.XOR<Prisma.SiteProfileUpdateManyMutationInput, Prisma.SiteProfileUncheckedUpdateManyWithoutAvatarInput>
-}
-
-export type SiteProfileScalarWhereInput = {
-  AND?: Prisma.SiteProfileScalarWhereInput | Prisma.SiteProfileScalarWhereInput[]
-  OR?: Prisma.SiteProfileScalarWhereInput[]
-  NOT?: Prisma.SiteProfileScalarWhereInput | Prisma.SiteProfileScalarWhereInput[]
-  id?: Prisma.StringFilter<"SiteProfile"> | string
-  name?: Prisma.StringFilter<"SiteProfile"> | string
-  title?: Prisma.StringFilter<"SiteProfile"> | string
-  bio?: Prisma.StringFilter<"SiteProfile"> | string
-  location?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  email?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  website?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  avatarId?: Prisma.StringNullableFilter<"SiteProfile"> | string | null
-  socialLinks?: Prisma.JsonNullableFilter<"SiteProfile">
-  skills?: Prisma.JsonNullableFilter<"SiteProfile">
-  slogans?: Prisma.JsonNullableFilter<"SiteProfile">
-  createdAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"SiteProfile"> | Date | string
-}
-
-export type SiteProfileCreateManyAvatarInput = {
-  id?: string
-  name: string
-  title: string
-  bio: string
-  location?: string | null
-  email?: string | null
-  website?: string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type SiteProfileUpdateWithoutAvatarInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type SiteProfileUncheckedUpdateWithoutAvatarInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type SiteProfileUncheckedUpdateManyWithoutAvatarInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialLinks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  slogans?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -662,13 +473,12 @@ export type SiteProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   location?: boolean
   email?: boolean
   website?: boolean
-  avatarId?: boolean
+  avatar?: boolean
   socialLinks?: boolean
   skills?: boolean
   slogans?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
 }, ExtArgs["result"]["siteProfile"]>
 
 export type SiteProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -679,13 +489,12 @@ export type SiteProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   location?: boolean
   email?: boolean
   website?: boolean
-  avatarId?: boolean
+  avatar?: boolean
   socialLinks?: boolean
   skills?: boolean
   slogans?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
 }, ExtArgs["result"]["siteProfile"]>
 
 export type SiteProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -696,13 +505,12 @@ export type SiteProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   location?: boolean
   email?: boolean
   website?: boolean
-  avatarId?: boolean
+  avatar?: boolean
   socialLinks?: boolean
   skills?: boolean
   slogans?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
 }, ExtArgs["result"]["siteProfile"]>
 
 export type SiteProfileSelectScalar = {
@@ -713,7 +521,7 @@ export type SiteProfileSelectScalar = {
   location?: boolean
   email?: boolean
   website?: boolean
-  avatarId?: boolean
+  avatar?: boolean
   socialLinks?: boolean
   skills?: boolean
   slogans?: boolean
@@ -721,22 +529,11 @@ export type SiteProfileSelectScalar = {
   updatedAt?: boolean
 }
 
-export type SiteProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "title" | "bio" | "location" | "email" | "website" | "avatarId" | "socialLinks" | "skills" | "slogans" | "createdAt" | "updatedAt", ExtArgs["result"]["siteProfile"]>
-export type SiteProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
-}
-export type SiteProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
-}
-export type SiteProfileIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  avatar?: boolean | Prisma.SiteProfile$avatarArgs<ExtArgs>
-}
+export type SiteProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "title" | "bio" | "location" | "email" | "website" | "avatar" | "socialLinks" | "skills" | "slogans" | "createdAt" | "updatedAt", ExtArgs["result"]["siteProfile"]>
 
 export type $SiteProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SiteProfile"
-  objects: {
-    avatar: Prisma.$MediaPayload<ExtArgs> | null
-  }
+  objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
@@ -745,7 +542,7 @@ export type $SiteProfilePayload<ExtArgs extends runtime.Types.Extensions.Interna
     location: string | null
     email: string | null
     website: string | null
-    avatarId: string | null
+    avatar: string | null
     socialLinks: runtime.JsonValue | null
     skills: runtime.JsonValue | null
     slogans: runtime.JsonValue | null
@@ -1145,7 +942,6 @@ readonly fields: SiteProfileFieldRefs;
  */
 export interface Prisma__SiteProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  avatar<T extends Prisma.SiteProfile$avatarArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SiteProfile$avatarArgs<ExtArgs>>): Prisma.Prisma__MediaClient<runtime.Types.Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1182,7 +978,7 @@ export interface SiteProfileFieldRefs {
   readonly location: Prisma.FieldRef<"SiteProfile", 'String'>
   readonly email: Prisma.FieldRef<"SiteProfile", 'String'>
   readonly website: Prisma.FieldRef<"SiteProfile", 'String'>
-  readonly avatarId: Prisma.FieldRef<"SiteProfile", 'String'>
+  readonly avatar: Prisma.FieldRef<"SiteProfile", 'String'>
   readonly socialLinks: Prisma.FieldRef<"SiteProfile", 'Json'>
   readonly skills: Prisma.FieldRef<"SiteProfile", 'Json'>
   readonly slogans: Prisma.FieldRef<"SiteProfile", 'Json'>
@@ -1205,10 +1001,6 @@ export type SiteProfileFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * Filter, which SiteProfile to fetch.
    */
   where: Prisma.SiteProfileWhereUniqueInput
@@ -1227,10 +1019,6 @@ export type SiteProfileFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Exten
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * Filter, which SiteProfile to fetch.
    */
   where: Prisma.SiteProfileWhereUniqueInput
@@ -1248,10 +1036,6 @@ export type SiteProfileFindFirstArgs<ExtArgs extends runtime.Types.Extensions.In
    * Omit specific fields from the SiteProfile
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
   /**
    * Filter, which SiteProfile to fetch.
    */
@@ -1301,10 +1085,6 @@ export type SiteProfileFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extens
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * Filter, which SiteProfile to fetch.
    */
   where?: Prisma.SiteProfileWhereInput
@@ -1353,10 +1133,6 @@ export type SiteProfileFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * Filter, which SiteProfiles to fetch.
    */
   where?: Prisma.SiteProfileWhereInput
@@ -1400,10 +1176,6 @@ export type SiteProfileCreateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * The data needed to create a SiteProfile.
    */
   data: Prisma.XOR<Prisma.SiteProfileCreateInput, Prisma.SiteProfileUncheckedCreateInput>
@@ -1437,10 +1209,6 @@ export type SiteProfileCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    */
   data: Prisma.SiteProfileCreateManyInput | Prisma.SiteProfileCreateManyInput[]
   skipDuplicates?: boolean
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1455,10 +1223,6 @@ export type SiteProfileUpdateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Omit specific fields from the SiteProfile
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
   /**
    * The data needed to update a SiteProfile.
    */
@@ -1511,10 +1275,6 @@ export type SiteProfileUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * Limit how many SiteProfiles to update.
    */
   limit?: number
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1529,10 +1289,6 @@ export type SiteProfileUpsertArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Omit specific fields from the SiteProfile
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
   /**
    * The filter to search for the SiteProfile to update in case it exists.
    */
@@ -1560,10 +1316,6 @@ export type SiteProfileDeleteArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
   /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
-  /**
    * Filter which SiteProfile to delete.
    */
   where: Prisma.SiteProfileWhereUniqueInput
@@ -1584,25 +1336,6 @@ export type SiteProfileDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
- * SiteProfile.avatar
- */
-export type SiteProfile$avatarArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Media
-   */
-  select?: Prisma.MediaSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Media
-   */
-  omit?: Prisma.MediaOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.MediaInclude<ExtArgs> | null
-  where?: Prisma.MediaWhereInput
-}
-
-/**
  * SiteProfile without action
  */
 export type SiteProfileDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1614,8 +1347,4 @@ export type SiteProfileDefaultArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Omit specific fields from the SiteProfile
    */
   omit?: Prisma.SiteProfileOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.SiteProfileInclude<ExtArgs> | null
 }

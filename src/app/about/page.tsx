@@ -4,7 +4,6 @@ import { fetchProfile } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
 import { GlobeIcon, MailIcon } from 'lucide-react'
-import type { SiteProfile } from '@/generated/prisma/client'
 
 type SocialLink = {
 	platform: string
@@ -30,7 +29,7 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default async function AboutPage() {
-	const profileData = await fetchProfile() as SiteProfile & { avatar?: { url: string } }
+	const profileData = await fetchProfile() 
 
 	if (!profileData) {
 		return <div>暂无个人资料</div>
@@ -43,7 +42,7 @@ export default async function AboutPage() {
 					<div>
 						{profileData.avatar && (
 							<Image
-								src={profileData.avatar.url || ''}
+								src={profileData.avatar || ''}
 								alt={profileData.name}
 								width={300}
 								height={300}

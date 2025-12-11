@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id              String    @id
-  name            String
-  email           String
-  emailVerified   Boolean   @default(false)
-  image           String?
-  banned          Boolean   @default(false)
-  role            Role      @default(USER)
+  id            String  @id
+  name          String
+  email         String
+  emailVerified Boolean @default(false)
+  image         String?
+  banned        Boolean @default(false)
+  role          Role    @default(USER)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   sessions        Session[]
   accounts        Account[]
   comments        Comment[]
@@ -179,8 +179,8 @@ model SiteProfile {
   email    String?
   website  String?
 
-  avatarId String?
-  avatar   Media?  @relation(fields: [avatarId], references: [id])
+  avatar String?
+  // avatar   Media?  @relation(fields: [avatarId], references: [id])
 
   socialLinks Json? // Array of {platform: string, url: string, username?: string}
   skills      Json? // Array of {category: string, technologies: Array<{name: string, level?: string}>}
@@ -192,20 +192,20 @@ model SiteProfile {
   @@map("siteProfile")
 }
 
-model Media {
-  id       String  @id @default(cuid())
-  filename String?
-  mimeType String?
-  filesize Int?
-  width    Int?
-  height   Int?
-  url      String?
+// model Media {
+//   id       String  @id @default(cuid())
+//   filename String?
+//   mimeType String?
+//   filesize Int?
+//   width    Int?
+//   height   Int?
+//   url      String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  // Relations
-  siteProfiles SiteProfile[]
+//   // Relations
+//   siteProfiles SiteProfile[]
 
-  @@map("media")
-}
+//   @@map("media")
+// }

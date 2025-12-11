@@ -102,3 +102,85 @@ export async function updateAvatar() {
 		throw new Error(error instanceof Error ? error.message : '更新失败')
 	}
 }
+
+interface UpdateSiteProfileData {
+	name: string
+	title: string
+	bio: string
+	avatar?: string
+	location?: string
+	email?: string
+	website?: string
+}
+
+export async function updateSiteProfile(data: UpdateSiteProfileData) {
+	try {
+		const headersList = await headers()
+		const session = await auth.api.getSession({
+			headers: headersList,
+		})
+
+		if (!session?.user?.id || session.user.role !== 'ADMIN') {
+			throw new Error('需要管理员权限')
+		}
+
+		// Get the first site profile (assuming there's only one)
+		const existingProfile = await prisma.siteProfile.findFirst()
+
+		if (existingProfile) {
+			// Update existing profile
+			await prisma.siteProfile.update({
+				where: { id: existingProfile.id },
+				data: {
+					name: data.name,
+					title: data.title,
+					bio: data.bio,
+					avatar: data.avatar,
+					location: data.location,
+					email: data.email,
+					website: data.website,
+					updatedAt: new Date(),
+				},
+			})
+		} else {
+			// Create new profile if none exists
+			await prisma.siteProfile.create({
+				data: {
+					name: data.name,
+					title: data.title,
+					bio: data.bio,
+					avatar: data.avatar,
+					location: data.location,
+					email: data.email,
+					website: data.website,
+				},
+			})
+		}
+
+		return { success: true }
+	} catch (error) {
+		console.error('Site profile update error:', error)
+		throw new Error(error instanceof Error ? error.message : '更新失败')
+	}
+}
+
+export async function getSiteProfile() {
+	try {
+		const headersList = await headers()
+		const session = await auth.api.getSession({
+			headers: headersList,
+		})
+
+		if (!session?.user?.id || session.user.role !== 'ADMIN') {
+			throw new Error('需要管理员权限')
+		}
+
+		// Get the first site profile (assuming there's only one)
+		const profile = await prisma.siteProfile.findFirst()
+
+		return { profile }
+	} catch (error) {
+		console.error('Get site profile error:', error)
+		throw new Error(error instanceof Error ? error.message : '获取失败')
+	}
+}
