@@ -18,6 +18,7 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
 	ButtonGroup,
 	ButtonGroupSeparator,
@@ -25,7 +26,13 @@ import {
 } from '@/components/ui/button-group'
 import { EditProfile } from '@/components/dashboard/EditProfile'
 import Link from 'next/link'
-import { Users, MessageSquare, FileText, TrendingUp } from 'lucide-react'
+import {
+	Users,
+	MessageSquare,
+	FileText,
+	TrendingUp,
+	UserCog,
+} from 'lucide-react'
 
 export default async function DashboardPage() {
 	const session = await auth.api.getSession({
@@ -42,6 +49,13 @@ export default async function DashboardPage() {
 				<div className="flex items-center justify-between">
 					<h1 className="text-3xl font-bold">仪表板</h1>
 					<ButtonGroup>
+						<Button asChild variant="outline" size="sm">
+							<Link href="/dashboard/users">
+								<UserCog className="h-4 w-4 mr-2" />
+								用户管理
+							</Link>
+						</Button>
+
 						<EditProfile />
 						<ButtonGroupSeparator />
 						<ButtonGroupText>管理员</ButtonGroupText>

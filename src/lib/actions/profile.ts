@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
-import { getGravatarProfile } from '../getGravatar'
+import { getGravatarProfile } from '../get-gravatar'
 import { generateAvatarUri } from '../avatar'
 import { SocialLink, Skill, Slogan } from '@/types'
 import { fetchProfile } from '../content-providers'
