@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import {
 	getUsersList,
 	toggleUserBan,
-	markCommentAsSpam,
+	toggleCommentSpam,
 	deleteComment,
 } from '@/lib/actions/dashboard'
 import { toast } from 'sonner'
@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
 	Dialog,
 	DialogClose,
@@ -25,8 +27,6 @@ import {
 } from '@/components/ui/dialog'
 import {
 	UserX,
-	UserCheck,
-	AlertTriangle,
 	Trash2,
 	MessageSquare,
 	Calendar,
@@ -84,16 +84,16 @@ export default function UsersPage() {
 		}
 	}
 
-	const handleToggleBan = async (userId: string, currentlyBanned: boolean) => {
+	const handleToggleBan = async (userId: string, newBanned: boolean) => {
 		try {
 			setActionLoading(userId)
-			await toggleUserBan(userId, !currentlyBanned)
+			await toggleUserBan(userId, newBanned)
 			setUsers(
 				users.map((user) =>
-					user.id === userId ? { ...user, banned: !currentlyBanned } : user,
+					user.id === userId ? { ...user, banned: newBanned } : user,
 				),
 			)
-			toast.success(currentlyBanned ? '用户已解封' : '用户已封禁')
+			toast.success(newBanned ? '用户已封禁' : '用户已解封')
 		} catch (error) {
 			console.error('Failed to toggle user ban:', error)
 			toast.error('操作失败')
@@ -102,21 +102,26 @@ export default function UsersPage() {
 		}
 	}
 
-	const handleMarkSpam = async (commentId: string) => {
+	const handleToggleCommentStatus = async (
+		commentId: string,
+		isSpam: boolean,
+	) => {
 		try {
 			setActionLoading(commentId)
-			await markCommentAsSpam(commentId)
+			await toggleCommentSpam(commentId, isSpam)
 			setUsers(
 				users.map((user) => ({
 					...user,
 					comments: user.comments.map((comment) =>
-						comment.id === commentId ? { ...comment, status: 'SPAM' } : comment,
+						comment.id === commentId
+							? { ...comment, status: isSpam ? 'SPAM' : 'PUBLISHED' }
+							: comment,
 					),
 				})),
 			)
-			toast.success('评论已标记为垃圾信息')
+			toast.success(isSpam ? '评论已标记为垃圾信息' : '评论已取消标记为垃圾信息')
 		} catch (error) {
-			console.error('Failed to mark comment as spam:', error)
+			console.error('Failed to toggle comment status:', error)
 			toast.error('操作失败')
 		} finally {
 			setActionLoading(null)
@@ -265,56 +270,20 @@ export default function UsersPage() {
 									</div>
 									<div className="flex gap-2">
 										{user.role !== 'ADMIN' && (
-											<Dialog>
-												<DialogTrigger asChild>
-													<Button
-														variant={user.banned ? 'default' : 'destructive'}
-														size="sm"
-														disabled={actionLoading === user.id}>
-														{user.banned ? (
-															<>
-																<UserCheck className="h-4 w-4 mr-2" />
-																解封用户
-															</>
-														) : (
-															<>
-																<UserX className="h-4 w-4 mr-2" />
-																封禁用户
-															</>
-														)}
-													</Button>
-												</DialogTrigger>
-												<DialogContent>
-													<DialogHeader>
-														<DialogTitle>
-															{user.banned ? '解封用户' : '封禁用户'}
-														</DialogTitle>
-														<DialogDescription>
-															确定要{user.banned ? '解封' : '封禁'}用户 &quot;
-															{user.name}&quot; 吗？
-															{user.banned
-																? '用户将被允许重新登录和发表评论。'
-																: '用户将被禁止登录，所有评论将被隐藏。'}
-														</DialogDescription>
-													</DialogHeader>
-													<DialogFooter>
-														<DialogClose asChild>
-															<Button variant="outline">取消</Button>
-														</DialogClose>
-														<Button
-															onClick={() =>
-																handleToggleBan(user.id, user.banned)
-															}
-															className={
-																user.banned
-																	? 'bg-green-600 hover:bg-green-700'
-																	: ''
-															}>
-															确认{user.banned ? '解封' : '封禁'}
-														</Button>
-													</DialogFooter>
-												</DialogContent>
-											</Dialog>
+											<div className="flex items-center gap-2">
+												<Label htmlFor={`ban-${user.id}`}>
+													<UserX />
+													封禁
+												</Label>
+												<Switch
+													id={`ban-${user.id}`}
+													checked={user.banned}
+													onCheckedChange={(checked) =>
+														handleToggleBan(user.id, checked)
+													}
+													disabled={actionLoading === user.id}
+												/>
+											</div>
 										)}
 									</div>
 								</div>
@@ -369,9 +338,21 @@ export default function UsersPage() {
 																	</Link>
 																</div>
 															</div>
-															<div className="flex gap-1">
-																{comment.status !== 'SPAM' &&
-																	comment.content !== '[已删除]' && (
+															<div className="flex gap-2 items-center">
+																{comment.content !== '[已删除]' && (
+																	<>
+																		<Label htmlFor="mark-spam">Spam</Label>
+																		<Switch
+																			aria-label="mark-spam"
+																			checked={comment.status === 'SPAM'}
+																			onCheckedChange={(checked) =>
+																				handleToggleCommentStatus(
+																					comment.id,
+																					checked,
+																				)
+																			}
+																			disabled={actionLoading === comment.id}
+																		/>
 																		<Dialog>
 																			<DialogTrigger asChild>
 																				<Button
@@ -380,69 +361,33 @@ export default function UsersPage() {
 																					disabled={
 																						actionLoading === comment.id
 																					}>
-																					<AlertTriangle className="h-3 w-3" />
+																					<Trash2 className="h-3 w-3" />
 																				</Button>
 																			</DialogTrigger>
 																			<DialogContent>
 																				<DialogHeader>
-																					<DialogTitle>
-																						标记为垃圾信息
-																					</DialogTitle>
+																					<DialogTitle>删除评论</DialogTitle>
 																					<DialogDescription>
-																						确定要将这条评论标记为垃圾信息吗？标记后将不再公开显示。
+																						确定要删除这条评论吗？删除后将不可恢复。
 																					</DialogDescription>
 																				</DialogHeader>
 																				<DialogFooter>
 																					<DialogClose asChild>
-																						<Button
-																							variant="outline"
-																							onClick={() => {}}>
+																						<Button variant="outline">
 																							取消
 																						</Button>
 																					</DialogClose>
 																					<Button
 																						onClick={() =>
-																							handleMarkSpam(comment.id)
-																						}>
-																						确认标记
+																							handleDeleteComment(comment.id)
+																						}
+																						className="bg-red-600 hover:bg-red-700">
+																						确认删除
 																					</Button>
 																				</DialogFooter>
 																			</DialogContent>
 																		</Dialog>
-																	)}
-																{comment.content !== '[已删除]' && (
-																	<Dialog>
-																		<DialogTrigger asChild>
-																			<Button
-																				variant="outline"
-																				size="sm"
-																				disabled={actionLoading === comment.id}>
-																				<Trash2 className="h-3 w-3" />
-																			</Button>
-																		</DialogTrigger>
-																		<DialogContent>
-																			<DialogHeader>
-																				<DialogTitle>删除评论</DialogTitle>
-																				<DialogDescription>
-																					确定要删除这条评论吗？删除后将不可恢复。
-																				</DialogDescription>
-																			</DialogHeader>
-																			<DialogFooter>
-																				<DialogClose asChild>
-																					<Button variant="outline">
-																						取消
-																					</Button>
-																				</DialogClose>
-																				<Button
-																					onClick={() =>
-																						handleDeleteComment(comment.id)
-																					}
-																					className="bg-red-600 hover:bg-red-700">
-																					确认删除
-																				</Button>
-																			</DialogFooter>
-																		</DialogContent>
-																	</Dialog>
+																	</>
 																)}
 															</div>
 														</div>

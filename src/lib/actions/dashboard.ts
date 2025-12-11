@@ -219,18 +219,18 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 	}
 }
 
-export async function markCommentAsSpam(commentId: string) {
+export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
 	try {
 		await prisma.comment.update({
 			where: { id: commentId },
-			data: { status: 'SPAM' },
+			data: { status: isSpam ? 'SPAM' : 'PUBLISHED' },
 		})
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to mark comment as spam:', error)
-		throw new Error('Failed to mark comment as spam')
+		console.error('Failed to toggle comment spam status:', error)
+		throw new Error('Failed to toggle comment spam status')
 	}
 }
 
