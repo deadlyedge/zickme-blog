@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
 import { getGravatarProfile } from '../getGravatar'
 import { generateAvatarUri } from '../avatar'
+import { SocialLink, Skill, Slogan } from '@/types'
+import { fetchProfile } from '../content-providers'
 // import { redirect } from 'next/navigation'
 
 interface UpdateProfileData {
@@ -111,6 +113,9 @@ interface UpdateSiteProfileData {
 	location?: string
 	email?: string
 	website?: string
+	slogans?: Slogan[]
+	skills?: Skill[]
+	socialLinks?: SocialLink[]
 }
 
 export async function updateSiteProfile(data: UpdateSiteProfileData) {
@@ -139,6 +144,9 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 					location: data.location,
 					email: data.email,
 					website: data.website,
+					slogans: data.slogans,
+					skills: data.skills,
+					socialLinks: data.socialLinks,
 					updatedAt: new Date(),
 				},
 			})
@@ -153,6 +161,9 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 					location: data.location,
 					email: data.email,
 					website: data.website,
+					slogans: data.slogans,
+					skills: data.skills,
+					socialLinks: data.socialLinks,
 				},
 			})
 		}
@@ -176,7 +187,7 @@ export async function getSiteProfile() {
 		}
 
 		// Get the first site profile (assuming there's only one)
-		const profile = await prisma.siteProfile.findFirst()
+		const profile = await fetchProfile()
 
 		return { profile }
 	} catch (error) {

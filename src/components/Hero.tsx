@@ -154,7 +154,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					variants={blockVariantsH}>
 					<CurvedLoop
 						marqueeText={
-							sloganList[2].text || 'We are a team of designers and developers.'
+							'We are a team of designers and developers.'
 						}
 						speed={1}
 						curveAmount={300}
