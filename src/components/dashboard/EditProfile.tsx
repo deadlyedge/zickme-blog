@@ -7,6 +7,16 @@ import { z } from 'zod'
 import { updateSiteProfile, getSiteProfile } from '@/lib/actions/profile'
 import { toast } from 'sonner'
 
+import { EditIcon, PlusIcon, SaveIcon, XIcon } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+	Select,
+	SelectValue,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+} from '@/components/ui/select'
 import {
 	Dialog,
 	DialogContent,
@@ -29,16 +39,6 @@ import {
 	InputGroupInput,
 	InputGroupTextarea,
 } from '@/components/ui/input-group'
-import { EditIcon } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import {
-	Select,
-	SelectValue,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-} from '../ui/select'
 
 const siteProfileSchema = z.object({
 	name: z
@@ -243,8 +243,10 @@ export function EditProfile() {
 												{...register('name')}
 												placeholder="输入站点名称"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.name]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.name]} />
 									</FieldContent>
 								</Field>
 
@@ -256,8 +258,10 @@ export function EditProfile() {
 												{...register('title')}
 												placeholder="输入站点标题"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.title]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.title]} />
 									</FieldContent>
 								</Field>
 
@@ -270,8 +274,10 @@ export function EditProfile() {
 												placeholder="输入站点简介"
 												rows={4}
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.bio]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.bio]} />
 									</FieldContent>
 								</Field>
 
@@ -284,8 +290,10 @@ export function EditProfile() {
 												{...register('avatar')}
 												placeholder="输入头像链接"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.avatar]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.avatar]} />
 									</FieldContent>
 								</Field>
 
@@ -297,8 +305,10 @@ export function EditProfile() {
 												{...register('location')}
 												placeholder="输入位置信息"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.location]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.location]} />
 									</FieldContent>
 								</Field>
 
@@ -311,8 +321,10 @@ export function EditProfile() {
 												{...register('email')}
 												placeholder="输入联系邮箱"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.email]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.email]} />
 									</FieldContent>
 								</Field>
 
@@ -325,12 +337,12 @@ export function EditProfile() {
 												{...register('website')}
 												placeholder="输入网站地址"
 											/>
+											<InputGroupAddon align="inline-end">
+												<FieldError errors={[errors.website]} />
+											</InputGroupAddon>
 										</InputGroup>
-										<FieldError errors={[errors.website]} />
 									</FieldContent>
 								</Field>
-
-								{errors.root && <FieldError errors={[errors.root]} />}
 							</FieldGroup>
 						</TabsContent>
 						<TabsContent value="slogans">
@@ -345,8 +357,12 @@ export function EditProfile() {
 														{...register(`slogans.${index}.text`)}
 														placeholder="输入口号文本"
 													/>
+													<InputGroupAddon align="inline-end">
+														<FieldError
+															errors={[errors.slogans?.[index]?.text]}
+														/>
+													</InputGroupAddon>
 												</InputGroup>
-												<FieldError errors={[errors.slogans?.[index]?.text]} />
 											</FieldContent>
 										</Field>
 										<div className="flex gap-2 items-center justify-center">
@@ -380,9 +396,10 @@ export function EditProfile() {
 											</Field>
 											<Button
 												variant="destructive"
-												size="sm"
+												size="icon"
+												className="rounded-full"
 												onClick={() => removeSlogan(index)}>
-												删除
+												<XIcon />
 											</Button>
 										</div>
 									</div>
@@ -391,7 +408,8 @@ export function EditProfile() {
 									onClick={() =>
 										appendSlogan({ text: '', fontSize: '', color: '' })
 									}>
-									添加口号
+									<PlusIcon />
+									口号
 								</Button>
 							</div>
 						</TabsContent>
@@ -410,10 +428,12 @@ export function EditProfile() {
 															{...register(`skills.${skillIndex}.category`)}
 															placeholder="例如: 前端开发"
 														/>
+														<InputGroupAddon align="inline-end">
+															<FieldError
+																errors={[errors.skills?.[skillIndex]?.category]}
+															/>
+														</InputGroupAddon>
 													</InputGroup>
-													<FieldError
-														errors={[errors.skills?.[skillIndex]?.category]}
-													/>
 												</FieldContent>
 											</Field>
 											<Button
@@ -433,7 +453,7 @@ export function EditProfile() {
 												) => (
 													<div
 														key={techIndex}
-														className="flex gap-2 items-end ml-4">
+														className="flex gap-2 items-center justify-center ml-4">
 														<Field>
 															<FieldContent>
 																<InputGroup>
@@ -444,24 +464,35 @@ export function EditProfile() {
 																		)}
 																		placeholder="例如: React"
 																	/>
+																	<InputGroupAddon align="inline-end">
+																		<FieldError
+																			errors={[
+																				errors.skills?.[skillIndex]
+																					?.technologies?.[techIndex]?.name,
+																			]}
+																		/>
+																	</InputGroupAddon>
 																</InputGroup>
-																<FieldError
-																	errors={[
-																		errors.skills?.[skillIndex]?.technologies?.[
-																			techIndex
-																		]?.name,
-																	]}
-																/>
 															</FieldContent>
 														</Field>
 														<Field className="flex-1">
 															<FieldContent>
 																<Select
-																	{...register(
+																	value={watch(
 																		`skills.${skillIndex}.technologies.${techIndex}.level`,
-																	)}>
+																	)}
+																	onValueChange={(value) =>
+																		setValue(
+																			`skills.${skillIndex}.technologies.${techIndex}.level`,
+																			value as
+																				| 'beginner'
+																				| 'intermediate'
+																				| 'advanced'
+																				| 'expert',
+																		)
+																	}>
 																	<SelectTrigger>
-																		<SelectValue />
+																		<SelectValue placeholder="选择熟练度" />
 																	</SelectTrigger>
 																	<SelectContent>
 																		<SelectGroup>
@@ -491,7 +522,8 @@ export function EditProfile() {
 														</Field>
 														<Button
 															variant="destructive"
-															size="sm"
+															size="icon"
+															className="rounded-full"
 															onClick={() => {
 																const currentTechnologies =
 																	watch(`skills.${skillIndex}.technologies`) ||
@@ -508,7 +540,7 @@ export function EditProfile() {
 																	newTechnologies,
 																)
 															}}>
-															删除技术
+															<XIcon className="size-4" />
 														</Button>
 													</div>
 												),
@@ -524,7 +556,8 @@ export function EditProfile() {
 													])
 												}}
 												className="ml-4">
-												添加技术
+												<PlusIcon />
+												技术
 											</Button>
 										</div>
 									</div>
@@ -533,34 +566,79 @@ export function EditProfile() {
 									onClick={() =>
 										appendSkill({ category: '', technologies: [] })
 									}>
-									添加技能类别
+									<PlusIcon />
+									技能类别
 								</Button>
 							</div>
 						</TabsContent>
 						<TabsContent value="socialLinks">
 							<div className="space-y-4">
 								{socialLinkFields.map((field, index) => (
-									<div key={field.id} className="flex gap-2 items-end">
-										<Field>
-											<FieldContent>
-												<InputGroup>
-													<InputGroupAddon>平台</InputGroupAddon>
-													<select
-														{...register(`socialLinks.${index}.platform`)}
-														className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-														<option value="GitHub">GitHub</option>
-														<option value="LinkedIn">LinkedIn</option>
-														<option value="Twitter">Twitter</option>
-														<option value="Instagram">Instagram</option>
-														<option value="YouTube">YouTube</option>
-														<option value="Other">Other</option>
-													</select>
-												</InputGroup>
-												<FieldError
-													errors={[errors.socialLinks?.[index]?.platform]}
-												/>
-											</FieldContent>
-										</Field>
+									<div
+										key={field.id}
+										className="flex flex-col gap-2 justify-center">
+										<div className="flex items-center justify-center gap-2">
+											<Field className="flex-1">
+												<FieldContent>
+													<Select
+														value={watch(`socialLinks.${index}.platform`)}
+														onValueChange={(value) =>
+															setValue(
+																`socialLinks.${index}.platform`,
+																value as
+																	| 'GitHub'
+																	| 'LinkedIn'
+																	| 'Twitter'
+																	| 'Instagram'
+																	| 'YouTube'
+																	| 'Other',
+															)
+														}>
+														<SelectTrigger>
+															<SelectValue placeholder="选择平台" />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectGroup>
+																<SelectItem value="GitHub">GitHub</SelectItem>
+																<SelectItem value="LinkedIn">
+																	LinkedIn
+																</SelectItem>
+																<SelectItem value="Twitter">Twitter</SelectItem>
+																<SelectItem value="Instagram">
+																	Instagram
+																</SelectItem>
+																<SelectItem value="YouTube">YouTube</SelectItem>
+																<SelectItem value="Other">Other</SelectItem>
+															</SelectGroup>
+														</SelectContent>
+													</Select>
+													<FieldError
+														errors={[errors.socialLinks?.[index]?.platform]}
+													/>
+												</FieldContent>
+											</Field>
+											<Field className="">
+												<FieldContent>
+													<InputGroup>
+														<InputGroupAddon>用户名</InputGroupAddon>
+														<InputGroupInput
+															{...register(`socialLinks.${index}.username`)}
+															placeholder="可选用户名"
+														/>
+													</InputGroup>
+													<FieldError
+														errors={[errors.socialLinks?.[index]?.username]}
+													/>
+												</FieldContent>
+											</Field>
+											<Button
+												variant="destructive"
+												size="icon"
+												className="rounded-full"
+												onClick={() => removeSocialLink(index)}>
+												<XIcon />
+											</Button>
+										</div>
 										<Field>
 											<FieldContent>
 												<InputGroup>
@@ -570,32 +648,14 @@ export function EditProfile() {
 														{...register(`socialLinks.${index}.url`)}
 														placeholder="输入链接地址"
 													/>
+													<InputGroupAddon align="inline-end">
+														<FieldError
+															errors={[errors.socialLinks?.[index]?.url]}
+														/>
+													</InputGroupAddon>
 												</InputGroup>
-												<FieldError
-													errors={[errors.socialLinks?.[index]?.url]}
-												/>
 											</FieldContent>
 										</Field>
-										<Field>
-											<FieldContent>
-												<InputGroup>
-													<InputGroupAddon>用户名</InputGroupAddon>
-													<InputGroupInput
-														{...register(`socialLinks.${index}.username`)}
-														placeholder="可选用户名"
-													/>
-												</InputGroup>
-												<FieldError
-													errors={[errors.socialLinks?.[index]?.username]}
-												/>
-											</FieldContent>
-										</Field>
-										<Button
-											variant="destructive"
-											size="sm"
-											onClick={() => removeSocialLink(index)}>
-											删除
-										</Button>
 									</div>
 								))}
 								<Button
@@ -606,13 +666,17 @@ export function EditProfile() {
 											username: '',
 										})
 									}>
-									添加社交链接
+									<PlusIcon />
+									社交链接
 								</Button>
 							</div>
 						</TabsContent>
 					</Tabs>
 					<DialogFooter>
+						{errors.root && <FieldError errors={[errors.root]} />}
+
 						<Button type="submit" disabled={isSubmitting}>
+							<SaveIcon />
 							{isSubmitting ? '保存中...' : '保存更改'}
 						</Button>
 					</DialogFooter>

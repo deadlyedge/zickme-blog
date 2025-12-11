@@ -13,6 +13,7 @@ import { HeaderNav } from '@/components/HeaderNav'
 import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
 import { SmartCacheProvider } from '@/components/SmartCacheProvider'
 import AuthModal from '@/components/auth/AuthModal'
+import { Toaster } from '@/components/ui/sonner'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -59,8 +60,6 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode
 }) {
-	// const data = await fetchContent()
-	// const { profile } = data
 
 	return (
 		<html lang="en">
@@ -72,6 +71,7 @@ export default async function RootLayout({
 						<AdvancedPageTransition>{children}</AdvancedPageTransition>
 					</main>
 					<AuthModal />
+					<Toaster />
 				</SmartCacheProvider>
 			</body>
 		</html>
