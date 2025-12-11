@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/input-group'
 import { EditIcon } from 'lucide-react'
 import { SiteProfile } from '@/generated/prisma/client'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 const siteProfileSchema = z.object({
 	name: z
@@ -132,7 +133,7 @@ export function EditProfile() {
 			<DialogTrigger asChild>
 				<Button variant="outline" size="sm">
 					<EditIcon className="h-4 w-4 mr-2" />
-					编辑
+					编辑 SiteProfile
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
@@ -142,105 +143,115 @@ export function EditProfile() {
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-					<FieldGroup>
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>站点名称</InputGroupAddon>
-									<InputGroupInput
-										{...register('name')}
-										placeholder="输入站点名称"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.name]} />
-							</FieldContent>
-						</Field>
+					<Tabs>
+						<TabsList>
+							<TabsTrigger value="base">Base</TabsTrigger>
+							<TabsTrigger value="slogans">Slogans</TabsTrigger>
+							<TabsTrigger value="skills">Skills</TabsTrigger>
+						</TabsList>
+						<TabsContent value="base">
+							<FieldGroup>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>站点名称</InputGroupAddon>
+											<InputGroupInput
+												{...register('name')}
+												placeholder="输入站点名称"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.name]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>站点标题</InputGroupAddon>
-									<InputGroupInput
-										{...register('title')}
-										placeholder="输入站点标题"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.title]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>站点标题</InputGroupAddon>
+											<InputGroupInput
+												{...register('title')}
+												placeholder="输入站点标题"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.title]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>站点简介</InputGroupAddon>
-									<InputGroupTextarea
-										{...register('bio')}
-										placeholder="输入站点简介"
-										rows={4}
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.bio]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>站点简介</InputGroupAddon>
+											<InputGroupTextarea
+												{...register('bio')}
+												placeholder="输入站点简介"
+												rows={4}
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.bio]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>头像链接</InputGroupAddon>
-									<InputGroupInput
-										type="url"
-										{...register('avatar')}
-										placeholder="输入头像链接"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.avatar]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>头像链接</InputGroupAddon>
+											<InputGroupInput
+												type="url"
+												{...register('avatar')}
+												placeholder="输入头像链接"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.avatar]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>位置</InputGroupAddon>
-									<InputGroupInput
-										{...register('location')}
-										placeholder="输入位置信息"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.location]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>位置</InputGroupAddon>
+											<InputGroupInput
+												{...register('location')}
+												placeholder="输入位置信息"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.location]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>邮箱</InputGroupAddon>
-									<InputGroupInput
-										type="email"
-										{...register('email')}
-										placeholder="输入联系邮箱"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.email]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>邮箱</InputGroupAddon>
+											<InputGroupInput
+												type="email"
+												{...register('email')}
+												placeholder="输入联系邮箱"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.email]} />
+									</FieldContent>
+								</Field>
 
-						<Field>
-							<FieldContent>
-								<InputGroup>
-									<InputGroupAddon>网站</InputGroupAddon>
-									<InputGroupInput
-										type="url"
-										{...register('website')}
-										placeholder="输入网站地址"
-									/>
-								</InputGroup>
-								<FieldError errors={[errors.website]} />
-							</FieldContent>
-						</Field>
+								<Field>
+									<FieldContent>
+										<InputGroup>
+											<InputGroupAddon>网站</InputGroupAddon>
+											<InputGroupInput
+												type="url"
+												{...register('website')}
+												placeholder="输入网站地址"
+											/>
+										</InputGroup>
+										<FieldError errors={[errors.website]} />
+									</FieldContent>
+								</Field>
 
-						{errors.root && <FieldError errors={[errors.root]} />}
-					</FieldGroup>
-
+								{errors.root && <FieldError errors={[errors.root]} />}
+							</FieldGroup>
+						</TabsContent>
+						<TabsContent value="slogans"></TabsContent>
+						<TabsContent value="skills"></TabsContent>
+					</Tabs>
 					<DialogFooter>
 						<Button type="submit" disabled={isSubmitting}>
 							{isSubmitting ? '保存中...' : '保存更改'}
