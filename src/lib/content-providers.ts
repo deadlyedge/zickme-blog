@@ -1,10 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import type {
-	SiteProfile,
-	Post,
-	Tag,
-	PostType,
-} from '@/generated/prisma/client'
+import type { Post, Tag, PostType } from '@/generated/prisma/client'
+import type { SiteProfileExtended } from '@/types'
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
@@ -12,7 +8,7 @@ if (typeof window !== 'undefined') {
 }
 
 export type ContentResponse = {
-	profile: SiteProfile | null
+	profile: SiteProfileExtended | null
 	projects: PostWithTags[]
 	blog: PostWithTags[]
 }
@@ -28,8 +24,8 @@ export type PostWithTags = Post & {
 		| null
 }
 
-export const fetchProfile = async (): Promise<SiteProfile | null> => {
-	return prisma.siteProfile.findFirst()
+export const fetchProfile = async (): Promise<SiteProfileExtended> => {
+	return prisma.siteProfile.findFirst() as Promise<SiteProfileExtended>
 }
 
 export const fetchPosts = async (
@@ -81,7 +77,7 @@ export const fetchTags = async (): Promise<Tag[]> => {
 
 export const fetchHomeContent = async (): Promise<ContentResponse> => {
 	const [profile, projects, blog] = await Promise.all([
-		prisma.siteProfile.findFirst(),
+		prisma.siteProfile.findFirst() as Promise<SiteProfileExtended>,
 		prisma.post.findMany({
 			where: {
 				type: 'PROJECT',
