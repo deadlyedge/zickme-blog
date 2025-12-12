@@ -160,7 +160,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 				)}
 			</div>
 
-			<CommentList comments={comments} docId={docId} />
+			<CommentList comments={comments} docId={docId} currentUser={user} />
 		</section>
 	)
 }

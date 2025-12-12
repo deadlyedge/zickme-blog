@@ -6,21 +6,47 @@ import { formatDistanceToNow } from 'date-fns'
 import { CommentForm } from './CommentForm'
 import { CommentList } from './CommentList'
 import { AnimatePresence, motion } from 'motion/react'
+import { toggleCommentSpam } from '@/lib/actions/dashboard'
+import { toast } from 'sonner'
 
 interface CommentItemProps {
 	comment: CommentWithReplies
 	docId: string
+	currentUser?: {
+		id: string
+		name?: string | null
+		email?: string
+		role?: string
+		image?: string | null
+	}
 	depth: number
 }
 
-export function CommentItem({ comment, docId, depth }: CommentItemProps) {
+export function CommentItem({ comment, docId, currentUser, depth }: CommentItemProps) {
 	const [isReplying, setIsReplying] = useState(false)
 	const [isCollapsed, setIsCollapsed] = useState(false)
+	const [spamActionLoading, setSpamActionLoading] = useState(false)
 	const hasReplies = comment.replies && comment.replies.length > 0
 
 	const authorName = comment.author?.banned
 		? '[已封禁用户]'
 		: comment.author?.name || 'Anonymous'
+
+	const handleToggleSpam = async () => {
+		try {
+			setSpamActionLoading(true)
+			const isSpam = comment.status !== 'SPAM'
+			await toggleCommentSpam(comment.id, isSpam)
+			toast.success(isSpam ? '评论已标记为垃圾信息' : '评论已取消标记为垃圾信息')
+			// 刷新页面以重新加载评论
+			window.location.reload()
+		} catch (error) {
+			console.error('Failed to toggle spam status:', error)
+			toast.error('操作失败')
+		} finally {
+			setSpamActionLoading(false)
+		}
+	}
 
 	return (
 		<div className={`group relative ${depth > 0 ? 'pl-4 md:pl-8' : ''}`}>
@@ -61,6 +87,15 @@ export function CommentItem({ comment, docId, depth }: CommentItemProps) {
 								className="text-xs font-medium text-slate-500 hover:text-amber-600 transition-colors">
 								{isReplying ? 'Cancel' : 'Reply'}
 							</button>
+
+							{currentUser?.role === 'ADMIN' && (
+								<button
+									onClick={handleToggleSpam}
+									disabled={spamActionLoading}
+									className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50">
+									{comment.status === 'SPAM' ? '取消标记垃圾信息' : '标记为垃圾信息'}
+								</button>
+							)}
 						</div>
 
 						<AnimatePresence>
@@ -89,6 +124,7 @@ export function CommentItem({ comment, docId, depth }: CommentItemProps) {
 					<CommentList
 						comments={comment.replies!}
 						docId={docId}
+						currentUser={currentUser}
 						depth={depth + 1}
 					/>
 				</div>
