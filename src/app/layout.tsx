@@ -60,13 +60,12 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode
 }) {
-
 	return (
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
 				<SmartCacheProvider>
-					<main className="">
+					<main>
 						<HeaderNav />
 						<AdvancedPageTransition>{children}</AdvancedPageTransition>
 					</main>

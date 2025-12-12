@@ -113,7 +113,7 @@ export async function getComments(docId: string) {
 		const allComments = await prisma.comment.findMany({
 			where: {
 				postId: docId,
-				status: 'PUBLISHED',
+				status: { in: ['PUBLISHED', 'SPAM'] },
 			},
 			include: {
 				author: true,
@@ -123,12 +123,22 @@ export async function getComments(docId: string) {
 			},
 		}) as CommentWithAuthor[]
 
+		// Process comments for security and display
+		const processedComments = allComments.map(comment => ({
+			...comment,
+			content: comment.status === 'SPAM'
+				? '[此评论已被标记为垃圾信息]'
+				: comment.author.banned
+				? '[此用户已被封禁]'
+				: comment.content
+		}))
+
 		// Build tree structure in memory
 		const commentMap = new Map<string, CommentWithReplies>()
 		const rootComments: CommentWithReplies[] = []
 
 		// First pass: create all comment nodes
-		allComments.forEach(comment => {
+		processedComments.forEach(comment => {
 			commentMap.set(comment.id, {
 				...comment,
 				replies: [],
@@ -136,7 +146,7 @@ export async function getComments(docId: string) {
 		})
 
 		// Second pass: build parent-child relationships
-		allComments.forEach(comment => {
+		processedComments.forEach(comment => {
 			const commentWithReplies = commentMap.get(comment.id)!
 
 			if (comment.parentId) {

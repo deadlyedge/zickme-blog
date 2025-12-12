@@ -29,14 +29,14 @@ export const metadata: Metadata = buildMetadata({
 })
 
 export default async function AboutPage() {
-	const profileData = await fetchProfile() 
+	const profileData = await fetchProfile()
 
 	if (!profileData) {
 		return <div>暂无个人资料</div>
 	}
 
 	return (
-		<div className='pt-16 overflow-y-auto h-svh'>
+		<div className="pt-16 overflow-y-auto h-svh">
 			<section className="mx-auto p-6 max-w-4xl">
 				<div className="grid md:grid-cols-2 gap-12">
 					<div>
@@ -80,20 +80,23 @@ export default async function AboutPage() {
 							</p>
 						)}
 
-						{profileData.socialLinks && Array.isArray(profileData.socialLinks) && (
-							<div className="flex gap-4">
-								{(profileData.socialLinks as SocialLink[]).map((link, index: number) => (
-									<a
-										key={index}
-										href={link.url}
-										className="text-2xl hover:opacity-75"
-										target="_blank"
-										rel="noopener noreferrer">
-										{link.platform}
-									</a>
-								))}
-							</div>
-						)}
+						{profileData.socialLinks &&
+							Array.isArray(profileData.socialLinks) && (
+								<div className="flex gap-4">
+									{(profileData.socialLinks as SocialLink[]).map(
+										(link, index: number) => (
+											<a
+												key={index}
+												href={link.url}
+												className="text-2xl hover:opacity-75"
+												target="_blank"
+												rel="noopener noreferrer">
+												{link.platform}
+											</a>
+										),
+									)}
+								</div>
+							)}
 					</div>
 				</div>
 

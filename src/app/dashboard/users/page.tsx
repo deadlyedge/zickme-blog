@@ -119,7 +119,9 @@ export default function UsersPage() {
 					),
 				})),
 			)
-			toast.success(isSpam ? '评论已标记为垃圾信息' : '评论已取消标记为垃圾信息')
+			toast.success(
+				isSpam ? '评论已标记为垃圾信息' : '评论已取消标记为垃圾信息',
+			)
 		} catch (error) {
 			console.error('Failed to toggle comment status:', error)
 			toast.error('操作失败')

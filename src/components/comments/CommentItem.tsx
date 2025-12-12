@@ -13,16 +13,14 @@ interface CommentItemProps {
 	depth: number
 }
 
-export function CommentItem({
-	comment,
-	docId,
-	depth,
-}: CommentItemProps) {
+export function CommentItem({ comment, docId, depth }: CommentItemProps) {
 	const [isReplying, setIsReplying] = useState(false)
 	const [isCollapsed, setIsCollapsed] = useState(false)
 	const hasReplies = comment.replies && comment.replies.length > 0
 
-	const authorName = comment.author?.name || 'Anonymous'
+	const authorName = comment.author?.banned
+		? '[已封禁用户]'
+		: comment.author?.name || 'Anonymous'
 
 	return (
 		<div className={`group relative ${depth > 0 ? 'pl-4 md:pl-8' : ''}`}>
@@ -35,7 +33,9 @@ export function CommentItem({
 				<header className="flex items-center gap-2 text-sm mb-2">
 					<span className="font-medium text-slate-900">{authorName}</span>
 					<span className="text-slate-400 text-xs">•</span>
-					<time className="text-slate-400 text-xs" dateTime={comment.createdAt.toISOString()}>
+					<time
+						className="text-slate-400 text-xs"
+						dateTime={comment.createdAt.toISOString()}>
 						{formatDistanceToNow(new Date(comment.createdAt), {
 							addSuffix: true,
 						})}

@@ -12,7 +12,6 @@ import { signOut, useSession } from '@/lib/auth-client'
 
 interface CommentsSectionProps {
 	docId: string
-	// docType: 'posts' | 'projects'
 }
 
 export function CommentsSection({ docId }: CommentsSectionProps) {
