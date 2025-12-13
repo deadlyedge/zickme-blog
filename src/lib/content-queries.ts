@@ -24,7 +24,7 @@ export function tagsOptions() {
 
 export function homeContentOptions() {
 	return {
-		queryKey: ['posts', 'siteProfile'] as const,
+		queryKey: ['content', 'home'] as const,
 		queryFn: () => fetchHomeContent(),
 		staleTime: 30 * 60 * 1000, // 30 minutes (首页内容变化较慢)
 	}
