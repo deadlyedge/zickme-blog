@@ -7,6 +7,7 @@ import {
 	PostWithTags,
 } from '../content-providers'
 import type { PostType, Tag } from '@/generated/prisma/client'
+import { getSiteProfile } from './profile'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
@@ -41,5 +42,23 @@ export async function fetchPostBySlugAction(
 	} catch (error) {
 		console.error(`Error fetching blog post ${slug}:`, error)
 		throw new Error(`Failed to fetch blog post ${slug}`)
+	}
+}
+
+export async function fetchSiteProfile() {
+	return await getSiteProfile()
+}
+
+export async function fetchHomeContent() {
+	const [projects, blog, siteProfile] = await Promise.all([
+		fetchPostsAction('PROJECT').then((posts) => posts.slice(0, 3)),
+		fetchPostsAction('BLOG').then((posts) => posts.slice(0, 3)),
+		fetchSiteProfile(),
+	])
+
+	return {
+		projects,
+		blog,
+		profile: siteProfile.profile,
 	}
 }

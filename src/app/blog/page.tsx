@@ -2,7 +2,7 @@ import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
 import { getQueryClient } from '@/lib/query-client'
-import { postsOptions, tagsOptions } from '@/lib/content-queries'
+import { postsOptions } from '@/lib/content-queries'
 import { PostGridClient } from '@/components/PostGridClient'
 
 // 每5分钟重新验证一次
@@ -16,9 +16,8 @@ export const metadata: Metadata = buildMetadata({
 export default function BlogPage() {
 	const queryClient = getQueryClient()
 
-	// 预取数据
+	// 只预取posts数据，tags会从posts中提取
 	void queryClient.prefetchQuery(postsOptions('BLOG'))
-	void queryClient.prefetchQuery(tagsOptions())
 
 	return (
 		<main>

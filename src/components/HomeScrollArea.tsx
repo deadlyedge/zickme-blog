@@ -3,15 +3,14 @@
 import Link from 'next/link'
 import { useRef } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
-import { ContentResponse } from '@/lib/content-providers'
+import { useHomeContent } from '@/lib/hooks/useContent'
 import { Hero } from './Hero'
 import { PostCard } from './PostCard'
 
-type HomeScrollAreaProps = { data: ContentResponse }
+export const HomeScrollArea = () => {
+	const scrollRef = useRef<HTMLDivElement>(null)
+	const { data } = useHomeContent()
 
-export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
-	const scrollRef = useRef(null)
-	const { profile, projects, blog } = data
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,
 		offset: ['0 0', '1 1'],
@@ -24,13 +23,18 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 
 	const scaleX = useTransform(smoothed, [0, 1], [0, 1])
 
+	if (!data) return null
+	const { projects, blog, profile } = data
+
 	return (
 		<div ref={scrollRef} id="page-scroll" className="h-svh overflow-y-auto">
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
-				<Hero profile={profile} scale={scaleX} />
+				{profile && <Hero profile={profile} scale={scaleX} />}
 
 				{/* LATEST PROJECTS */}
-				<section id="projects" className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
+				<section
+					id="projects"
+					className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest projects</h2>
 						<Link

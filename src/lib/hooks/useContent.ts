@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { PostType } from '@/generated/prisma/client'
-import { postsOptions, tagsOptions } from '../content-queries'
+import { postsOptions, tagsOptions, homeContentOptions } from '../content-queries'
 import { fetchPostBySlugAction } from '../actions/content'
 
 // Query Keys
@@ -18,6 +18,10 @@ export function usePosts(type: PostType = 'BLOG') {
 
 export function useTags() {
 	return useQuery(tagsOptions())
+}
+
+export function useHomeContent() {
+	return useQuery(homeContentOptions())
 }
 
 export function usePost(slug: string) {

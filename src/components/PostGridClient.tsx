@@ -7,8 +7,15 @@ import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
 import { PostCard } from './PostCard'
 
-import { usePosts, useTags } from '@/lib/hooks/useContent'
+import { usePosts } from '@/lib/hooks/useContent'
 import { PostType } from '@/generated/prisma/client'
+
+type PostTag = {
+	id: string
+	name: string
+	slug: string
+	color: string | null
+}
 
 type Props = {
 	type?: PostType
@@ -19,7 +26,20 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 
 	// Use TanStack Query - data will be hydrated from server
 	const { data: posts } = usePosts(type)
-	const { data: tags } = useTags()
+
+	// Extract tags from posts data to avoid showing unused tags
+	const tags = useMemo(() => {
+		if (!posts) return []
+		const tagMap = new Map<string, PostTag>()
+		posts.forEach((post) => {
+			post.tags?.forEach((tag) => {
+				if (!tagMap.has(tag.id)) {
+					tagMap.set(tag.id, tag)
+				}
+			})
+		})
+		return Array.from(tagMap.values())
+	}, [posts])
 
 	const filteredPosts = useMemo(() => {
 		if (!posts) return []
