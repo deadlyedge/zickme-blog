@@ -5,7 +5,7 @@ import {
 	fetchPostBySlug,
 	fetchTags,
 	PostWithTags,
-} from '../content-providers'
+} from '@/lib/content-providers'
 import type { PostType, Tag } from '@/generated/prisma/client'
 import { getSiteProfile } from './profile'
 

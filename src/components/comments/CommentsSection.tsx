@@ -1,48 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getComments } from '@/lib/actions/comments'
-import { useAppStore } from '@/lib/store'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CommentList } from './CommentList'
 import { CommentForm } from './CommentForm'
-import { Button } from '@/components/ui/button'
-import type { CommentWithReplies } from '@/lib/actions/comments'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+
 import { signOut, useSession } from '@/lib/auth-client'
+import { useAppStore } from '@/lib/store'
+import { useComments } from '@/lib/hooks/useContent'
 
 interface CommentsSectionProps {
 	docId: string
 }
 
 export function CommentsSection({ docId }: CommentsSectionProps) {
-	const [comments, setComments] = useState<CommentWithReplies[]>([])
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-
+	const { data: comments, isLoading, error } = useComments(docId)
 	const openAuthModal = useAppStore((state) => state.openAuthModal)
 	const { data: session } = useSession()
 	const user = session?.user
-
-	useEffect(() => {
-		async function loadComments() {
-			try {
-				setLoading(true)
-				const commentsData = await getComments(docId)
-				setComments(commentsData)
-			} catch (err) {
-				setError(err instanceof Error ? err.message : 'Failed to load comments')
-			} finally {
-				setLoading(false)
-			}
-		}
-
-		loadComments()
-	}, [docId])
-
-	const handleCommentAdded = () => {
-		// 重新加载评论
-		getComments(docId).then(setComments).catch(console.error)
-	}
 
 	const handleLoginClick = () => {
 		openAuthModal('login')
@@ -67,7 +42,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 		}
 	}
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<section className="py-12 max-w-2xl mx-auto border-t border-slate-100 mt-12">
 				<h2 className="text-2xl font-bold mb-8 text-slate-900">Comments</h2>
@@ -84,7 +59,9 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 		return (
 			<section className="py-12 max-w-2xl mx-auto border-t border-slate-100 mt-12">
 				<h2 className="text-2xl font-bold mb-8 text-slate-900">Comments</h2>
-				<p className="text-red-500">{error}</p>
+				<p className="text-red-500">
+					{error.message || 'Failed to load comments'}
+				</p>
 			</section>
 		)
 	}
@@ -144,7 +121,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 			{/* 评论表单区域 */}
 			<div className="mb-12">
 				{!!user ? (
-					<CommentForm docId={docId} onSuccess={handleCommentAdded} />
+					<CommentForm docId={docId} />
 				) : (
 					<div className="border border-dashed border-gray-200 rounded-lg p-8 text-center bg-gray-50">
 						<p className="text-gray-600 mb-4">登录后即可发表评论</p>
@@ -160,7 +137,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 				)}
 			</div>
 
-			<CommentList comments={comments} docId={docId} currentUser={user} />
+			<CommentList comments={comments || []} docId={docId} currentUser={user} />
 		</section>
 	)
 }

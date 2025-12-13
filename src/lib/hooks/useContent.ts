@@ -1,12 +1,24 @@
-import { useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query'
-import { PostType } from '@/generated/prisma/client'
+import {
+	useQuery,
+	useQueryClient,
+	useMutation,
+	UseQueryOptions,
+} from '@tanstack/react-query'
+import type { PostType } from '@/generated/prisma/client'
+
+import { fetchPostBySlugAction } from '@/lib/actions/content'
+import {
+	getComments,
+	createComment,
+	type CreateCommentData,
+} from '@/lib/actions/comments'
 import {
 	postsOptions,
 	tagsOptions,
 	homeContentOptions,
-} from '../content-queries'
-import { fetchPostBySlugAction } from '../actions/content'
-import type { PostWithTags } from '../content-providers'
+} from '@/lib/content-queries'
+
+import type { PostWithTags } from '@/lib/content-providers'
 
 // Query Keys
 export const contentKeys = {
@@ -14,6 +26,7 @@ export const contentKeys = {
 	posts: (type?: PostType) => ['content', 'posts', type] as const,
 	tags: () => ['content', 'tags'] as const,
 	post: (slug: string) => ['content', 'post', slug] as const,
+	comments: (docId: string) => ['comments', docId] as const,
 }
 
 // Hooks for data fetching
@@ -29,7 +42,10 @@ export function useHomeContent() {
 	return useQuery(homeContentOptions())
 }
 
-export function usePost(slug: string, options?: Partial<UseQueryOptions<PostWithTags | null>>) {
+export function usePost(
+	slug: string,
+	options?: Partial<UseQueryOptions<PostWithTags | null>>,
+) {
 	return useQuery({
 		queryKey: contentKeys.post(slug),
 		queryFn: () => fetchPostBySlugAction(slug),
@@ -65,4 +81,30 @@ export function useContentMutations() {
 		invalidatePost,
 		invalidateAllContent,
 	}
+}
+
+// Comment hooks
+export function useComments(docId: string) {
+	return useQuery({
+		queryKey: contentKeys.comments(docId),
+		queryFn: () => getComments(docId),
+		staleTime: 2 * 60 * 1000, // 2 minutes for comments
+		enabled: !!docId,
+	})
+}
+
+export function useCreateComment() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: CreateCommentData) => createComment(data),
+		onSuccess: (result, variables) => {
+			if (result.success) {
+				// Invalidate and refetch comments for this doc
+				queryClient.invalidateQueries({
+					queryKey: contentKeys.comments(variables.docId),
+				})
+			}
+		},
+	})
 }

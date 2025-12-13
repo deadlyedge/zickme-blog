@@ -1,6 +1,3 @@
-import type { PostType, Tag } from '@/generated/prisma/client'
-import { PostWithTags } from '../content-providers'
-
 export interface NavigationState {
 	isNavigating: boolean
 	currentPath: string
@@ -43,9 +40,20 @@ export interface AuthActions {
 	closeAuthModal: () => void
 }
 
+export interface CommentState {
+	activeReplyId: string | null
+}
+
+export interface CommentActions {
+	setActiveReplyId: (id: string | null) => void
+	clearActiveReplyId: () => void
+}
+
 export type AppState = NavigationState &
 	NavigationActions &
 	UIState &
 	UIActions &
 	AuthState &
-	AuthActions
+	AuthActions &
+	CommentState &
+	CommentActions
