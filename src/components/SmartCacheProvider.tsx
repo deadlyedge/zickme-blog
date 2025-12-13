@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'
-import { useAppStore } from '@/lib/store'
+import { usePosts, useTags } from '@/lib/hooks/useContent'
 
 interface SmartCacheContextType {
 	isDataReady: boolean
@@ -12,11 +12,12 @@ const SmartCacheContext = createContext<SmartCacheContextType | undefined>(
 )
 
 export function SmartCacheProvider({ children }: { children: ReactNode }) {
-	const hasPosts = useAppStore((state) => state.posts.size > 0)
-	const hasTags = useAppStore((state) => state.tags.length > 0)
+	// Use TanStack Query to check if data is ready
+	const { data: posts, isSuccess: postsReady } = usePosts()
+	const { data: tags, isSuccess: tagsReady } = useTags()
 
 	// 检查是否所有关键数据都已加载
-	const isDataReady = hasPosts && hasTags
+	const isDataReady = postsReady && tagsReady && posts && posts.length > 0 && tags && tags.length > 0
 
 	return (
 		<SmartCacheContext.Provider value={{ isDataReady }}>

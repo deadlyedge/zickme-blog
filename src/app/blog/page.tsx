@@ -1,8 +1,9 @@
-import { fetchPosts } from '@/lib/content-providers'
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
+import { getQueryClient } from '@/lib/query-client'
+import { postsOptions, tagsOptions } from '@/lib/content-queries'
 import { PostGridClient } from '@/components/PostGridClient'
-import type { Tag } from '@/generated/prisma/client'
 
 // 每5分钟重新验证一次
 export const revalidate = 300
@@ -12,20 +13,24 @@ export const metadata: Metadata = buildMetadata({
 	description: '浏览我的所有博客文章',
 })
 
-export default async function BlogPage() {
-	const posts = await fetchPosts('BLOG')
-	const allTags = posts.flatMap((post) => post.tags ?? []) as Tag[]
-	const uniqueTags = Array.from(
-		new Map(allTags.map((tag) => [tag.id, tag])).values(),
-	)
+export default function BlogPage() {
+	const queryClient = getQueryClient()
+
+	// 预取数据
+	void queryClient.prefetchQuery(postsOptions('BLOG'))
+	void queryClient.prefetchQuery(tagsOptions())
 
 	return (
-		<div className="pt-16 overflow-y-auto h-svh">
-			<div className="mx-auto max-w-7xl p-6">
-				<h1 className="text-4xl font-bold mb-8">博客文章</h1>
+		<main>
+			<div className="pt-16 overflow-y-auto h-svh">
+				<div className="mx-auto max-w-7xl p-6">
+					<h1 className="text-4xl font-bold mb-8">博客文章</h1>
 
-				<PostGridClient posts={posts} tags={uniqueTags} />
+					<HydrationBoundary state={dehydrate(queryClient)}>
+						<PostGridClient type='BLOG' />
+					</HydrationBoundary>
+				</div>
 			</div>
-		</div>
+		</main>
 	)
 }
