@@ -1,7 +1,12 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query'
 import { PostType } from '@/generated/prisma/client'
-import { postsOptions, tagsOptions, homeContentOptions } from '../content-queries'
+import {
+	postsOptions,
+	tagsOptions,
+	homeContentOptions,
+} from '../content-queries'
 import { fetchPostBySlugAction } from '../actions/content'
+import type { PostWithTags } from '../content-providers'
 
 // Query Keys
 export const contentKeys = {
@@ -24,12 +29,13 @@ export function useHomeContent() {
 	return useQuery(homeContentOptions())
 }
 
-export function usePost(slug: string) {
+export function usePost(slug: string, options?: Partial<UseQueryOptions<PostWithTags | null>>) {
 	return useQuery({
 		queryKey: contentKeys.post(slug),
 		queryFn: () => fetchPostBySlugAction(slug),
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		enabled: !!slug,
+		...options, // Spread additional options including initialData
 	})
 }
 

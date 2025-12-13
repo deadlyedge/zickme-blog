@@ -3,13 +3,13 @@
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+
 import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CommentsSection } from '@/components/comments'
-import { usePost } from '@/lib/hooks/useContent'
-import { PostWithTags } from '@/lib/content-providers'
 
-// Post with tags included
+import { usePost } from '@/lib/hooks/useContent'
+import type { PostWithTags } from '@/lib/content-providers'
 
 interface PostClientProps {
 	initialPost?: PostWithTags
@@ -19,8 +19,11 @@ export function PostClient({ initialPost }: PostClientProps) {
 	const params = useParams()
 	const slug = params.slug as string
 
-	// Use TanStack Query for data fetching
-	const { data: post, isLoading, error } = usePost(slug)
+	// Use TanStack Query with initial data hydration
+	const { data: post, isLoading } = usePost(slug, {
+		initialData: initialPost,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	})
 
 	if (isLoading && !post) {
 		return (
