@@ -1,6 +1,3 @@
-import type { PostType, Tag } from '@/generated/prisma/client'
-import { PostWithTags } from '../content-providers'
-
 export interface NavigationState {
 	isNavigating: boolean
 	currentPath: string
@@ -14,52 +11,7 @@ export interface NavigationActions {
 	navigate: (path: string) => void
 }
 
-export interface CacheState {
-	// 列表数据
-	posts: Map<string, PostWithTags>
-	tags: Tag[]
-
-	// 单篇内容数据 - 按 slug 缓存
-	singlePosts: Map<string, PostWithTags>
-	singlePostTimestamps: Map<string, number>
-
-	lastFetched: {
-		posts: number
-		tags: number
-		singleContent: number
-	}
-
-	// 预加载状态
-	preloading: {
-		post: string | null
-	}
-}
-
-export interface CacheActions {
-	setPosts: (posts: PostWithTags[]) => void
-	setTags: (tags: Tag[]) => void
-	setSinglePost: (slug: string, post: PostWithTags) => void
-
-	getSinglePost: (slug: string) => PostWithTags | undefined
-	getPost: (slug: string) => PostWithTags | undefined
-
-	fetchPosts: (type?: PostType) => Promise<void>
-	fetchTags: () => Promise<void>
-	fetchPost: (slug: string) => Promise<void>
-
-	setPreloadingBlog: (slug: string | null) => void
-
-	clearCache: () => void
-	isCacheValid: (
-		key: keyof CacheState['lastFetched'],
-		maxAge?: number,
-	) => boolean
-	isSingleContentCached: (
-		type: 'blog',
-		slug: string,
-		maxAge?: number,
-	) => boolean
-}
+// Cache types have been removed - all data fetching is now handled by TanStack Query
 
 export interface UIState {
 	loadingStates: {
@@ -88,11 +40,20 @@ export interface AuthActions {
 	closeAuthModal: () => void
 }
 
+export interface CommentState {
+	activeReplyId: string | null
+}
+
+export interface CommentActions {
+	setActiveReplyId: (id: string | null) => void
+	clearActiveReplyId: () => void
+}
+
 export type AppState = NavigationState &
 	NavigationActions &
-	CacheState &
-	CacheActions &
 	UIState &
 	UIActions &
 	AuthState &
-	AuthActions
+	AuthActions &
+	CommentState &
+	CommentActions

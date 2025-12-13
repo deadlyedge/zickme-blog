@@ -3,14 +3,13 @@
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect } from 'react'
+
 import { formatPublishedDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { CommentsSection } from '@/components/comments'
-import { useAppStore } from '@/lib/store'
-import { PostWithTags } from '@/lib/content-providers'
 
-// Post with tags included
+import { usePost } from '@/lib/hooks/useContent'
+import type { PostWithTags } from '@/lib/content-providers'
 
 interface PostClientProps {
 	initialPost?: PostWithTags
@@ -20,31 +19,11 @@ export function PostClient({ initialPost }: PostClientProps) {
 	const params = useParams()
 	const slug = params.slug as string
 
-	const getSinglePost = useAppStore((state) => state.getSinglePost)
-	const fetchPost = useAppStore((state) => state.fetchPost)
-	const setSinglePost = useAppStore((state) => state.setSinglePost)
-	const preloadingPost = useAppStore((state) => state.preloading.post)
-
-	// 使用 initialPost 作为主要数据源，如果 store 中有更新版本则使用
-	const cachedPost = getSinglePost(slug)
-	const post = cachedPost || initialPost
-	const isLoading = preloadingPost === slug
-
-	// 如果 store 中没有数据，用 initialPost 初始化
-	useEffect(() => {
-		if (initialPost && !getSinglePost(slug)) {
-			console.log(`PostClient [${slug}]: setting initial data from server`)
-			setSinglePost(slug, initialPost)
-		}
-	}, [initialPost, slug, setSinglePost, getSinglePost])
-
-	// 后台更新数据（用于获取最新内容）
-	useEffect(() => {
-		if (slug && !isLoading) {
-			console.log(`PostClient [${slug}]: triggering background fetch`)
-			fetchPost(slug)
-		}
-	}, [slug, fetchPost, isLoading])
+	// Use TanStack Query with initial data hydration
+	const { data: post, isLoading } = usePost(slug, {
+		initialData: initialPost,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+	})
 
 	if (isLoading && !post) {
 		return (

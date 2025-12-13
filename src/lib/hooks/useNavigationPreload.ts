@@ -1,13 +1,13 @@
-import { useAppStore } from '@/lib/store'
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
+
+import { contentKeys } from './useContent'
+import { fetchPostBySlugAction } from '@/lib/actions/content'
 
 export function useNavigationPreload() {
 	const router = useRouter()
-	const setNavigating = useAppStore((state) => state.setNavigating)
-	const setCurrentPath = useAppStore((state) => state.setCurrentPath)
-	const fetchPost = useAppStore((state) => state.fetchPost)
-
+	const queryClient = useQueryClient()
 	const [isPreloading, setIsPreloading] = useState(false)
 
 	const preloadData = useCallback(
@@ -17,34 +17,35 @@ export function useNavigationPreload() {
 
 			if (blogMatch) {
 				const slug = blogMatch[1]
-				await fetchPost(slug)
+
+				// Prefetch the post data using TanStack Query
+				await queryClient.prefetchQuery({
+					queryKey: contentKeys.post(slug),
+					queryFn: () => fetchPostBySlugAction(slug),
+					staleTime: 5 * 60 * 1000, // 5 minutes
+				})
 				return
 			}
 		},
-		[fetchPost],
+		[queryClient],
 	)
 
 	const preloadAndNavigate = useCallback(
 		async (href: string) => {
 			// 开始预加载状态
 			setIsPreloading(true)
-			setNavigating(true)
 
 			try {
 				await preloadData(href)
-				setCurrentPath(href)
 				router.push(href)
 			} catch (error) {
 				console.error('Navigation error:', error)
-				setCurrentPath(href)
 				router.push(href)
 			} finally {
 				setIsPreloading(false)
-				// 延迟重置导航状态
-				setTimeout(() => setNavigating(false), 200)
 			}
 		},
-		[preloadData, router, setNavigating, setCurrentPath],
+		[preloadData, router],
 	)
 
 	return {

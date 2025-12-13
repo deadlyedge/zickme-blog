@@ -1,13 +1,14 @@
 'use server'
 
+import { headers } from 'next/headers'
+
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { headers } from 'next/headers'
-import { getGravatarProfile } from '../get-gravatar'
-import { generateAvatarUri } from '../avatar'
+import { getGravatarProfile } from '@/lib/get-gravatar'
+import { generateAvatarUri } from '@/lib/generate-avatar'
+import { fetchProfile } from '@/lib/content-providers'
+
 import { SocialLink, Skill, Slogan } from '@/types'
-import { fetchProfile } from '../content-providers'
-// import { redirect } from 'next/navigation'
 
 interface UpdateProfileData {
 	username: string

@@ -11,7 +11,7 @@ import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
 import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
-import { SmartCacheProvider } from '@/components/SmartCacheProvider'
+import { QueryProvider } from '@/components/QueryProvider'
 import AuthModal from '@/components/auth/AuthModal'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -64,14 +64,14 @@ export default async function RootLayout({
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
-				<SmartCacheProvider>
+				<QueryProvider>
 					<main>
 						<HeaderNav />
 						<AdvancedPageTransition>{children}</AdvancedPageTransition>
 					</main>
 					<AuthModal />
 					<Toaster />
-				</SmartCacheProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	)
