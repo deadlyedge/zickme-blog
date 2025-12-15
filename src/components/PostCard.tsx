@@ -5,7 +5,7 @@ import { Badge } from './ui/badge'
 import { formatPublishedDate } from '@/lib/utils'
 import { Button } from './ui/button'
 import { NavigationLink } from './NavigationLink'
-import { PostWithTags } from '@/lib/content-providers'
+import { PostWithTags } from '@/types'
 import { BookOpenIcon, CodeIcon } from 'lucide-react'
 
 type PostCardProps = { post: PostWithTags }

@@ -11,17 +11,11 @@ import {
 	FacebookIcon,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { SiteProfileExtended } from '@/types'
+import { SiteProfile, SocialLink } from '@/types'
 import type React from 'react'
 
-type SocialLink = {
-	platform: string
-	url: string
-	username?: string
-}
-
 type FooterAboutProps = {
-	profileData: SiteProfileExtended
+	profileData: SiteProfile | null
 }
 
 type AnimatedContainerProps = React.ComponentProps<typeof motion.div> & {

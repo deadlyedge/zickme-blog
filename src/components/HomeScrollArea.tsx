@@ -3,11 +3,10 @@
 import Link from 'next/link'
 import { useRef } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
-import { ContentResponse } from '@/lib/content-providers'
+import { ContentResponse } from '@/types'
 import { Hero } from './Hero'
 import { PostCard } from './PostCard'
 import { FooterAbout } from './Footer'
-// import { StickyFooter } from './StickyFooter'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
@@ -70,7 +69,6 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 				</section>
 
 				<FooterAbout profileData={profile} />
-				{/* <StickyFooter profileData={profile} /> */}
 			</div>
 		</div>
 	)

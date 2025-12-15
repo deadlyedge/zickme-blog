@@ -16,7 +16,7 @@ type CommentWithAuthor = Comment & {
 	}
 }
 
-export interface CommentWithReplies extends Comment {
+interface CommentWithReplies extends Comment {
 	replies?: CommentWithReplies[]
 	depth?: number
 	author: {
@@ -28,7 +28,7 @@ export interface CommentWithReplies extends Comment {
 	}
 }
 
-export type CreateCommentData = {
+type CreateCommentData = {
 	content: string
 	docId: string
 	parentId?: string

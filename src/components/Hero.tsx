@@ -6,11 +6,11 @@ import type { MotionStyle, MotionValue, Variants } from 'motion/react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import CurvedLoop from './ui/effects/CurvedLoop'
-import type { SiteProfileExtended } from '@/types'
+import type { SiteProfile } from '@/types'
 import Link from 'next/link'
 
 type HeroProps = {
-	profile: SiteProfileExtended
+	profile: SiteProfile | null
 	scale: MotionValue<number>
 }
 

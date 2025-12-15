@@ -26,11 +26,11 @@ export function getCoverUrl(cover: unknown): string | null {
  * 从联合类型如 'number | T' 中剔除 'number'，返回 T | null
  * 用于处理 Payload depth 不足时关联字段返回 ID 的情况
  */
-export type ExcludeNumber<T> = T extends number ? never : T
+// export type ExcludeNumber<T> = T extends number ? never : T
 
-export function safeExtract<T>(value: T): ExcludeNumber<T> | null {
-	return typeof value === 'number' ? null : (value as ExcludeNumber<T>) || null
-}
+// export function safeExtract<T>(value: T): ExcludeNumber<T> | null {
+// 	return typeof value === 'number' ? null : (value as ExcludeNumber<T>) || null
+// }
 
 export const formatPublishedDate = (value: string) => {
 	const date = parseISO(value)
