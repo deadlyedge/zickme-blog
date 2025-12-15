@@ -18,7 +18,7 @@ import {
 	homeContentOptions,
 } from '@/lib/content-queries'
 
-import type { PostWithTags } from '@/lib/content-providers'
+import type { PostWithTags } from '@/types'
 
 // Query Keys
 export const contentKeys = {

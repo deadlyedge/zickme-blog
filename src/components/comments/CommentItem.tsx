@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type CommentWithReplies } from '@/lib/actions/comments'
+import { CommentWithReplies } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { CommentForm } from './CommentForm'
 import { CommentList } from './CommentList'

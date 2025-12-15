@@ -28,7 +28,7 @@ interface CommentWithReplies extends Comment {
 	}
 }
 
-type CreateCommentData = {
+export type CreateCommentData = {
 	content: string
 	docId: string
 	parentId?: string

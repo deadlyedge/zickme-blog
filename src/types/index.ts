@@ -1,4 +1,5 @@
 // Unified type exports
+import { Comment } from '@/generated/prisma/client'
 
 // Content types
 export type {
@@ -11,25 +12,12 @@ export type {
 	PostWithTags,
 } from './content'
 
-export {
-	isSiteProfile,
-	isPostWithTags,
-	isSocialLink,
-} from './content'
+export { isSiteProfile, isPostWithTags, isSocialLink } from './content'
 
 // User types
-export type {
-	UserWithRelations,
-	AuthUser,
-	SignInContext,
-} from './user'
+export type { UserWithRelations, AuthUser, SignInContext } from './user'
 
-export {
-	isAdmin,
-	isEditor,
-	canEditContent,
-	isAuthUser,
-} from './user'
+export { isAdmin, isEditor, canEditContent, isAuthUser } from './user'
 
 // UI types
 export type {
@@ -48,10 +36,7 @@ export type {
 	ErrorState,
 } from './ui'
 
-export {
-	isValidButtonVariant,
-	isValidButtonSize,
-} from './ui'
+export { isValidButtonVariant, isValidButtonSize } from './ui'
 
 // Re-export commonly used Prisma types for convenience
 export type {
@@ -63,3 +48,16 @@ export type {
 	StatusType,
 	Role,
 } from '@/generated/prisma/client'
+
+// comment type
+export interface CommentWithReplies extends Comment {
+	replies?: CommentWithReplies[]
+	depth?: number
+	author: {
+		id: string
+		name: string
+		email: string
+		image: string | null
+		banned: boolean
+	}
+}

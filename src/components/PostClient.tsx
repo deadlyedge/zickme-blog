@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { CommentsSection } from '@/components/comments'
 
 import { usePost } from '@/lib/hooks/useContent'
-import type { PostWithTags } from '@/lib/content-providers'
+import { PostWithTags } from '@/types'
 
 interface PostClientProps {
 	initialPost?: PostWithTags

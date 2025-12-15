@@ -90,6 +90,7 @@ const siteProfileSchema = z.object({
 					'Twitter',
 					'Instagram',
 					'YouTube',
+					'Facebook',
 					'Other',
 				]),
 				url: z.url('请输入有效的URL'),
@@ -591,6 +592,7 @@ export function EditProfile() {
 																	| 'Twitter'
 																	| 'Instagram'
 																	| 'YouTube'
+																	| 'Facebook'
 																	| 'Other',
 															)
 														}>
@@ -608,6 +610,7 @@ export function EditProfile() {
 																	Instagram
 																</SelectItem>
 																<SelectItem value="YouTube">YouTube</SelectItem>
+																<SelectItem value="Facebook">Facebook</SelectItem>
 																<SelectItem value="Other">Other</SelectItem>
 															</SelectGroup>
 														</SelectContent>

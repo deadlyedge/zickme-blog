@@ -1,11 +1,7 @@
 'use server'
 
-import {
-	fetchPosts,
-	fetchPostBySlug,
-	fetchTags,
-	PostWithTags,
-} from '@/lib/content-providers'
+import { fetchPosts, fetchPostBySlug, fetchTags } from '@/lib/content-providers'
+import type { PostWithTags } from '@/types'
 import type { PostType, Tag } from '@/generated/prisma/client'
 import { getSiteProfile } from './profile'
 

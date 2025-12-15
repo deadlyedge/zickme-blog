@@ -32,7 +32,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 		if (!posts) return []
 		const tagMap = new Map<string, PostTag>()
 		posts.forEach((post) => {
-			post.tags?.forEach((tag) => {
+			post.tags?.forEach((tag: PostTag) => {
 				if (!tagMap.has(tag.id)) {
 					tagMap.set(tag.id, tag)
 				}
@@ -45,7 +45,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 		if (!posts) return []
 		if (activeTag === 'All') return posts
 		return posts.filter((post) =>
-			post.tags?.some((tag) => tag.slug === activeTag),
+			post.tags?.some((tag: PostTag) => tag.slug === activeTag),
 		)
 	}, [posts, activeTag])
 
