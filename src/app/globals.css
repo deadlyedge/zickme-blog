@@ -149,6 +149,25 @@
 	background: var(--primary);
 }
 
+/* 动画性能优化工具类 */
+@utility will-change-transform {
+  will-change: transform;
+}
+
+@utility will-change-transform-opacity {
+  will-change: transform, opacity;
+}
+
+@utility will-change-auto {
+  will-change: auto;
+}
+
+@utility transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 /* 自定义 prose-blog 工具类 */
 @utility prose-blog {
   @apply prose prose-lg max-w-[65ch];

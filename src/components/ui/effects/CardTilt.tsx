@@ -96,8 +96,15 @@ const CardTilt = React.forwardRef<HTMLDivElement, CardTiltProps>(
 					ref={containerRef}
 					onMouseMove={handleMouseMove}
 					onMouseLeave={handleMouseLeave}
-					className={cn('relative inline-block', className)}
-					style={{ perspective: '1000px' }}
+					className={cn(
+						'relative inline-block',
+						'will-change-auto', // 容器不参与动画，设为auto
+						className,
+					)}
+					style={{
+						perspective: '1000px',
+						backfaceVisibility: 'hidden',
+					}}
 					{...props}>
 					<div className="absolute inset-0 rounded-2xl border-2 border-dashed border-slate-300" />
 					{children}
@@ -126,8 +133,15 @@ const CardTiltContent = React.forwardRef<HTMLDivElement, CardTiltContentProps>(
 					rotateY,
 					scale,
 					transformStyle: 'preserve-3d',
+					backfaceVisibility: 'hidden',
+					perspective: 1000,
 				}}
-				className={cn('relative', className)}
+				className={cn(
+					'relative',
+					'will-change-transform',
+					'transform-gpu', // 强制GPU加速
+					className,
+				)}
 				{...props}>
 				{children}
 			</motion.div>
