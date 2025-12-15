@@ -28,8 +28,8 @@ export const HeaderNav = () => {
 						asChild
 						variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
 						className={cn(
-							"font-bold transition-all duration-200 hover:scale-105",
-							isNavigating && "opacity-50 cursor-not-allowed"
+							'font-bold transition-all duration-200 hover:scale-105',
+							isNavigating && 'opacity-50 cursor-not-allowed',
 						)}
 						disabled={isNavigating}>
 						<Link href="/projects">projects</Link>
@@ -38,8 +38,8 @@ export const HeaderNav = () => {
 						asChild
 						variant={pathname.startsWith('/blog') ? 'secondary' : 'link'}
 						className={cn(
-							"font-bold transition-all duration-200 hover:scale-105",
-							isNavigating && "opacity-50 cursor-not-allowed"
+							'font-bold transition-all duration-200 hover:scale-105',
+							isNavigating && 'opacity-50 cursor-not-allowed',
 						)}
 						disabled={isNavigating}>
 						<Link href="/blog">blog</Link>
@@ -48,11 +48,11 @@ export const HeaderNav = () => {
 						asChild
 						variant={pathname.startsWith('/about') ? 'secondary' : 'link'}
 						className={cn(
-							"font-bold transition-all duration-200 hover:scale-105",
-							isNavigating && "opacity-50 cursor-not-allowed"
+							'font-bold transition-all duration-200 hover:scale-105',
+							isNavigating && 'opacity-50 cursor-not-allowed',
 						)}
 						disabled={isNavigating}>
-						<Link href="/about">contact</Link>
+						<Link href="/about">about</Link>
 					</Button>
 				</nav>
 			</div>

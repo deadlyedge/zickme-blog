@@ -67,7 +67,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 								formatPublishedDate(post.publishedAt.toISOString())}
 						</div>
 						<div className="flex items-center gap-2">
-							{true && (
+							{post.sourceUrl && (
 								<Button variant="link" asChild>
 									<a href={`${route}${post.slug}`} target="_blank">
 										<CodeIcon />
