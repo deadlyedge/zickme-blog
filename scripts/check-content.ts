@@ -76,12 +76,47 @@ function normalizeTags(tags: string[] | string | undefined): string[] {
 	if (!tags) return []
 	if (Array.isArray(tags)) return tags
 	if (typeof tags === 'string') {
+		// 支持逗号分隔的字符串标签
 		return tags
 			.split(',')
 			.map((tag) => tag.trim())
 			.filter((tag) => tag.length > 0)
 	}
 	return []
+}
+
+/**
+ * 处理图片URL，根据文件位置找到对应的本地图片路径
+ */
+async function validateImagePath(
+	imagePath: string | undefined,
+	filePath: string,
+	// postsDir: string,
+): Promise<{ isValid: boolean; absolutePath?: string; error?: string }> {
+	if (!imagePath) return { isValid: true }
+
+	// 只验证 ./images/ 格式的引用
+	if (imagePath.startsWith('./images/')) {
+		// 获取当前文件所在的文件夹
+		const fileDir = path.dirname(filePath)
+		const imageName = imagePath.replace('./images/', '')
+		const imageAbsolutePath = path.join(fileDir, 'images', imageName)
+
+		try {
+			// 检查文件是否存在
+			const stats = await fsPromises.stat(imageAbsolutePath)
+			if (stats.isFile()) {
+				return { isValid: true, absolutePath: imageAbsolutePath }
+			} else {
+				return { isValid: false, error: '路径指向的不是文件' }
+			}
+		} catch {
+			return { isValid: false, error: '图片文件不存在' }
+		}
+	}
+
+	// 对于其他格式的图片路径，暂时不验证
+	return { isValid: true }
 }
 
 /**
@@ -133,6 +168,23 @@ async function checkMarkdownFile(
 	filePath: string,
 	config: CheckConfig,
 ): Promise<ContentCheckResult> {
+	/**
+	 * 转换状态字符串为StatusType枚举值
+	 */
+	function parseStatusType(
+		statusStr: string | undefined,
+		draft: boolean | undefined,
+	): StatusType | undefined {
+		if (draft === true) return StatusType.DRAFT
+		if (statusStr) {
+			const upperStatus = statusStr.toUpperCase()
+			if (Object.values(StatusType).includes(upperStatus as StatusType)) {
+				return upperStatus as StatusType
+			}
+		}
+		return undefined // 默认为null，让数据库使用默认值PUBLISHED
+	}
+
 	const result: ContentCheckResult = {
 		filePath,
 		issues: [],
@@ -193,15 +245,42 @@ async function checkMarkdownFile(
 			}
 		}
 
-		// 状态字段检查
+		// 状态字段检查 - 使用与sync相同的逻辑
+		const parsedStatus = parseStatusType(frontmatter.status, frontmatter.draft)
 		if (frontmatter.draft === true) {
 			result.suggestions.push('ℹ️ 文章标记为草稿状态 (draft: true)')
-		} else if (frontmatter.status) {
-			const validStatuses = Object.values(StatusType)
-			const normalizedStatus = frontmatter.status.toUpperCase()
-			if (!validStatuses.includes(normalizedStatus as StatusType)) {
-				result.issues.push(`❌ 无效的状态值: ${frontmatter.status}`)
-				result.suggestions.push(`💡 有效状态: ${validStatuses.join(', ')}`)
+		} else if (frontmatter.status && parsedStatus === undefined) {
+			result.issues.push(`❌ 无效的状态值: ${frontmatter.status}`)
+			result.suggestions.push(
+				`💡 有效状态: ${Object.values(StatusType).join(', ')}`,
+			)
+		}
+
+		// 图片路径验证
+		if (frontmatter.image) {
+			const imageValidation = await validateImagePath(
+				frontmatter.image,
+				filePath,
+			)
+			if (!imageValidation.isValid) {
+				result.issues.push(`❌ 封面图片不存在: ${frontmatter.image}`)
+				result.suggestions.push(`💡 错误: ${imageValidation.error}`)
+			}
+		}
+
+		// 项目图片数组验证
+		if (frontmatter.images && Array.isArray(frontmatter.images)) {
+			for (const imageItem of frontmatter.images) {
+				if (imageItem.image) {
+					const imageValidation = await validateImagePath(
+						imageItem.image,
+						filePath,
+					)
+					if (!imageValidation.isValid) {
+						result.issues.push(`❌ 项目图片不存在: ${imageItem.image}`)
+						result.suggestions.push(`💡 错误: ${imageValidation.error}`)
+					}
+				}
 			}
 		}
 
