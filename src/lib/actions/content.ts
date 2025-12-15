@@ -1,8 +1,7 @@
 'use server'
 
 import { fetchPosts, fetchPostBySlug, fetchTags } from '@/lib/content-providers'
-import type { PostWithTags } from '@/types'
-import type { PostType, Tag } from '@/generated/prisma/client'
+import type { PostWithTags, PostType, Tag } from '@/types'
 import { getSiteProfile } from './profile'
 
 const isDevelopment = process.env.NODE_ENV === 'development'

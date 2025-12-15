@@ -1,16 +1,32 @@
 // Unified type exports
 import { Comment } from '@/generated/prisma/client'
 
-// Content types
 export type {
+	SiteProfile,
+	ContentResponse,
+	PostWithTags,
 	SocialLink,
 	Technology,
 	Skill,
 	Slogan,
-	SiteProfile,
-	ContentResponse,
-	PostWithTags,
+	Tag,
+	PostType,
+	StatusType,
 } from './content'
+
+// Content types
+// export type {
+// 	SiteProfile,
+// 	ContentResponse,
+// 	PostWithTags,
+// 	SocialLink,
+// 	Technology,
+// 	Skill,
+// 	Slogan,
+// 	Tag,
+// }
+
+// export type { PostType, StatusType }
 
 export { isSiteProfile, isPostWithTags, isSocialLink } from './content'
 
@@ -39,15 +55,7 @@ export type {
 export { isValidButtonVariant, isValidButtonSize } from './ui'
 
 // Re-export commonly used Prisma types for convenience
-export type {
-	Post,
-	Tag,
-	User,
-	Comment,
-	PostType,
-	StatusType,
-	Role,
-} from '@/generated/prisma/client'
+export type { Post, User, Comment, Role } from '@/generated/prisma/client'
 
 // comment type
 export interface CommentWithReplies extends Comment {

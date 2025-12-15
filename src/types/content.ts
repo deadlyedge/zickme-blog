@@ -1,5 +1,20 @@
 import { Post } from '@/generated/prisma/client'
 
+// Enums
+export type PostType = 'BLOG' | 'PROJECT'
+export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
+
+// Tag type
+export interface Tag {
+	id: string
+	name: string
+	slug: string
+	color: string | null
+	background: string | null
+	createdAt?: Date
+	updatedAt?: Date
+}
+
 // Social links and profile types
 export type SocialLink = {
 	platform:

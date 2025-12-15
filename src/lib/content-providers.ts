@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import type { Tag, PostType } from '@/generated/prisma/client'
-import type { ContentResponse, PostWithTags, SiteProfile } from '@/types'
+import type { ContentResponse, PostWithTags, SiteProfile, Tag, PostType } from '@/types'
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
