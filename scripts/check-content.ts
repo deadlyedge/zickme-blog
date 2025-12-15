@@ -3,6 +3,7 @@ import * as fsPromises from 'fs/promises'
 import * as path from 'path'
 import { StatusType } from '../src/generated/prisma/enums'
 import type { Stats } from 'fs'
+import { generateSlugFromPath } from '@/lib/slug'
 
 interface MarkdownFrontmatter {
 	title?: string
@@ -19,6 +20,7 @@ interface MarkdownFrontmatter {
 
 interface StandardFrontmatter {
 	title: string
+	slug: string
 	date: string
 	tags: string[]
 	status: string
@@ -68,20 +70,6 @@ function generateTitleFromFileName(fileName: string): string {
 }
 
 /**
- * 从文件路径生成slug
- */
-// function generateSlugFromPath(filePath: string, postsDir: string): string {
-// 	const relativePath = path.relative(postsDir, filePath)
-// 	const pathWithoutExt = relativePath.replace(/\.md$/, '')
-// 	const pathParts = pathWithoutExt.split('/')
-
-// 	// 对每个路径部分进行slugify
-// 	const slugParts = pathParts.map((part) => part.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''))
-
-// 	return slugParts.join('-')
-// }
-
-/**
  * 规范化标签数组
  */
 function normalizeTags(tags: string[] | string | undefined): string[] {
@@ -112,6 +100,7 @@ function generateStandardFrontmatter(
 	// 构建标准化的frontmatter对象
 	const standardData: StandardFrontmatter = {
 		title: frontmatter.title || generateTitleFromFileName(fileName),
+		slug: frontmatter.slug || generateSlugFromPath(filePath, postsDir),
 		date: frontmatter.date || stats.mtime.toISOString().split('T')[0],
 		tags: normalizeTags(frontmatter.tags),
 		status:

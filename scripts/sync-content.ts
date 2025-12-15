@@ -4,7 +4,7 @@ import matter from 'gray-matter'
 import * as fsPromises from 'fs/promises'
 import * as path from 'path'
 import { marked } from 'marked'
-import { generateSlug } from '../src/lib/slug'
+import { generateSlugFromPath } from '../src/lib/slug'
 import type { Stats } from 'fs'
 
 interface MarkdownFrontmatter {
@@ -99,20 +99,6 @@ function getPostType(filePath: string, postsDir: string): 'BLOG' | 'PROJECT' {
 	if (normalizedPath.startsWith('blogs/')) return 'BLOG'
 	if (normalizedPath.startsWith('projects/')) return 'PROJECT'
 	return 'BLOG' // 默认值
-}
-
-/**
- * 从文件路径生成slug，支持多级文件夹
- */
-function generateSlugFromPath(filePath: string, postsDir: string): string {
-	const relativePath = path.relative(postsDir, filePath) // blogs/tech/前端开发.md
-	const pathWithoutExt = relativePath.replace(/\.md$/, '') // blogs/tech/前端开发
-	const pathParts = pathWithoutExt.split('/') // ['blogs', 'tech', '前端开发']
-
-	// 对每个路径部分进行slugify
-	const slugParts = pathParts.map((part) => generateSlug(part))
-
-	return slugParts.join('-') // blogs-tech-前端开发
 }
 
 /**

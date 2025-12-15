@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
 import { Button } from './ui/button'
+import { Spinner } from './ui/spinner'
 import { PostCard } from './PostCard'
 
 import { usePosts } from '@/lib/hooks/useContent'
@@ -25,7 +26,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 	const [activeTag, setActiveTag] = useState<string>('All')
 
 	// Use TanStack Query - data will be hydrated from server
-	const { data: posts } = usePosts(type)
+	const { data: posts, isLoading, isError } = usePosts(type)
 
 	// Extract tags from posts data to avoid showing unused tags
 	const tags = useMemo(() => {
@@ -48,6 +49,25 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 			post.tags?.some((tag: PostTag) => tag.slug === activeTag),
 		)
 	}, [posts, activeTag])
+
+	// Loading state
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center py-16">
+				<Spinner className="size-8" />
+				<span className="ml-2 text-muted-foreground">正在加载文章列表...</span>
+			</div>
+		)
+	}
+
+	// Error state
+	if (isError) {
+		return (
+			<div className="text-center py-16">
+				<p className="text-muted-foreground">加载文章列表时出错，请稍后重试。</p>
+			</div>
+		)
+	}
 
 	return (
 		<div>

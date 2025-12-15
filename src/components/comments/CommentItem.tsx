@@ -114,8 +114,8 @@ export const CommentItem = React.memo(
 											disabled={spamActionLoading}
 											className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50">
 											{comment.status === 'SPAM'
-												? '取消标记垃圾信息'
-												: '标记为垃圾信息'}
+												? 'not spam'
+												: 'mark spam'}
 										</button>
 									)}
 								</div>

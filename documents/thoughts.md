@@ -6,4 +6,5 @@
 - 文件路径自动生成tag
 - siteProfie 管理面板??
 - ~~考虑是应该在前端渲染markdown，还是在后端转换html~~
-- 添加slogans，socialLinks，skills的编辑tab
+- 添加slogans，socialLinks，skills的编辑tab??
+- 回收折叠的comments时动画有一点页面抖动。

@@ -25,7 +25,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	})
 
-	if (isLoading && !post) {
+	if (isLoading) {
 		return (
 			<div className="pt-16 overflow-y-auto h-svh">
 				<div className="mx-auto p-6 pt-24 max-w-4xl">
