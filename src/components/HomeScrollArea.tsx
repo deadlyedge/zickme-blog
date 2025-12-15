@@ -6,6 +6,7 @@ import { useScroll, useSpring, useTransform } from 'motion/react'
 import { ContentResponse } from '@/lib/content-providers'
 import { Hero } from './Hero'
 import { PostCard } from './PostCard'
+import { FooterAbout } from './Footer'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
@@ -30,7 +31,9 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* LATEST PROJECTS */}
-				<section id="projects" className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
+				<section
+					id="projects"
+					className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest projects</h2>
 						<Link
@@ -64,6 +67,8 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 						))}
 					</div>
 				</section>
+
+				<FooterAbout profileData={profile} />
 			</div>
 		</div>
 	)
