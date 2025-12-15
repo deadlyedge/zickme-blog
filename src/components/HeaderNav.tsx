@@ -4,11 +4,9 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from './ui/button'
-import { useAppStore } from '@/lib/store'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
-	const isNavigating = useAppStore((state) => state.isNavigating)
 
 	return (
 		<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
@@ -27,31 +25,19 @@ export const HeaderNav = () => {
 					<Button
 						asChild
 						variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
-						className={cn(
-							'font-bold transition-all duration-200 hover:scale-105',
-							isNavigating && 'opacity-50 cursor-not-allowed',
-						)}
-						disabled={isNavigating}>
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/projects">projects</Link>
 					</Button>
 					<Button
 						asChild
 						variant={pathname.startsWith('/blog') ? 'secondary' : 'link'}
-						className={cn(
-							'font-bold transition-all duration-200 hover:scale-105',
-							isNavigating && 'opacity-50 cursor-not-allowed',
-						)}
-						disabled={isNavigating}>
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/blog">blog</Link>
 					</Button>
 					<Button
 						asChild
 						variant={pathname.startsWith('/about') ? 'secondary' : 'link'}
-						className={cn(
-							'font-bold transition-all duration-200 hover:scale-105',
-							isNavigating && 'opacity-50 cursor-not-allowed',
-						)}
-						disabled={isNavigating}>
+						className="font-bold transition-all duration-200 hover:scale-105">
 						<Link href="/about">about</Link>
 					</Button>
 				</nav>

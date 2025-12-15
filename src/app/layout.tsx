@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
-import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
+// import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
 import { QueryProvider } from '@/components/QueryProvider'
 import AuthModal from '@/components/auth/AuthModal'
 import { Toaster } from '@/components/ui/sonner'
@@ -67,7 +67,7 @@ export default async function RootLayout({
 				<QueryProvider>
 					<main>
 						<HeaderNav />
-						<AdvancedPageTransition>{children}</AdvancedPageTransition>
+						{children}
 					</main>
 					<AuthModal />
 					<Toaster />
