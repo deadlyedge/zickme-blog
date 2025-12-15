@@ -1,3 +1,4 @@
+import React from 'react'
 import Image from 'next/image'
 
 import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
@@ -10,7 +11,7 @@ import { BookOpenIcon, CodeIcon } from 'lucide-react'
 
 type PostCardProps = { post: PostWithTags }
 
-export const PostCard = ({ post }: PostCardProps) => {
+export const PostCard = React.memo(({ post }: PostCardProps) => {
 	const route = post.type === 'PROJECT' ? '/projects/' : '/blog/'
 
 	return (
@@ -87,4 +88,6 @@ export const PostCard = ({ post }: PostCardProps) => {
 			</CardTiltContent>
 		</CardTilt>
 	)
-}
+})
+
+PostCard.displayName = 'PostCard'
