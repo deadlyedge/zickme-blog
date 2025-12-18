@@ -1,5 +1,6 @@
 ---
 title: 我的第二篇文章
+slug: second-post
 date: '2025-12-08'
 tags:
   - Prisma
@@ -9,6 +10,7 @@ status: published
 excerpt: ''
 image: ./images/meFace_bigEyeball.jpg
 ---
+
 
 
 
