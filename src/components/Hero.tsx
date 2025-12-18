@@ -74,7 +74,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 						id="hero-ball"
 						className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl"
 						style={style}>
-						<div className="text-6xl font-bold text-white">🏀</div>
+						<div className="text-8xl font-bold text-white">🏀</div>
 					</motion.div>
 				</div>
 				{/* 背景 JUICE：单独一个 scroll 动画块 */}

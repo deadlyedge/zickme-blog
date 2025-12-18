@@ -29,7 +29,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const backgroundColor = useTransform(
 		smoothed,
 		[0, 1],
-		['hsl(108,31%,50%)', 'hsl(0, 0, 95%)']
+		['hsl(108,31%,50%)', 'hsl(0, 0, 95%)'],
 		// ['hsl(0, 0%, 97%)', 'hsl(247, 74%, 64%)']
 	)
 
@@ -38,7 +38,7 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 		const updateBackground = () => {
 			document.documentElement.style.setProperty(
 				'--scroll-bg-color',
-				backgroundColor.get()
+				backgroundColor.get(),
 			)
 		}
 
@@ -61,14 +61,17 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	}, [])
 
 	return (
-		<div ref={scrollRef} id="page-scroll" className="h-svh overflow-y-auto overflow-x-hidden">
+		<div
+			ref={scrollRef}
+			id="page-scroll"
+			className="h-svh overflow-y-auto overflow-x-hidden">
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* LATEST PROJECTS */}
 				<section
 					id="projects"
-					className="pt-20 px-2 bg-linear-to-b from-[hsl(108,31%,80%)]">
+					className="pt-20 px-2 bg-linear-to-b from-[hsla(49,80%,92%,0.8)] rounded-t-3xl">
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest projects</h2>
 						<Link

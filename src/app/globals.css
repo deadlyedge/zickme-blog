@@ -142,6 +142,9 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
+	background: var(--background-color);
+}
+.has-scroll-bg::-webkit-scrollbar-track {
 	background: var(--scroll-bg-color);
 	transition: background-color 0.3s ease;
 }
