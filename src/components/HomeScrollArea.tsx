@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
 import { ContentResponse } from '@/types'
 import { Hero } from './Hero'
@@ -25,8 +25,43 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 
 	const scaleX = useTransform(smoothed, [0, 1], [0, 1])
 
+	// 将滚动进度映射到背景颜色（从初始白色渐变到主题紫色）
+	const backgroundColor = useTransform(
+		smoothed,
+		[0, 1],
+		['hsl(108,31%,50%)', 'hsl(0, 0, 95%)']
+		// ['hsl(0, 0%, 97%)', 'hsl(247, 74%, 64%)']
+	)
+
+	// 监听背景颜色变化并应用到CSS变量
+	useEffect(() => {
+		const updateBackground = () => {
+			document.documentElement.style.setProperty(
+				'--scroll-bg-color',
+				backgroundColor.get()
+			)
+		}
+
+		// 初始设置
+		updateBackground()
+
+		// 监听颜色变化
+		const unsubscribe = backgroundColor.on('change', updateBackground)
+
+		return () => unsubscribe()
+	}, [backgroundColor])
+
+	// 在组件挂载时给body添加类，卸载时移除类
+	useEffect(() => {
+		document.body.classList.add('has-scroll-bg')
+
+		return () => {
+			document.body.classList.remove('has-scroll-bg')
+		}
+	}, [])
+
 	return (
-		<div ref={scrollRef} id="page-scroll" className="h-svh overflow-y-auto">
+		<div ref={scrollRef} id="page-scroll" className="h-svh overflow-y-auto overflow-x-hidden">
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 				<Hero profile={profile} scale={scaleX} />
 

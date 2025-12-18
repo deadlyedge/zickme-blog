@@ -42,11 +42,11 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 	})
 
 	const style: MotionStyle = {
-		scale: scaleValue < 0.5 ? 1 - scaleValue : 0.8,
-		opacity: scaleValue < 0.5 ? 1 - scaleValue * 2 : 1,
+		scale: scaleValue < 0.4 ? 1 - scaleValue : 0.6,
+		opacity: 1,
 		x: scaleValue * 200,
-		y: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 100,
-		rotate: scaleValue < 0.5 ? 0 : (scaleValue - 0.5) * 360 * 2,
+		y: scaleValue * 100,
+		rotate: scaleValue * 360 * 2,
 	}
 
 	const sloganList = profile?.slogans || [
@@ -63,7 +63,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 		<section className="overflow-hidden">
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
 			<div
-				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 bg-linear-to-b from-[hsl(108,31%,50%)] via-[hsl(108,31%,50%)] to-[hsl(108,31%,80%)] h-[300vh]"
+				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 h-[300vh]"
 				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 50}vh` }}>
 				<div
 					className={cn(
