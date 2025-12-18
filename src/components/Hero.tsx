@@ -64,7 +64,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
 			<div
 				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 h-[300vh]"
-				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 50}vh` }}>
+				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 30}vh` }}>
 				<div
 					className={cn(
 						'fixed top-36 left-36 z-0 select-none',
