@@ -2,7 +2,7 @@
 title: ImageTidy.V2
 slug: projects-python-imagetidy-v2
 date: '2025-12-18'
-tags: []
+tags: ['python','ai','image']
 status: published
 excerpt: ''
 images: []

@@ -5,8 +5,8 @@ import { getQueryClient } from '@/lib/query-client'
 import { postsOptions } from '@/lib/content-queries'
 import { PostGridClient } from '@/components/PostGridClient'
 
-// 每5分钟重新验证一次
-export const revalidate = 300
+// 每分钟重新验证一次
+export const revalidate = 60
 
 export const metadata: Metadata = buildMetadata({
 	title: '博客文章',
