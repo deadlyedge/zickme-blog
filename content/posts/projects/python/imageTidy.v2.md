@@ -5,7 +5,7 @@ date: '2025-12-18'
 tags: ['python','ai','image']
 status: published
 excerpt: ''
-image: .\images\imageTidy.v1.png
+image: ./images/imageTidy.v1.png
 sourceUrl: 'https://github.com/deadlyedge/imageTidy.v2'
 ---
 
