@@ -6,11 +6,9 @@ import {
 	Noto_Serif_SC,
 } from 'next/font/google'
 import type { Metadata } from 'next'
-// import { fetchContent } from '@/lib/content-providers'
 import './globals.css'
 
 import { HeaderNav } from '@/components/HeaderNav'
-// import { AdvancedPageTransition } from '@/components/AdvancedPageTransition'
 import { QueryProvider } from '@/components/QueryProvider'
 import AuthModal from '@/components/auth/AuthModal'
 import { Toaster } from '@/components/ui/sonner'

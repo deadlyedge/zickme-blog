@@ -5,13 +5,15 @@ date: '2025-12-18'
 tags: ['python','ai','image']
 status: published
 excerpt: ''
-images: []
+image: .\images\imageTidy.v1.png
 sourceUrl: 'https://github.com/deadlyedge/imageTidy.v2'
 ---
 
 # imageTidy.v2
 
 一个智能化的复杂文件结构整理工具，专门用于整理CAD图纸、照片和文档。通过AI智能分析项目名称、时间段和文件类型，自动生成整理计划并执行迁移。
+
+![image banana](./images/imageTidy.v1.png)
 
 ## 核心功能
 

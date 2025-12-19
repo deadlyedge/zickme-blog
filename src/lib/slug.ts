@@ -30,7 +30,7 @@ function generateSlug(title: string): string {
 export function generateSlugFromPath(filePath: string, postsDir: string): string {
 	const relativePath = path.relative(postsDir, filePath) // blogs/tech/前端开发.md
 	const pathWithoutExt = relativePath.replace(/\.md$/, '') // blogs/tech/前端开发
-	const pathParts = pathWithoutExt.split('/') // ['blogs', 'tech', '前端开发']
+	const pathParts = pathWithoutExt.split(path.sep) // ['blogs', 'tech', '前端开发']
 
 	// 对每个路径部分进行slugify
 	const slugParts = pathParts.map((part) => generateSlug(part))
