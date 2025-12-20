@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
@@ -26,9 +27,11 @@ export default function ProjectsPage() {
 				<div className="mx-auto max-w-7xl p-6">
 					<h1 className="text-4xl font-bold mb-8">我的项目</h1>
 
-					<HydrationBoundary state={dehydrate(queryClient)}>
-						<PostGridClient type='PROJECT' />
-					</HydrationBoundary>
+					<Suspense fallback={<div>加载中...</div>}>
+						<HydrationBoundary state={dehydrate(queryClient)}>
+							<PostGridClient type='PROJECT' />
+						</HydrationBoundary>
+					</Suspense>
 				</div>
 			</div>
 		</main>

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { buildMetadata } from '@/lib/seo'
 import { Metadata } from 'next'
@@ -25,9 +26,11 @@ export default function BlogPage() {
 				<div className="mx-auto max-w-7xl p-6">
 					<h1 className="text-4xl font-bold mb-8">博客文章</h1>
 
-					<HydrationBoundary state={dehydrate(queryClient)}>
-						<PostGridClient type='BLOG' />
-					</HydrationBoundary>
+					<Suspense fallback={<div>加载中...</div>}>
+						<HydrationBoundary state={dehydrate(queryClient)}>
+							<PostGridClient type='BLOG' />
+						</HydrationBoundary>
+					</Suspense>
 				</div>
 			</div>
 		</main>
