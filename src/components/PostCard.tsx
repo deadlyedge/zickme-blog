@@ -70,7 +70,7 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 						<div className="flex items-center gap-2">
 							{post.sourceUrl && (
 								<Button variant="link" asChild>
-									<a href={`${route}${post.slug}`} target="_blank">
+									<a href={post.sourceUrl} target="_blank">
 										<CodeIcon />
 										source
 									</a>

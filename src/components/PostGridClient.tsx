@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import { ButtonGroup } from './ui/button-group'
@@ -23,10 +24,29 @@ type Props = {
 }
 
 export function PostGridClient({ type = 'BLOG' }: Props) {
-	const [activeTag, setActiveTag] = useState<string>('All')
+	const searchParams = useSearchParams()
+	const router = useRouter()
+	const urlTag = searchParams.get('tag')
+
+	// 从URL参数初始化activeTag
+	const [activeTag, setActiveTag] = useState<string>(() => urlTag || 'All')
 
 	// Use TanStack Query - data will be hydrated from server
 	const { data: posts, isLoading, isError } = usePosts(type)
+
+	// 处理标签点击，更新URL参数
+	const handleTagClick = (tagSlug: string) => {
+		setActiveTag(tagSlug)
+
+		// 更新URL参数
+		const currentPath = window.location.pathname
+		if (tagSlug === 'All') {
+			// 清除tag参数
+			router.push(currentPath)
+		} else {
+			router.push(`${currentPath}?tag=${tagSlug}`)
+		}
+	}
 
 	// Extract tags from posts data to avoid showing unused tags
 	const tags = useMemo(() => {
@@ -75,7 +95,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 			<ButtonGroup className="mb-4 flex-wrap space-y-2">
 				<Button
 					size="sm"
-					onClick={() => setActiveTag('All')}
+					onClick={() => handleTagClick('All')}
 					className={cn(
 						activeTag === 'All'
 							? 'bg-primary text-primary-foreground'
@@ -87,7 +107,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 					<Button
 						size="sm"
 						key={tag.slug}
-						onClick={() => setActiveTag(tag.slug)}
+						onClick={() => handleTagClick(tag.slug)}
 						className={cn(
 							activeTag === tag.slug
 								? 'bg-primary text-primary-foreground'

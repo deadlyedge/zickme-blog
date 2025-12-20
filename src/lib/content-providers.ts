@@ -87,6 +87,38 @@ export const fetchHomeContent = async (): Promise<ContentResponse> => {
 	}
 }
 
+export const fetchAllPostsForSearch = async (): Promise<PostWithTags[]> => {
+	return prisma.post.findMany({
+		where: {
+			status: 'PUBLISHED',
+		},
+		include: { tags: true },
+		orderBy: { publishedAt: 'desc' },
+	})
+}
+
+export const fetchAllTagsForSearch = async (): Promise<(Tag & { postTypes: string[] })[]> => {
+	const tags = await prisma.tag.findMany({
+		include: {
+			posts: {
+				where: {
+					status: 'PUBLISHED',
+				},
+				select: {
+					type: true,
+				},
+			},
+		},
+		orderBy: { name: 'asc' },
+	})
+
+	// 为每个tag添加postTypes数组
+	return tags.map(tag => ({
+		...tag,
+		postTypes: [...new Set(tag.posts.map(post => post.type))], // 去重
+	}))
+}
+
 // export const fetchContent = async (): Promise<ContentResponse> => {
 // 	const [profile, posts] = await Promise.all([fetchProfile(), fetchPosts()])
 
