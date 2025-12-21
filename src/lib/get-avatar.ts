@@ -1,6 +1,6 @@
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
 import crypto from 'crypto'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/auth'
 
 interface GravatarProfile {
 	display_name: string
@@ -66,8 +66,7 @@ export async function getGravatarProfile(options: GetGravatarOptions = {}) {
 		return {
 			success: true,
 			// profile,
-			avatarUrl:
-				profile.avatar_url,
+			avatarUrl: profile.avatar_url,
 		}
 	} catch (error) {
 		console.error('获取 Gravatar 资料失败:', error)

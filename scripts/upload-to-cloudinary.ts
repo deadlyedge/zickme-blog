@@ -21,7 +21,10 @@ async function scanAllImages(dirPath: string): Promise<string[]> {
 				if (entry.name === 'images') {
 					const imageFiles = await fs.readdir(fullPath, { withFileTypes: true })
 					for (const imgEntry of imageFiles) {
-						if (imgEntry.isFile() && /\.(jpg|jpeg|png|webp|gif)$/i.test(imgEntry.name)) {
+						if (
+							imgEntry.isFile() &&
+							/\.(jpg|jpeg|png|webp|gif)$/i.test(imgEntry.name)
+						) {
 							images.push(path.join(fullPath, imgEntry.name))
 						}
 					}
@@ -64,7 +67,9 @@ async function main() {
 	// 递归扫描所有images文件夹
 	const imageFiles = await scanAllImages(POSTS_DIR)
 	console.log(`📁 Found ${imageFiles.length} image files:`)
-	imageFiles.forEach(file => console.log(`  - ${path.relative(POSTS_DIR, file)}`))
+	imageFiles.forEach(
+		(file) => void console.log(`  - ${path.relative(POSTS_DIR, file)}`),
+	)
 
 	// 上传所有图片
 	for (const imagePath of imageFiles) {

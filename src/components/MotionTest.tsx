@@ -1,13 +1,13 @@
 'use client'
 
 import {
+	type MotionValue,
 	motion,
-	MotionValue,
 	useScroll,
 	useSpring,
 	useTransform,
 } from 'motion/react'
-import { RefObject, useRef } from 'react'
+import { type RefObject, useRef } from 'react'
 
 const gradient = (mask: boolean) =>
 	`conic-gradient(black 0%, black ${mask ? 0 : 100}%, transparent ${
@@ -37,7 +37,8 @@ function Item({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
 					maskImage,
 					width: '10rem',
 					height: '15rem',
-				}}>
+				}}
+			>
 				<div className="absolute inset-0 bg-amber-600" />
 			</motion.div>
 		</section>
@@ -46,7 +47,7 @@ function Item({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
 
 export default function MotionTest({
 	scrollRef,
-	scrollYProgress
+	scrollYProgress,
 }: {
 	scrollRef?: RefObject<HTMLElement | null>
 	scrollYProgress: MotionValue<number>

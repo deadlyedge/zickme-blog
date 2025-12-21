@@ -1,10 +1,10 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import type { Comment } from '@/generated/prisma/client'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 type CommentWithAuthor = Comment & {
 	author: {
@@ -110,7 +110,7 @@ export async function getComments(docId: string) {
 		}
 
 		// Fetch all comments for this post in a single query
-		const allComments = await prisma.comment.findMany({
+		const allComments = (await prisma.comment.findMany({
 			where: {
 				postId: docId,
 				status: { in: ['PUBLISHED', 'SPAM'] },
@@ -121,16 +121,17 @@ export async function getComments(docId: string) {
 			orderBy: {
 				createdAt: 'asc',
 			},
-		}) as CommentWithAuthor[]
+		})) as CommentWithAuthor[]
 
 		// Process comments for security and display
-		const processedComments = allComments.map(comment => ({
+		const processedComments = allComments.map((comment) => ({
 			...comment,
-			content: comment.status === 'SPAM'
-				? '[此评论已被标记为垃圾信息]'
-				: comment.author.banned
-				? '[此用户已被封禁]'
-				: comment.content
+			content:
+				comment.status === 'SPAM'
+					? '[此评论已被标记为垃圾信息]'
+					: comment.author.banned
+						? '[此用户已被封禁]'
+						: comment.content,
 		}))
 
 		// Build tree structure in memory
@@ -138,7 +139,7 @@ export async function getComments(docId: string) {
 		const rootComments: CommentWithReplies[] = []
 
 		// First pass: create all comment nodes
-		processedComments.forEach(comment => {
+		processedComments.forEach((comment) => {
 			commentMap.set(comment.id, {
 				...comment,
 				replies: [],
@@ -146,7 +147,7 @@ export async function getComments(docId: string) {
 		})
 
 		// Second pass: build parent-child relationships
-		processedComments.forEach(comment => {
+		processedComments.forEach((comment) => {
 			const commentWithReplies = commentMap.get(comment.id)!
 
 			if (comment.parentId) {

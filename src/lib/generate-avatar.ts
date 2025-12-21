@@ -1,5 +1,5 @@
+import { croodles, initials } from '@dicebear/collection'
 import { createAvatar } from '@dicebear/core'
-import { initials, croodles } from '@dicebear/collection'
 
 type AvatarProps = {
 	seed: string

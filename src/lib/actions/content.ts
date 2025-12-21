@@ -1,13 +1,13 @@
 'use server'
 
 import {
-	fetchPosts,
-	fetchPostBySlug,
-	fetchTags,
 	fetchAllPostsForSearch,
 	fetchAllTagsForSearch,
+	fetchPostBySlug,
+	fetchPosts,
+	fetchTags,
 } from '@/lib/content-providers'
-import type { PostWithTags, PostType, Tag } from '@/types'
+import type { PostType, PostWithTags, Tag } from '@/types'
 import { getSiteProfile } from './profile'
 
 const isDevelopment = process.env.NODE_ENV === 'development'

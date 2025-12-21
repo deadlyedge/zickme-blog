@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-
-import { contentKeys } from '@/lib/content-queries'
+import { useRouter } from 'next/navigation'
+import { useCallback, useState } from 'react'
 import { fetchPostBySlugAction } from '@/lib/actions/content'
+import { contentKeys } from '@/lib/content-queries'
 
 export function useNavigationPreload() {
 	const router = useRouter()

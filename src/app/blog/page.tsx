@@ -1,10 +1,10 @@
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import { buildMetadata } from '@/lib/seo'
-import { Metadata } from 'next'
-import { getQueryClient } from '@/lib/query-client'
-import { postsOptions } from '@/lib/content-queries'
 import { PostGridClient } from '@/components/PostGridClient'
+import { postsOptions } from '@/lib/content-queries'
+import { getQueryClient } from '@/lib/query-client'
+import { buildMetadata } from '@/lib/seo'
 
 // 5分钟重新验证一次，与Query缓存保持一致
 export const revalidate = 300
@@ -28,7 +28,7 @@ export default function BlogPage() {
 
 					<Suspense fallback={<div>加载中...</div>}>
 						<HydrationBoundary state={dehydrate(queryClient)}>
-							<PostGridClient type='BLOG' />
+							<PostGridClient type="BLOG" />
 						</HydrationBoundary>
 					</Suspense>
 				</div>

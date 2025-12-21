@@ -1,12 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { useRef, useEffect } from 'react'
 import { useScroll, useSpring, useTransform } from 'motion/react'
-import { ContentResponse } from '@/types'
+import Link from 'next/link'
+import { useEffect, useRef } from 'react'
+import type { ContentResponse } from '@/types'
+import { FooterAbout } from './Footer'
 import { Hero } from './Hero'
 import { PostCard } from './PostCard'
-import { FooterAbout } from './Footer'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
@@ -64,19 +64,22 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 		<div
 			ref={scrollRef}
 			id="page-scroll"
-			className="h-svh overflow-y-auto overflow-x-hidden">
+			className="h-svh overflow-y-auto overflow-x-hidden"
+		>
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 				<Hero profile={profile} scale={scaleX} />
 
 				{/* LATEST PROJECTS */}
 				<section
 					id="projects"
-					className="pt-20 px-2 bg-linear-to-b from-[hsla(49,80%,92%,0.8)] rounded-t-3xl">
+					className="pt-20 px-2 bg-linear-to-b from-[hsla(49,80%,92%,0.8)] rounded-t-3xl"
+				>
 					<div className="flex items-baseline justify-between">
 						<h2 className="text-3xl font-semibold">Latest projects</h2>
 						<Link
 							href="/projects"
-							className="text-sm text-slate-500 hover:underline">
+							className="text-sm text-slate-500 hover:underline"
+						>
 							See all projects
 						</Link>
 					</div>
@@ -94,7 +97,8 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 						<h2 className="text-3xl font-semibold">Latest blog</h2>
 						<Link
 							href="/blog"
-							className="text-sm text-slate-500 hover:underline">
+							className="text-sm text-slate-500 hover:underline"
+						>
 							See all blog
 						</Link>
 					</div>

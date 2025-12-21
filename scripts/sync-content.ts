@@ -1,11 +1,11 @@
-import { prisma } from '../src/lib/prisma'
-import { StatusType } from '../src/generated/prisma/enums'
+import type { Stats } from 'node:fs'
+import * as fsPromises from 'node:fs/promises'
+import * as path from 'node:path'
 import matter from 'gray-matter'
-import * as fsPromises from 'fs/promises'
-import * as path from 'path'
 import { marked } from 'marked'
+import { StatusType } from '../src/generated/prisma/enums'
+import { prisma } from '../src/lib/prisma'
 import { generateSlugFromPath } from '../src/lib/slug'
-import type { Stats } from 'fs'
 
 interface MarkdownFrontmatter {
 	title?: string
@@ -200,7 +200,7 @@ async function processMarkdownFile(
 		// 处理新的 ./images/ 引用
 		processedBody = processedBody.replace(
 			/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g,
-			(match, alt, src) => {
+			(_, alt, src) => {
 				// 获取当前文件所在的文件夹
 				const fileDir = path.dirname(filePath)
 				const relativeDir = path.relative(postsDir, fileDir)
@@ -216,7 +216,7 @@ async function processMarkdownFile(
 		// 兼容旧的 ../images/ 引用（过渡期支持）
 		processedBody = processedBody.replace(
 			/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
-			(match, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
+			(_, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
 		)
 
 		// 在事务外部进行marked转换，减少事务时间
@@ -251,14 +251,14 @@ async function preCreateTags(
 ): Promise<void> {
 	const allTags = new Set<string>()
 	posts.forEach((post) => {
-		post.tags.forEach((tag) => allTags.add(tag))
+		post.tags.forEach((tag) => void allTags.add(tag))
 	})
 
 	if (allTags.size === 0) return
 
 	if (config.dryRun) {
 		console.log(`📋 [DRY RUN] 将预创建 ${allTags.size} 个标签:`)
-		allTags.forEach((tag) => console.log(`  - ${tag}`))
+		allTags.forEach((tag) => void console.log(`  - ${tag}`))
 		return
 	}
 
@@ -378,7 +378,7 @@ async function handleDeletedPosts(
 
 	if (config.dryRun) {
 		console.log(`📋 [DRY RUN] 将标记删除 ${deletedSlugs.length} 篇文章:`)
-		deletedSlugs.forEach((slug) => console.log(`  - ${slug}`))
+		deletedSlugs.forEach((slug) => void console.log(`  - ${slug}`))
 		return
 	}
 

@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -14,11 +14,11 @@
 	--popover-foreground: hsl(0 0% 20%);
 	--primary: hsl(247 74% 64%);
 	--primary-foreground: hsl(0 0% 100%);
-	--secondary: hsl(211 72% 79%);
+	--secondary: hsl(247 74% 85%);
 	--secondary-foreground: hsl(0 0% 20%);
 	--muted: hsl(44 15% 75%);
 	--muted-foreground: hsl(180 0% 43%);
-	--accent: hsl(72 16% 50%);
+	--accent: hsl(27, 98%, 67%);
 	--accent-foreground: hsl(0 0% 100%);
 	--destructive: hsl(0 86% 61%);
 	--border: hsl(0 0% 83%);
@@ -117,7 +117,7 @@
 		@apply border-border outline-ring/50;
 	}
 	html {
-		font-family: theme(fontFamily.serif);
+		font-family: var(--font-serif);
 	}
 	body {
 		@apply bg-background text-foreground;
@@ -129,7 +129,7 @@
 		background-color: var(--scroll-bg-color);
 	}
 	button:not(:disabled),
-	[role='button']:not(:disabled) {
+	[role="button"]:not(:disabled) {
 		cursor: pointer;
 	}
 }
@@ -162,55 +162,55 @@
 
 /* 动画性能优化工具类 */
 @utility will-change-transform {
-  will-change: transform;
+	will-change: transform;
 }
 
 @utility will-change-transform-opacity {
-  will-change: transform, opacity;
+	will-change: transform, opacity;
 }
 
 @utility will-change-auto {
-  will-change: auto;
+	will-change: auto;
 }
 
 @utility transform-gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
 }
 
 /* 自定义 prose-blog 工具类 */
 @utility prose-blog {
-  @apply prose prose-lg max-w-[65ch];
+	@apply prose prose-lg max-w-[65ch];
 
-  /* 可以直接在这里写深度选择器 */
-  & :is(h1, h2, h3, h4) {
-    scroll-margin-top: 6rem;
-  }
+	/* 可以直接在这里写深度选择器 */
+	& :is(h1, h2, h3, h4) {
+		scroll-margin-top: 6rem;
+	}
 
-  & a {
-    text-decoration: none;
-    border-bottom: 1px solid rgba(37,99,235,0.3);
-  }
+	& a {
+		text-decoration: none;
+		border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+	}
 
-  & a:hover {
-    border-bottom-color: rgba(37,99,235,0.8);
-  }
+	& a:hover {
+		border-bottom-color: rgba(37, 99, 235, 0.8);
+	}
 
-  & img {
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 30px rgba(15,23,42,0.25);
-  }
+	& img {
+		border-radius: 0.75rem;
+		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+	}
 
-  & code {
-    border-radius: 0.375rem;
-    padding: 0.15rem 0.35rem;
-    background-color: rgba(15,23,42,0.04);
-  }
+	& code {
+		border-radius: 0.375rem;
+		padding: 0.15rem 0.35rem;
+		background-color: rgba(15, 23, 42, 0.04);
+	}
 
-  & pre {
-    border-radius: 0.75rem;
-    padding: 1rem 1.25rem;
-    background-color: #020617;
-  }
+	& pre {
+		border-radius: 0.75rem;
+		padding: 1rem 1.25rem;
+		background-color: #020617;
+	}
 }

@@ -3,12 +3,12 @@
 import { headers } from 'next/headers'
 
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { getGravatarProfile } from '@/lib/get-avatar'
-import { generateAvatarUri } from '@/lib/generate-avatar'
 import { fetchProfile } from '@/lib/content-providers'
+import { generateAvatarUri } from '@/lib/generate-avatar'
+import { getGravatarProfile } from '@/lib/get-avatar'
+import { prisma } from '@/lib/prisma'
 
-import { SocialLink, Skill, Slogan } from '@/types'
+import type { Skill, Slogan, SocialLink } from '@/types'
 
 interface UpdateProfileData {
 	username: string

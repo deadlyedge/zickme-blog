@@ -1,16 +1,14 @@
 'use client'
 
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-
-import { cn } from '@/lib/utils'
-import { ButtonGroup } from './ui/button-group'
-import { Button } from './ui/button'
-import { Spinner } from './ui/spinner'
-import { PostCard } from './PostCard'
-
+import type { PostType } from '@/generated/prisma/client'
 import { usePosts } from '@/lib/hooks/useContent'
-import { PostType } from '@/generated/prisma/client'
+import { cn } from '@/lib/utils'
+import { PostCard } from './PostCard'
+import { Button } from './ui/button'
+import { ButtonGroup } from './ui/button-group'
+import { Spinner } from './ui/spinner'
 
 type PostTag = {
 	id: string
@@ -84,7 +82,9 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 	if (isError) {
 		return (
 			<div className="text-center py-16">
-				<p className="text-muted-foreground">加载文章列表时出错，请稍后重试。</p>
+				<p className="text-muted-foreground">
+					加载文章列表时出错，请稍后重试。
+				</p>
 			</div>
 		)
 	}
@@ -100,7 +100,8 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 						activeTag === 'All'
 							? 'bg-primary text-primary-foreground'
 							: 'bg-secondary hover:bg-secondary/80',
-					)}>
+					)}
+				>
 					全部文章
 				</Button>
 				{tags?.map((tag) => (
@@ -117,7 +118,8 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 							{
 								'--tag-color': tag.color || 'var(--secondary)',
 							} as React.CSSProperties
-						}>
+						}
+					>
 						{tag.name}
 					</Button>
 				))}

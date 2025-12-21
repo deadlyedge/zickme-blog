@@ -1,13 +1,12 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { CommentList } from './CommentList'
-import { CommentForm } from './CommentForm'
-
+import { Button } from '@/components/ui/button'
 import { signOut, useSession } from '@/lib/auth-client'
-import { useAppStore } from '@/lib/store'
 import { useComments } from '@/lib/hooks/useContent'
+import { useAppStore } from '@/lib/store'
+import { CommentForm } from './CommentForm'
+import { CommentList } from './CommentList'
 
 interface CommentsSectionProps {
 	docId: string
@@ -73,12 +72,13 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 
 				{/* 认证状态显示 */}
 				<div className="flex items-center gap-3">
-					{!!user ? (
+					{user ? (
 						<div className="flex items-center gap-3">
 							<Button
 								variant="link"
 								onClick={handleEditProfile}
-								className="flex items-center gap-2">
+								className="flex items-center gap-2"
+							>
 								<Avatar>
 									<AvatarImage
 										src={user?.image || 'https://github.com/shadcn.png'}
@@ -94,7 +94,8 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 								variant="outline"
 								size="sm"
 								onClick={handleLogout}
-								className="text-xs h-7 px-2">
+								className="text-xs h-7 px-2"
+							>
 								登出
 							</Button>
 						</div>
@@ -104,13 +105,15 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 								variant="outline"
 								size="sm"
 								onClick={handleLoginClick}
-								className="text-xs h-7 px-3">
+								className="text-xs h-7 px-3"
+							>
 								登录
 							</Button>
 							<Button
 								size="sm"
 								onClick={handleRegisterClick}
-								className="text-xs h-7 px-3">
+								className="text-xs h-7 px-3"
+							>
 								注册
 							</Button>
 						</div>
@@ -120,7 +123,7 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 
 			{/* 评论表单区域 */}
 			<div className="mb-12">
-				{!!user ? (
+				{user ? (
 					<CommentForm docId={docId} />
 				) : (
 					<div className="border border-dashed border-gray-200 rounded-lg p-8 text-center bg-gray-50">

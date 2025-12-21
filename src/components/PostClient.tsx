@@ -1,15 +1,13 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
-
-import { formatPublishedDate } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { CommentsSection } from '@/components/comments'
-
+import { Badge } from '@/components/ui/badge'
 import { usePost } from '@/lib/hooks/useContent'
-import { PostWithTags } from '@/types'
+import { formatPublishedDate } from '@/lib/utils'
+import type { PostWithTags } from '@/types'
 
 interface PostClientProps {
 	initialPost?: PostWithTags
@@ -90,7 +88,8 @@ export function PostClient({ initialPost }: PostClientProps) {
 									style={{
 										backgroundColor: tag.color || undefined,
 										color: tag.color ? '#fff' : undefined,
-									}}>
+									}}
+								>
 									{tag.name}
 								</Badge>
 							))}

@@ -1,7 +1,21 @@
-import { auth } from '@/lib/auth'
+import {
+	FileText,
+	MessageSquare,
+	TrendingUp,
+	UserCog,
+	Users,
+} from 'lucide-react'
 import { headers } from 'next/headers'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getDashboardStats } from '@/lib/actions/dashboard'
+import { EditProfile } from '@/components/dashboard/EditProfile'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+	ButtonGroup,
+	ButtonGroupSeparator,
+	ButtonGroupText,
+} from '@/components/ui/button-group'
 import {
 	Card,
 	CardContent,
@@ -17,22 +31,8 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-	ButtonGroup,
-	ButtonGroupSeparator,
-	ButtonGroupText,
-} from '@/components/ui/button-group'
-import { EditProfile } from '@/components/dashboard/EditProfile'
-import Link from 'next/link'
-import {
-	Users,
-	MessageSquare,
-	FileText,
-	TrendingUp,
-	UserCog,
-} from 'lucide-react'
+import { getDashboardStats } from '@/lib/actions/dashboard'
+import { auth } from '@/lib/auth'
 
 export default async function DashboardPage() {
 	const session = await auth.api.getSession({
@@ -140,7 +140,8 @@ export default async function DashboardPage() {
 											<TableCell>
 												<Link
 													href={`/blog/${post.slug}`}
-													className="hover:underline text-blue-600">
+													className="hover:underline text-blue-600"
+												>
 													{post.title}
 												</Link>
 											</TableCell>
@@ -218,7 +219,8 @@ export default async function DashboardPage() {
 										<TableCell>
 											<Link
 												href={`/blog/${comment.postSlug}`}
-												className="hover:underline text-blue-600">
+												className="hover:underline text-blue-600"
+											>
 												{comment.postTitle}
 											</Link>
 										</TableCell>

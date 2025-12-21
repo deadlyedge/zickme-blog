@@ -1,13 +1,13 @@
 'use client'
 
-import * as React from 'react'
 import {
+	type MotionValue,
 	motion,
 	useMotionValue,
 	useSpring,
 	useTransform,
-	MotionValue,
 } from 'motion/react'
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 interface CardTiltProps {
@@ -88,10 +88,12 @@ const CardTilt = React.forwardRef<HTMLDivElement, CardTiltProps>(
 			scaleValue.set(1)
 		}
 
+		// biome-ignore lint/style/noNonNullAssertion: <need for animate>
 		React.useImperativeHandle(forwardedRef, () => containerRef.current!)
 
 		return (
 			<CardTiltContext.Provider value={{ rotateX, rotateY, scale: scaleValue }}>
+				{/** biome-ignore lint/a11y/noStaticElementInteractions: <we need this> */}
 				<div
 					ref={containerRef}
 					onMouseMove={handleMouseMove}
@@ -105,7 +107,8 @@ const CardTilt = React.forwardRef<HTMLDivElement, CardTiltProps>(
 						perspective: '1000px',
 						backfaceVisibility: 'hidden',
 					}}
-					{...props}>
+					{...props}
+				>
 					<div className="absolute inset-0 rounded-2xl border-2 border-dashed border-slate-300" />
 					{children}
 				</div>
@@ -142,7 +145,8 @@ const CardTiltContent = React.forwardRef<HTMLDivElement, CardTiltContentProps>(
 					'transform-gpu', // 强制GPU加速
 					className,
 				)}
-				{...props}>
+				{...props}
+			>
 				{children}
 			</motion.div>
 		)

@@ -1,20 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import {
-	getUsersList,
-	toggleUserBan,
-	toggleCommentSpam,
-	deleteComment,
-} from '@/lib/actions/dashboard'
+	ArrowLeft,
+	Calendar,
+	Mail,
+	MessageSquare,
+	Shield,
+	Trash2,
+	UserX,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
 	Dialog,
 	DialogClose,
@@ -25,18 +28,15 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Switch } from '@/components/ui/switch'
 import {
-	UserX,
-	Trash2,
-	MessageSquare,
-	Calendar,
-	Shield,
-	Mail,
-	ArrowLeft,
-} from 'lucide-react'
-import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+	deleteComment,
+	getUsersList,
+	toggleCommentSpam,
+	toggleUserBan,
+} from '@/lib/actions/dashboard'
 
 type User = {
 	id: string
@@ -310,7 +310,8 @@ export default function UsersPage() {
 																: comment.status === 'PENDING'
 																	? 'bg-yellow-50 border-yellow-200'
 																	: 'bg-gray-50'
-														}`}>
+														}`}
+													>
 														<div className="flex items-start justify-between gap-3">
 															<div className="flex-1 space-y-2">
 																<div className="flex items-center gap-2">
@@ -318,7 +319,8 @@ export default function UsersPage() {
 																		variant={getStatusBadgeVariant(
 																			comment.status,
 																		)}
-																		className="text-xs">
+																		className="text-xs"
+																	>
 																		{getStatusText(comment.status)}
 																	</Badge>
 																	<span className="text-xs text-muted-foreground">
@@ -335,7 +337,8 @@ export default function UsersPage() {
 																	文章:{' '}
 																	<Link
 																		href={`/blog/${comment.post.slug}`}
-																		className="hover:underline text-blue-600">
+																		className="hover:underline text-blue-600"
+																	>
 																		{comment.post.title}
 																	</Link>
 																</div>
@@ -362,7 +365,8 @@ export default function UsersPage() {
 																					size="sm"
 																					disabled={
 																						actionLoading === comment.id
-																					}>
+																					}
+																				>
 																					<Trash2 className="h-3 w-3" />
 																				</Button>
 																			</DialogTrigger>
@@ -383,7 +387,8 @@ export default function UsersPage() {
 																						onClick={() =>
 																							handleDeleteComment(comment.id)
 																						}
-																						className="bg-red-600 hover:bg-red-700">
+																						className="bg-red-600 hover:bg-red-700"
+																					>
 																						确认删除
 																					</Button>
 																				</DialogFooter>

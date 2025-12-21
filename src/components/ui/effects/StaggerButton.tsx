@@ -1,13 +1,13 @@
 'use client'
-import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import {
 	AnimatePresence,
 	motion,
-	type Variants,
 	useReducedMotion,
+	type Variants,
 } from 'motion/react'
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
@@ -50,8 +50,7 @@ const buttonVariants = cva(
 )
 
 interface StaggerButtonProps
-	extends
-		React.ButtonHTMLAttributes<HTMLButtonElement>,
+	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
 		VariantProps<typeof buttonVariants> {
 	asChild?: boolean
 	text?: string
@@ -216,7 +215,8 @@ const StaggerButton = React.forwardRef<HTMLButtonElement, StaggerButtonProps>(
 						initial="initial"
 						exit="exit"
 						animate={shouldAnimate ? 'hover' : 'initial'}
-						style={{ perspective: 1000 }}>
+						style={{ perspective: 1000 }}
+					>
 						{safeBase.map((char, index) => {
 							const nextChar = safeHover[index]
 							const isSpace = char === ' ' && nextChar === ' '
@@ -230,7 +230,8 @@ const StaggerButton = React.forwardRef<HTMLButtonElement, StaggerButtonProps>(
 								<span
 									key={index}
 									className="inline-block h-[1em] align-baseline overflow-hidden relative"
-									style={{ lineHeight: 1 }}>
+									style={{ lineHeight: 1 }}
+								>
 									<motion.span
 										className="block relative"
 										variants={stackVariants}
@@ -239,7 +240,8 @@ const StaggerButton = React.forwardRef<HTMLButtonElement, StaggerButtonProps>(
 											backfaceVisibility: 'hidden',
 											transform: 'translateZ(0)',
 											lineHeight: 1,
-										}}>
+										}}
+									>
 										{isUp ? (
 											<>
 												<span className="block h-[1em] leading-none relative">
@@ -280,7 +282,24 @@ const StaggerButton = React.forwardRef<HTMLButtonElement, StaggerButtonProps>(
 
 		if (asChild) {
 			return (
-				<Slot {...commonProps} {...motionSafeProps} {...{ onDrag, onDragEnd, onDragEnter, onDragExit, onDragLeave, onDragOver, onDragStart, onDrop, onAnimationStart, onAnimationEnd, onAnimationIteration, onTransitionEnd }}>
+				<Slot
+					{...commonProps}
+					{...motionSafeProps}
+					{...{
+						onDrag,
+						onDragEnd,
+						onDragEnter,
+						onDragExit,
+						onDragLeave,
+						onDragOver,
+						onDragStart,
+						onDrop,
+						onAnimationStart,
+						onAnimationEnd,
+						onAnimationIteration,
+						onTransitionEnd,
+					}}
+				>
 					{innerContent}
 				</Slot>
 			)

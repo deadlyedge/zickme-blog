@@ -1,15 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
-import { CommentWithReplies } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
-import { CommentForm } from './CommentForm'
-import { CommentList } from './CommentList'
+import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import React, { useState } from 'react'
+import { toast } from 'sonner'
 import { toggleCommentSpam } from '@/lib/actions/dashboard'
 import { useAppStore } from '@/lib/store'
-import { toast } from 'sonner'
-import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
+import type { CommentWithReplies } from '@/types'
+import { CommentForm } from './CommentForm'
+import { CommentList } from './CommentList'
 
 interface CommentItemProps {
 	comment: CommentWithReplies
@@ -68,7 +68,8 @@ export const CommentItem = React.memo(
 						<span className="text-slate-400 text-xs">•</span>
 						<time
 							className="text-slate-400 text-xs"
-							dateTime={comment.createdAt.toISOString()}>
+							dateTime={comment.createdAt.toISOString()}
+						>
 							{formatDistanceToNow(new Date(comment.createdAt), {
 								addSuffix: true,
 							})}
@@ -76,7 +77,8 @@ export const CommentItem = React.memo(
 						{hasReplies && (
 							<button
 								onClick={() => setIsCollapsed(!isCollapsed)}
-								className="ml-auto text-slate-400 hover:text-slate-600 text-xs">
+								className="ml-auto text-slate-400 hover:text-slate-600 text-xs"
+							>
 								{isCollapsed ? (
 									<span className="flex items-center justify-center">
 										{`${comment.replies?.length} more`}
@@ -96,7 +98,8 @@ export const CommentItem = React.memo(
 								animate={{ opacity: 1, height: 'auto' }}
 								exit={{ opacity: 0, height: 0 }} // Exit animation definition
 								transition={{ duration: 0.3 }}
-								className="text-slate-700 leading-relaxed whitespace-pre-wrap text-[0.95rem]">
+								className="text-slate-700 leading-relaxed whitespace-pre-wrap text-[0.95rem]"
+							>
 								{comment.content}
 
 								<div className="flex items-center gap-4 mt-2">
@@ -104,7 +107,8 @@ export const CommentItem = React.memo(
 										onClick={() =>
 											setActiveReplyId(isReplying ? null : comment.id)
 										}
-										className="text-xs font-medium text-slate-500 hover:text-amber-600 transition-colors">
+										className="text-xs font-medium text-slate-500 hover:text-amber-600 transition-colors"
+									>
 										{isReplying ? 'Cancel' : 'Reply'}
 									</button>
 
@@ -112,10 +116,9 @@ export const CommentItem = React.memo(
 										<button
 											onClick={handleToggleSpam}
 											disabled={spamActionLoading}
-											className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50">
-											{comment.status === 'SPAM'
-												? 'not spam'
-												: 'mark spam'}
+											className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+										>
+											{comment.status === 'SPAM' ? 'not spam' : 'mark spam'}
 										</button>
 									)}
 								</div>
@@ -126,7 +129,8 @@ export const CommentItem = React.memo(
 											initial={{ opacity: 0, height: 0 }}
 											animate={{ opacity: 1, height: 'auto' }}
 											exit={{ opacity: 0, height: 0 }}
-											className="mt-4 overflow-hidden p-1">
+											className="mt-4 overflow-hidden p-1"
+										>
 											<CommentForm
 												docId={docId}
 												parentId={comment.id}

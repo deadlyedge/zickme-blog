@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
-import { toast } from 'sonner'
-
 import { ArrowUpIcon } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -79,7 +78,8 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 						type="submit"
 						disabled={isPending || !content.trim()}
 						variant={parentId ? 'secondary' : 'default'}
-						className={parentId ? 'h-8 text-xs' : ''}>
+						className={parentId ? 'h-8 text-xs' : ''}
+					>
 						<ArrowUpIcon />
 						{isPending ? 'Posting...' : parentId ? 'Reply' : 'Post Comment'}
 					</InputGroupButton>

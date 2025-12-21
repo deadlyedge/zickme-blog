@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
 	title: '隐私政策 | Learn English with Songs',
@@ -21,9 +21,7 @@ export default function PrivacyPage() {
 						<li>
 							当您注册账户或使用我们的服务时，我们会收集您提供的个人信息。
 						</li>
-						<li>
-							我们使用email进行身份验证。
-						</li>
+						<li>我们使用email进行身份验证。</li>
 						<li>我们可能会收集使用数据以改进我们的服务。</li>
 					</ul>
 				</section>

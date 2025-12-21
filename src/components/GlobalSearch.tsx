@@ -1,8 +1,8 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { TagIcon, FileTextIcon } from 'lucide-react'
+import { FileTextIcon, TagIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import {
 	CommandDialog,
 	CommandEmpty,
@@ -69,7 +69,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 										key={`blog-${tag.id}`}
 										value={`blog-${tag.name} ${tag.slug}`}
 										onSelect={() => handleTagClick(tag)}
-										className="flex items-center gap-2">
+										className="flex items-center gap-2"
+									>
 										<TagIcon className="h-4 w-4 text-blue-500" />
 										<span>{tag.name}</span>
 										<span className="ml-auto text-xs text-muted-foreground">
@@ -90,7 +91,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 											key={`project-${tag.id}`}
 											value={`project-${tag.name} ${tag.slug}`}
 											onSelect={() => handleTagClick(tag)}
-											className="flex items-center gap-2">
+											className="flex items-center gap-2"
+										>
 											<TagIcon className="h-4 w-4 text-green-500" />
 											<span>{tag.name}</span>
 											<span className="ml-auto text-xs text-muted-foreground">
@@ -115,7 +117,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 										key={`blog-post-${post.id}`}
 										value={`${post.title} ${post.slug} ${post.excerpt || ''}`}
 										onSelect={() => handlePostClick(post)}
-										className="flex items-center gap-2">
+										className="flex items-center gap-2"
+									>
 										<FileTextIcon className="h-4 w-4 text-blue-500" />
 										<div className="flex flex-col">
 											<span className="font-medium">{post.title}</span>
@@ -140,7 +143,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 											key={`project-post-${post.id}`}
 											value={`${post.title} ${post.slug} ${post.excerpt || ''}`}
 											onSelect={() => handlePostClick(post)}
-											className="flex items-center gap-2">
+											className="flex items-center gap-2"
+										>
 											<FileTextIcon className="h-4 w-4 text-green-500" />
 											<div className="flex flex-col">
 												<span className="font-medium">{post.title}</span>

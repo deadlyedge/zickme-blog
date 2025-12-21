@@ -1,7 +1,6 @@
-import { Metadata } from 'next'
-import Image from 'next/image'
-
 import { GlobeIcon, MailIcon } from 'lucide-react'
+import type { Metadata } from 'next'
+import Image from 'next/image'
 import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
 
 import { fetchProfile } from '@/lib/content-providers'
@@ -76,7 +75,8 @@ export default async function AboutPage() {
 								<GlobeIcon />
 								<a
 									href={profileData.website}
-									className="text-primary hover:underline">
+									className="text-primary hover:underline"
+								>
 									{profileData.website}
 								</a>
 							</p>
@@ -92,7 +92,8 @@ export default async function AboutPage() {
 												href={link.url}
 												className="text-2xl hover:opacity-75"
 												target="_blank"
-												rel="noopener noreferrer">
+												rel="noopener noreferrer"
+											>
 												{link.platform}
 											</a>
 										),

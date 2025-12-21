@@ -1,13 +1,12 @@
-import React from 'react'
-import Image from 'next/image'
-
-import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
-import { Badge } from './ui/badge'
-import { formatPublishedDate } from '@/lib/utils'
-import { Button } from './ui/button'
-import { NavigationLink } from './NavigationLink'
-import { PostWithTags } from '@/types'
 import { BookOpenIcon, CodeIcon } from 'lucide-react'
+import Image from 'next/image'
+import React from 'react'
+import { formatPublishedDate } from '@/lib/utils'
+import type { PostWithTags } from '@/types'
+import { NavigationLink } from './NavigationLink'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 
 type PostCardProps = { post: PostWithTags }
 
@@ -19,7 +18,8 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 			key={post.slug}
 			aria-labelledby={`post-${post.title}`}
 			tiltMaxAngle={15}
-			scale={1.05}>
+			scale={1.05}
+		>
 			<CardTiltContent className="rounded-2xl bg-card shadow-2xl overflow-hidden">
 				<div className="relative bg-slate-100">
 					<NavigationLink href={`${route}${post.slug}`}>
@@ -51,7 +51,8 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 									style={{
 										backgroundColor: t.color || undefined,
 										color: t.color ? '#fff' : undefined,
-									}}>
+									}}
+								>
 									{t.name}
 								</Badge>
 							))}

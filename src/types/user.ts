@@ -1,4 +1,10 @@
-import { User, Role, Account, Session, Comment } from '@/generated/prisma/client'
+import type {
+	Account,
+	Comment,
+	Role,
+	Session,
+	User,
+} from '@/generated/prisma/client'
 
 // Extended user types
 export interface UserWithRelations extends User {
@@ -37,8 +43,13 @@ export function canEditContent(user: AuthUser | null): boolean {
 
 // Type guards
 export function isAuthUser(user: unknown): user is AuthUser {
-	return user !== null && typeof user === 'object' &&
-		   'id' in user && typeof user.id === 'string' &&
-		   'email' in user && typeof user.email === 'string' &&
-		   'role' in user
+	return (
+		user !== null &&
+		typeof user === 'object' &&
+		'id' in user &&
+		typeof user.id === 'string' &&
+		'email' in user &&
+		typeof user.email === 'string' &&
+		'role' in user
+	)
 }

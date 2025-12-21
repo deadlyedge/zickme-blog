@@ -1,4 +1,4 @@
-import { Post } from '@/generated/prisma/client'
+import type { Post } from '@/generated/prisma/client'
 
 // Enums
 export type PostType = 'BLOG' | 'PROJECT'
@@ -71,29 +71,46 @@ export interface ContentResponse {
 
 // Post with tags type (simplified from content-providers)
 export type PostWithTags = Post & {
-	tags?: {
-		id: string
-		name: string
-		slug: string
-		color: string | null
-	}[] | null
+	tags?:
+		| {
+				id: string
+				name: string
+				slug: string
+				color: string | null
+		  }[]
+		| null
 }
 
 // Type guards
 export function isSiteProfile(data: unknown): data is SiteProfile {
-	return data !== null && typeof data === 'object' &&
-		   'name' in data && typeof data.name === 'string' &&
-		   'bio' in data && typeof data.bio === 'string'
+	return (
+		data !== null &&
+		typeof data === 'object' &&
+		'name' in data &&
+		typeof data.name === 'string' &&
+		'bio' in data &&
+		typeof data.bio === 'string'
+	)
 }
 
 export function isPostWithTags(post: unknown): post is PostWithTags {
-	return post !== null && typeof post === 'object' &&
-		   'id' in post && typeof post.id === 'string' &&
-		   'title' in post && typeof post.title === 'string'
+	return (
+		post !== null &&
+		typeof post === 'object' &&
+		'id' in post &&
+		typeof post.id === 'string' &&
+		'title' in post &&
+		typeof post.title === 'string'
+	)
 }
 
 export function isSocialLink(link: unknown): link is SocialLink {
-	return link !== null && typeof link === 'object' &&
-		   'url' in link && typeof link.url === 'string' &&
-		   'platform' in link && typeof link.platform === 'string'
+	return (
+		link !== null &&
+		typeof link === 'object' &&
+		'url' in link &&
+		typeof link.url === 'string' &&
+		'platform' in link &&
+		typeof link.platform === 'string'
+	)
 }

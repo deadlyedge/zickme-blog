@@ -1,14 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Key, Lock, Mail, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
-
-import { signIn, signUp, useSession } from '@/lib/auth-client'
-import { useAppStore } from '@/lib/store'
-import { VALIDATION_RULES, VALIDATION_MESSAGES } from '@/constants'
-import { updateAvatar, updateProfile } from '@/lib/actions/profile'
+import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
@@ -16,7 +13,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
 	Field,
 	FieldError,
@@ -28,8 +24,11 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from '@/components/ui/input-group'
-import { Button } from '@/components/ui/button'
-import { Mail, Lock, User, Key } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants'
+import { updateAvatar, updateProfile } from '@/lib/actions/profile'
+import { signIn, signUp, useSession } from '@/lib/auth-client'
+import { useAppStore } from '@/lib/store'
 
 // Zod schemas using constants
 const loginSchema = z.object({
@@ -602,7 +601,8 @@ export default function AuthModal() {
 				<Tabs
 					value={activeTab}
 					onValueChange={handleTabChange}
-					className="w-full">
+					className="w-full"
+				>
 					{isLoggedIn ? (
 						<>
 							<TabsContent value="profile" className="mt-4">

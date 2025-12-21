@@ -27,7 +27,10 @@ function generateSlug(title: string): string {
 /**
  * 从文件路径生成slug，支持多级文件夹
  */
-export function generateSlugFromPath(filePath: string, postsDir: string): string {
+export function generateSlugFromPath(
+	filePath: string,
+	postsDir: string,
+): string {
 	const relativePath = path.relative(postsDir, filePath) // blogs/tech/前端开发.md
 	const pathWithoutExt = relativePath.replace(/\.md$/, '') // blogs/tech/前端开发
 	const pathParts = pathWithoutExt.split(path.sep) // ['blogs', 'tech', '前端开发']

@@ -1,19 +1,19 @@
 import {
+	type UseQueryOptions,
+	useMutation,
 	useQuery,
 	useQueryClient,
-	useMutation,
-	UseQueryOptions,
 } from '@tanstack/react-query'
 import type { PostType } from '@/generated/prisma/client'
 
-import { createComment, type CreateCommentData } from '@/lib/actions/comments'
+import { type CreateCommentData, createComment } from '@/lib/actions/comments'
 import {
+	commentsOptions,
 	contentKeys,
-	postsOptions,
-	tagsOptions,
 	homeContentOptions,
 	postOptions,
-	commentsOptions,
+	postsOptions,
+	tagsOptions,
 } from '@/lib/content-queries'
 
 import type { PostWithTags } from '@/types'

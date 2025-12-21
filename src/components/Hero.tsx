@@ -1,13 +1,13 @@
 'use client'
 
-import * as motion from 'motion/react-client'
-import { useMotionValueEvent } from 'motion/react'
 import type { MotionStyle, MotionValue, Variants } from 'motion/react'
+import { useMotionValueEvent } from 'motion/react'
+import * as motion from 'motion/react-client'
+import Link from 'next/link'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import CurvedLoop from './ui/effects/CurvedLoop'
 import type { SiteProfile } from '@/types'
-import Link from 'next/link'
+import CurvedLoop from './ui/effects/CurvedLoop'
 
 type HeroProps = {
 	profile: SiteProfile | null
@@ -64,16 +64,19 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
 			<div
 				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 h-[300vh]"
-				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 30}vh` }}>
+				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 30}vh` }}
+			>
 				<div
 					className={cn(
 						'fixed top-36 left-36 z-0 select-none',
 						scaleValue > 0.5 ? '-z-10' : '',
-					)}>
+					)}
+				>
 					<motion.div
 						id="hero-ball"
 						className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl"
-						style={style}>
+						style={style}
+					>
 						<div className="text-8xl font-bold text-white">🏀</div>
 					</motion.div>
 				</div>
@@ -84,7 +87,8 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.5, once: false }}
-					variants={blockVariantsH}>
+					variants={blockVariantsH}
+				>
 					<span className="pointer-events-none text-6xl leading-none font-extrabold">
 						{profile?.title || 'JUICE'}
 					</span>
@@ -97,10 +101,12 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
+					variants={blockVariantsH}
+				>
 					<Link
 						href="/projects"
-						className="inline-flex items-center gap-2 bg-white/90 px-4 py-2 text-xs font-medium text-slate-900 shadow-sm">
+						className="inline-flex items-center gap-2 bg-white/90 px-4 py-2 text-xs font-medium text-slate-900 shadow-sm"
+					>
 						查看我的项目 →
 					</Link>
 				</motion.div>
@@ -114,13 +120,15 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 						initial="offscreen"
 						whileInView="onscreen"
 						viewport={{ amount: 0.7, once: false }}
-						variants={blockVariantsH}>
+						variants={blockVariantsH}
+					>
 						<h2
 							className={cn(
 								'max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty uppercase',
 								slogan.fontSize,
 								`text-${slogan.color}`,
-							)}>
+							)}
+						>
 							{slogan.text ||
 								'A good design is not just a design, it is a future.'}
 						</h2>
@@ -134,7 +142,8 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
+					variants={blockVariantsH}
+				>
 					<p className="max-w-lg text-slate-900/90 text-2xl">
 						{profile?.bio ??
 							'We craft impactful digital experiences for ambitious brands.'}
@@ -149,7 +158,8 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
-					variants={blockVariantsH}>
+					variants={blockVariantsH}
+				>
 					<CurvedLoop
 						marqueeText={'We are a team of designers and developers.'}
 						speed={1}

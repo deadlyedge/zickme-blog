@@ -1,5 +1,5 @@
+import { type FC, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { useRef, useEffect, useState, useMemo, useId, FC } from 'react'
 
 interface CurvedLoopProps {
 	marqueeText?: string
@@ -81,14 +81,17 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
 	return (
 		<div
 			className="min-h-screen flex items-center justify-center w-full"
-			style={{ visibility: ready ? 'visible' : 'hidden', cursor: cursorStyle }}>
+			style={{ visibility: ready ? 'visible' : 'hidden', cursor: cursorStyle }}
+		>
 			<svg
 				className="select-none w-full overflow-visible block aspect-100/12 text-[6rem] font-bold uppercase leading-none"
-				viewBox="0 0 1440 120">
+				viewBox="0 0 1440 120"
+			>
 				<text
 					ref={measureRef}
 					xmlSpace="preserve"
-					style={{ visibility: 'hidden', opacity: 0, pointerEvents: 'none' }}>
+					style={{ visibility: 'hidden', opacity: 0, pointerEvents: 'none' }}
+				>
 					{text}
 				</text>
 				<defs>

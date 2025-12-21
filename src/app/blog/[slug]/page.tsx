@@ -1,9 +1,8 @@
-import { fetchPostBySlug, fetchAllPostSlugs } from '@/lib/content-providers'
-import { buildMetadata } from '@/lib/seo'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-
 import { PostClient } from '@/components/PostClient'
+import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/content-providers'
+import { buildMetadata } from '@/lib/seo'
 
 interface PageProps {
 	params: Promise<{

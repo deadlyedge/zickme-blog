@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import {
 	Funnel_Display,
 	Noto_Sans,
@@ -5,12 +6,11 @@ import {
 	Noto_Serif,
 	Noto_Serif_SC,
 } from 'next/font/google'
-import type { Metadata } from 'next'
 import './globals.css'
 
+import AuthModal from '@/components/auth/AuthModal'
 import { HeaderNav } from '@/components/HeaderNav'
 import { QueryProvider } from '@/components/QueryProvider'
-import AuthModal from '@/components/auth/AuthModal'
 import { Toaster } from '@/components/ui/sonner'
 
 const notoSerif = Noto_Serif({
@@ -61,7 +61,8 @@ export default async function RootLayout({
 	return (
 		<html lang="en">
 			<body
-				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}>
+				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}
+			>
 				<QueryProvider>
 					<main>
 						<HeaderNav />

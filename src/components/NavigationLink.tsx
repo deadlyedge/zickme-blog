@@ -1,13 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { useNavigationPreload } from '@/lib/hooks/useNavigationPreload'
-import { ReactNode } from 'react'
 
-interface NavigationLinkProps extends Omit<
-	React.AnchorHTMLAttributes<HTMLAnchorElement>,
-	'href'
-> {
+interface NavigationLinkProps
+	extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
 	href: string
 	children: ReactNode
 }

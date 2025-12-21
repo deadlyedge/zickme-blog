@@ -1,5 +1,11 @@
 import { prisma } from '@/lib/prisma'
-import type { ContentResponse, PostWithTags, SiteProfile, Tag, PostType } from '@/types'
+import type {
+	ContentResponse,
+	PostType,
+	PostWithTags,
+	SiteProfile,
+	Tag,
+} from '@/types'
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
@@ -97,7 +103,9 @@ export const fetchAllPostsForSearch = async (): Promise<PostWithTags[]> => {
 	})
 }
 
-export const fetchAllTagsForSearch = async (): Promise<(Tag & { postTypes: string[] })[]> => {
+export const fetchAllTagsForSearch = async (): Promise<
+	(Tag & { postTypes: string[] })[]
+> => {
 	const tags = await prisma.tag.findMany({
 		include: {
 			posts: {
@@ -113,9 +121,9 @@ export const fetchAllTagsForSearch = async (): Promise<(Tag & { postTypes: strin
 	})
 
 	// 为每个tag添加postTypes数组
-	return tags.map(tag => ({
+	return tags.map((tag) => ({
 		...tag,
-		postTypes: [...new Set(tag.posts.map(post => post.type))], // 去重
+		postTypes: [...new Set(tag.posts.map((post) => post.type))], // 去重
 	}))
 }
 

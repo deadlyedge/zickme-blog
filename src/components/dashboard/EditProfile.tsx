@@ -1,22 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { updateSiteProfile, getSiteProfile } from '@/lib/actions/profile'
-import { toast } from 'sonner'
-
 import { EditIcon, PlusIcon, SaveIcon, XIcon } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-	Select,
-	SelectValue,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-} from '@/components/ui/select'
+import { useEffect, useState } from 'react'
+import { useFieldArray, useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
@@ -26,7 +16,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import {
 	Field,
 	FieldContent,
@@ -39,6 +28,16 @@ import {
 	InputGroupInput,
 	InputGroupTextarea,
 } from '@/components/ui/input-group'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getSiteProfile, updateSiteProfile } from '@/lib/actions/profile'
 
 const siteProfileSchema = z.object({
 	name: z
@@ -399,7 +398,8 @@ export function EditProfile() {
 												variant="destructive"
 												size="icon"
 												className="rounded-full"
-												onClick={() => removeSlogan(index)}>
+												onClick={() => removeSlogan(index)}
+											>
 												<XIcon />
 											</Button>
 										</div>
@@ -408,7 +408,8 @@ export function EditProfile() {
 								<Button
 									onClick={() =>
 										appendSlogan({ text: '', fontSize: '', color: '' })
-									}>
+									}
+								>
 									<PlusIcon />
 									口号
 								</Button>
@@ -419,7 +420,8 @@ export function EditProfile() {
 								{skillFields.map((field, skillIndex) => (
 									<div
 										key={field.id}
-										className="border rounded-lg p-4 space-y-4">
+										className="border rounded-lg p-4 space-y-4"
+									>
 										<div className="flex gap-2 items-center justify-center">
 											<Field>
 												<FieldContent>
@@ -440,7 +442,8 @@ export function EditProfile() {
 											<Button
 												variant="destructive"
 												size="sm"
-												onClick={() => removeSkill(skillIndex)}>
+												onClick={() => removeSkill(skillIndex)}
+											>
 												删除类别
 											</Button>
 										</div>
@@ -454,7 +457,8 @@ export function EditProfile() {
 												) => (
 													<div
 														key={techIndex}
-														className="flex gap-2 items-center justify-center ml-4">
+														className="flex gap-2 items-center justify-center ml-4"
+													>
 														<Field>
 															<FieldContent>
 																<InputGroup>
@@ -491,7 +495,8 @@ export function EditProfile() {
 																				| 'advanced'
 																				| 'expert',
 																		)
-																	}>
+																	}
+																>
 																	<SelectTrigger>
 																		<SelectValue placeholder="选择熟练度" />
 																	</SelectTrigger>
@@ -540,7 +545,8 @@ export function EditProfile() {
 																	`skills.${skillIndex}.technologies`,
 																	newTechnologies,
 																)
-															}}>
+															}}
+														>
 															<XIcon className="size-4" />
 														</Button>
 													</div>
@@ -556,7 +562,8 @@ export function EditProfile() {
 														{ name: '', level: undefined },
 													])
 												}}
-												className="ml-4">
+												className="ml-4"
+											>
 												<PlusIcon />
 												技术
 											</Button>
@@ -566,7 +573,8 @@ export function EditProfile() {
 								<Button
 									onClick={() =>
 										appendSkill({ category: '', technologies: [] })
-									}>
+									}
+								>
 									<PlusIcon />
 									技能类别
 								</Button>
@@ -577,7 +585,8 @@ export function EditProfile() {
 								{socialLinkFields.map((field, index) => (
 									<div
 										key={field.id}
-										className="flex flex-col gap-2 justify-center">
+										className="flex flex-col gap-2 justify-center"
+									>
 										<div className="flex items-center justify-center gap-2">
 											<Field className="flex-1">
 												<FieldContent>
@@ -595,7 +604,8 @@ export function EditProfile() {
 																	| 'Facebook'
 																	| 'Other',
 															)
-														}>
+														}
+													>
 														<SelectTrigger>
 															<SelectValue placeholder="选择平台" />
 														</SelectTrigger>
@@ -610,7 +620,9 @@ export function EditProfile() {
 																	Instagram
 																</SelectItem>
 																<SelectItem value="YouTube">YouTube</SelectItem>
-																<SelectItem value="Facebook">Facebook</SelectItem>
+																<SelectItem value="Facebook">
+																	Facebook
+																</SelectItem>
 																<SelectItem value="Other">Other</SelectItem>
 															</SelectGroup>
 														</SelectContent>
@@ -638,7 +650,8 @@ export function EditProfile() {
 												variant="destructive"
 												size="icon"
 												className="rounded-full"
-												onClick={() => removeSocialLink(index)}>
+												onClick={() => removeSocialLink(index)}
+											>
 												<XIcon />
 											</Button>
 										</div>
@@ -668,7 +681,8 @@ export function EditProfile() {
 											url: '',
 											username: '',
 										})
-									}>
+									}
+								>
 									<PlusIcon />
 									社交链接
 								</Button>

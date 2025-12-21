@@ -1,9 +1,9 @@
-import matter from 'gray-matter'
-import * as fsPromises from 'fs/promises'
-import * as path from 'path'
-import { StatusType } from '../src/generated/prisma/enums'
 import type { Stats } from 'fs'
+import * as fsPromises from 'fs/promises'
+import matter from 'gray-matter'
+import * as path from 'path'
 import { generateSlugFromPath } from '@/lib/slug'
+import { StatusType } from '../src/generated/prisma/enums'
 
 interface MarkdownFrontmatter {
 	title?: string

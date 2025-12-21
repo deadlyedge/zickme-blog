@@ -56,7 +56,13 @@ export interface SectionProps extends BaseComponentProps {
 }
 
 // Button variants and sizes
-export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+export type ButtonVariant =
+	| 'default'
+	| 'destructive'
+	| 'outline'
+	| 'secondary'
+	| 'ghost'
+	| 'link'
 export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon'
 
 // Theme types
@@ -76,8 +82,17 @@ export interface ErrorState {
 }
 
 // Type guards for UI components
-export function isValidButtonVariant(variant: string): variant is ButtonVariant {
-	const validVariants: ButtonVariant[] = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']
+export function isValidButtonVariant(
+	variant: string,
+): variant is ButtonVariant {
+	const validVariants: ButtonVariant[] = [
+		'default',
+		'destructive',
+		'outline',
+		'secondary',
+		'ghost',
+		'link',
+	]
 	return validVariants.includes(variant as ButtonVariant)
 }
 

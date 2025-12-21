@@ -1,6 +1,7 @@
-import React, { useLayoutEffect, useRef, useCallback } from 'react'
-import type { ReactNode } from 'react'
 import Lenis from 'lenis'
+import type React from 'react'
+import type { ReactNode } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 
 export interface ScrollStackItemProps {
 	itemClassName?: string
@@ -16,7 +17,8 @@ export const ScrollStackItem: React.FC<ScrollStackItemProps> = ({
 		style={{
 			backfaceVisibility: 'hidden',
 			transformStyle: 'preserve-3d',
-		}}>
+		}}
+	>
 		{children}
 	</div>
 )
@@ -237,7 +239,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
 		if (useWindowScroll) {
 			const lenis = new Lenis({
 				duration: 1.2,
-				easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+				easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
 				smoothWheel: true,
 				touchMultiplier: 2,
 				infinite: false,
@@ -265,7 +267,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
 				wrapper: scroller,
 				content: scroller.querySelector('.scroll-stack-inner') as HTMLElement,
 				duration: 1.2,
-				easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+				easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
 				smoothWheel: true,
 				touchMultiplier: 2,
 				infinite: false,
@@ -356,7 +358,8 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
 				WebkitTransform: 'translateZ(0)',
 				transform: 'translateZ(0)',
 				willChange: 'scroll-position',
-			}}>
+			}}
+		>
 			<div className="scroll-stack-inner pt-[20vh] px-20 pb-200 min-h-screen">
 				{children}
 				{/* Spacer so the last pin can release cleanly */}

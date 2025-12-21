@@ -1,12 +1,12 @@
-import { PostType } from '@/generated/prisma/client'
+import type { PostType } from '@/generated/prisma/client'
+import { getComments } from './actions/comments'
 import {
-	fetchPostsAction,
-	fetchTagsAction,
+	fetchAllContentForSearchAction,
 	fetchHomeContent,
 	fetchPostBySlugAction,
-	fetchAllContentForSearchAction,
+	fetchPostsAction,
+	fetchTagsAction,
 } from './actions/content'
-import { getComments } from './actions/comments'
 
 // Query Keys - 统一管理所有查询的key定义
 export const contentKeys = {

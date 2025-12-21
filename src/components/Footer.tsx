@@ -1,19 +1,19 @@
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import {
-	GlobeIcon,
-	MailIcon,
-	GithubIcon,
-	LinkedinIcon,
-	TwitterIcon,
-	InstagramIcon,
-	YoutubeIcon,
 	FacebookIcon,
+	GithubIcon,
+	GlobeIcon,
+	InstagramIcon,
+	LinkedinIcon,
+	MailIcon,
+	TwitterIcon,
+	YoutubeIcon,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { SiteProfile, SocialLink } from '@/types'
-import type React from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
+import type React from 'react'
+import { Button } from '@/components/ui/button'
+import type { SiteProfile, SocialLink } from '@/types'
 
 type FooterAboutProps = {
 	profileData: SiteProfile | null
@@ -41,7 +41,8 @@ function AnimatedContainer({
 			transition={{ delay, duration: 0.8 }}
 			viewport={{ once: false }}
 			whileInView={{ filter: 'blur(0px)', translateY: 0, opacity: 1 }}
-			{...props}>
+			{...props}
+		>
 			{children}
 		</motion.div>
 	)
@@ -76,7 +77,8 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 	return (
 		<footer
 			className="relative h-140 w-full border-t mt-24 pt-24"
-			style={{ clipPath: 'polygon(0% 0, 100% 0%, 100% 100%, 0 100%)' }}>
+			style={{ clipPath: 'polygon(0% 0, 100% 0%, 100% 100%, 0 100%)' }}
+		>
 			<div className="fixed bottom-0 left-0 h-140 w-full pointer-events-none isolate">
 				<div className="sticky top-[calc(100vh-560px)] h-full pointer-events-none">
 					<div className="grid grid-cols-1 gap-12 pt-12 sm:grid-cols-4 max-w-7xl mx-auto px-4">
@@ -117,7 +119,8 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 										<GlobeIcon />
 										<a
 											href={profileData.website}
-											className="text-primary hover:underline">
+											className="text-primary hover:underline"
+										>
 											{profileData.website}
 										</a>
 									</p>
@@ -134,11 +137,13 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 															key={`social-${link.url}-${index}`}
 															size="icon-sm"
 															variant="outline"
-															asChild>
+															asChild
+														>
 															<a
 																href={link.url}
 																target="_blank"
-																rel="noopener noreferrer">
+																rel="noopener noreferrer"
+															>
 																<IconComponent className="size-4" />
 															</a>
 														</Button>
@@ -146,14 +151,10 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 												},
 											)}
 											<Button size="sm" variant="outline" asChild>
-												<Link href="/privacy">
-													Privacy
-												</Link>
+												<Link href="/privacy">Privacy</Link>
 											</Button>
 											<Button size="sm" variant="outline" asChild>
-												<Link href="/terms-of-service">
-													Terms of service
-												</Link>
+												<Link href="/terms-of-service">Terms of service</Link>
 											</Button>
 										</div>
 									)}
