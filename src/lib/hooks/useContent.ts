@@ -6,28 +6,17 @@ import {
 } from '@tanstack/react-query'
 import type { PostType } from '@/generated/prisma/client'
 
-import { fetchPostBySlugAction } from '@/lib/actions/content'
+import { createComment, type CreateCommentData } from '@/lib/actions/comments'
 import {
-	getComments,
-	createComment,
-	type CreateCommentData,
-} from '@/lib/actions/comments'
-import {
+	contentKeys,
 	postsOptions,
 	tagsOptions,
 	homeContentOptions,
+	postOptions,
+	commentsOptions,
 } from '@/lib/content-queries'
 
 import type { PostWithTags } from '@/types'
-
-// Query Keys
-export const contentKeys = {
-	all: ['content'] as const,
-	posts: (type?: PostType) => ['content', 'posts', type] as const,
-	tags: () => ['content', 'tags'] as const,
-	post: (slug: string) => ['content', 'post', slug] as const,
-	comments: (docId: string) => ['comments', docId] as const,
-}
 
 // Hooks for data fetching
 export function usePosts(type: PostType = 'BLOG') {
@@ -47,10 +36,7 @@ export function usePost(
 	options?: Partial<UseQueryOptions<PostWithTags | null>>,
 ) {
 	return useQuery({
-		queryKey: contentKeys.post(slug),
-		queryFn: () => fetchPostBySlugAction(slug),
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		enabled: !!slug,
+		...postOptions(slug),
 		...options, // Spread additional options including initialData
 	})
 }
@@ -85,12 +71,7 @@ export function useContentMutations() {
 
 // Comment hooks
 export function useComments(docId: string) {
-	return useQuery({
-		queryKey: contentKeys.comments(docId),
-		queryFn: () => getComments(docId),
-		staleTime: 2 * 60 * 1000, // 2 minutes for comments
-		enabled: !!docId,
-	})
+	return useQuery(commentsOptions(docId))
 }
 
 export function useCreateComment() {

@@ -13,6 +13,6 @@ export const generateAvatarUri = ({
 	const avatar = createAvatar(variant === 'initials' ? initials : croodles, {
 		seed,
 	})
-	// console.log('[avatar generated] ', avatar.toDataUri())
+
 	return avatar.toDataUri()
 }

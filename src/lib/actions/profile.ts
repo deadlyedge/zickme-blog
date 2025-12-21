@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getGravatarProfile } from '@/lib/get-gravatar'
+import { getGravatarProfile } from '@/lib/get-avatar'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { fetchProfile } from '@/lib/content-providers'
 

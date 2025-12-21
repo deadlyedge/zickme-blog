@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { contentKeys } from './useContent'
+import { contentKeys } from '@/lib/content-queries'
 import { fetchPostBySlugAction } from '@/lib/actions/content'
 
 export function useNavigationPreload() {

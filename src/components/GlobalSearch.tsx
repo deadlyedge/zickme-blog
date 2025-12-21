@@ -12,7 +12,7 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command'
-import { fetchAllContentForSearchAction } from '@/lib/actions/content'
+import { searchContentOptions } from '@/lib/content-queries'
 import type { PostWithTags } from '@/types'
 
 type TagWithType = {
@@ -33,10 +33,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 	const router = useRouter()
 
 	const { data, isLoading } = useQuery({
-		queryKey: ['search', 'all-content'],
-		queryFn: () => fetchAllContentForSearchAction(),
+		...searchContentOptions(),
 		enabled: open, // 只在对话框打开时获取数据
-		staleTime: 5 * 60 * 1000, // 5分钟缓存
 	})
 
 	const handleTagClick = (tag: TagWithType) => {
