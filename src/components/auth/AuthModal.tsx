@@ -403,7 +403,7 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 		})
 		return () => subscription.unsubscribe()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	}, [form.watch])
 
 	const onSubmit = async (data: ProfileForm) => {
 		try {

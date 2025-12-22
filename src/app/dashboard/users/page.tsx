@@ -68,21 +68,20 @@ export default function UsersPage() {
 	const [actionLoading, setActionLoading] = useState<string | null>(null)
 
 	useEffect(() => {
+		const loadUsers = async () => {
+			try {
+				setLoading(true)
+				const usersData = await getUsersList()
+				setUsers(usersData)
+			} catch (error) {
+				console.error('Failed to load users:', error)
+				toast.error('加载用户列表失败')
+			} finally {
+				setLoading(false)
+			}
+		}
 		loadUsers()
 	}, [])
-
-	const loadUsers = async () => {
-		try {
-			setLoading(true)
-			const usersData = await getUsersList()
-			setUsers(usersData)
-		} catch (error) {
-			console.error('Failed to load users:', error)
-			toast.error('加载用户列表失败')
-		} finally {
-			setLoading(false)
-		}
-	}
 
 	const handleToggleBan = async (userId: string, newBanned: boolean) => {
 		try {

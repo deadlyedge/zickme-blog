@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { GlobalSearch } from './GlobalSearch'
 import { Button } from './ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
@@ -64,16 +65,21 @@ export const HeaderNav = () => {
 						</Button>
 
 						{/* 搜索按钮 */}
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setIsSearchOpen(true)}
-							className="ml-2 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent"
-							title="搜索 (⌘K)"
-						>
-							<SearchIcon className="h-4 w-4" />
-							<span className="sr-only">搜索</span>
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setIsSearchOpen(true)}
+									className="ml-2 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent"
+									// title="搜索 (⌘K)"
+								>
+									<SearchIcon className="h-4 w-4" />
+									<span className="sr-only">搜索</span>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>搜索 (⌘K)</TooltipContent>
+						</Tooltip>
 					</nav>
 				</div>
 			</nav>

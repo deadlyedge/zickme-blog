@@ -71,6 +71,7 @@ const siteProfileSchema = z.object({
 				category: z.string().min(1, '技能类别不能为空'),
 				technologies: z.array(
 					z.object({
+						id: z.string(),
 						name: z.string().min(1, '技术名称不能为空'),
 						level: z
 							.enum(['beginner', 'intermediate', 'advanced', 'expert'])
@@ -170,7 +171,16 @@ export function EditProfile() {
 						setValue('email', profile.email || '')
 						setValue('website', profile.website || '')
 						setValue('slogans', profile.slogans || [])
-						setValue('skills', profile.skills || [])
+						// Ensure skills technologies have ids
+						const skillsWithIds = (profile.skills || []).map((skill) => ({
+							...skill,
+							technologies: (skill.technologies || []).map((tech) => ({
+								id: tech.id || crypto.randomUUID(),
+								name: tech.name,
+								level: tech.level,
+							})),
+						}))
+						setValue('skills', skillsWithIds)
 						setValue('socialLinks', profile.socialLinks || [])
 					}
 				})
@@ -452,11 +462,11 @@ export function EditProfile() {
 											{/* For simplicity, we'll use watch to get current technologies and render them */}
 											{(watch(`skills.${skillIndex}.technologies`) || []).map(
 												(
-													tech: { name: string; level?: string },
+													tech: { id: string; name: string; level?: string },
 													techIndex: number,
 												) => (
 													<div
-														key={techIndex}
+														key={tech.id}
 														className="flex gap-2 items-center justify-center ml-4"
 													>
 														<Field>
@@ -559,7 +569,11 @@ export function EditProfile() {
 														watch(`skills.${skillIndex}.technologies`) || []
 													setValue(`skills.${skillIndex}.technologies`, [
 														...currentTechnologies,
-														{ name: '', level: undefined },
+														{
+															id: crypto.randomUUID(),
+															name: '',
+															level: undefined,
+														},
 													])
 												}}
 												className="ml-4"

@@ -85,19 +85,17 @@ export default async function AboutPage() {
 						{profileData.socialLinks &&
 							Array.isArray(profileData.socialLinks) && (
 								<div className="flex gap-4">
-									{(profileData.socialLinks as SocialLink[]).map(
-										(link, index: number) => (
-											<a
-												key={index}
-												href={link.url}
-												className="text-2xl hover:opacity-75"
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												{link.platform}
-											</a>
-										),
-									)}
+									{(profileData.socialLinks as SocialLink[]).map((link) => (
+										<a
+											key={link.platform}
+											href={link.url}
+											className="text-2xl hover:opacity-75"
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											{link.platform}
+										</a>
+									))}
 								</div>
 							)}
 					</div>
@@ -108,14 +106,21 @@ export default async function AboutPage() {
 						<h2 className="text-3xl font-bold mb-8">技能专长</h2>
 						<div className="grid md:grid-cols-2 gap-8">
 							{(profileData.skills as Skill[]).map((skill, index: number) => (
-								<CardTilt key={index} tiltMaxAngle={15} scale={1.05}>
+								<CardTilt
+									key={`${index}-${skill.category}`}
+									tiltMaxAngle={15}
+									scale={1.05}
+								>
 									<CardTiltContent className="rounded-2xl bg-card shadow-2xl p-6">
 										<h3 className="text-lg font-semibold mb-4">
 											{skill.category}
 										</h3>
 										<div className="space-y-2">
 											{skill.technologies?.map((tech, techIndex: number) => (
-												<div key={techIndex} className="flex justify-between">
+												<div
+													key={`${techIndex}-${tech.name}`}
+													className="flex justify-between"
+												>
 													<span>{tech.name}</span>
 													<span className="text-muted-foreground">
 														{tech.level}

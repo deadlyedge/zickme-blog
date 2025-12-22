@@ -30,6 +30,7 @@ export type SocialLink = {
 }
 
 export type Technology = {
+	id: string
 	name: string
 	level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
 }

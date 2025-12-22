@@ -91,7 +91,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 
 	return (
 		<div>
-			<p className="text-muted">按标签过滤</p>
+			<p className="sr-only">按标签过滤</p>
 			<ButtonGroup className="mb-4 flex-wrap space-y-2">
 				<Button
 					size="sm"

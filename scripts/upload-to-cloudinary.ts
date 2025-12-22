@@ -1,6 +1,6 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { v2 as cloudinary } from 'cloudinary'
-import fs from 'fs/promises'
-import path from 'path'
 
 const POSTS_DIR = path.join(process.cwd(), 'content/posts')
 

@@ -76,6 +76,7 @@ export const CommentItem = React.memo(
 						</time>
 						{hasReplies && (
 							<button
+								type="button"
 								onClick={() => setIsCollapsed(!isCollapsed)}
 								className="ml-auto text-slate-400 hover:text-slate-600 text-xs"
 							>
@@ -104,6 +105,7 @@ export const CommentItem = React.memo(
 
 								<div className="flex items-center gap-4 mt-2">
 									<button
+										type="button"
 										onClick={() =>
 											setActiveReplyId(isReplying ? null : comment.id)
 										}
@@ -114,6 +116,7 @@ export const CommentItem = React.memo(
 
 									{currentUser?.role === 'ADMIN' && (
 										<button
+											type="button"
 											onClick={handleToggleSpam}
 											disabled={spamActionLoading}
 											className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
@@ -145,10 +148,10 @@ export const CommentItem = React.memo(
 				</div>
 
 				{/* Nested Replies */}
-				{!isCollapsed && hasReplies && (
+				{!isCollapsed && hasReplies && comment.replies && (
 					<div className="relative">
 						<CommentList
-							comments={comment.replies!}
+							comments={comment.replies}
 							docId={docId}
 							currentUser={currentUser}
 							depth={depth + 1}

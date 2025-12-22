@@ -126,9 +126,9 @@ function parseHsl(hsl: string): { h: number; s: number; l: number } {
 	}
 
 	return {
-		h: parseInt(match[1]),
-		s: parseInt(match[2]),
-		l: parseInt(match[3]),
+		h: parseInt(match[1], 10),
+		s: parseInt(match[2], 10),
+		l: parseInt(match[3], 10),
 	}
 }
 
@@ -142,9 +142,9 @@ function parseRgb(rgb: string): { r: number; g: number; b: number } {
 	}
 
 	return {
-		r: parseInt(match[1]),
-		g: parseInt(match[2]),
-		b: parseInt(match[3]),
+		r: parseInt(match[1], 10),
+		g: parseInt(match[2], 10),
+		b: parseInt(match[3], 10),
 	}
 }
 

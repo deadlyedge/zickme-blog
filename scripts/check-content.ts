@@ -1,7 +1,7 @@
-import type { Stats } from 'fs'
-import * as fsPromises from 'fs/promises'
+import type { Stats } from 'node:fs'
+import * as fsPromises from 'node:fs/promises'
+import * as path from 'node:path'
 import matter from 'gray-matter'
-import * as path from 'path'
 import { generateSlugFromPath } from '@/lib/slug'
 import { StatusType } from '../src/generated/prisma/enums'
 
@@ -390,7 +390,7 @@ images:
 sourceUrl: "https://github.com/username/blog"
 ---`)
 
-	console.log('\n' + '='.repeat(60) + '\n')
+	console.log(`\n${'='.repeat(60)}\n`)
 }
 
 /**
@@ -421,13 +421,13 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 			console.log(`📄 ${relativePath}`)
 
 			if (result.issues.length > 0) {
-				result.issues.forEach((issue) => console.log(`   ${issue}`))
+				result.issues.forEach((issue) => void console.log(`   ${issue}`))
 				totalIssues += result.issues.length
 			}
 
 			if (result.suggestions.length > 0) {
-				result.suggestions.forEach((suggestion) =>
-					console.log(`   ${suggestion}`),
+				result.suggestions.forEach(
+					(suggestion) => void console.log(`   ${suggestion}`),
 				)
 				totalSuggestions += result.suggestions.length
 			}

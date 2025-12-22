@@ -7,7 +7,14 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"experimentalScannerIgnores": ["src/components/ui/**"]
+		"includes": [
+			"**",
+			"!node_modules",
+			"!dist",
+			"!.next",
+			"!public",
+			"!**/components/ui"
+		]
 	},
 	"formatter": {
 		"enabled": true,

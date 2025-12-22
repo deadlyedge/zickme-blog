@@ -148,11 +148,12 @@ export async function getComments(docId: string) {
 
 		// Second pass: build parent-child relationships
 		processedComments.forEach((comment) => {
-			const commentWithReplies = commentMap.get(comment.id)!
+			const commentWithReplies = commentMap.get(comment.id)
+			if (!commentWithReplies) return
 
 			if (comment.parentId) {
 				const parent = commentMap.get(comment.parentId)
-				if (parent && parent.replies) {
+				if (parent?.replies) {
 					parent.replies.push(commentWithReplies)
 				} else {
 					// Orphan comment (parent doesn't exist), treat as root

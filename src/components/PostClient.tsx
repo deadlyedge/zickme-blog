@@ -105,6 +105,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 
 					<div className="prose prose-lg prose-blog max-w-none">
 						{/* TODO: Convert content to proper format for RichText component */}
+						{/** biome-ignore lint/security/noDangerouslySetInnerHtml: <need this for markdowns> */}
 						<div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
 					</div>
 				</article>
