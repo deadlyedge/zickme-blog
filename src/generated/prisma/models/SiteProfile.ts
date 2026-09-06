@@ -202,7 +202,7 @@ export type SiteProfileGroupByOutputType = {
   _max: SiteProfileMaxAggregateOutputType | null
 }
 
-type GetSiteProfileGroupByPayload<T extends SiteProfileGroupByArgs> = Prisma.PrismaPromise<
+export type GetSiteProfileGroupByPayload<T extends SiteProfileGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<SiteProfileGroupByOutputType, T['by']> &
       {
@@ -1160,6 +1160,11 @@ export type SiteProfileFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` SiteProfiles.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of SiteProfiles.
+   */
   distinct?: Prisma.SiteProfileScalarFieldEnum | Prisma.SiteProfileScalarFieldEnum[]
 }
 
