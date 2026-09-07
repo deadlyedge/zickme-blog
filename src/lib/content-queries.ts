@@ -1,4 +1,3 @@
-import type { PostType } from '@/generated/prisma/client'
 import { getComments } from './actions/comments'
 import {
 	fetchAllContentForSearchAction,
@@ -11,7 +10,7 @@ import {
 // Query Keys - 统一管理所有查询的key定义
 export const contentKeys = {
 	all: ['content'] as const,
-	posts: (type?: PostType) => ['content', 'posts', type] as const,
+	posts: () => ['content', 'posts'] as const,
 	tags: () => ['content', 'tags'] as const,
 	post: (slug: string) => ['content', 'post', slug] as const,
 	home: () => ['content', 'home'] as const,
@@ -20,10 +19,10 @@ export const contentKeys = {
 }
 
 // Query options for content
-export function postsOptions(type: PostType = 'BLOG') {
+export function postsOptions() {
 	return {
-		queryKey: contentKeys.posts(type),
-		queryFn: () => fetchPostsAction(type),
+		queryKey: contentKeys.posts(),
+		queryFn: () => fetchPostsAction(),
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	}
 }

@@ -55,8 +55,11 @@ export function PostClient({ initialPost }: PostClientProps) {
 						文章未找到
 					</h1>
 					<p className="text-slate-600 mb-6">这篇文章可能已被删除或移动。</p>
-					<Link href="/blog" className="text-sm text-amber-600 hover:underline">
-						返回博客列表
+					<Link
+						href="/posts"
+						className="text-sm text-amber-600 hover:underline"
+					>
+						返回文章列表
 					</Link>
 				</div>
 			</div>
@@ -104,7 +107,6 @@ export function PostClient({ initialPost }: PostClientProps) {
 					</header>
 
 					<div className="prose prose-lg prose-blog max-w-none">
-						{/* TODO: Convert content to proper format for RichText component */}
 						{/** biome-ignore lint/security/noDangerouslySetInnerHtml: <need this for markdowns> */}
 						<div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
 					</div>

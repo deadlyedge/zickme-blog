@@ -1,11 +1,13 @@
 'use server'
 
 import { hashPassword } from 'better-auth/crypto'
+import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import { db } from '@/db'
+import { accounts, comments, posts, sessions, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -43,8 +45,8 @@ export async function resetUserPasswordByAdmin(data: {
 			}
 		}
 
-		const targetUser = await prisma.user.findUnique({
-			where: { id: parsed.data.userId },
+		const targetUser = await db.query.users.findFirst({
+			where: eq(users.id, parsed.data.userId),
 		})
 
 		if (!targetUser) {
@@ -53,38 +55,34 @@ export async function resetUserPasswordByAdmin(data: {
 
 		const hashedPassword = await hashPassword(parsed.data.newPassword)
 
-		const existingAccount = await prisma.account.findFirst({
-			where: {
-				userId: targetUser.id,
-				providerId: 'credential',
-			},
+		const existingAccount = await db.query.accounts.findFirst({
+			where: and(
+				eq(accounts.userId, targetUser.id),
+				eq(accounts.providerId, 'credential'),
+			),
 		})
 
 		if (existingAccount) {
-			await prisma.account.update({
-				where: { id: existingAccount.id },
-				data: {
+			await db
+				.update(accounts)
+				.set({
 					password: hashedPassword,
 					updatedAt: new Date(),
-				},
-			})
+				})
+				.where(eq(accounts.id, existingAccount.id))
 		} else {
-			await prisma.account.create({
-				data: {
-					id: crypto.randomUUID().replace(/-/g, '').slice(0, 32),
-					accountId: targetUser.id,
-					providerId: 'credential',
-					userId: targetUser.id,
-					password: hashedPassword,
-					updatedAt: new Date(),
-				},
+			await db.insert(accounts).values({
+				id: crypto.randomUUID().replace(/-/g, '').slice(0, 32),
+				accountId: targetUser.id,
+				providerId: 'credential',
+				userId: targetUser.id,
+				password: hashedPassword,
+				updatedAt: new Date(),
 			})
 		}
 
 		// 撤销该用户的所有 session，强制重新登录
-		await prisma.session.deleteMany({
-			where: { userId: targetUser.id },
-		})
+		await db.delete(sessions).where(eq(sessions.userId, targetUser.id))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
@@ -102,124 +100,118 @@ export async function getDashboardStats() {
 		await requireAdminSession()
 
 		// 总用户数
-		const totalUsers = await prisma.user.count()
+		const [userCountResult] = await db.select({ value: count() }).from(users)
+		const totalUsers = userCountResult?.value ?? 0
 
 		// 总评论数
-		const totalComments = await prisma.comment.count()
+		const [commentCountResult] = await db
+			.select({ value: count() })
+			.from(comments)
+		const totalComments = commentCountResult?.value ?? 0
+
+		// 总文章数
+		const [postCountResult] = await db
+			.select({ value: count() })
+			.from(posts)
+			.where(isNull(posts.archivedAt))
+		const totalPosts = postCountResult?.value ?? 0
+
+		// 已发布文章数
+		const [pubPostCountResult] = await db
+			.select({ value: count() })
+			.from(posts)
+			.where(and(eq(posts.status, 'PUBLISHED'), isNull(posts.archivedAt)))
+		const publishedPosts = pubPostCountResult?.value ?? 0
+
+		// 草稿文章数
+		const [draftPostCountResult] = await db
+			.select({ value: count() })
+			.from(posts)
+			.where(and(eq(posts.status, 'DRAFT'), isNull(posts.archivedAt)))
+		const draftPosts = draftPostCountResult?.value ?? 0
 
 		// 评论数前5的文章
-		const topCommentedPosts = await prisma.post.findMany({
-			select: {
-				id: true,
-				title: true,
-				slug: true,
-				_count: {
-					select: {
-						comments: true,
-					},
-				},
-			},
-			where: {
-				comments: {
-					some: {
-						status: 'PUBLISHED',
-					},
-				},
-			},
-			orderBy: {
-				comments: {
-					_count: 'desc',
-				},
-			},
-			take: 5,
-		})
+		const topCommentedPostsRaw = await db
+			.select({
+				id: posts.id,
+				title: posts.title,
+				slug: posts.slug,
+				commentsCount: count(comments.id),
+			})
+			.from(posts)
+			.innerJoin(
+				comments,
+				and(eq(comments.postId, posts.id), eq(comments.status, 'PUBLISHED')),
+			)
+			.groupBy(posts.id, posts.title, posts.slug)
+			.orderBy(desc(count(comments.id)))
+			.limit(5)
 
-		// 发表最多评论的前五用户
-		const topCommentingUsers = await prisma.user.findMany({
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				_count: {
-					select: {
-						comments: true,
-					},
-				},
-			},
-			orderBy: {
-				comments: {
-					_count: 'desc',
-				},
-			},
-			take: 5,
-		})
+		// 发表最多评论的前5用户
+		const topCommentingUsersRaw = await db
+			.select({
+				id: users.id,
+				name: users.name,
+				email: users.email,
+				commentsCount: count(comments.id),
+			})
+			.from(users)
+			.innerJoin(comments, eq(comments.authorId, users.id))
+			.groupBy(users.id, users.name, users.email)
+			.orderBy(desc(count(comments.id)))
+			.limit(5)
 
-		// 其他统计数据
-		const totalPosts = await prisma.post.count()
-		const publishedPosts = await prisma.post.count({
-			where: {
-				status: 'PUBLISHED',
-			},
-		})
-		const draftPosts = await prisma.post.count({
-			where: {
-				status: 'DRAFT',
-			},
-		})
-
-		const recentComments = await prisma.comment.findMany({
-			select: {
-				id: true,
-				content: true,
-				createdAt: true,
+		// 最近5条评论
+		const recentComments = await db.query.comments.findMany({
+			with: {
 				author: {
-					select: {
+					columns: {
+						id: true,
 						name: true,
+						email: true,
 					},
 				},
 				post: {
-					select: {
+					columns: {
+						id: true,
 						title: true,
 						slug: true,
 					},
 				},
 			},
-			where: {
-				status: 'PUBLISHED',
-			},
-			orderBy: {
-				createdAt: 'desc',
-			},
-			take: 5,
+			orderBy: [desc(comments.createdAt)],
+			limit: 5,
 		})
 
 		return {
-			totalUsers,
-			totalComments,
-			totalPosts,
-			publishedPosts,
-			draftPosts,
-			topCommentedPosts: topCommentedPosts.map((post) => ({
-				id: post.id,
-				title: post.title,
-				slug: post.slug,
-				commentCount: post._count.comments,
+			overview: {
+				totalUsers,
+				totalComments,
+				totalPosts,
+				publishedPosts,
+				draftPosts,
+			},
+			topCommentedPosts: topCommentedPostsRaw.map((p) => ({
+				id: p.id,
+				title: p.title,
+				slug: p.slug,
+				commentCount: p.commentsCount,
 			})),
-			topCommentingUsers: topCommentingUsers.map((user) => ({
-				id: user.id,
-				name: user.name,
-				email: user.email,
-				commentCount: user._count.comments,
+			topCommentingUsers: topCommentingUsersRaw.map((u) => ({
+				id: u.id,
+				name: u.name,
+				email: u.email,
+				commentCount: u.commentsCount,
 			})),
-			recentComments: recentComments.map((comment) => ({
-				id: comment.id,
-				content:
-					comment.content.substring(0, 100) +
-					(comment.content.length > 100 ? '...' : ''),
-				createdAt: comment.createdAt,
-				authorName: comment.author.name,
-				postTitle: comment.post.title,
-				postSlug: comment.post.slug,
+			recentComments: recentComments.map((c) => ({
+				id: c.id,
+				content: c.content,
+				status: c.status,
+				createdAt: c.createdAt,
+				authorName: c.author?.name || 'Unknown',
+				authorEmail: c.author?.email || 'Unknown',
+				postTitle: c.post?.title || 'Unknown',
+				postSlug: c.post?.slug || '',
 			})),
 		}
 	} catch (error) {
@@ -236,70 +228,59 @@ export async function getUsersList() {
 	try {
 		await requireAdminSession()
 
-		const users = await prisma.user.findMany({
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				image: true,
-				banned: true,
-				role: true,
-				emailVerified: true,
-				createdAt: true,
-				updatedAt: true,
-				_count: {
-					select: {
-						comments: true,
-					},
-				},
-				comments: {
-					select: {
-						id: true,
-						content: true,
-						status: true,
-						createdAt: true,
+		const allUsers = await db.query.users.findMany({
+			orderBy: [desc(users.createdAt)],
+		})
+
+		const usersWithDetails = await Promise.all(
+			allUsers.map(async (u) => {
+				const [cCount] = await db
+					.select({ value: count() })
+					.from(comments)
+					.where(eq(comments.authorId, u.id))
+
+				const userComments = await db.query.comments.findMany({
+					where: eq(comments.authorId, u.id),
+					with: {
 						post: {
-							select: {
+							columns: {
 								id: true,
 								title: true,
 								slug: true,
 							},
 						},
 					},
-					orderBy: {
-						createdAt: 'desc',
-					},
-					take: 10, // 只显示最近10条评论
-				},
-			},
-			orderBy: {
-				createdAt: 'desc',
-			},
-		})
+					orderBy: [desc(comments.createdAt)],
+					limit: 10,
+				})
 
-		return users.map((user) => ({
-			id: user.id,
-			name: user.name,
-			email: user.email,
-			image: user.image,
-			banned: user.banned,
-			role: user.role,
-			emailVerified: user.emailVerified,
-			createdAt: user.createdAt,
-			updatedAt: user.updatedAt,
-			totalComments: user._count.comments,
-			comments: user.comments.map((comment) => ({
-				id: comment.id,
-				content: comment.content,
-				status: comment.status,
-				createdAt: comment.createdAt,
-				post: {
-					id: comment.post.id,
-					title: comment.post.title,
-					slug: comment.post.slug,
-				},
-			})),
-		}))
+				return {
+					id: u.id,
+					name: u.name,
+					email: u.email,
+					image: u.image,
+					banned: u.banned,
+					role: u.role,
+					emailVerified: u.emailVerified,
+					createdAt: u.createdAt,
+					updatedAt: u.updatedAt,
+					totalComments: cCount?.value ?? 0,
+					comments: userComments.map((c) => ({
+						id: c.id,
+						content: c.content,
+						status: c.status,
+						createdAt: c.createdAt,
+						post: {
+							id: c.post?.id || '',
+							title: c.post?.title || '',
+							slug: c.post?.slug || '',
+						},
+					})),
+				}
+			}),
+		)
+
+		return usersWithDetails
 	} catch (error) {
 		console.error('Failed to fetch users list:', error)
 		throw new Error(
@@ -312,10 +293,7 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 	try {
 		await requireAdminSession()
 
-		await prisma.user.update({
-			where: { id: userId },
-			data: { banned },
-		})
+		await db.update(users).set({ banned }).where(eq(users.id, userId))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
@@ -331,10 +309,10 @@ export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
 	try {
 		await requireAdminSession()
 
-		await prisma.comment.update({
-			where: { id: commentId },
-			data: { status: isSpam ? 'SPAM' : 'PUBLISHED' },
-		})
+		await db
+			.update(comments)
+			.set({ status: isSpam ? 'SPAM' : 'PUBLISHED' })
+			.where(eq(comments.id, commentId))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
@@ -352,13 +330,13 @@ export async function deleteComment(commentId: string) {
 	try {
 		await requireAdminSession()
 
-		await prisma.comment.update({
-			where: { id: commentId },
-			data: {
+		await db
+			.update(comments)
+			.set({
 				deleted: true,
 				content: '[已删除]',
-			},
-		})
+			})
+			.where(eq(comments.id, commentId))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }

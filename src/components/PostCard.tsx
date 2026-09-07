@@ -11,7 +11,7 @@ import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 type PostCardProps = { post: PostWithTags }
 
 export const PostCard = React.memo(({ post }: PostCardProps) => {
-	const route = post.type === 'PROJECT' ? '/projects/' : '/blog/'
+	const route = '/posts/'
 
 	return (
 		<CardTilt

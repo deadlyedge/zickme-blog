@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import type { PostType } from '@/generated/prisma/client'
 import { usePosts } from '@/lib/hooks/useContent'
 import { cn } from '@/lib/utils'
 import { PostCard } from './PostCard'
@@ -17,11 +16,7 @@ type PostTag = {
 	color: string | null
 }
 
-type Props = {
-	type?: PostType
-}
-
-export function PostGridClient({ type = 'BLOG' }: Props) {
+export function PostGridClient() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const urlTag = searchParams.get('tag')
@@ -30,7 +25,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 	const [activeTag, setActiveTag] = useState<string>(() => urlTag || 'All')
 
 	// Use TanStack Query - data will be hydrated from server
-	const { data: posts, isLoading, isError } = usePosts(type)
+	const { data: posts, isLoading, isError } = usePosts()
 
 	// 处理标签点击，更新URL参数
 	const handleTagClick = (tagSlug: string) => {
@@ -39,14 +34,13 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 		// 更新URL参数
 		const currentPath = window.location.pathname
 		if (tagSlug === 'All') {
-			// 清除tag参数
 			router.push(currentPath)
 		} else {
 			router.push(`${currentPath}?tag=${tagSlug}`)
 		}
 	}
 
-	// Extract tags from posts data to avoid showing unused tags
+	// Extract tags from posts data
 	const tags = useMemo(() => {
 		if (!posts) return []
 		const tagMap = new Map<string, PostTag>()
@@ -135,7 +129,7 @@ export function PostGridClient({ type = 'BLOG' }: Props) {
 				<div className="text-center py-16">
 					<p className="text-muted-foreground">
 						{activeTag === 'All'
-							? '暂无博客文章。'
+							? '暂无文章。'
 							: `没有找到标签为 "${tags?.find((t) => t.slug === activeTag)?.name}" 的文章。`}
 					</p>
 				</div>

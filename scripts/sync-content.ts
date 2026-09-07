@@ -1,11 +1,13 @@
 import type { Stats } from 'node:fs'
 import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
+import { eq, isNull } from 'drizzle-orm'
 import matter from 'gray-matter'
 import { marked } from 'marked'
-import { StatusType } from '../src/generated/prisma/enums'
-import { prisma } from '../src/lib/prisma'
+import { db } from '../src/db'
+import { posts, postsToTags, tags } from '../src/db/schema'
 import { generateSlugFromPath } from '../src/lib/slug'
+import type { StatusType } from '../src/types'
 
 interface MarkdownFrontmatter {
 	title?: string
@@ -16,7 +18,6 @@ interface MarkdownFrontmatter {
 	slug?: string
 	status?: string
 	draft?: boolean
-	images?: Array<{ image: string; caption?: string }>
 	sourceUrl?: string
 }
 
@@ -28,9 +29,7 @@ interface ProcessedPost {
 	content: string
 	publishedAt: Date
 	tags: string[]
-	type: 'BLOG' | 'PROJECT'
-	status?: StatusType
-	images?: Array<{ image: string; caption?: string }>
+	status: StatusType
 	sourceUrl?: string
 	fileStats: Stats
 }
@@ -44,38 +43,41 @@ interface SyncConfig {
 
 const DEFAULT_CONFIG: SyncConfig = {
 	dryRun: process.argv.includes('--dry-run'),
-	batchSize: 2, // 进一步减少批量大小到2，避免事务超时
+	batchSize: 5,
 	deleteOld: !process.argv.includes('--no-delete'),
 	cloudinaryBaseUrl:
 		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/',
 }
 
 /**
- * 转换状态字符串为StatusType枚举值
+ * 转换状态字符串为 StatusType 枚举值
  */
 function parseStatusType(
 	statusStr: string | undefined,
 	draft: boolean | undefined,
-): StatusType | undefined {
-	if (draft === true) return StatusType.DRAFT
+): StatusType {
+	if (draft === true) return 'DRAFT'
 	if (statusStr) {
 		const upperStatus = statusStr.toUpperCase()
-		if (Object.values(StatusType).includes(upperStatus as StatusType)) {
+		if (
+			['PUBLISHED', 'DRAFT', 'ARCHIVED', 'PENDING', 'SPAM'].includes(
+				upperStatus,
+			)
+		) {
 			return upperStatus as StatusType
 		}
 	}
-	return undefined // 默认为null，让数据库使用默认值PUBLISHED
+	return 'PUBLISHED'
 }
 
 /**
  * 规范化标签数组
  */
-function normalizeTags(tags: string[] | string | undefined): string[] {
-	if (!tags) return []
-	if (Array.isArray(tags)) return tags
-	if (typeof tags === 'string') {
-		// 支持逗号分隔的字符串标签
-		return tags
+function normalizeTags(tagsInput: string[] | string | undefined): string[] {
+	if (!tagsInput) return []
+	if (Array.isArray(tagsInput)) return tagsInput
+	if (typeof tagsInput === 'string') {
+		return tagsInput
 			.split(',')
 			.map((tag) => tag.trim())
 			.filter((tag) => tag.length > 0)
@@ -91,18 +93,7 @@ function generateTitleFromFileName(fileName: string): string {
 }
 
 /**
- * 根据文件路径判断文章类型
- */
-function getPostType(filePath: string, postsDir: string): 'BLOG' | 'PROJECT' {
-	const relativePath = path.relative(postsDir, filePath)
-	const normalizedPath = relativePath.replace(/\\/g, '/')
-	if (normalizedPath.startsWith('blogs/')) return 'BLOG'
-	if (normalizedPath.startsWith('projects/')) return 'PROJECT'
-	return 'BLOG' // 默认值
-}
-
-/**
- * 处理图片URL，根据文件位置找到对应的Cloudinary图片
+ * 处理图片URL，根据文件位置找到对应的 Cloudinary 图片
  */
 function processImageUrl(
 	imagePath: string | undefined,
@@ -112,13 +103,10 @@ function processImageUrl(
 ): string | undefined {
 	if (!imagePath) return undefined
 
-	// 新的引用格式：./images/xxx.jpg
 	if (imagePath.startsWith('./images/')) {
-		// 获取当前文件所在的文件夹
 		const fileDir = path.dirname(filePath)
 		const relativeDir = path.relative(postsDir, fileDir)
 
-		// 构建Cloudinary publicId路径（与upload-to-cloudinary.ts保持一致）
 		const imageName = imagePath
 			.replace('./images/', '')
 			.replace(/\.[^/.]+$/, '')
@@ -130,36 +118,67 @@ function processImageUrl(
 		return `${config.cloudinaryBaseUrl}${publicId}`
 	}
 
+	if (imagePath.startsWith('/images/')) {
+		const imageName = imagePath.replace('/images/', '').replace(/\.[^/.]+$/, '')
+		return `${config.cloudinaryBaseUrl}images-${imageName}`
+	}
+
 	return imagePath
 }
 
 /**
- * 递归扫描所有Markdown文件
+ * 处理 Markdown 内容中的图片链接
  */
-async function scanMarkdownFiles(dirPath: string): Promise<string[]> {
+function processMarkdownContent(
+	content: string,
+	config: SyncConfig,
+	filePath: string,
+	postsDir: string,
+): string {
+	const renderer = new marked.Renderer()
+	const originalImage = renderer.image.bind(renderer)
+
+	renderer.image = (imageToken) => {
+		const processedHref = processImageUrl(
+			imageToken.href,
+			config,
+			filePath,
+			postsDir,
+		)
+		return originalImage({
+			...imageToken,
+			href: processedHref || imageToken.href,
+		})
+	}
+
+	return marked.parse(content, { renderer }) as string
+}
+
+/**
+ * 扫描指定目录下的所有 Markdown 文件
+ */
+async function scanMarkdownFiles(dir: string): Promise<string[]> {
+	const entries = await fsPromises.readdir(dir, { withFileTypes: true })
 	const files: string[] = []
 
-	async function scan(dir: string) {
-		const entries = await fsPromises.readdir(dir, { withFileTypes: true })
+	for (const entry of entries) {
+		const fullPath = path.join(dir, entry.name)
 
-		for (const entry of entries) {
-			const fullPath = path.join(dir, entry.name)
-
-			if (entry.isDirectory()) {
-				// 递归扫描子文件夹
-				await scan(fullPath)
-			} else if (entry.isFile() && entry.name.endsWith('.md')) {
-				files.push(fullPath)
+		if (entry.isDirectory()) {
+			if (entry.name !== 'images') {
+				const subFiles = await scanMarkdownFiles(fullPath)
+				files.push(...subFiles)
 			}
+		} else if (entry.isFile() && entry.name.endsWith('.md')) {
+			files.push(fullPath)
 		}
 	}
 
-	await scan(dirPath)
 	return files
 }
 
 /**
- * 处理单个Markdown文件
+ * 处理单个 Markdown 文件
  */
 async function processMarkdownFile(
 	filePath: string,
@@ -167,25 +186,18 @@ async function processMarkdownFile(
 	postsDir: string,
 ): Promise<ProcessedPost | null> {
 	try {
-		const [content, stats] = await Promise.all([
-			fsPromises.readFile(filePath, 'utf8'),
-			fsPromises.stat(filePath),
-		])
-
-		const { data: frontmatter, content: body } = matter(content) as unknown as {
-			data: MarkdownFrontmatter
-			content: string
-		}
-
+		const fileContent = await fsPromises.readFile(filePath, 'utf-8')
+		const stats = await fsPromises.stat(filePath)
 		const fileName = path.basename(filePath, '.md')
 
-		// 智能字段生成
+		const { data, content } = matter(fileContent)
+		const frontmatter = data as MarkdownFrontmatter
+
 		const title = frontmatter.title || generateTitleFromFileName(fileName)
 		const slug = frontmatter.slug || generateSlugFromPath(filePath, postsDir)
-		const type = getPostType(filePath, postsDir)
 		const publishedAt = frontmatter.date
 			? new Date(frontmatter.date)
-			: stats.mtime
+			: stats.birthtime
 
 		const poster = processImageUrl(
 			frontmatter.image,
@@ -193,166 +205,152 @@ async function processMarkdownFile(
 			filePath,
 			postsDir,
 		)
-
-		// 替换正文中的图片地址
-		let processedBody = body
-
-		// 处理新的 ./images/ 引用
-		processedBody = processedBody.replace(
-			/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g,
-			(_, alt, src) => {
-				// 获取当前文件所在的文件夹
-				const fileDir = path.dirname(filePath)
-				const relativeDir = path.relative(postsDir, fileDir)
-				const imageName = src.replace(/\.[^/.]+$/, '')
-				const fullRelativePath = relativeDir
-					? `${relativeDir}/images/${imageName}`
-					: `images/${imageName}`
-				const publicId = fullRelativePath.replace(/\//g, '-')
-				return `![${alt}](${config.cloudinaryBaseUrl}${publicId})`
-			},
+		const processedContent = processMarkdownContent(
+			content,
+			config,
+			filePath,
+			postsDir,
 		)
-
-		// 兼容旧的 ../images/ 引用（过渡期支持）
-		processedBody = processedBody.replace(
-			/!\[([^\]]*)\]\(\.\.\/images\/([^)]+)\)/g,
-			(_, alt, src) => `![${alt}](${config.cloudinaryBaseUrl}${src})`,
-		)
-
-		// 在事务外部进行marked转换，减少事务时间
-		const htmlContent = await marked(processedBody)
 
 		return {
 			slug,
 			title,
 			excerpt: frontmatter.excerpt,
 			poster,
-			content: htmlContent,
+			content: processedContent,
 			publishedAt,
 			tags: normalizeTags(frontmatter.tags),
-			type,
 			status: parseStatusType(frontmatter.status, frontmatter.draft),
-			images: frontmatter.images,
 			sourceUrl: frontmatter.sourceUrl,
 			fileStats: stats,
 		}
 	} catch (error) {
-		console.error(`❌ 处理文件失败 ${filePath}:`, error)
+		console.error(`处理文件失败 ${filePath}:`, error)
 		return null
 	}
 }
 
 /**
- * 预创建所有标签
+ * 预创建或更新所有标签
  */
 async function preCreateTags(
-	posts: ProcessedPost[],
+	postsList: ProcessedPost[],
 	config: SyncConfig,
-): Promise<void> {
+): Promise<Map<string, string>> {
 	const allTags = new Set<string>()
-	posts.forEach((post) => {
-		post.tags.forEach((tag) => void allTags.add(tag))
-	})
-
-	if (allTags.size === 0) return
-
-	if (config.dryRun) {
-		console.log(`📋 [DRY RUN] 将预创建 ${allTags.size} 个标签:`)
-		allTags.forEach((tag) => void console.log(`  - ${tag}`))
-		return
-	}
-
-	// 逐个创建标签（避免事务超时）
-	for (const tagName of allTags) {
-		try {
-			const tagData = {
-				name: tagName,
-				slug: tagName.toLowerCase().replace(/\s+/g, '-'),
-			}
-
-			await prisma.tag.upsert({
-				where: { name: tagData.name },
-				update: {},
-				create: tagData,
-			})
-		} catch (error) {
-			console.warn(`⚠️ 标签创建失败: ${tagName}`, error)
-			// 继续处理其他标签，不要中断
+	for (const post of postsList) {
+		for (const tag of post.tags) {
+			allTags.add(tag)
 		}
 	}
 
-	console.log(`✅ 预创建完成: ${allTags.size} 个标签`)
+	const tagNameToId = new Map<string, string>()
+
+	if (config.dryRun) {
+		console.log(`🏷️ [DRY RUN] 预处理 ${allTags.size} 个标签`)
+		return tagNameToId
+	}
+
+	for (const tagName of allTags) {
+		const tagSlug = tagName
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '')
+
+		const existing = await db.query.tags.findFirst({
+			where: eq(tags.name, tagName),
+		})
+
+		if (existing) {
+			tagNameToId.set(tagName, existing.id)
+		} else {
+			const [newTag] = await db
+				.insert(tags)
+				.values({
+					name: tagName,
+					slug: tagSlug || tagName.toLowerCase(),
+				})
+				.returning()
+			if (newTag) {
+				tagNameToId.set(tagName, newTag.id)
+			}
+		}
+	}
+
+	return tagNameToId
 }
 
 /**
  * 批量同步文章到数据库
  */
 async function syncPostsToDatabase(
-	posts: ProcessedPost[],
+	postsList: ProcessedPost[],
+	tagNameToId: Map<string, string>,
 	config: SyncConfig,
 ): Promise<void> {
-	const batches = []
-	for (let i = 0; i < posts.length; i += config.batchSize) {
-		batches.push(posts.slice(i, i + config.batchSize))
+	if (config.dryRun) {
+		console.log(`📝 [DRY RUN] 准备同步 ${postsList.length} 篇文章:`)
+		for (const post of postsList) {
+			console.log(`  - [${post.status}] ${post.title} (${post.slug})`)
+		}
+		return
 	}
 
-	for (const batch of batches) {
-		await prisma.$transaction(async (tx) => {
-			for (const post of batch) {
-				if (config.dryRun) {
-					console.log(`📋 [DRY RUN] 将同步: ${post.slug} - ${post.title}`)
-					continue
-				}
-
-				// Upsert post
-				await tx.post.upsert({
-					where: { slug: post.slug },
-					update: {
-						title: post.title,
-						excerpt: post.excerpt,
-						poster: post.poster,
-						content: post.content,
-						publishedAt: post.publishedAt,
-						type: post.type,
-						status: post.status,
-						images: post.images,
-						sourceUrl: post.sourceUrl,
-						archivedAt: null, // 恢复
-					},
-					create: {
-						slug: post.slug,
-						title: post.title,
-						excerpt: post.excerpt,
-						poster: post.poster,
-						content: post.content,
-						publishedAt: post.publishedAt,
-						type: post.type,
-						status: post.status,
-						images: post.images,
-						sourceUrl: post.sourceUrl,
-					},
-				})
-
-				// Handle tags - 现在标签已经预创建，直接连接
-				if (post.tags.length > 0) {
-					const tagConnections = post.tags.map((tagName: string) => ({
-						name: tagName,
-					}))
-
-					await tx.post.update({
-						where: { slug: post.slug },
-						data: {
-							tags: {
-								set: [], // 清除现有标签
-								connect: tagConnections,
-							},
-						},
-					})
-				}
-
-				console.log(`✅ 同步完成: ${post.slug}`)
-			}
+	for (const post of postsList) {
+		// Upsert post
+		const existingPost = await db.query.posts.findFirst({
+			where: eq(posts.slug, post.slug),
 		})
+
+		let postId: string
+
+		if (existingPost) {
+			postId = existingPost.id
+			await db
+				.update(posts)
+				.set({
+					title: post.title,
+					excerpt: post.excerpt,
+					poster: post.poster,
+					content: post.content,
+					publishedAt: post.publishedAt,
+					status: post.status,
+					sourceUrl: post.sourceUrl,
+					archivedAt: null,
+					updatedAt: new Date(),
+				})
+				.where(eq(posts.id, postId))
+		} else {
+			const [newPost] = await db
+				.insert(posts)
+				.values({
+					slug: post.slug,
+					title: post.title,
+					excerpt: post.excerpt,
+					poster: post.poster,
+					content: post.content,
+					publishedAt: post.publishedAt,
+					status: post.status,
+					sourceUrl: post.sourceUrl,
+				})
+				.returning()
+			postId = newPost.id
+		}
+
+		// Update tags
+		await db.delete(postsToTags).where(eq(postsToTags.postId, postId))
+
+		for (const tagName of post.tags) {
+			const tagId = tagNameToId.get(tagName)
+			if (tagId) {
+				await db.insert(postsToTags).values({
+					postId,
+					tagId,
+				})
+			}
+		}
+
+		console.log(`✅ 同步完成: ${post.slug}`)
 	}
 }
 
@@ -365,12 +363,12 @@ async function handleDeletedPosts(
 ): Promise<void> {
 	if (!config.deleteOld) return
 
-	const dbSlugs = await prisma.post.findMany({
-		where: { archivedAt: null },
-		select: { slug: true },
-	})
+	const dbPosts = await db
+		.select({ slug: posts.slug })
+		.from(posts)
+		.where(isNull(posts.archivedAt))
 
-	const deletedSlugs = dbSlugs
+	const deletedSlugs = dbPosts
 		.map((p) => p.slug)
 		.filter((slug) => !existingSlugs.has(slug))
 
@@ -378,22 +376,22 @@ async function handleDeletedPosts(
 
 	if (config.dryRun) {
 		console.log(`📋 [DRY RUN] 将标记删除 ${deletedSlugs.length} 篇文章:`)
-		deletedSlugs.forEach((slug) => void console.log(`  - ${slug}`))
+		for (const slug of deletedSlugs) {
+			console.log(`  - ${slug}`)
+		}
 		return
 	}
 
-	await prisma.$transaction(async (tx) => {
-		for (const slug of deletedSlugs) {
-			await tx.post.update({
-				where: { slug },
-				data: {
-					archivedAt: new Date(),
-					title: `[已删除] ${slug}`,
-				},
+	for (const slug of deletedSlugs) {
+		await db
+			.update(posts)
+			.set({
+				archivedAt: new Date(),
+				title: `[已删除] ${slug}`,
 			})
-			console.log(`🗑️ 标记删除: ${slug}`)
-		}
-	})
+			.where(eq(posts.slug, slug))
+		console.log(`🗑️ 标记删除: ${slug}`)
+	}
 }
 
 /**
@@ -408,17 +406,13 @@ async function syncPosts(config: SyncConfig = DEFAULT_CONFIG) {
 	const postsDir = path.join(process.cwd(), 'content/posts')
 
 	try {
-		// 递归扫描所有Markdown文件
 		const mdFiles = await scanMarkdownFiles(postsDir)
-
 		console.log(`📁 发现 ${mdFiles.length} 个Markdown文件`)
 
-		// 并行处理所有文件
 		const processedPosts = await Promise.all(
 			mdFiles.map((file) => processMarkdownFile(file, config, postsDir)),
 		)
 
-		// 过滤掉处理失败的文件
 		const validPosts = processedPosts.filter(
 			(post): post is ProcessedPost => post !== null,
 		)
@@ -430,30 +424,19 @@ async function syncPosts(config: SyncConfig = DEFAULT_CONFIG) {
 
 		console.log(`✅ 成功处理 ${validPosts.length} 篇文章`)
 
-		// 预创建标签
-		await preCreateTags(validPosts, config)
+		const tagNameToId = await preCreateTags(validPosts, config)
+		await syncPostsToDatabase(validPosts, tagNameToId, config)
 
-		// 同步到数据库
-		await syncPostsToDatabase(validPosts, config)
-
-		// 处理已删除的文章
-		const existingSlugs = new Set(validPosts.map((p: ProcessedPost) => p.slug))
+		const existingSlugs = new Set(validPosts.map((p) => p.slug))
 		await handleDeletedPosts(existingSlugs, config)
 
 		console.log('✅ 同步完成！')
-
-		if (config.dryRun) {
-			console.log('💡 使用 --dry-run 查看预览，移除参数执行实际同步')
-		}
 	} catch (error) {
 		console.error('❌ 同步失败:', error)
 		process.exit(1)
-	} finally {
-		await prisma.$disconnect()
 	}
 }
 
-// 如果直接运行此脚本
 if (require.main === module) {
 	syncPosts().catch(console.error)
 }

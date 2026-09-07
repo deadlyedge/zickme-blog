@@ -37,24 +37,22 @@ export const HeaderNav = () => {
 							pathname === '/' && 'text-primary',
 						)}
 					>
-						{/* {profile?.website?.split('://')[1]?.replace(/\/$/, '') ?? 'Your Name'} */}
 						zick.me
 					</Link>
 
 					<nav className="flex items-center font-bold font-sans text-base gap-1">
 						<Button
 							asChild
-							variant={pathname.startsWith('/projects') ? 'secondary' : 'link'}
+							variant={
+								pathname.startsWith('/posts') ||
+								pathname.startsWith('/blog') ||
+								pathname.startsWith('/projects')
+									? 'secondary'
+									: 'link'
+							}
 							className="font-bold transition-all duration-200 hover:scale-105"
 						>
-							<Link href="/projects">projects</Link>
-						</Button>
-						<Button
-							asChild
-							variant={pathname.startsWith('/blog') ? 'secondary' : 'link'}
-							className="font-bold transition-all duration-200 hover:scale-105"
-						>
-							<Link href="/blog">blog</Link>
+							<Link href="/posts">posts</Link>
 						</Button>
 						<Button
 							asChild
@@ -72,7 +70,6 @@ export const HeaderNav = () => {
 									size="sm"
 									onClick={() => setIsSearchOpen(true)}
 									className="ml-2 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent"
-									// title="搜索 (⌘K)"
 								>
 									<SearchIcon className="h-4 w-4" />
 									<span className="sr-only">搜索</span>

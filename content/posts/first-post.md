@@ -3,8 +3,9 @@ slug: "my-first-post"
 title: "我的第一篇文章"
 excerpt: "简短描述"
 image: "./images/drogon.jpg"
-tags: ["Next.js", "Prisma"]
+tags: ["Next.js", "React"]
 date: "2025-12-06"
+status: published
 ---
 
 正文内容，支持 Markdown 语法...

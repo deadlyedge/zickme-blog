@@ -1,24 +1,19 @@
 // Server-side auth configuration - only runs on server
 import { betterAuth } from 'better-auth'
-import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
-import { prisma } from '@/lib/prisma'
-// import { getGravatarProfile } from '@/lib/getGravatar'
-
-// interface SignInContext {
-// 	user: {
-// 		id: string
-// 		email: string
-// 		image?: string | null
-// 		name?: string | null
-// 	}
-// 	account: unknown
-// 	profile?: unknown
-// }
+import { db } from '@/db'
+import * as schema from '@/db/schema'
 
 export const auth = betterAuth({
-	database: prismaAdapter(prisma, {
-		provider: 'postgresql',
+	database: drizzleAdapter(db, {
+		provider: 'pg',
+		schema: {
+			user: schema.users,
+			session: schema.sessions,
+			account: schema.accounts,
+			verification: schema.verifications,
+		},
 	}),
 	emailAndPassword: {
 		enabled: true,

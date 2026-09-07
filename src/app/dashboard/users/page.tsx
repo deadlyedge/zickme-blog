@@ -396,7 +396,7 @@ export default function UsersPage() {
 																<div className="text-xs text-muted-foreground">
 																	文章:{' '}
 																	<Link
-																		href={`/blog/${comment.post.slug}`}
+																		href={`/posts/${comment.post.slug}`}
 																		className="hover:underline text-blue-600"
 																	>
 																		{comment.post.title}

@@ -1,19 +1,15 @@
-import type { Post } from '@/generated/prisma/client'
+import type { InferSelectModel } from 'drizzle-orm'
+import type { comments, posts, tags, users } from '@/db/schema'
 
-// Enums
-export type PostType = 'BLOG' | 'PROJECT'
+// Enums / Status
 export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
+export type Role = 'ADMIN' | 'EDITOR' | 'USER'
 
-// Tag type
-export interface Tag {
-	id: string
-	name: string
-	slug: string
-	color: string | null
-	background: string | null
-	createdAt?: Date
-	updatedAt?: Date
-}
+// Base Models
+export type Post = InferSelectModel<typeof posts>
+export type Tag = InferSelectModel<typeof tags>
+export type Comment = InferSelectModel<typeof comments>
+export type User = InferSelectModel<typeof users>
 
 // Social links and profile types
 export type SocialLink = {
@@ -46,19 +42,18 @@ export type Slogan = {
 	color?: string
 }
 
-// Simplified SiteProfile interface
 export interface SiteProfile {
 	id?: string
 	name: string
 	title: string
 	bio: string
-	location?: string
-	email?: string
-	website?: string
-	avatar?: string
-	socialLinks?: SocialLink[]
-	skills?: Skill[]
-	slogans?: Slogan[]
+	location?: string | null
+	email?: string | null
+	website?: string | null
+	avatar?: string | null
+	socialLinks?: SocialLink[] | null
+	skills?: Skill[] | null
+	slogans?: Slogan[] | null
 	createdAt?: Date
 	updatedAt?: Date
 }
@@ -66,11 +61,10 @@ export interface SiteProfile {
 // Content response types
 export interface ContentResponse {
 	profile: SiteProfile | null
-	projects: PostWithTags[]
-	blog: PostWithTags[]
+	posts: PostWithTags[]
 }
 
-// Post with tags type (simplified from content-providers)
+// Post with tags type
 export type PostWithTags = Post & {
 	tags?:
 		| {
@@ -88,9 +82,9 @@ export function isSiteProfile(data: unknown): data is SiteProfile {
 		data !== null &&
 		typeof data === 'object' &&
 		'name' in data &&
-		typeof data.name === 'string' &&
+		typeof (data as Record<string, unknown>).name === 'string' &&
 		'bio' in data &&
-		typeof data.bio === 'string'
+		typeof (data as Record<string, unknown>).bio === 'string'
 	)
 }
 
@@ -99,9 +93,9 @@ export function isPostWithTags(post: unknown): post is PostWithTags {
 		post !== null &&
 		typeof post === 'object' &&
 		'id' in post &&
-		typeof post.id === 'string' &&
+		typeof (post as Record<string, unknown>).id === 'string' &&
 		'title' in post &&
-		typeof post.title === 'string'
+		typeof (post as Record<string, unknown>).title === 'string'
 	)
 }
 
@@ -110,8 +104,8 @@ export function isSocialLink(link: unknown): link is SocialLink {
 		link !== null &&
 		typeof link === 'object' &&
 		'url' in link &&
-		typeof link.url === 'string' &&
+		typeof (link as Record<string, unknown>).url === 'string' &&
 		'platform' in link &&
-		typeof link.platform === 'string'
+		typeof (link as Record<string, unknown>).platform === 'string'
 	)
 }

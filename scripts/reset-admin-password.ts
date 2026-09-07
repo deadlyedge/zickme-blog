@@ -1,6 +1,8 @@
 import * as readline from 'node:readline'
 import { hashPassword } from 'better-auth/crypto'
-import { prisma } from '../src/lib/prisma'
+import { and, eq } from 'drizzle-orm'
+import { db } from '../src/db'
+import { accounts, sessions, users } from '../src/db/schema'
 
 interface ResetOptions {
 	email?: string
@@ -58,8 +60,8 @@ async function main() {
 	}
 
 	// 查找用户
-	const user = await prisma.user.findUnique({
-		where: { email },
+	const user = await db.query.users.findFirst({
+		where: eq(users.email, email),
 	})
 
 	if (!user) {
@@ -73,10 +75,7 @@ async function main() {
 		)
 		const promote = await prompt('是否将其同时提升为 ADMIN 角色? (y/N): ')
 		if (promote.toLowerCase() === 'y') {
-			await prisma.user.update({
-				where: { id: user.id },
-				data: { role: 'ADMIN' },
-			})
+			await db.update(users).set({ role: 'ADMIN' }).where(eq(users.id, user.id))
 			console.log('✅ 已提升为 ADMIN 角色')
 		}
 	}
@@ -96,39 +95,35 @@ async function main() {
 	const hashedPassword = await hashPassword(password)
 
 	// 查找或创建 credential account
-	const existingAccount = await prisma.account.findFirst({
-		where: {
-			userId: user.id,
-			providerId: 'credential',
-		},
+	const existingAccount = await db.query.accounts.findFirst({
+		where: and(
+			eq(accounts.userId, user.id),
+			eq(accounts.providerId, 'credential'),
+		),
 	})
 
 	if (existingAccount) {
-		await prisma.account.update({
-			where: { id: existingAccount.id },
-			data: {
+		await db
+			.update(accounts)
+			.set({
 				password: hashedPassword,
 				updatedAt: new Date(),
-			},
-		})
+			})
+			.where(eq(accounts.id, existingAccount.id))
 	} else {
 		// 如果此前没有 credential account，新建一个
-		await prisma.account.create({
-			data: {
-				id: crypto.randomUUID().replace(/-/g, '').slice(0, 32),
-				accountId: user.id,
-				providerId: 'credential',
-				userId: user.id,
-				password: hashedPassword,
-				updatedAt: new Date(),
-			},
+		await db.insert(accounts).values({
+			id: crypto.randomUUID().replace(/-/g, '').slice(0, 32),
+			accountId: user.id,
+			providerId: 'credential',
+			userId: user.id,
+			password: hashedPassword,
+			updatedAt: new Date(),
 		})
 	}
 
 	// 清理该用户现有的 session，确保重新使用新密码登录
-	await prisma.session.deleteMany({
-		where: { userId: user.id },
-	})
+	await db.delete(sessions).where(eq(sessions.userId, user.id))
 
 	console.log(`\n🎉 管理员 [${email}] 密码重置成功！已撤销所有现有登录会话。`)
 }
@@ -138,6 +133,6 @@ main()
 		console.error('❌ 重置失败:', error)
 		process.exit(1)
 	})
-	.finally(async () => {
-		await prisma.$disconnect()
+	.finally(() => {
+		process.exit(0)
 	})

@@ -1,32 +1,12 @@
 'use server'
 
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import type { Comment } from '@/generated/prisma/client'
+import { db } from '@/db'
+import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-
-type CommentWithAuthor = Comment & {
-	author: {
-		id: string
-		name: string
-		email: string
-		image: string | null
-		banned: boolean
-	}
-}
-
-interface CommentWithReplies extends Comment {
-	replies?: CommentWithReplies[]
-	depth?: number
-	author: {
-		id: string
-		name: string
-		email: string
-		image: string | null
-		banned: boolean
-	}
-}
+import type { CommentWithReplies } from '@/types'
 
 export type CreateCommentData = {
 	content: string
@@ -46,12 +26,9 @@ export async function createComment(data: CreateCommentData) {
 			return { success: false, error: 'User not authenticated' }
 		}
 
-		// Find the post by ID and type
-		const post = await prisma.post.findFirst({
-			where: {
-				id: data.docId,
-				// type: data.docType === 'posts' ? 'BLOG' : 'PROJECT',
-			},
+		// Find the post by ID
+		const post = await db.query.posts.findFirst({
+			where: eq(posts.id, data.docId),
 		})
 
 		if (!post) {
@@ -59,13 +36,12 @@ export async function createComment(data: CreateCommentData) {
 		}
 
 		// Validate parent comment if provided
-		let parentComment = null
 		if (data.parentId) {
-			parentComment = await prisma.comment.findFirst({
-				where: {
-					id: data.parentId,
-					postId: data.docId,
-				},
+			const parentComment = await db.query.comments.findFirst({
+				where: and(
+					eq(comments.id, data.parentId),
+					eq(comments.postId, data.docId),
+				),
 			})
 
 			if (!parentComment) {
@@ -74,64 +50,57 @@ export async function createComment(data: CreateCommentData) {
 		}
 
 		// Create the comment
-		const comment = await prisma.comment.create({
-			data: {
+		const [newComment] = await db
+			.insert(comments)
+			.values({
 				content: data.content,
 				postId: data.docId,
 				authorId: session.user.id,
 				parentId: data.parentId || null,
 				status: 'PUBLISHED',
-			},
-			include: {
-				author: true,
-				parent: true,
-			},
-		})
+			})
+			.returning()
 
 		revalidatePath(data.path)
-		return { success: true, comment }
+		return { success: true, comment: newComment }
 	} catch (error) {
 		console.error('Error creating comment:', error)
 		return { success: false, error: 'Failed to create comment' }
 	}
 }
 
-export async function getComments(docId: string) {
+export async function getComments(
+	docId: string,
+): Promise<CommentWithReplies[]> {
 	try {
-		// Find the post first to ensure it exists
-		const post = await prisma.post.findFirst({
-			where: {
-				id: docId,
-			},
-		})
-
-		if (!post) {
-			return []
-		}
-
-		// Fetch all comments for this post in a single query
-		const allComments = (await prisma.comment.findMany({
-			where: {
-				postId: docId,
-				status: { in: ['PUBLISHED', 'SPAM'] },
-			},
-			include: {
+		// Fetch all comments for this post
+		const allComments = await db.query.comments.findMany({
+			where: and(
+				eq(comments.postId, docId),
+				inArray(comments.status, ['PUBLISHED', 'SPAM']),
+			),
+			with: {
 				author: true,
 			},
-			orderBy: {
-				createdAt: 'asc',
-			},
-		})) as CommentWithAuthor[]
+			orderBy: [asc(comments.createdAt)],
+		})
 
 		// Process comments for security and display
-		const processedComments = allComments.map((comment) => ({
-			...comment,
+		const processedComments = allComments.map((c) => ({
+			...c,
 			content:
-				comment.status === 'SPAM'
+				c.status === 'SPAM'
 					? '[此评论已被标记为垃圾信息]'
-					: comment.author.banned
+					: c.author?.banned
 						? '[此用户已被封禁]'
-						: comment.content,
+						: c.content,
+			author: {
+				id: c.author.id,
+				name: c.author.name,
+				email: c.author.email,
+				image: c.author.image,
+				banned: c.author.banned,
+			},
 		}))
 
 		// Build tree structure in memory
@@ -139,28 +108,26 @@ export async function getComments(docId: string) {
 		const rootComments: CommentWithReplies[] = []
 
 		// First pass: create all comment nodes
-		processedComments.forEach((comment) => {
-			commentMap.set(comment.id, {
-				...comment,
+		processedComments.forEach((c) => {
+			commentMap.set(c.id, {
+				...c,
 				replies: [],
 			})
 		})
 
 		// Second pass: build parent-child relationships
-		processedComments.forEach((comment) => {
-			const commentWithReplies = commentMap.get(comment.id)
+		processedComments.forEach((c) => {
+			const commentWithReplies = commentMap.get(c.id)
 			if (!commentWithReplies) return
 
-			if (comment.parentId) {
-				const parent = commentMap.get(comment.parentId)
+			if (c.parentId) {
+				const parent = commentMap.get(c.parentId)
 				if (parent?.replies) {
 					parent.replies.push(commentWithReplies)
 				} else {
-					// Orphan comment (parent doesn't exist), treat as root
 					rootComments.push(commentWithReplies)
 				}
 			} else {
-				// Root comment
 				rootComments.push(commentWithReplies)
 			}
 		})

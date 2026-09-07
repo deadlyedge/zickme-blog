@@ -1,13 +1,13 @@
 'use server'
 
+import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
-
+import { db } from '@/db'
+import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { fetchProfile } from '@/lib/content-providers'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarProfile } from '@/lib/get-avatar'
-import { prisma } from '@/lib/prisma'
-
 import type { Skill, Slogan, SocialLink } from '@/types'
 
 interface UpdateProfileData {
@@ -31,27 +31,21 @@ export async function updateProfile(data: UpdateProfileData) {
 
 		// If changing password, verify current password first
 		if (data.newPassword && data.currentPassword) {
-			const account = await prisma.account.findFirst({
-				where: {
-					userId: userId,
-					providerId: 'credential', // better-auth uses 'credential' for email/password
-				},
+			const account = await db.query.accounts.findFirst({
+				where: (acc, { and, eq }) =>
+					and(eq(acc.userId, userId), eq(acc.providerId, 'credential')),
 			})
 
 			if (!account?.password) {
 				throw new Error('当前用户没有密码记录')
 			}
 
-			// For better-auth, password verification should be done through the auth system
-			// But since we're using server action, we'll need to handle this differently
-			// For now, let's update the name and handle password separately
 			await auth.api.changePassword({
 				body: {
-					newPassword: data.newPassword, // required
-					currentPassword: data.currentPassword, // required
+					newPassword: data.newPassword,
+					currentPassword: data.currentPassword,
 					revokeOtherSessions: true,
 				},
-				// This endpoint requires session cookies.
 				headers: await headers(),
 			})
 		}
@@ -60,7 +54,6 @@ export async function updateProfile(data: UpdateProfileData) {
 				body: {
 					name: data.username,
 				},
-				// This endpoint requires session cookies.
 				headers: await headers(),
 			})
 		}
@@ -92,12 +85,12 @@ export async function updateAvatar() {
 			variant: 'croodles',
 		})
 
-		await prisma.user.update({
-			where: { id: userId },
-			data: {
+		await db
+			.update(users)
+			.set({
 				image: avatarUrl || bearAvatar,
-			},
-		})
+			})
+			.where(eq(users.id, userId))
 
 		return { success: true }
 	} catch (error) {
@@ -130,14 +123,12 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 			throw new Error('需要管理员权限')
 		}
 
-		// Get the first site profile (assuming there's only one)
-		const existingProfile = await prisma.siteProfile.findFirst()
+		const existingProfile = await db.query.siteProfile.findFirst()
 
 		if (existingProfile) {
-			// Update existing profile
-			await prisma.siteProfile.update({
-				where: { id: existingProfile.id },
-				data: {
+			await db
+				.update(siteProfile)
+				.set({
 					name: data.name,
 					title: data.title,
 					bio: data.bio,
@@ -149,23 +140,20 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 					skills: data.skills,
 					socialLinks: data.socialLinks,
 					updatedAt: new Date(),
-				},
-			})
+				})
+				.where(eq(siteProfile.id, existingProfile.id))
 		} else {
-			// Create new profile if none exists
-			await prisma.siteProfile.create({
-				data: {
-					name: data.name,
-					title: data.title,
-					bio: data.bio,
-					avatar: data.avatar,
-					location: data.location,
-					email: data.email,
-					website: data.website,
-					slogans: data.slogans,
-					skills: data.skills,
-					socialLinks: data.socialLinks,
-				},
+			await db.insert(siteProfile).values({
+				name: data.name,
+				title: data.title,
+				bio: data.bio,
+				avatar: data.avatar,
+				location: data.location,
+				email: data.email,
+				website: data.website,
+				slogans: data.slogans,
+				skills: data.skills,
+				socialLinks: data.socialLinks,
 			})
 		}
 
@@ -187,7 +175,6 @@ export async function getSiteProfile() {
 			throw new Error('需要管理员权限')
 		}
 
-		// Get the first site profile (assuming there's only one)
 		const profile = await fetchProfile()
 
 		return { profile }

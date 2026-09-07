@@ -70,7 +70,9 @@ export default async function DashboardPage() {
 							<Users className="h-4 w-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">{stats.totalUsers}</div>
+							<div className="text-2xl font-bold">
+								{stats.overview.totalUsers}
+							</div>
 							<p className="text-xs text-muted-foreground">注册用户总数</p>
 						</CardContent>
 					</Card>
@@ -81,7 +83,9 @@ export default async function DashboardPage() {
 							<MessageSquare className="h-4 w-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">{stats.totalComments}</div>
+							<div className="text-2xl font-bold">
+								{stats.overview.totalComments}
+							</div>
 							<p className="text-xs text-muted-foreground">所有评论总数</p>
 						</CardContent>
 					</Card>
@@ -92,9 +96,12 @@ export default async function DashboardPage() {
 							<FileText className="h-4 w-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">{stats.totalPosts}</div>
+							<div className="text-2xl font-bold">
+								{stats.overview.totalPosts}
+							</div>
 							<p className="text-xs text-muted-foreground">
-								已发布: {stats.publishedPosts} | 草稿: {stats.draftPosts}
+								已发布: {stats.overview.publishedPosts} | 草稿:{' '}
+								{stats.overview.draftPosts}
 							</p>
 						</CardContent>
 					</Card>
@@ -106,9 +113,12 @@ export default async function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{stats.totalPosts > 0
-									? Math.round((stats.totalComments / stats.totalPosts) * 10) /
-										10
+								{stats.overview.totalPosts > 0
+									? Math.round(
+											(stats.overview.totalComments /
+												stats.overview.totalPosts) *
+												10,
+										) / 10
 									: 0}
 							</div>
 							<p className="text-xs text-muted-foreground">
@@ -139,7 +149,7 @@ export default async function DashboardPage() {
 										<TableRow key={post.id}>
 											<TableCell>
 												<Link
-													href={`/blog/${post.slug}`}
+													href={`/posts/${post.slug}`}
 													className="hover:underline text-blue-600"
 												>
 													{post.title}
@@ -218,7 +228,7 @@ export default async function DashboardPage() {
 										</TableCell>
 										<TableCell>
 											<Link
-												href={`/blog/${comment.postSlug}`}
+												href={`/posts/${comment.postSlug}`}
 												className="hover:underline text-blue-600"
 											>
 												{comment.postTitle}

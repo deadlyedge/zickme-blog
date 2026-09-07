@@ -12,7 +12,7 @@ type HomeScrollAreaProps = { data: ContentResponse }
 
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const scrollRef = useRef(null)
-	const { profile, projects, blog } = data
+	const { profile, posts } = data
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,
 		offset: ['0 0', '1 1'],
@@ -25,12 +25,11 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 
 	const scaleX = useTransform(smoothed, [0, 1], [0, 1])
 
-	// 将滚动进度映射到背景颜色（从初始白色渐变到主题紫色）
+	// 将滚动进度映射到背景颜色
 	const backgroundColor = useTransform(
 		smoothed,
 		[0, 1],
 		['hsl(108,31%,50%)', 'hsl(0, 0, 95%)'],
-		// ['hsl(0, 0%, 97%)', 'hsl(247, 74%, 64%)']
 	)
 
 	// 监听背景颜色变化并应用到CSS变量
@@ -69,42 +68,23 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
 				<Hero profile={profile} scale={scaleX} />
 
-				{/* LATEST PROJECTS */}
+				{/* LATEST POSTS */}
 				<section
-					id="projects"
+					id="posts"
 					className="pt-20 px-2 bg-linear-to-b from-[hsla(49,80%,92%,0.8)] rounded-t-3xl"
 				>
 					<div className="flex items-baseline justify-between">
-						<h2 className="text-3xl font-semibold">Latest projects</h2>
+						<h2 className="text-3xl font-semibold">Latest Posts</h2>
 						<Link
-							href="/projects"
+							href="/posts"
 							className="text-sm text-slate-500 hover:underline"
 						>
-							See all projects
+							See all posts
 						</Link>
 					</div>
 
 					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{projects.map((post) => (
-							<PostCard key={post.id} post={post} />
-						))}
-					</div>
-				</section>
-
-				{/* LATEST BLOG */}
-				<section id="blog" className="mt-20 px-2">
-					<div className="flex items-baseline justify-between">
-						<h2 className="text-3xl font-semibold">Latest blog</h2>
-						<Link
-							href="/blog"
-							className="text-sm text-slate-500 hover:underline"
-						>
-							See all blog
-						</Link>
-					</div>
-
-					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{blog.map((post) => (
+						{posts?.map((post) => (
 							<PostCard key={post.id} post={post} />
 						))}
 					</div>

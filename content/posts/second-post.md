@@ -3,11 +3,10 @@ title: 我的第二篇文章
 slug: second-post
 date: '2025-12-08'
 tags:
-  - Prisma
   - about
   - feelings
 status: published
-excerpt: ''
+excerpt: '总结以replicaSet方式安装mongodb的方法'
 image: ./images/meFace_bigEyeball.jpg
 ---
 

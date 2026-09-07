@@ -5,7 +5,7 @@ import { v2 as cloudinary } from 'cloudinary'
 const POSTS_DIR = path.join(process.cwd(), 'content/posts')
 
 /**
- * 递归扫描所有images文件夹中的图片文件
+ * 递归扫描所有 images 文件夹中的图片文件
  */
 async function scanAllImages(dirPath: string): Promise<string[]> {
 	const images: string[] = []
@@ -17,7 +17,6 @@ async function scanAllImages(dirPath: string): Promise<string[]> {
 			const fullPath = path.join(dir, entry.name)
 
 			if (entry.isDirectory()) {
-				// 如果是images文件夹，扫描其中的图片
 				if (entry.name === 'images') {
 					const imageFiles = await fs.readdir(fullPath, { withFileTypes: true })
 					for (const imgEntry of imageFiles) {
@@ -29,7 +28,6 @@ async function scanAllImages(dirPath: string): Promise<string[]> {
 						}
 					}
 				} else {
-					// 递归扫描其他文件夹
 					await scan(fullPath)
 				}
 			}
@@ -41,12 +39,12 @@ async function scanAllImages(dirPath: string): Promise<string[]> {
 }
 
 /**
- * 生成Cloudinary publicId，包含完整路径信息
+ * 生成 Cloudinary publicId，包含完整相对路径
  */
 function generateCloudinaryPublicId(imagePath: string): string {
-	const relativePath = path.relative(POSTS_DIR, imagePath) // posts/images/xxx.jpg 或 posts/blogs/images/xxx.jpg
-	const pathWithoutExt = relativePath.replace(/\.[^/.]+$/, '') // 移除扩展名
-	return pathWithoutExt.replace(/\//g, '-') // posts-images-xxx 或 posts-blogs-images-xxx
+	const relativePath = path.relative(POSTS_DIR, imagePath)
+	const pathWithoutExt = relativePath.replace(/\.[^/.]+$/, '')
+	return pathWithoutExt.replace(/[\\/]/g, '-')
 }
 
 async function main() {
@@ -64,14 +62,12 @@ async function main() {
 		api_key: cloudinary.config().api_key ? '***' : undefined,
 	})
 
-	// 递归扫描所有images文件夹
 	const imageFiles = await scanAllImages(POSTS_DIR)
 	console.log(`📁 Found ${imageFiles.length} image files:`)
-	imageFiles.forEach(
-		(file) => void console.log(`  - ${path.relative(POSTS_DIR, file)}`),
-	)
+	for (const file of imageFiles) {
+		console.log(`  - ${path.relative(POSTS_DIR, file)}`)
+	}
 
-	// 上传所有图片
 	for (const imagePath of imageFiles) {
 		const stat = await fs.stat(imagePath)
 		if (!stat.isFile()) continue
@@ -87,7 +83,6 @@ async function main() {
 				public_id: publicId,
 				resource_type: 'image',
 				overwrite: true,
-				// upload_preset: 'zickme-blog',
 			})
 
 			console.log(`✅ Uploaded: ${res.public_id}`)

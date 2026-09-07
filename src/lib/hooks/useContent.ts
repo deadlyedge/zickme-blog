@@ -1,11 +1,11 @@
+'use client'
+
 import {
 	type UseQueryOptions,
 	useMutation,
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
-import type { PostType } from '@/generated/prisma/client'
-
 import { type CreateCommentData, createComment } from '@/lib/actions/comments'
 import {
 	commentsOptions,
@@ -13,79 +13,87 @@ import {
 	homeContentOptions,
 	postOptions,
 	postsOptions,
+	searchContentOptions,
 	tagsOptions,
 } from '@/lib/content-queries'
-
 import type { PostWithTags } from '@/types'
 
-// Hooks for data fetching
-export function usePosts(type: PostType = 'BLOG') {
-	return useQuery(postsOptions(type))
+// Hook to fetch all posts
+export function usePosts() {
+	return useQuery(postsOptions())
 }
 
-export function useTags() {
-	return useQuery(tagsOptions())
-}
-
-export function useHomeContent() {
-	return useQuery(homeContentOptions())
-}
-
+// Hook to fetch a single post by slug
 export function usePost(
 	slug: string,
 	options?: Partial<UseQueryOptions<PostWithTags | null>>,
 ) {
 	return useQuery({
 		...postOptions(slug),
-		...options, // Spread additional options including initialData
+		...options,
 	})
 }
 
-// Mutations for data modification (if needed in the future)
-export function useContentMutations() {
+// Hook to fetch all tags
+export function useTags() {
+	return useQuery(tagsOptions())
+}
+
+// Hook to fetch home page content
+export function useHomeContent() {
+	return useQuery(homeContentOptions())
+}
+
+// Hook for search functionality
+export function useSearchContent() {
+	return useQuery(searchContentOptions())
+}
+
+// Hook for post invalidation utilities
+export function useInvalidateContent() {
 	const queryClient = useQueryClient()
 
-	const invalidatePosts = (type?: PostType) => {
-		queryClient.invalidateQueries({ queryKey: contentKeys.posts(type) })
-	}
-
-	const invalidateTags = () => {
-		queryClient.invalidateQueries({ queryKey: contentKeys.tags() })
+	const invalidatePosts = () => {
+		return queryClient.invalidateQueries({
+			queryKey: contentKeys.posts(),
+		})
 	}
 
 	const invalidatePost = (slug: string) => {
-		queryClient.invalidateQueries({ queryKey: contentKeys.post(slug) })
+		return queryClient.invalidateQueries({
+			queryKey: contentKeys.post(slug),
+		})
 	}
 
-	const invalidateAllContent = () => {
-		queryClient.invalidateQueries({ queryKey: contentKeys.all })
+	const invalidateAll = () => {
+		return queryClient.invalidateQueries({
+			queryKey: contentKeys.all,
+		})
 	}
 
 	return {
 		invalidatePosts,
-		invalidateTags,
 		invalidatePost,
-		invalidateAllContent,
+		invalidateAll,
 	}
 }
 
-// Comment hooks
+// Hook to fetch comments for a post
 export function useComments(docId: string) {
 	return useQuery(commentsOptions(docId))
 }
 
+// Hook to create a new comment
 export function useCreateComment() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: (data: CreateCommentData) => createComment(data),
-		onSuccess: (result, variables) => {
-			if (result.success) {
-				// Invalidate and refetch comments for this doc
-				queryClient.invalidateQueries({
-					queryKey: contentKeys.comments(variables.docId),
-				})
-			}
+		onSuccess: (_, variables) => {
+			// Invalidate comments query for this specific post
+			void queryClient.invalidateQueries({
+				queryKey: contentKeys.comments(variables.docId),
+			})
 		},
 	})
 }

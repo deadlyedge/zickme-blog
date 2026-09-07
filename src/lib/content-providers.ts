@@ -1,137 +1,95 @@
-import { prisma } from '@/lib/prisma'
-import type {
-	ContentResponse,
-	PostType,
-	PostWithTags,
-	SiteProfile,
-	Tag,
-} from '@/types'
+import { and, asc, desc, eq, isNull } from 'drizzle-orm'
+import { db } from '@/db'
+import { posts, tags } from '@/db/schema'
+import type { ContentResponse, PostWithTags, SiteProfile, Tag } from '@/types'
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
 	throw new Error('content-providers can only be used on the server side')
 }
 
-export const fetchProfile = async (): Promise<SiteProfile> => {
-	return prisma.siteProfile.findFirst() as Promise<SiteProfile>
+export const fetchProfile = async (): Promise<SiteProfile | null> => {
+	const res = await db.query.siteProfile.findFirst()
+	return (res as unknown as SiteProfile) ?? null
 }
 
-export const fetchPosts = async (
-	type: PostType = 'BLOG',
-): Promise<PostWithTags[]> => {
-	return prisma.post.findMany({
-		where: {
-			type,
-			status: 'PUBLISHED',
+export const fetchPosts = async (limit = 100): Promise<PostWithTags[]> => {
+	const results = await db.query.posts.findMany({
+		where: and(eq(posts.status, 'PUBLISHED'), isNull(posts.archivedAt)),
+		orderBy: [desc(posts.publishedAt)],
+		limit,
+		with: {
+			postsToTags: {
+				with: {
+					tag: true,
+				},
+			},
 		},
-		include: { tags: true },
-		orderBy: { publishedAt: 'desc' },
-		take: 6,
 	})
+
+	return results.map((post) => ({
+		...post,
+		tags: post.postsToTags.map((pt) => pt.tag),
+	})) as PostWithTags[]
 }
 
 export const fetchPostBySlug = async (
 	slug: string,
 ): Promise<PostWithTags | null> => {
-	return prisma.post.findFirst({
-		where: {
-			slug,
-			// type: 'BLOG',
-			status: 'PUBLISHED',
+	const post = await db.query.posts.findFirst({
+		where: and(
+			eq(posts.slug, slug),
+			eq(posts.status, 'PUBLISHED'),
+			isNull(posts.archivedAt),
+		),
+		with: {
+			postsToTags: {
+				with: {
+					tag: true,
+				},
+			},
 		},
-		include: { tags: true },
 	})
+
+	if (!post) return null
+
+	return {
+		...post,
+		tags: post.postsToTags.map((pt) => pt.tag),
+	} as PostWithTags
 }
 
-export const fetchAllPostSlugs = async (type?: PostType): Promise<string[]> => {
-	const posts = await prisma.post.findMany({
-		where: {
-			type: type ?? 'BLOG',
-			status: 'PUBLISHED',
-		},
-		select: {
-			slug: true,
-		},
-	})
+export const fetchAllPostSlugs = async (): Promise<string[]> => {
+	const results = await db
+		.select({ slug: posts.slug })
+		.from(posts)
+		.where(and(eq(posts.status, 'PUBLISHED'), isNull(posts.archivedAt)))
 
-	return posts.map((post) => post.slug)
+	return results.map((post) => post.slug)
 }
 
 export const fetchTags = async (): Promise<Tag[]> => {
-	return prisma.tag.findMany({
-		orderBy: { name: 'asc' },
+	return await db.query.tags.findMany({
+		orderBy: [asc(tags.name)],
 	})
 }
 
 export const fetchHomeContent = async (): Promise<ContentResponse> => {
-	const [profile, projects, blog] = await Promise.all([
-		prisma.siteProfile.findFirst() as Promise<SiteProfile>,
-		prisma.post.findMany({
-			where: {
-				type: 'PROJECT',
-				status: 'PUBLISHED',
-			},
-			include: { tags: true },
-			orderBy: { publishedAt: 'desc' },
-			take: 3,
-		}),
-		prisma.post.findMany({
-			where: {
-				type: 'BLOG',
-				status: 'PUBLISHED',
-			},
-			include: { tags: true },
-			orderBy: { publishedAt: 'desc' },
-			take: 3,
-		}),
+	const [profile, latestPosts] = await Promise.all([
+		fetchProfile(),
+		fetchPosts(6),
 	])
 
 	return {
 		profile,
-		projects,
-		blog,
+		posts: latestPosts,
 	}
 }
 
 export const fetchAllPostsForSearch = async (): Promise<PostWithTags[]> => {
-	return prisma.post.findMany({
-		where: {
-			status: 'PUBLISHED',
-		},
-		include: { tags: true },
-		orderBy: { publishedAt: 'desc' },
-	})
+	return await fetchPosts(200)
 }
 
-export const fetchAllTagsForSearch = async (): Promise<
-	(Tag & { postTypes: string[] })[]
-> => {
-	const tags = await prisma.tag.findMany({
-		include: {
-			posts: {
-				where: {
-					status: 'PUBLISHED',
-				},
-				select: {
-					type: true,
-				},
-			},
-		},
-		orderBy: { name: 'asc' },
-	})
-
-	// 为每个tag添加postTypes数组
-	return tags.map((tag) => ({
-		...tag,
-		postTypes: [...new Set(tag.posts.map((post) => post.type))], // 去重
-	}))
+export const fetchAllTagsForSearch = async (): Promise<Tag[]> => {
+	return await fetchTags()
 }
-
-// export const fetchContent = async (): Promise<ContentResponse> => {
-// 	const [profile, posts] = await Promise.all([fetchProfile(), fetchPosts()])
-
-// 	return {
-// 		profile,
-// 		posts,
-// 	}
-// }

@@ -9,6 +9,30 @@ const nextConfig: NextConfig = {
 			{ protocol: 'https', hostname: 'c.zick.xyz' },
 		],
 	},
+	async redirects() {
+		return [
+			{
+				source: '/blog',
+				destination: '/posts',
+				permanent: true,
+			},
+			{
+				source: '/blog/:slug',
+				destination: '/posts/:slug',
+				permanent: true,
+			},
+			{
+				source: '/projects',
+				destination: '/posts',
+				permanent: true,
+			},
+			{
+				source: '/projects/:slug',
+				destination: '/posts/:slug',
+				permanent: true,
+			},
+		]
+	},
 }
 
 export default nextConfig
