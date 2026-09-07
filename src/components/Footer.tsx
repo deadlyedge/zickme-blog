@@ -129,27 +129,25 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 								{profileData.socialLinks &&
 									Array.isArray(profileData.socialLinks) && (
 										<div className="flex gap-2">
-											{(profileData.socialLinks as SocialLink[]).map(
-												(link, index: number) => {
-													const IconComponent = getSocialIcon(link.platform)
-													return IconComponent ? (
-														<Button
-															key={`social-${link.url}-${index}`}
-															size="icon-sm"
-															variant="outline"
-															asChild
+											{(profileData.socialLinks as SocialLink[]).map((link) => {
+												const IconComponent = getSocialIcon(link.platform)
+												return IconComponent ? (
+													<Button
+														key={`social-${link.platform}-${link.url}`}
+														size="icon-sm"
+														variant="outline"
+														asChild
+													>
+														<a
+															href={link.url}
+															target="_blank"
+															rel="noopener noreferrer"
 														>
-															<a
-																href={link.url}
-																target="_blank"
-																rel="noopener noreferrer"
-															>
-																<IconComponent className="size-4" />
-															</a>
-														</Button>
-													) : null
-												},
-											)}
+															<IconComponent className="size-4" />
+														</a>
+													</Button>
+												) : null
+											})}
 											<Button size="sm" variant="outline" asChild>
 												<Link href="/privacy">Privacy</Link>
 											</Button>

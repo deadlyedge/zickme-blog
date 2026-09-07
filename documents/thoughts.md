@@ -3,8 +3,14 @@
 
 # Todos
 
-- 如何重置管理员密码
-- 迁移到drizzle
-- 取消网站结构中的blogs/projects分类，统一用posts
-- 目前项目过于依赖github actions进行文章同步，一旦github actions转换出现问题，即使是很小的问题，非常难于排查错误。考虑在dashboard中做文章导入，并作状态提示如：cloudinary上传状态，文章解析状态等。
-- 在dashboard中管理文章状态
+- 在数据库中添加表来实现样式/landing page/about page的自定义
+  - 样式可直接使用shadcn的globle.css格式
+  - landing page可关闭，开启时：
+    - 使用top 5 hottest blog 翻页效果
+    - slogen
+    - 置顶blog列表
+    - 最新blog列表
+  - about使用现有样式并参考 https://template.mafifi.dev/about 的内容
+  - 在dashboard添加相应的录入
+- 为普通用户（非管理员）添加dashboard功能，比如修改密码/查看回复等功能
+- 

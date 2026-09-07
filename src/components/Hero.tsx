@@ -112,10 +112,10 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 				</motion.div>
 
 				{/* 2. 标题 */}
-				{sloganList.map((slogan, index) => (
+				{sloganList.map((slogan) => (
 					<motion.div
-						id={`slogan-${index + 1}`}
-						key={`slogan-${index + 1}`}
+						id={`slogan-${slogan.text}`}
+						key={`slogan-${slogan.text}`}
 						className="flex justify-start z-10"
 						initial="offscreen"
 						whileInView="onscreen"

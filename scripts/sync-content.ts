@@ -458,5 +458,5 @@ if (require.main === module) {
 	syncPosts().catch(console.error)
 }
 
-export { syncPosts, DEFAULT_CONFIG }
-export type { SyncConfig, ProcessedPost }
+export type { ProcessedPost, SyncConfig }
+export { DEFAULT_CONFIG, syncPosts }

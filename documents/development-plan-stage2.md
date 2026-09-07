@@ -26,27 +26,6 @@
 
 ---
 
-## 🧹 二、 可清除的不再需要的文件清单
-
-经过对代码库全局依赖的梳理，以下文件为废弃的历史遗留代码、旧 Payload 依赖残余或临时备份，可安全清理：
-
-### 1. 废弃的参考与遗留文档（不再被引用）
-- `references/` 目录下的所有遗留代码：
-  - `references/deprecated_payload_documents/`（全目录：历史阶段文档）
-  - `references/payload/`（全目录：旧版 Payload CMS 配置文件与集合定义）
-  - `references/api/`（全目录：旧 API routes 备份）
-  - `references/auth_alt.ts`（旧鉴权备用文件）
-  - `references/CommentsSection.tsx`（旧评论组件备份）
-  - `references/FieldExample.tsx`（旧表单组件测试代码）
-  - `references/media_success.yml`（旧 Actions 备份）
-
-### 2. 根目录废弃备份与临时文件
-- `.env.backup`（旧环境变量备份）
-- `.env.backup.payload`（Payload 遗留环境变量备份）
-- `ignore-build.sh`（如不再用于 Vercel 自定义 build 忽略规则，可清理）
-
----
-
 ## 🗺️ 三、 下一阶段开发计划与实施路径
 
 ### 阶段一：管理员与用户密码重置及运维增强（免邮件系统方案）

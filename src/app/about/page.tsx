@@ -105,22 +105,15 @@ export default async function AboutPage() {
 					<section className="mt-16">
 						<h2 className="text-3xl font-bold mb-8">技能专长</h2>
 						<div className="grid md:grid-cols-2 gap-8">
-							{(profileData.skills as Skill[]).map((skill, index: number) => (
-								<CardTilt
-									key={`${index}-${skill.category}`}
-									tiltMaxAngle={15}
-									scale={1.05}
-								>
+							{(profileData.skills as Skill[]).map((skill) => (
+								<CardTilt key={skill.category} tiltMaxAngle={15} scale={1.05}>
 									<CardTiltContent className="rounded-2xl bg-card shadow-2xl p-6">
 										<h3 className="text-lg font-semibold mb-4">
 											{skill.category}
 										</h3>
 										<div className="space-y-2">
-											{skill.technologies?.map((tech, techIndex: number) => (
-												<div
-													key={`${techIndex}-${tech.name}`}
-													className="flex justify-between"
-												>
+											{skill.technologies?.map((tech) => (
+												<div key={tech.name} className="flex justify-between">
 													<span>{tech.name}</span>
 													<span className="text-muted-foreground">
 														{tech.level}

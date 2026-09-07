@@ -475,5 +475,5 @@ if (require.main === module) {
 	checkContent().catch(console.error)
 }
 
-export { checkContent, DEFAULT_CONFIG }
 export type { CheckConfig, ContentCheckResult }
+export { checkContent, DEFAULT_CONFIG }
