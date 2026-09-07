@@ -19,8 +19,8 @@
 		"seed": "bun run scripts/seed.ts"
 	},
 	"dependencies": {
-		"@dicebear/collection": "^9.4.2",
-		"@dicebear/core": "^9.4.3",
+		"@dicebear/core": "^10.7.0",
+		"@dicebear/styles": "^10.6.0",
 		"@hookform/resolvers": "^5.9.1",
 		"@prisma/adapter-pg": "^7.10.0",
 		"@prisma/client": "^7.10.0",
