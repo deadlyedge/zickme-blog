@@ -1,11 +1,10 @@
 # 想法
 
-- ~~修改文件名是否应该自动修改slug~~
-- /posts的必要性，或者说/content的必要性
-- 直接在vscode中编辑.md文件会生成不带前缀‘./’的类似于(images/xxx.jpg)的链接，是否考虑覆盖处理
-- 文件路径自动生成tag??
-- siteProfie 管理面板??
-- ~~考虑是应该在前端渲染markdown，还是在后端转换html~~
-- 添加slogans，socialLinks，skills的编辑tab??
-- 回收折叠的comments时动画有一点页面抖动。??
-- 是否应该整理tanstack query的query key
+
+# Todos
+
+- 如何重置管理员密码
+- 迁移到drizzle
+- 取消网站结构中的blogs/projects分类，统一用posts
+- 目前项目过于依赖github actions进行文章同步，一旦github actions转换出现问题，即使是很小的问题，非常难于排查错误。考虑在dashboard中做文章导入，并作状态提示如：cloudinary上传状态，文章解析状态等。
+- 在dashboard中管理文章状态
