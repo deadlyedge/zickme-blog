@@ -4,6 +4,7 @@
 [![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://postgresql.org/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.45-green)](https://orm.drizzle.team/)
 [![Better Auth](https://img.shields.io/badge/Better--Auth-1.7-orange)](https://www.better-auth.com/)
 
 一个现代化的个人博客和作品集系统，采用最新的 Web 技术栈构建。
@@ -15,7 +16,7 @@
 ### 🎨 现代化交互与设计
 - **响应式布局**: 完美适配桌面端、平板和移动设备。
 - **暗色与多主题**: 基于 `next-themes` 的视觉设计。
-- **平滑动画与动效**: 基于 Framer Motion 的页面过渡与 Lenis 平滑滚动。
+- **平滑动画与动效**: 基于 Motion 的页面过渡与 Lenis 平滑滚动。
 
 ### 📝 统一内容管理系统 (Post System)
 - **Markdown 驱动**: 基于 Git 与 Markdown 的纯文本内容管理。
@@ -36,7 +37,7 @@
 
 - **框架与运行时**: Next.js 16 (App Router + React 19) + TypeScript + Bun
 - **样式与 UI**: Tailwind CSS 4 + Radix UI + Motion
-- **数据库与 ORM**: PostgreSQL (Neon) + Prisma 7 (正在逐步向 Drizzle ORM 迁移)
+- **数据库与 ORM**: PostgreSQL (Neon) + Drizzle ORM
 - **认证与鉴权**: Better Auth + RBAC 权限系统
 - **代码质量与格式化**: Biome
 
@@ -45,8 +46,8 @@
 ## 🚀 快速开始
 
 ### 1. 环境准备
-- **Bun** (推荐) 或 Node.js 20+
-- **PostgreSQL** 16+
+- **Bun** (推荐) 或 Node.js 24+
+- **PostgreSQL** 17+ (推荐 Neon Serverless Postgres)
 
 ### 2. 安装与配置
 
@@ -69,6 +70,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/zickme_blog"
 
 # Better Auth
 BETTER_AUTH_SECRET="your-secret-key"
+# 本地开发填 http://localhost:3000；部署至 Vercel 时请务必设置为你的生产域名（如 https://zick.me 或 https://your-project.vercel.app）
 BETTER_AUTH_URL="http://localhost:3000"
 
 # Cloudinary (可选)
@@ -80,9 +82,8 @@ CLOUDINARY_API_SECRET="your-api-secret"
 ### 3. 数据库与初始化
 
 ```bash
-# 生成客户端并运行迁移
-bun run db:generate
-bun run db:migrate
+# 推送 schema 到数据库 / 生成迁移
+bun run db:push
 
 # 导入/同步本地文章至数据库
 bun run sync
@@ -97,27 +98,40 @@ bun run dev
 
 ---
 
+## 🌐 Vercel 部署注意事项
+
+在 Vercel 部署时，请在 **Project Settings ➡️ Environment Variables** 中配置以下环境变量：
+
+| 环境变量 | 必填 | 说明 | 示例 |
+| :--- | :---: | :--- | :--- |
+| `DATABASE_URL` | **是** | PostgreSQL 数据库连接串 | `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require` |
+| `BETTER_AUTH_SECRET` | **是** | Better-Auth 密钥 (可通过 `openssl rand -base64 32` 生成) | `abcdef123456...` |
+| `BETTER_AUTH_URL` | **是** | **必须配置生产站点的完整 URL**（避免出现 `Base URL is not set` 警告及回调异常） | `https://zick.me` 或 `https://your-app.vercel.app` |
+| `CLOUDINARY_CLOUD_NAME` | 否 | Cloudinary 云名称（媒体同步用） | `my-cloud` |
+| `CLOUDINARY_API_KEY` | 否 | Cloudinary API Key | `1234567890` |
+| `CLOUDINARY_API_SECRET` | 否 | Cloudinary API Secret | `abcdefgh...` |
+
+---
+
 ## 📁 核心目录结构
 
 ```
 zickme-blog/
 ├── content/                 # Markdown 内容文件
-│   └── posts/               # 文章仓库
-├── documents/               # 当前有效规划文档 (Stage 2 规划等)
+│   └── posts/               # 文章与本地图片仓库
+├── documents/               # 规划与设计文档 (Stage 2 规划等)
 │   └── development-plan-stage2.md
-├── references/              # 归档的历史文档与遗留代码
-│   └── old-documents/       # 历史开发文档
-├── prisma/                  # 数据库模式与迁移
-├── public/                  # 静态资源
 ├── scripts/                 # 运维与同步工具脚本
 │   ├── check-content.ts     # Markdown 内容检查
 │   ├── sync-content.ts      # 内容同步入库脚本
+│   ├── reset-db.ts          # 数据库快速重置脚本
 │   └── reset-admin-password.ts # 管理员密码重置脚本
 ├── src/
 │   ├── app/                 # Next.js App Router (页面、路由、Dashboard)
 │   ├── components/          # React 业务与 UI 组件
-│   ├── lib/                 # 核心工具库 (auth, db, utils)
-│   └── constants.ts         # 全局常量与校验规则
+│   ├── db/                  # Drizzle ORM Schema 与数据库连接实例
+│   ├── lib/                 # 核心工具库 (auth, actions, queries, utils)
+│   └── types/               # 统一类型定义
 ├── AGENTS.md                # AI Agent 开发指南与规范
 └── biome.json               # 代码格式化与 Linter 配置
 ```
@@ -134,8 +148,10 @@ zickme-blog/
 | `bun run format` | 运行 Biome 自动格式化代码 |
 | `bun run sync` | 执行本地 Markdown 内容向数据库同步 |
 | `bun run content:check` | 校验本地 Markdown frontmatter 与格式 |
-| `bun run db:migrate` | 运行数据库迁移 |
-| `bun run db:studio` | 打开数据库可视化管理工具 |
+| `bun run db:push` | 将 Drizzle Schema 同步推送到数据库 |
+| `bun run db:generate` | 生成 Drizzle 迁移文件 |
+| `bun run db:reset` | 重置/清空数据库所有数据表 |
+| `bun run reset-admin-password` | CLI 脚本直接重置管理员密码 |
 
 ---
 
