@@ -15,6 +15,13 @@
 			"when": 1788788259893,
 			"tag": "0001_giant_epoch",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1788792623411,
+			"tag": "0002_ancient_praxagora",
+			"breakpoints": true
 		}
 	]
 }

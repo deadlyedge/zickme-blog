@@ -8,7 +8,14 @@ import { auth } from '@/lib/auth'
 import { fetchProfile } from '@/lib/content-providers'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarProfile } from '@/lib/get-avatar'
-import type { Skill, Slogan, SocialLink } from '@/types'
+import type {
+	AboutPageConfig,
+	LandingPageConfig,
+	Skill,
+	Slogan,
+	SocialLink,
+	ThemeConfig,
+} from '@/types'
 
 interface UpdateProfileData {
 	username: string
@@ -110,6 +117,9 @@ interface UpdateSiteProfileData {
 	slogans?: Slogan[]
 	skills?: Skill[]
 	socialLinks?: SocialLink[]
+	themeConfig?: ThemeConfig
+	landingPageConfig?: LandingPageConfig
+	aboutPageConfig?: AboutPageConfig
 }
 
 export async function updateSiteProfile(data: UpdateSiteProfileData) {
@@ -139,6 +149,9 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 					slogans: data.slogans,
 					skills: data.skills,
 					socialLinks: data.socialLinks,
+					themeConfig: data.themeConfig,
+					landingPageConfig: data.landingPageConfig,
+					aboutPageConfig: data.aboutPageConfig,
 					updatedAt: new Date(),
 				})
 				.where(eq(siteProfile.id, existingProfile.id))
@@ -154,6 +167,9 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 				slogans: data.slogans,
 				skills: data.skills,
 				socialLinks: data.socialLinks,
+				themeConfig: data.themeConfig,
+				landingPageConfig: data.landingPageConfig,
+				aboutPageConfig: data.aboutPageConfig,
 			})
 		}
 

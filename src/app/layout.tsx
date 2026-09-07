@@ -12,6 +12,8 @@ import AuthModal from '@/components/auth/AuthModal'
 import { HeaderNav } from '@/components/HeaderNav'
 import { QueryProvider } from '@/components/QueryProvider'
 import { Toaster } from '@/components/ui/sonner'
+import { fetchProfile } from '@/lib/content-providers'
+import { generateDynamicThemeCss } from '@/lib/theme'
 
 const notoSerif = Noto_Serif({
 	variable: '--font-noto-serif',
@@ -58,11 +60,21 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode
 }) {
+	const profile = await fetchProfile()
+	const dynamicThemeCss = generateDynamicThemeCss(profile?.themeConfig)
+
 	return (
 		<html lang="en">
 			<body
 				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}
 			>
+				{dynamicThemeCss && (
+					<style
+						id="dynamic-theme-style"
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: dynamic theme injection from database
+						dangerouslySetInnerHTML={{ __html: dynamicThemeCss }}
+					/>
+				)}
 				<QueryProvider>
 					<main>
 						<HeaderNav />

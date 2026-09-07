@@ -2,7 +2,10 @@
 import type { Comment } from './content'
 
 export type {
+	AboutPageConfig,
 	ContentResponse,
+	FeaturedProject,
+	LandingPageConfig,
 	Post,
 	PostWithTags,
 	Role,
@@ -17,6 +20,9 @@ export type {
 	SyncStatus,
 	Tag,
 	Technology,
+	ThemeConfig,
+	ThemeVariables,
+	TimelineItem,
 	User,
 } from './content'
 

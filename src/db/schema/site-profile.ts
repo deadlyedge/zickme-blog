@@ -14,6 +14,9 @@ export const siteProfile = pgTable('siteProfile', {
 	socialLinks: jsonb('socialLinks'),
 	skills: jsonb('skills'),
 	slogans: jsonb('slogans'),
+	themeConfig: jsonb('themeConfig'),
+	landingPageConfig: jsonb('landingPageConfig'),
+	aboutPageConfig: jsonb('aboutPageConfig'),
 	createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp('updatedAt', { mode: 'date' })
 		.defaultNow()
