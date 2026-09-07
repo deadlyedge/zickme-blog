@@ -1,10 +1,12 @@
 import {
 	FileText,
+	HardDriveUpload,
 	MessageSquare,
 	TrendingUp,
 	UserCog,
 	Users,
 } from 'lucide-react'
+
 import { headers } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -49,6 +51,18 @@ export default async function DashboardPage() {
 				<div className="flex items-center justify-between">
 					<h1 className="text-3xl font-bold">仪表板</h1>
 					<ButtonGroup>
+						<Button asChild variant="outline" size="sm">
+							<Link href="/dashboard/posts">
+								<FileText className="h-4 w-4 mr-2" />
+								文章管理
+							</Link>
+						</Button>
+						<Button asChild variant="outline" size="sm">
+							<Link href="/dashboard/sync">
+								<HardDriveUpload className="h-4 w-4 mr-2" />
+								同步中心
+							</Link>
+						</Button>
 						<Button asChild variant="outline" size="sm">
 							<Link href="/dashboard/users">
 								<UserCog className="h-4 w-4 mr-2" />

@@ -8,6 +8,13 @@
 			"when": 1788774795977,
 			"tag": "0000_soft_lila_cheney",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1788788259893,
+			"tag": "0001_giant_epoch",
+			"breakpoints": true
 		}
 	]
 }

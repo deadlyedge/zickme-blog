@@ -1,15 +1,35 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { comments, posts, tags, users } from '@/db/schema'
+import type { comments, posts, syncLogs, tags, users } from '@/db/schema'
 
 // Enums / Status
 export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
 export type Role = 'ADMIN' | 'EDITOR' | 'USER'
+export type SyncStatus = 'SUCCESS' | 'FAILED' | 'PARTIAL'
 
 // Base Models
 export type Post = InferSelectModel<typeof posts>
 export type Tag = InferSelectModel<typeof tags>
 export type Comment = InferSelectModel<typeof comments>
 export type User = InferSelectModel<typeof users>
+export type SyncLog = InferSelectModel<typeof syncLogs>
+
+// Sync Log detail types
+export interface SyncLogItem {
+	stage: 'frontmatter' | 'media' | 'db' | 'general'
+	level: 'info' | 'warn' | 'error' | 'success'
+	message: string
+	detail?: string
+	timestamp: string
+}
+
+export interface SyncResult {
+	success: boolean
+	status: SyncStatus
+	totalPosts: number
+	successCount: number
+	errorCount: number
+	logs: SyncLogItem[]
+}
 
 // Social links and profile types
 export type SocialLink = {
