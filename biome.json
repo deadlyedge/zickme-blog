@@ -13,6 +13,7 @@
 			"!dist",
 			"!.next",
 			"!public",
+			"!src/generated",
 			"!**/components/ui"
 		]
 	},
