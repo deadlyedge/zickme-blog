@@ -1,18 +1,10 @@
-import {
-	FacebookIcon,
-	GithubIcon,
-	GlobeIcon,
-	InstagramIcon,
-	LinkedinIcon,
-	MailIcon,
-	TwitterIcon,
-	YoutubeIcon,
-} from 'lucide-react'
+import { GlobeIcon, MailIcon } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type React from 'react'
 import { Button } from '@/components/ui/button'
+import { getSocialIcon } from '@/components/ui/icons/social'
 import type { SiteProfile, SocialLink } from '@/types'
 
 type FooterAboutProps = {
@@ -48,25 +40,6 @@ function AnimatedContainer({
 	)
 }
 
-function getSocialIcon(platform: string) {
-	switch (platform) {
-		case 'GitHub':
-			return GithubIcon
-		case 'LinkedIn':
-			return LinkedinIcon
-		case 'Twitter':
-			return TwitterIcon
-		case 'Instagram':
-			return InstagramIcon
-		case 'YouTube':
-			return YoutubeIcon
-		case 'Facebook':
-			return FacebookIcon
-		default:
-			return null
-	}
-}
-
 export function FooterAbout({ profileData }: FooterAboutProps) {
 	// const profileData = await fetchProfile()
 
@@ -81,7 +54,7 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 		>
 			<div className="fixed bottom-0 left-0 h-140 w-full pointer-events-none isolate">
 				<div className="sticky top-[calc(100vh-560px)] h-full pointer-events-none">
-					<div className="grid grid-cols-1 gap-12 pt-12 sm:grid-cols-4 max-w-7xl mx-auto px-4">
+					<div className="grid grid-cols-1 gap-12 pt-12 sm:grid-cols-4 max-w-7xl mx-auto px-4 sm:px-6">
 						<AnimatedContainer className="space-y-4 sm:col-start-2">
 							<div className="mt-8 sm:mt-0">
 								{profileData.avatar && (

@@ -40,6 +40,8 @@ export type SocialLink = {
 		| 'Instagram'
 		| 'YouTube'
 		| 'Facebook'
+		| 'Bilibili'
+		| 'Zhihu'
 		| 'Other'
 	url: string
 	username?: string

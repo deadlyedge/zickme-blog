@@ -91,6 +91,8 @@ const siteProfileSchema = z.object({
 					'Instagram',
 					'YouTube',
 					'Facebook',
+					'Bilibili',
+					'Zhihu',
 					'Other',
 				]),
 				url: z.url('请输入有效的URL'),
@@ -637,6 +639,10 @@ export function EditProfile() {
 																<SelectItem value="Facebook">
 																	Facebook
 																</SelectItem>
+																<SelectItem value="Bilibili">
+																	Bilibili
+																</SelectItem>
+																<SelectItem value="Zhihu">知乎</SelectItem>
 																<SelectItem value="Other">Other</SelectItem>
 															</SelectGroup>
 														</SelectContent>

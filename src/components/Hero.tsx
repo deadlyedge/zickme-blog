@@ -68,16 +68,16 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 			>
 				<div
 					className={cn(
-						'fixed top-36 left-36 z-0 select-none',
+						'fixed top-24 left-4 sm:top-36 sm:left-36 z-0 select-none pointer-events-none',
 						scaleValue > 0.5 ? '-z-10' : '',
 					)}
 				>
 					<motion.div
 						id="hero-ball"
-						className="flex h-80 w-80 items-center justify-center rounded-full border-8 border-white/80 bg-orange-400 shadow-2xl"
+						className="flex h-44 w-44 sm:h-80 sm:w-80 items-center justify-center rounded-full border-4 sm:border-8 border-white/80 bg-orange-400 shadow-2xl"
 						style={style}
 					>
-						<div className="text-8xl font-bold text-white">🏀</div>
+						<div className="text-4xl sm:text-8xl font-bold text-white">🏀</div>
 					</motion.div>
 				</div>
 				{/* 背景 JUICE：单独一个 scroll 动画块 */}
