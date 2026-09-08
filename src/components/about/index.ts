@@ -1,0 +1,5 @@
+export { AboutHero } from './AboutHero'
+export { ContactCardsSection } from './ContactCardsSection'
+export { FeaturedProjectsSection } from './FeaturedProjectsSection'
+export { SkillsSection } from './SkillsSection'
+export { TimelineSection } from './TimelineSection'

@@ -1,133 +1,118 @@
-import { GlobeIcon, MailIcon } from 'lucide-react'
 import type { Metadata } from 'next'
-import Image from 'next/image'
-import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
-
+import {
+	AboutHero,
+	ContactCardsSection,
+	FeaturedProjectsSection,
+	SkillsSection,
+	TimelineSection,
+} from '@/components/about'
 import { fetchProfile } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
-
-type SocialLink = {
-	platform: string
-	url: string
-	username?: string
-}
-
-type Technology = {
-	name: string
-	level?: string
-}
-
-type Skill = {
-	category: string
-	technologies: Technology[]
-}
+import type { TimelineItem } from '@/types'
 
 export const revalidate = 3600 // 每小时重新验证一次
 
 export const metadata: Metadata = buildMetadata({
 	title: 'About',
-	description: 'Learn more about me and my background.',
+	description:
+		'Learn more about my background, career experience, tech stack, and open source projects.',
 })
+
+// 默认兜底经历时间线（若数据库尚未录入时提供高质量的结构展示）
+const DEFAULT_CAREER_TIMELINE: TimelineItem[] = [
+	{
+		id: 'default-exp-1',
+		period: '2024 - Present',
+		role: 'Senior Full Stack Engineer',
+		company: 'Modern Web & Cloud Architecture',
+		location: 'Remote',
+		description:
+			'Designing and building high-performance web applications, distributed backend services, and developer tools using Next.js, TypeScript, and modern Cloud ecosystems.',
+		achievements: [
+			'Engineered scalable personal blog and content management system with App Router and Drizzle ORM.',
+			'Architected streamlined data pipelines with automated validation and fast full-text search indexing.',
+		],
+		technologies: [
+			'Next.js',
+			'React 19',
+			'TypeScript',
+			'Tailwind CSS',
+			'Drizzle ORM',
+			'PostgreSQL',
+		],
+	},
+	{
+		id: 'default-exp-2',
+		period: '2022 - 2024',
+		role: 'Frontend & UI Systems Specialist',
+		company: 'Interactive Digital Experience',
+		location: 'Shenzhen / Remote',
+		description:
+			'Focused on fluid motion design, component systems, and optimizing web vitals for data-dense frontend dashboards.',
+		achievements: [
+			'Built custom micro-interaction motion libraries with 60fps performance on mobile devices.',
+			'Refactored legacy monolith into composable modular micro-frontends.',
+		],
+		technologies: [
+			'React',
+			'TypeScript',
+			'Motion',
+			'Node.js',
+			'Zustand',
+			'GraphQL',
+		],
+	},
+]
 
 export default async function AboutPage() {
 	const profileData = await fetchProfile()
 
 	if (!profileData) {
-		return <div>暂无个人资料</div>
+		return (
+			<div className="pt-24 min-h-screen flex items-center justify-center">
+				<p className="text-muted-foreground">暂无个人资料</p>
+			</div>
+		)
 	}
 
+	const aboutConfig = profileData.aboutPageConfig
+
 	return (
-		<div className="pt-16 overflow-y-auto h-svh">
-			<section className="mx-auto p-6 max-w-4xl">
-				<div className="grid md:grid-cols-2 gap-12">
-					<div>
-						{profileData.avatar && (
-							<Image
-								src={profileData.avatar || ''}
-								alt={profileData.name}
-								width={300}
-								height={300}
-								className="rounded-lg"
-							/>
-						)}
-					</div>
+		<main className="min-h-screen pt-20 pb-16 bg-background">
+			<div className="mx-auto max-w-4xl px-6 sm:px-8 space-y-4">
+				{/* 1. Hero 个人导语与即时状态 */}
+				<AboutHero profile={profileData} aboutConfig={aboutConfig} />
 
-					<div>
-						<h1 className="text-4xl font-bold mb-4">{profileData.name}</h1>
-						<p className="text-xl text-muted-foreground mb-6">
-							{profileData.title}
-						</p>
-						<p className="text-lg mb-6">{profileData.bio}</p>
+				{/* 2. 职业生涯经历时间线 */}
+				<TimelineSection
+					title="Work & Career Experience"
+					description="A chronicle of engineering roles, leadership positions, and system architecture challenges I've tackled."
+					items={aboutConfig?.careerTimeline}
+					emptyFallback={DEFAULT_CAREER_TIMELINE}
+				/>
 
-						{profileData.location && (
-							<p className="mb-2">📍 {profileData.location}</p>
-						)}
+				{/* 3. 教育背景与学术经历（若有配置） */}
+				{aboutConfig?.educationTimeline &&
+					aboutConfig.educationTimeline.length > 0 && (
+						<TimelineSection
+							title="Education & Academic Background"
+							description="Degrees, academic foundations, and formal training in computer science and engineering."
+							items={aboutConfig.educationTimeline}
+						/>
+					)}
 
-						{profileData.email && (
-							<p className="mb-2 flex gap-1">
-								<MailIcon />
-								{profileData.email}
-							</p>
-						)}
+				{/* 4. 技能栈与常用工具库 */}
+				<SkillsSection skills={profileData.skills} />
 
-						{profileData.website && (
-							<p className="mb-6 flex gap-1">
-								<GlobeIcon />
-								<a
-									href={profileData.website}
-									className="text-primary hover:underline"
-								>
-									{profileData.website}
-								</a>
-							</p>
-						)}
+				{/* 5. 精选项目与开源亮点（若有配置） */}
+				{aboutConfig?.featuredProjects &&
+					aboutConfig.featuredProjects.length > 0 && (
+						<FeaturedProjectsSection projects={aboutConfig.featuredProjects} />
+					)}
 
-						{profileData.socialLinks &&
-							Array.isArray(profileData.socialLinks) && (
-								<div className="flex gap-4">
-									{(profileData.socialLinks as SocialLink[]).map((link) => (
-										<a
-											key={link.platform}
-											href={link.url}
-											className="text-2xl hover:opacity-75"
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											{link.platform}
-										</a>
-									))}
-								</div>
-							)}
-					</div>
-				</div>
-
-				{profileData.skills && Array.isArray(profileData.skills) && (
-					<section className="mt-16">
-						<h2 className="text-3xl font-bold mb-8">技能专长</h2>
-						<div className="grid md:grid-cols-2 gap-8">
-							{(profileData.skills as Skill[]).map((skill) => (
-								<CardTilt key={skill.category} tiltMaxAngle={15} scale={1.05}>
-									<CardTiltContent className="rounded-2xl bg-card shadow-2xl p-6">
-										<h3 className="text-lg font-semibold mb-4">
-											{skill.category}
-										</h3>
-										<div className="space-y-2">
-											{skill.technologies?.map((tech) => (
-												<div key={tech.name} className="flex justify-between">
-													<span>{tech.name}</span>
-													<span className="text-muted-foreground">
-														{tech.level}
-													</span>
-												</div>
-											))}
-										</div>
-									</CardTiltContent>
-								</CardTilt>
-							))}
-						</div>
-					</section>
-				)}
-			</section>
-		</div>
+				{/* 6. 社交媒体与联系卡片 */}
+				<ContactCardsSection profile={profileData} />
+			</div>
+		</main>
 	)
 }
