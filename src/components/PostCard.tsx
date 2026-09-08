@@ -1,7 +1,7 @@
-import { BookOpenIcon, CodeIcon } from 'lucide-react'
+import { BookOpenIcon, ClockIcon, CodeIcon } from 'lucide-react'
 import Image from 'next/image'
-import React from 'react'
-import { formatPublishedDate } from '@/lib/utils'
+import React, { useMemo } from 'react'
+import { calculateReadingTime, formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types'
 import { NavigationLink } from './NavigationLink'
 import { Badge } from './ui/badge'
@@ -12,6 +12,10 @@ type PostCardProps = { post: PostWithTags }
 
 export const PostCard = React.memo(({ post }: PostCardProps) => {
 	const route = '/posts/'
+
+	const readingTime = useMemo(() => {
+		return calculateReadingTime(post.content)
+	}, [post.content])
 
 	return (
 		<CardTilt
@@ -64,9 +68,16 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 					<p className="text-sm line-clamp-3">{post.excerpt}</p>
 
 					<div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-						<div>
-							{post.publishedAt &&
-								formatPublishedDate(post.publishedAt.toISOString())}
+						<div className="flex items-center gap-3">
+							{post.publishedAt && (
+								<span>
+									{formatPublishedDate(post.publishedAt.toISOString())}
+								</span>
+							)}
+							<span className="inline-flex items-center gap-1 text-muted-foreground">
+								<ClockIcon className="size-3.5" />
+								{readingTime.text}
+							</span>
 						</div>
 						<div className="flex items-center gap-2">
 							{post.sourceUrl && (

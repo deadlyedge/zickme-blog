@@ -6,9 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
-//写一个方法来处理类型问题，从一个复合类型如'number | T'中剔除'number'
-// export type ExcludeNumber<T> = T extends number ? never : T
-
 /**
  * 从 cover 对象中安全提取 URL，确保返回 string | null
  */
@@ -22,20 +19,45 @@ export function getCoverUrl(cover: unknown): string | null {
 	return null
 }
 
-/**
- * 从联合类型如 'number | T' 中剔除 'number'，返回 T | null
- * 用于处理 Payload depth 不足时关联字段返回 ID 的情况
- */
-// export type ExcludeNumber<T> = T extends number ? never : T
-
-// export function safeExtract<T>(value: T): ExcludeNumber<T> | null {
-// 	return typeof value === 'number' ? null : (value as ExcludeNumber<T>) || null
-// }
-
 export const formatPublishedDate = (value: string) => {
 	const date = parseISO(value)
 	if (!isValid(date)) return value
 	return format(date, 'MMMM d, yyyy')
+}
+
+/**
+ * 估算 Markdown 文本的阅读时长与字数统计
+ * @param content Markdown 正文
+ * @param wordsPerMinute 中英文混合阅读速度（默认每分钟 300 字）
+ */
+export function calculateReadingTime(
+	content: string | null | undefined,
+	wordsPerMinute = 300,
+): { minutes: number; text: string; wordsCount: number } {
+	if (!content || typeof content !== 'string') {
+		return { minutes: 1, text: '1 分钟阅读', wordsCount: 0 }
+	}
+
+	// 移除 HTML 标签和 Markdown 常见符号
+	const cleanText = content
+		.replace(/```[\s\S]*?```/g, '') // 去除代码块
+		.replace(/<[^>]+>/g, '') // 去除 HTML
+		.replace(/[#*`_~[\]()!-]/g, '') // 去除 Markdown 特殊符号
+		.trim()
+
+	// 统计中文字符数与英文单词数
+	const chineseMatches = cleanText.match(/[\u4e00-\u9fa5]/g) || []
+	const englishMatches =
+		cleanText.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[a-zA-Z0-9_-]+/g) || []
+
+	const totalWords = chineseMatches.length + englishMatches.length
+	const minutes = Math.max(1, Math.ceil(totalWords / wordsPerMinute))
+
+	return {
+		minutes,
+		text: `${minutes} 分钟阅读`,
+		wordsCount: totalWords,
+	}
 }
 
 /**
