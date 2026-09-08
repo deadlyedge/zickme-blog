@@ -2,6 +2,7 @@ import {
 	FileText,
 	HardDriveUpload,
 	MessageSquare,
+	Palette,
 	TrendingUp,
 	UserCog,
 	Users,
@@ -48,9 +49,15 @@ export default async function DashboardPage() {
 	return (
 		<div className="h-svh overflow-y-auto">
 			<div className="container mx-auto p-6 pt-24 space-y-8">
-				<div className="flex items-center justify-between">
+				<div className="flex flex-wrap items-center justify-between gap-4">
 					<h1 className="text-3xl font-bold">仪表板</h1>
 					<ButtonGroup>
+						<Button asChild variant="outline" size="sm">
+							<Link href="/dashboard/settings">
+								<Palette className="h-4 w-4 mr-2" />
+								站点定制
+							</Link>
+						</Button>
 						<Button asChild variant="outline" size="sm">
 							<Link href="/dashboard/posts">
 								<FileText className="h-4 w-4 mr-2" />
@@ -113,31 +120,20 @@ export default async function DashboardPage() {
 							<div className="text-2xl font-bold">
 								{stats.overview.totalPosts}
 							</div>
-							<p className="text-xs text-muted-foreground">
-								已发布: {stats.overview.publishedPosts} | 草稿:{' '}
-								{stats.overview.draftPosts}
-							</p>
+							<p className="text-xs text-muted-foreground">数据库已收录文章</p>
 						</CardContent>
 					</Card>
 
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium">活跃度</CardTitle>
+							<CardTitle className="text-sm font-medium">已发布文章</CardTitle>
 							<TrendingUp className="h-4 w-4 text-muted-foreground" />
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{stats.overview.totalPosts > 0
-									? Math.round(
-											(stats.overview.totalComments /
-												stats.overview.totalPosts) *
-												10,
-										) / 10
-									: 0}
+								{stats.overview.publishedPosts}
 							</div>
-							<p className="text-xs text-muted-foreground">
-								平均每篇文章评论数
-							</p>
+							<p className="text-xs text-muted-foreground">公开可见文章</p>
 						</CardContent>
 					</Card>
 				</div>

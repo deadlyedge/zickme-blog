@@ -1,17 +1,22 @@
 'use client'
 
-import { SearchIcon } from 'lucide-react'
+import { SearchIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useSession } from '@/lib/auth-client'
+import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { GlobalSearch } from './GlobalSearch'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export const HeaderNav = () => {
 	const pathname = usePathname()
 	const [isSearchOpen, setIsSearchOpen] = useState(false)
+	const { data: session } = useSession()
+	const openAuthModal = useAppStore((state) => state.openAuthModal)
 
 	// 全局键盘快捷键监听
 	useEffect(() => {
@@ -26,9 +31,11 @@ export const HeaderNav = () => {
 		return () => document.removeEventListener('keydown', handleKeyDown)
 	}, [])
 
+	const userRole = (session?.user as { role?: string } | undefined)?.role
+
 	return (
 		<>
-			<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 backdrop-blur border-b">
+			<nav className="fixed w-full top-0 z-40 h-16 bg-white/60 dark:bg-background/80 backdrop-blur border-b">
 				<div className="mx-auto max-w-7xl px-6 py-3 h-16 flex items-center justify-between">
 					<Link
 						href="/"
@@ -62,6 +69,60 @@ export const HeaderNav = () => {
 							<Link href="/about">about</Link>
 						</Button>
 
+						{/* 登录/用户中心 入口 */}
+						{session?.user ? (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										asChild
+										variant={
+											pathname.startsWith('/user') ||
+											pathname.startsWith('/dashboard')
+												? 'secondary'
+												: 'ghost'
+										}
+										size="sm"
+										className="h-8 px-2 gap-1.5 ml-1"
+									>
+										<Link href={userRole === 'ADMIN' ? '/dashboard' : '/user'}>
+											<Avatar className="size-5">
+												<AvatarImage
+													src={session.user.image || ''}
+													alt={session.user.name}
+												/>
+												<AvatarFallback className="text-[10px]">
+													{session.user.name?.slice(0, 2).toUpperCase() || 'U'}
+												</AvatarFallback>
+											</Avatar>
+											<span className="text-xs max-w-[80px] truncate hidden sm:inline">
+												{session.user.name}
+											</span>
+										</Link>
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									{userRole === 'ADMIN'
+										? '管理控制台 (/dashboard)'
+										: '用户个人中心 (/user)'}
+								</TooltipContent>
+							</Tooltip>
+						) : (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => openAuthModal('login')}
+										className="h-8 px-2 gap-1 ml-1 text-xs"
+									>
+										<UserIcon className="size-3.5" />
+										<span>登录</span>
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>登录 / 注册</TooltipContent>
+							</Tooltip>
+						)}
+
 						{/* 搜索按钮 */}
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -69,7 +130,7 @@ export const HeaderNav = () => {
 									variant="ghost"
 									size="sm"
 									onClick={() => setIsSearchOpen(true)}
-									className="ml-2 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent"
+									className="ml-1 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent"
 								>
 									<SearchIcon className="h-4 w-4" />
 									<span className="sr-only">搜索</span>
