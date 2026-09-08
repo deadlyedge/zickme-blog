@@ -1,4 +1,6 @@
+import { relations } from 'drizzle-orm'
 import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { comments } from './comments'
 
 export const roleEnum = pgEnum('Role', ['ADMIN', 'EDITOR', 'USER'])
 
@@ -34,7 +36,9 @@ export const sessions = pgTable('session', {
 })
 
 export const accounts = pgTable('account', {
-	id: text('id').primaryKey(),
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
 	accountId: text('accountId').notNull(),
 	providerId: text('providerId').notNull(),
 	userId: text('userId')
@@ -65,3 +69,23 @@ export const verifications = pgTable('verification', {
 		.$onUpdate(() => new Date())
 		.notNull(),
 })
+
+export const usersRelations = relations(users, ({ many }) => ({
+	sessions: many(sessions),
+	accounts: many(accounts),
+	comments: many(comments),
+}))
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+	user: one(users, {
+		fields: [accounts.userId],
+		references: [users.id],
+	}),
+}))
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+	user: one(users, {
+		fields: [sessions.userId],
+		references: [users.id],
+	}),
+}))

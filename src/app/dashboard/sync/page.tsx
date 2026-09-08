@@ -3,7 +3,6 @@
 import { format } from 'date-fns'
 import {
 	AlertCircle,
-	ArrowLeft,
 	CheckCircle2,
 	Clock,
 	Database,
@@ -137,259 +136,286 @@ export default function DashboardSyncPage() {
 	// 触发文件上传与导入
 	const handleUploadImport = async () => {
 		if (selectedFiles.length === 0) {
-			toast.warning('请先选择需要导入的 Markdown 文件或 Zip 压缩包')
+			toast.error('请先选择要上传的文件')
 			return
 		}
 
 		startTransition(async () => {
-			const formData = new FormData()
-			for (const file of selectedFiles) {
-				formData.append('files', file)
-			}
+			try {
+				const formData = new FormData()
+				for (const file of selectedFiles) {
+					formData.append('files', file)
+				}
 
-			toast.info('正在解析并导入上传文件...')
-			const result = await importUploadedContent(formData)
-			setCurrentResult(result)
-			if (result.success) {
-				toast.success(
-					`导入完成：成功 ${result.successCount} 篇，失败 ${result.errorCount} 篇`,
-				)
-				setSelectedFiles([])
-				if (fileInputRef.current) fileInputRef.current.value = ''
-			} else {
-				toast.error('导入失败，请查看日志详情')
+				toast.info('正在处理上传文件并导入...')
+				const result = await importUploadedContent(formData)
+				setCurrentResult(result)
+
+				if (result.success) {
+					toast.success(`成功导入 ${result.successCount} 篇文章！`)
+					setSelectedFiles([])
+					if (fileInputRef.current) fileInputRef.current.value = ''
+				} else {
+					toast.error('导入处理失败，请查看日志详情')
+				}
+			} catch (err) {
+				console.error(err)
+				toast.error('上传导入请求异常')
 			}
 		})
 	}
 
-	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
 			setSelectedFiles(Array.from(e.target.files))
 		}
 	}
 
-	const displayedLogs = (
-		currentResult
-			? currentResult.logs
-			: selectedHistory
-				? (selectedHistory.logs as SyncLogItem[])
-				: []
-	).filter((log) => stageFilter === 'ALL' || log.stage === stageFilter)
+	// 过滤当前展示的日志
+	const logsToDisplay = selectedHistory
+		? (selectedHistory.logs as SyncLogItem[])
+		: currentResult?.logs || []
+
+	const displayedLogs = logsToDisplay.filter((item) => {
+		if (stageFilter === 'ALL') return true
+		return item.stage === stageFilter
+	})
 
 	return (
-		<div className="h-svh overflow-y-auto">
-			<div className="container mx-auto p-6 pt-24 space-y-6">
-				{/* 顶栏 */}
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-					<div className="flex items-center gap-3">
-						<Link href="/dashboard">
-							<Button variant="outline" size="sm">
-								<ArrowLeft className="h-4 w-4 mr-2" />
-								返回概览
-							</Button>
-						</Link>
-						<div>
-							<h1 className="text-2xl font-bold flex items-center gap-2">
-								<HardDriveUpload className="h-6 w-6 text-primary" />
-								可视化内容同步与导入中心
-							</h1>
-							<p className="text-sm text-muted-foreground">
-								多阶段日志追踪：Markdown解析 ➡️ Cloudinary图片规范 ➡️ 数据库落库
-							</p>
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<Link href="/dashboard/posts">
-							<Button variant="outline" size="sm">
-								<FileText className="h-4 w-4 mr-2" />
-								管理文章看板
-							</Button>
-						</Link>
-					</div>
+		<div className="container mx-auto p-4 sm:p-6 py-8 space-y-6 max-w-7xl">
+			{/* 顶栏 */}
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<div>
+					<h1 className="text-2xl font-bold flex items-center gap-2">
+						<HardDriveUpload className="h-6 w-6 text-primary" />
+						可视化内容同步与导入中心
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						多阶段日志追踪：Markdown解析 ➡️ Cloudinary图片规范 ➡️ 数据库落库
+					</p>
 				</div>
 
-				<Tabs
-					value={activeTab}
-					onValueChange={(val) => setActiveTab(val as any)}
-					className="space-y-6"
-				>
-					<TabsList className="grid w-full grid-cols-3 max-w-md">
-						<TabsTrigger value="sync" className="flex items-center gap-2">
-							<RefreshCw className="h-4 w-4" />
-							本地扫描同步
-						</TabsTrigger>
-						<TabsTrigger value="upload" className="flex items-center gap-2">
-							<Upload className="h-4 w-4" />
-							Web文件导入
-						</TabsTrigger>
-						<TabsTrigger value="history" className="flex items-center gap-2">
-							<Clock className="h-4 w-4" />
-							历史同步记录
-						</TabsTrigger>
-					</TabsList>
+				<div className="flex items-center gap-2">
+					<Link href="/dashboard/posts">
+						<Button variant="outline" size="sm" className="shadow-2xs">
+							<FileText className="h-4 w-4 mr-1.5" />
+							管理文章看板
+						</Button>
+					</Link>
+				</div>
+			</div>
 
-					{/* 选项卡 1：本地扫描同步 */}
-					<TabsContent value="sync" className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="text-base">扫描本地文件并入库</CardTitle>
-								<CardDescription>
-									将直接扫描项目目录 `content/posts/` 下所有的 Markdown
-									文件并上传相关图片至 Cloudinary。
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="flex flex-wrap items-center gap-8 p-4 bg-muted/40 rounded-lg border">
-									<div className="flex items-center space-x-2">
-										<Switch
-											id="dry-run-switch"
-											checked={dryRun}
-											onCheckedChange={setDryRun}
-										/>
-										<Label htmlFor="dry-run-switch" className="cursor-pointer">
-											<span className="font-medium">
-												预览模拟模式 (Dry-run)
-											</span>
-											<p className="text-xs text-muted-foreground">
-												仅校验 Frontmatter 及图片，不实际修改数据库
-											</p>
+			<Tabs
+				value={activeTab}
+				onValueChange={(val) =>
+					setActiveTab(val as 'sync' | 'upload' | 'history')
+				}
+				className="space-y-6"
+			>
+				<TabsList className="grid w-full grid-cols-3 max-w-md shadow-2xs">
+					<TabsTrigger
+						value="sync"
+						className="flex items-center gap-2 text-xs sm:text-sm"
+					>
+						<RefreshCw className="h-3.5 w-3.5" />
+						本地扫描同步
+					</TabsTrigger>
+					<TabsTrigger
+						value="upload"
+						className="flex items-center gap-2 text-xs sm:text-sm"
+					>
+						<Upload className="h-3.5 w-3.5" />
+						Web文件导入
+					</TabsTrigger>
+					<TabsTrigger
+						value="history"
+						className="flex items-center gap-2 text-xs sm:text-sm"
+					>
+						<Clock className="h-3.5 w-3.5" />
+						历史记录
+					</TabsTrigger>
+				</TabsList>
+
+				{/* 选项卡 1：本地扫描同步 */}
+				<TabsContent value="sync" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-base">扫描本地文件并入库</CardTitle>
+							<CardDescription>
+								将直接扫描项目目录 `content/posts/` 下所有的 Markdown
+								文件并上传相关图片至 Cloudinary。
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
+									<div className="space-y-0.5">
+										<Label className="text-sm font-semibold">
+											模拟运行 (Dry Run)
 										</Label>
+										<p className="text-xs text-muted-foreground">
+											仅解析校验 Frontmatter 与关联图片，不写入数据库
+										</p>
 									</div>
-
-									<div className="flex items-center space-x-2">
-										<Switch
-											id="delete-old-switch"
-											checked={deleteOld}
-											onCheckedChange={setDeleteOld}
-											disabled={dryRun}
-										/>
-										<Label
-											htmlFor="delete-old-switch"
-											className="cursor-pointer"
-										>
-											<span className="font-medium">自动归档已删除文件</span>
-											<p className="text-xs text-muted-foreground">
-												若本地已不存在该文章，自动将其标记为 ARCHIVED
-											</p>
-										</Label>
-									</div>
-								</div>
-
-								<div className="flex items-center justify-between">
-									<Button
-										onClick={handleManualSync}
+									<Switch
+										checked={dryRun}
+										onCheckedChange={setDryRun}
 										disabled={isPending}
-										size="lg"
-										className="font-semibold"
-									>
-										{isPending ? (
-											<>
-												<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-												正在同步中...
-											</>
-										) : (
-											<>
-												<Play className="h-4 w-4 mr-2" />
-												立即扫描并同步
-											</>
-										)}
-									</Button>
-								</div>
-							</CardContent>
-						</Card>
-					</TabsContent>
-
-					{/* 选项卡 2：Web 网页端直接导入 */}
-					<TabsContent value="upload" className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="text-base">
-									直接上传 Markdown 文件或 ZIP 压缩包
-								</CardTitle>
-								<CardDescription>
-									无需通过 Git 提交，即可通过网页端快速上传 .md 文件或附带
-									images 文件夹的 .zip 压缩包。
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<div
-									onClick={() => fileInputRef.current?.click()}
-									className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/30 cursor-pointer transition-colors space-y-3"
-								>
-									<Upload className="h-10 w-10 mx-auto text-muted-foreground" />
-									<div className="font-medium text-foreground">
-										点击选择文件或将文件拖曳至此
-									</div>
-									<p className="text-xs text-muted-foreground">
-										支持多选 .md 文件，或直接打包上传 .zip
-										压缩包（包含文章与图片文件夹）
-									</p>
-									<input
-										ref={fileInputRef}
-										type="file"
-										multiple
-										accept=".md,.zip,image/*"
-										className="hidden"
-										onChange={handleFileSelect}
 									/>
 								</div>
 
-								{selectedFiles.length > 0 && (
-									<div className="space-y-2">
-										<div className="text-xs font-semibold text-muted-foreground">
-											已选待导入文件 ({selectedFiles.length}):
-										</div>
-										<div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 bg-muted/40 rounded border">
-											{selectedFiles.map((file) => (
-												<Badge
-													key={`${file.name}-${file.size}-${file.lastModified}`}
-													variant="outline"
-													className="flex items-center gap-1 text-xs"
-												>
-													<FileText className="h-3 w-3" />
-													{file.name}
-													<span className="text-[10px] text-muted-foreground">
-														({(file.size / 1024).toFixed(1)} KB)
-													</span>
-												</Badge>
-											))}
-										</div>
+								<div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
+									<div className="space-y-0.5">
+										<Label className="text-sm font-semibold">
+											清理归档 (Delete/Archive Missing)
+										</Label>
+										<p className="text-xs text-muted-foreground">
+											自动将本地已删除的文章在数据库中标记为已归档
+										</p>
 									</div>
-								)}
+									<Switch
+										checked={deleteOld}
+										onCheckedChange={setDeleteOld}
+										disabled={isPending}
+									/>
+								</div>
+							</div>
 
+							<div className="flex items-center justify-end">
 								<Button
-									onClick={handleUploadImport}
-									disabled={isPending || selectedFiles.length === 0}
 									size="lg"
-									className="font-semibold"
+									onClick={handleManualSync}
+									disabled={isPending}
+									className="gap-2 shadow-xs"
 								>
 									{isPending ? (
 										<>
-											<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-											正在上传并解析...
+											<Loader2 className="h-4 w-4 animate-spin" />
+											同步处理中...
 										</>
 									) : (
 										<>
-											<HardDriveUpload className="h-4 w-4 mr-2" />
-											开始导入落库
+											<Play className="h-4 w-4 fill-current" />
+											{dryRun ? '开始模拟预览' : '执行全量同步'}
 										</>
 									)}
 								</Button>
-							</CardContent>
-						</Card>
-					</TabsContent>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-					{/* 选项卡 3：历史同步记录 */}
-					<TabsContent value="history" className="space-y-6">
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between">
+				{/* 选项卡 2：Web 上传导入 */}
+				<TabsContent value="upload" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-base">
+								上传 Markdown / Zip 导入
+							</CardTitle>
+							<CardDescription>
+								支持直接上传单个/多个 `.md` 文章文件，或包含文章与 `images/`
+								资源的 `.zip` 压缩包。
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<div
+								className="border-2 border-dashed border-border/80 hover:border-primary/50 rounded-2xl p-8 text-center bg-muted/10 cursor-pointer transition-colors"
+								onClick={() => fileInputRef.current?.click()}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										fileInputRef.current?.click()
+									}
+								}}
+							>
+								<input
+									type="file"
+									ref={fileInputRef}
+									onChange={handleFileChange}
+									multiple
+									accept=".md,.markdown,.zip"
+									className="hidden"
+								/>
+								<div className="flex flex-col items-center justify-center space-y-3">
+									<div className="p-3 bg-primary/10 text-primary rounded-full">
+										<Upload className="h-6 w-6" />
+									</div>
+									<div>
+										<p className="text-sm font-medium">
+											点击选择或拖拽 Markdown 文件 / Zip 压缩包至此处
+										</p>
+										<p className="text-xs text-muted-foreground mt-1">
+											支持 .md, .markdown, .zip 格式
+										</p>
+									</div>
+								</div>
+							</div>
+
+							{selectedFiles.length > 0 && (
+								<div className="space-y-2">
+									<Label className="text-xs font-semibold text-muted-foreground">
+										已选中的文件 ({selectedFiles.length})
+									</Label>
+									<div className="p-3 bg-muted/30 border rounded-lg space-y-1 max-h-40 overflow-y-auto">
+										{selectedFiles.map((f) => (
+											<div
+												key={`${f.name}-${f.lastModified}-${f.size}`}
+												className="text-xs font-mono flex items-center justify-between text-foreground/80"
+											>
+												<span>{f.name}</span>
+												<span className="text-muted-foreground">
+													{(f.size / 1024).toFixed(1)} KB
+												</span>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
+
+							<div className="flex items-center justify-end gap-3">
+								{selectedFiles.length > 0 && (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => {
+											setSelectedFiles([])
+											if (fileInputRef.current) fileInputRef.current.value = ''
+										}}
+									>
+										清空选择
+									</Button>
+								)}
+								<Button
+									size="lg"
+									onClick={handleUploadImport}
+									disabled={isPending || selectedFiles.length === 0}
+									className="gap-2 shadow-xs"
+								>
+									{isPending ? (
+										<>
+											<Loader2 className="h-4 w-4 animate-spin" />
+											正在解析并上传...
+										</>
+									) : (
+										<>
+											<HardDriveUpload className="h-4 w-4" />
+											开始导入
+										</>
+									)}
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				{/* 选项卡 3：历史同步记录 */}
+				<TabsContent value="history" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<div className="flex items-center justify-between">
 								<div>
-									<CardTitle className="text-base">
-										历史同步与导入日志
-									</CardTitle>
+									<CardTitle className="text-base">历史同步审计记录</CardTitle>
 									<CardDescription>
-										查阅历次同步结果、变更文章统计与排错日志
+										展示最近 30 次同步任务的触发类型、状态与日志概览
 									</CardDescription>
 								</div>
 								<Button
@@ -397,215 +423,211 @@ export default function DashboardSyncPage() {
 									size="sm"
 									onClick={loadHistory}
 									disabled={loadingHistory}
+									className="shadow-2xs"
 								>
 									<RefreshCw
-										className={`h-4 w-4 mr-2 ${loadingHistory ? 'animate-spin' : ''}`}
+										className={`h-4 w-4 mr-1.5 ${loadingHistory ? 'animate-spin' : ''}`}
 									/>
-									刷新
+									刷新记录
 								</Button>
-							</CardHeader>
-							<CardContent>
-								{loadingHistory ? (
-									<div className="text-center py-8">
-										<Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-									</div>
-								) : historyLogs.length === 0 ? (
-									<div className="text-center py-8 text-muted-foreground text-sm">
-										暂无历史同步日志记录
-									</div>
-								) : (
-									<div className="space-y-3">
-										{historyLogs.map((log) => {
-											const isSuccess = log.status === 'SUCCESS'
-											const isPartial = log.status === 'PARTIAL'
-											const isSelected = selectedHistory?.id === log.id
-
-											return (
-												<div
-													key={log.id}
-													onClick={() => {
-														setSelectedHistory(log)
-														setCurrentResult(null)
-													}}
-													className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
-														isSelected
-															? 'bg-primary/5 border-primary'
-															: 'hover:bg-muted/40'
-													}`}
-												>
-													<div className="space-y-1">
-														<div className="flex items-center gap-2">
-															<Badge
-																variant={
-																	isSuccess
-																		? 'default'
-																		: isPartial
-																			? 'outline'
-																			: 'destructive'
-																}
-															>
-																{log.status}
-															</Badge>
-															<span className="font-medium text-sm">
-																触发方式: {log.triggerType}
-															</span>
-															<span className="text-xs text-muted-foreground">
-																{format(
-																	new Date(log.createdAt),
-																	'yyyy-MM-dd HH:mm:ss',
-																)}
-															</span>
-														</div>
-														<div className="text-xs text-muted-foreground">
-															总文章: {log.totalPosts} | 成功:{' '}
-															{log.successCount} | 失败: {log.errorCount}
-														</div>
-													</div>
-													<Button variant="ghost" size="sm">
-														查看详情日志
-													</Button>
-												</div>
-											)
-										})}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					</TabsContent>
-				</Tabs>
-
-				{/* 多阶段实时/选定日志监控看板 */}
-				{(currentResult || selectedHistory) && (
-					<Card className="border-t-4 border-t-primary">
-						<CardHeader className="pb-3">
-							<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-								<div>
-									<CardTitle className="text-base flex items-center gap-2">
-										<Layers className="h-5 w-5 text-primary" />
-										多阶段同步诊断与日志监控
-										{currentResult && (
-											<Badge
-												variant={
-													currentResult.status === 'SUCCESS'
-														? 'default'
-														: currentResult.status === 'PARTIAL'
-															? 'outline'
-															: 'destructive'
-												}
-											>
-												{currentResult.status}
-											</Badge>
-										)}
-										{selectedHistory && (
-											<Badge variant="outline">
-												历史记录: {selectedHistory.id.slice(0, 8)}
-											</Badge>
-										)}
-									</CardTitle>
-									<CardDescription className="mt-1">
-										阶段 1: Markdown解析校验 ➡️ 阶段 2: 图片处理与Cloudinary上传
-										➡️ 阶段 3: 数据库落库
-									</CardDescription>
-								</div>
-
-								{/* 阶段筛选 */}
-								<div className="flex items-center gap-2">
-									<Button
-										size="sm"
-										variant={stageFilter === 'ALL' ? 'default' : 'outline'}
-										onClick={() => setStageFilter('ALL')}
-									>
-										全部阶段
-									</Button>
-									<Button
-										size="sm"
-										variant={
-											stageFilter === 'frontmatter' ? 'default' : 'outline'
-										}
-										onClick={() => setStageFilter('frontmatter')}
-									>
-										Frontmatter
-									</Button>
-									<Button
-										size="sm"
-										variant={stageFilter === 'media' ? 'default' : 'outline'}
-										onClick={() => setStageFilter('media')}
-									>
-										图片/CDN
-									</Button>
-									<Button
-										size="sm"
-										variant={stageFilter === 'db' ? 'default' : 'outline'}
-										onClick={() => setStageFilter('db')}
-									>
-										数据库
-									</Button>
-								</div>
 							</div>
 						</CardHeader>
 						<CardContent className="p-0">
-							<ScrollArea className="h-100 p-4 bg-muted/20">
-								{displayedLogs.length === 0 ? (
-									<div className="text-center py-12 text-muted-foreground text-sm">
-										该阶段无相关日志
-									</div>
-								) : (
-									<div className="space-y-2 font-mono text-xs">
-										{displayedLogs.map((item, index) => {
-											const levelConf =
-												LEVEL_STYLE_MAP[item.level] || LEVEL_STYLE_MAP.info
-											const StageIcon =
-												STAGE_ICON_MAP[item.stage] || STAGE_ICON_MAP.general
-											const LevelIcon = levelConf.icon
-											const logKey = `${item.stage}-${item.timestamp}-${item.message.slice(0, 20)}-${index}`
-
-											return (
-												<div
-													key={logKey}
-													className="flex items-start gap-3 p-2.5 rounded bg-background border hover:bg-muted/40 transition-colors"
-												>
-													<div className="mt-0.5">
-														<LevelIcon
-															className={`h-4 w-4 ${levelConf.color}`}
-														/>
+							{loadingHistory ? (
+								<div className="flex items-center justify-center p-12 text-muted-foreground">
+									<Loader2 className="h-6 w-6 animate-spin mr-2" />
+									正在加载历史记录...
+								</div>
+							) : historyLogs.length === 0 ? (
+								<div className="text-center p-12 text-muted-foreground text-sm">
+									暂无历史同步记录
+								</div>
+							) : (
+								<div className="divide-y">
+									{historyLogs.map((log) => {
+										const isSelected = selectedHistory?.id === log.id
+										return (
+											<div
+												key={log.id}
+												className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+													isSelected ? 'bg-primary/5' : 'hover:bg-muted/20'
+												}`}
+											>
+												<div className="space-y-1">
+													<div className="flex items-center gap-2">
+														<Badge
+															variant={
+																log.status === 'SUCCESS'
+																	? 'default'
+																	: log.status === 'PARTIAL'
+																		? 'secondary'
+																		: 'destructive'
+															}
+														>
+															{log.status}
+														</Badge>
+														<Badge variant="outline" className="text-xs">
+															{log.triggerType}
+														</Badge>
+														<span className="text-xs text-muted-foreground font-mono">
+															{log.createdAt
+																? format(
+																		new Date(log.createdAt),
+																		'yyyy-MM-dd HH:mm:ss',
+																	)
+																: ''}
+														</span>
 													</div>
-													<div className="flex-1 space-y-1">
-														<div className="flex items-center gap-2">
-															<Badge
-																variant="outline"
-																className="text-[10px] px-1.5 py-0 flex items-center gap-1"
-															>
-																<StageIcon className="h-3 w-3" />
-																{item.stage.toUpperCase()}
-															</Badge>
-															<span className="font-semibold text-foreground">
-																{item.message}
-															</span>
-															<span className="text-[10px] text-muted-foreground ml-auto">
-																{item.timestamp
-																	? format(
-																			new Date(item.timestamp),
-																			'HH:mm:ss.SSS',
-																		)
-																	: ''}
-															</span>
-														</div>
-														{item.detail && (
-															<div className="text-[11px] text-muted-foreground bg-muted/60 p-2 rounded whitespace-pre-wrap break-all">
-																{item.detail}
-															</div>
-														)}
+													<div className="text-xs text-muted-foreground">
+														文章总数: {log.totalPosts || 0} | 成功:{' '}
+														<span className="text-green-600 font-medium">
+															{log.successCount || 0}
+														</span>{' '}
+														| 失败:{' '}
+														<span className="text-destructive font-medium">
+															{log.errorCount || 0}
+														</span>
 													</div>
 												</div>
-											)
-										})}
-									</div>
-								)}
-							</ScrollArea>
+
+												<Button
+													size="sm"
+													variant={isSelected ? 'default' : 'outline'}
+													onClick={() => {
+														setSelectedHistory(isSelected ? null : log)
+														setCurrentResult(null)
+													}}
+													className="self-end sm:self-auto text-xs"
+												>
+													{isSelected ? '收起日志' : '查看日志'}
+												</Button>
+											</div>
+										)
+									})}
+								</div>
+							)}
 						</CardContent>
 					</Card>
-				)}
-			</div>
+				</TabsContent>
+			</Tabs>
+
+			{/* 实时/选中的多阶段日志面板 */}
+			{(currentResult || selectedHistory) && (
+				<Card className="shadow-2xs overflow-hidden border-primary/20">
+					<CardHeader className="p-4 border-b bg-muted/40">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+							<div>
+								<CardTitle className="text-base flex items-center gap-2">
+									<Layers className="h-5 w-5 text-primary" />
+									{selectedHistory
+										? `历史日志详情 (${selectedHistory.triggerType})`
+										: '本次同步执行日志'}
+								</CardTitle>
+								<CardDescription className="mt-1">
+									阶段 1: Markdown解析校验 ➡️ 阶段 2: 图片处理与Cloudinary上传 ➡️
+									阶段 3: 数据库落库
+								</CardDescription>
+							</div>
+
+							{/* 阶段筛选 */}
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<Button
+									size="sm"
+									variant={stageFilter === 'ALL' ? 'default' : 'outline'}
+									onClick={() => setStageFilter('ALL')}
+									className="h-7 text-xs"
+								>
+									全部
+								</Button>
+								<Button
+									size="sm"
+									variant={
+										stageFilter === 'frontmatter' ? 'default' : 'outline'
+									}
+									onClick={() => setStageFilter('frontmatter')}
+									className="h-7 text-xs"
+								>
+									Frontmatter
+								</Button>
+								<Button
+									size="sm"
+									variant={stageFilter === 'media' ? 'default' : 'outline'}
+									onClick={() => setStageFilter('media')}
+									className="h-7 text-xs"
+								>
+									图片/CDN
+								</Button>
+								<Button
+									size="sm"
+									variant={stageFilter === 'db' ? 'default' : 'outline'}
+									onClick={() => setStageFilter('db')}
+									className="h-7 text-xs"
+								>
+									数据库
+								</Button>
+							</div>
+						</div>
+					</CardHeader>
+					<CardContent className="p-0">
+						<ScrollArea className="h-96 p-4 bg-muted/20">
+							{displayedLogs.length === 0 ? (
+								<div className="text-center py-12 text-muted-foreground text-sm">
+									该阶段无相关日志
+								</div>
+							) : (
+								<div className="space-y-2 font-mono text-xs">
+									{displayedLogs.map((item, index) => {
+										const levelConf =
+											LEVEL_STYLE_MAP[item.level] || LEVEL_STYLE_MAP.info
+										const StageIcon =
+											STAGE_ICON_MAP[item.stage] || STAGE_ICON_MAP.general
+										const LevelIcon = levelConf.icon
+										const logKey = `${item.stage}-${item.timestamp}-${item.message.slice(0, 20)}-${index}`
+
+										return (
+											<div
+												key={logKey}
+												className="flex items-start gap-3 p-2.5 rounded-lg bg-background border hover:bg-muted/40 transition-colors shadow-2xs"
+											>
+												<div className="mt-0.5">
+													<LevelIcon className={`h-4 w-4 ${levelConf.color}`} />
+												</div>
+												<div className="flex-1 space-y-1 min-w-0">
+													<div className="flex items-center gap-2 flex-wrap">
+														<Badge
+															variant="outline"
+															className="text-[10px] px-1.5 py-0 flex items-center gap-1"
+														>
+															<StageIcon className="h-3 w-3" />
+															{item.stage.toUpperCase()}
+														</Badge>
+														<span className="font-semibold text-foreground">
+															{item.message}
+														</span>
+														<span className="text-[10px] text-muted-foreground ml-auto font-mono">
+															{item.timestamp
+																? format(
+																		new Date(item.timestamp),
+																		'HH:mm:ss.SSS',
+																	)
+																: ''}
+														</span>
+													</div>
+													{item.detail && (
+														<div className="text-[11px] text-muted-foreground bg-muted/60 p-2 rounded whitespace-pre-wrap break-all">
+															{item.detail}
+														</div>
+													)}
+												</div>
+											</div>
+										)
+									})}
+								</div>
+							)}
+						</ScrollArea>
+					</CardContent>
+				</Card>
+			)}
 		</div>
 	)
 }

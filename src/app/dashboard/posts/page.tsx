@@ -4,7 +4,6 @@ import { format } from 'date-fns'
 import {
 	AlertTriangle,
 	Archive,
-	ArrowLeft,
 	CheckSquare,
 	ExternalLink,
 	Eye,
@@ -84,7 +83,7 @@ export default function DashboardPostsPage() {
 	const [statusFilter, setStatusFilter] = useState<string>('ALL')
 	const [tagFilter, setTagFilter] = useState<string>('ALL')
 	const [searchQuery, setSearchQuery] = useState('')
-	const [includeArchived, setIncludeArchived] = useState(false)
+	const [includeArchived, _setIncludeArchived] = useState(false)
 
 	// 批量选择
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -139,7 +138,7 @@ export default function DashboardPostsPage() {
 					prev.map((p) => (p.id === postId ? { ...p, status: newStatus } : p)),
 				)
 			} else {
-				toast.error(res.error || '更新失败')
+				toast.error(res.error || '状态更新失败')
 			}
 		})
 	}
@@ -160,7 +159,7 @@ export default function DashboardPostsPage() {
 		startTransition(async () => {
 			const res = await restorePost(postId)
 			if (res.success) {
-				toast.success('文章已恢复发布')
+				toast.success('文章已恢复发布状态')
 				loadData()
 			} else {
 				toast.error(res.error || '恢复失败')
@@ -173,9 +172,9 @@ export default function DashboardPostsPage() {
 		startTransition(async () => {
 			const res = await deletePostPermanently(deleteTargetPost.id)
 			if (res.success) {
-				toast.success('文章已彻底删除')
+				toast.success(`文章 [${deleteTargetPost.title}] 已永久删除`)
 				setDeleteTargetPost(null)
-				setPosts((prev) => prev.filter((p) => p.id !== deleteTargetPost.id))
+				loadData()
 			} else {
 				toast.error(res.error || '删除失败')
 			}
@@ -212,477 +211,604 @@ export default function DashboardPostsPage() {
 	}
 
 	return (
-		<div className="h-svh overflow-y-auto">
-			<div className="container mx-auto p-6 pt-24 space-y-6">
-				{/* 顶栏 */}
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-					<div className="flex items-center gap-3">
-						<Link href="/dashboard">
-							<Button variant="outline" size="sm">
-								<ArrowLeft className="h-4 w-4 mr-2" />
-								返回概览
-							</Button>
-						</Link>
-						<div>
-							<h1 className="text-2xl font-bold flex items-center gap-2">
-								<FileText className="h-6 w-6 text-primary" />
-								文章管理看板
-							</h1>
-							<p className="text-sm text-muted-foreground">
-								集中掌控全站文章状态、快速切换发布/草稿/归档
-							</p>
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={loadData}
-							disabled={loading || isPending}
-						>
-							<RefreshCw
-								className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
-							/>
-							刷新列表
-						</Button>
-						<Link href="/dashboard/sync">
-							<Button size="sm">
-								<RefreshCw className="h-4 w-4 mr-2" />
-								同步与导入中心
-							</Button>
-						</Link>
-					</div>
+		<div className="container mx-auto p-4 sm:p-6 py-8 space-y-6 max-w-7xl">
+			{/* 顶栏 */}
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<div>
+					<h1 className="text-2xl font-bold flex items-center gap-2">
+						<FileText className="h-6 w-6 text-primary" />
+						文章管理看板
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						集中掌控全站文章状态、快速切换发布/草稿/归档
+					</p>
 				</div>
 
-				{/* 筛选与操作卡片 */}
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle className="text-base font-medium flex items-center gap-2">
-							<Filter className="h-4 w-4 text-muted-foreground" />
-							筛选与批量操作
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="flex flex-wrap items-center gap-4">
-							{/* 搜索框 */}
-							<form
-								onSubmit={handleSearchSubmit}
-								className="flex items-center gap-2 flex-1 min-w-50"
-							>
-								<div className="relative flex-1">
-									<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-									<Input
-										placeholder="搜索标题或 slug..."
-										value={searchQuery}
-										onChange={(e) => setSearchQuery(e.target.value)}
-										className="pl-9"
-									/>
-								</div>
-								<Button type="submit" variant="secondary" size="sm">
-									搜索
-								</Button>
-							</form>
+				<div className="flex items-center gap-2 self-start sm:self-auto">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => loadData()}
+						disabled={loading}
+						className="shadow-2xs"
+					>
+						<RefreshCw
+							className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`}
+						/>
+						刷新数据
+					</Button>
+				</div>
+			</div>
 
-							{/* 状态筛选 */}
-							<div className="flex items-center gap-2 min-w-37.5">
+			{/* 筛选与检索控制条 */}
+			<Card className="shadow-2xs">
+				<CardContent className="p-4">
+					<div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+						{/* 搜索框 */}
+						<form
+							onSubmit={handleSearchSubmit}
+							className="flex items-center gap-2 flex-1 max-w-md"
+						>
+							<div className="relative flex-1">
+								<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+								<Input
+									placeholder="搜索文章标题、简介或 Slug..."
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className="pl-8"
+								/>
+							</div>
+							<Button type="submit" size="sm">
+								搜索
+							</Button>
+						</form>
+
+						{/* 状态与标签筛选器 */}
+						<div className="flex flex-wrap items-center gap-2 sm:gap-3">
+							<div className="flex items-center gap-1.5">
+								<Filter className="h-4 w-4 text-muted-foreground" />
+								<span className="text-xs text-muted-foreground">状态:</span>
 								<Select value={statusFilter} onValueChange={setStatusFilter}>
-									<SelectTrigger className="w-35">
-										<SelectValue placeholder="文章状态" />
+									<SelectTrigger className="w-28 h-8 text-xs">
+										<SelectValue placeholder="全选状态" />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="ALL">全部状态</SelectItem>
-										<SelectItem value="PUBLISHED">
-											已发布 (PUBLISHED)
-										</SelectItem>
-										<SelectItem value="DRAFT">草稿 (DRAFT)</SelectItem>
-										<SelectItem value="ARCHIVED">已归档 (ARCHIVED)</SelectItem>
+										<SelectItem value="PUBLISHED">已发布</SelectItem>
+										<SelectItem value="DRAFT">草稿</SelectItem>
+										<SelectItem value="ARCHIVED">已归档</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
 
-							{/* 标签筛选 */}
-							<div className="flex items-center gap-2 min-w-37.5">
+							<div className="flex items-center gap-1.5">
+								<span className="text-xs text-muted-foreground">标签:</span>
 								<Select value={tagFilter} onValueChange={setTagFilter}>
-									<SelectTrigger className="w-35">
-										<SelectValue placeholder="按标签" />
+									<SelectTrigger className="w-32 h-8 text-xs">
+										<SelectValue placeholder="全部标签" />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="ALL">全部标签</SelectItem>
 										{tagsList.map((tag) => (
-											<SelectItem key={tag.id} value={tag.slug}>
+											<SelectItem key={tag.slug} value={tag.slug}>
 												{tag.name}
 											</SelectItem>
 										))}
 									</SelectContent>
 								</Select>
 							</div>
-
-							{/* 包含归档选项 */}
-							<Button
-								variant={includeArchived ? 'default' : 'outline'}
-								size="sm"
-								onClick={() => setIncludeArchived(!includeArchived)}
-							>
-								{includeArchived ? '已包含已归档' : '包含已归档'}
-							</Button>
 						</div>
+					</div>
+				</CardContent>
+			</Card>
 
-						{/* 批量操作控制栏 */}
-						{selectedIds.length > 0 && (
-							<div className="flex items-center justify-between p-3 bg-muted/60 rounded-md text-sm border">
-								<span className="font-medium text-foreground">
-									已勾选{' '}
-									<span className="text-primary">{selectedIds.length}</span>{' '}
-									篇文章
-								</span>
-								<div className="flex items-center gap-2">
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => handleBatchStatus('PUBLISHED')}
-										disabled={isPending}
-									>
-										转为已发布
-									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => handleBatchStatus('DRAFT')}
-										disabled={isPending}
-									>
-										转为草稿
-									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => handleBatchStatus('ARCHIVED')}
-										disabled={isPending}
-									>
-										转为归档
-									</Button>
-								</div>
-							</div>
-						)}
-					</CardContent>
-				</Card>
+			{/* 批量操作控制浮条 */}
+			{selectedIds.length > 0 && (
+				<div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-primary/10 border border-primary/20 rounded-xl shadow-xs">
+					<div className="text-sm font-medium flex items-center gap-2">
+						<CheckSquare className="h-4 w-4 text-primary" />
+						已选中 <Badge variant="default">{selectedIds.length}</Badge> 篇文章
+					</div>
+					<div className="flex flex-wrap items-center gap-2">
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => handleBatchStatus('PUBLISHED')}
+							disabled={isPending}
+							className="h-8 text-xs bg-background"
+						>
+							批量设为已发布
+						</Button>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => handleBatchStatus('DRAFT')}
+							disabled={isPending}
+							className="h-8 text-xs bg-background"
+						>
+							批量设为草稿
+						</Button>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => handleBatchStatus('ARCHIVED')}
+							disabled={isPending}
+							className="h-8 text-xs bg-background text-amber-600 hover:text-amber-700"
+						>
+							批量归档
+						</Button>
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => setSelectedIds([])}
+							className="h-8 text-xs"
+						>
+							取消选择
+						</Button>
+					</div>
+				</div>
+			)}
 
-				{/* 文章数据表格 */}
-				<Card>
-					<CardContent className="p-0">
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead className="w-12 text-center">
-										<button
-											type="button"
-											onClick={toggleSelectAll}
-											className="flex items-center justify-center p-1 text-muted-foreground hover:text-foreground"
-										>
-											{selectedIds.length > 0 &&
-											selectedIds.length === posts.length ? (
-												<CheckSquare className="h-4 w-4 text-primary" />
-											) : (
-												<Square className="h-4 w-4" />
-											)}
-										</button>
-									</TableHead>
-									<TableHead className="min-w-60">文章标题 / Slug</TableHead>
-									<TableHead>状态</TableHead>
-									<TableHead>标签</TableHead>
-									<TableHead>发布/更新时间</TableHead>
-									<TableHead className="text-right">操作</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{loading ? (
-									<TableRow>
-										<TableCell colSpan={6} className="text-center py-12">
-											<Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-											<p className="text-sm text-muted-foreground mt-2">
-												正在加载文章数据...
-											</p>
-										</TableCell>
-									</TableRow>
-								) : posts.length === 0 ? (
-									<TableRow>
-										<TableCell
-											colSpan={6}
-											className="text-center py-12 text-muted-foreground"
-										>
-											没有找到符合条件的文章
-										</TableCell>
-									</TableRow>
-								) : (
-									posts.map((post) => {
-										const isSelected = selectedIds.includes(post.id)
-										const statusBadge =
-											STATUS_BADGE_MAP[post.status] ||
-											STATUS_BADGE_MAP.PUBLISHED
-
-										return (
-											<TableRow
-												key={post.id}
-												className={
-													post.archivedAt ? 'opacity-60 bg-muted/20' : ''
-												}
-											>
-												<TableCell className="text-center">
-													<button
-														type="button"
-														onClick={() => toggleSelectOne(post.id)}
-														className="flex items-center justify-center p-1 text-muted-foreground hover:text-foreground"
-													>
-														{isSelected ? (
-															<CheckSquare className="h-4 w-4 text-primary" />
-														) : (
-															<Square className="h-4 w-4" />
-														)}
-													</button>
-												</TableCell>
-												<TableCell>
-													<div className="space-y-1">
-														<div className="font-medium flex items-center gap-2">
-															<span>{post.title}</span>
-															{post.poster && (
-																<Badge
-																	variant="outline"
-																	className="text-[10px] px-1 py-0"
-																>
-																	有封面
-																</Badge>
-															)}
-														</div>
-														<div className="text-xs text-muted-foreground font-mono">
-															/{post.slug}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>
-													<Badge variant={statusBadge.variant}>
-														{statusBadge.label}
-													</Badge>
-												</TableCell>
-												<TableCell>
-													<div className="flex flex-wrap gap-1 max-w-50">
-														{post.tags && post.tags.length > 0 ? (
-															post.tags.map((tag) => (
-																<Badge
-																	key={tag.id}
-																	variant="secondary"
-																	className="text-xs px-1.5 py-0"
-																>
-																	{tag.name}
-																</Badge>
-															))
-														) : (
-															<span className="text-xs text-muted-foreground">
-																无
-															</span>
-														)}
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className="text-xs space-y-0.5">
-														<div className="text-foreground">
-															发布:{' '}
-															{post.publishedAt
-																? format(
-																		new Date(post.publishedAt),
-																		'yyyy-MM-dd',
-																	)
-																: '未设'}
-														</div>
-														<div className="text-muted-foreground">
-															更新:{' '}
-															{post.updatedAt
-																? format(
-																		new Date(post.updatedAt),
-																		'yyyy-MM-dd HH:mm',
-																	)
-																: '-'}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell className="text-right">
-													<div className="flex items-center justify-end gap-1">
-														{/* 预览 */}
-														<Button
-															variant="ghost"
-															size="sm"
-															title="快速预览"
-															onClick={() => setPreviewPost(post)}
-														>
-															<Eye className="h-4 w-4" />
-														</Button>
-
-														{/* 前台新窗口直达 */}
-														<Button
-															asChild
-															variant="ghost"
-															size="sm"
-															title="在新标签页查看"
-														>
-															<Link
-																href={`/posts/${post.slug}`}
-																target="_blank"
-															>
-																<ExternalLink className="h-4 w-4" />
-															</Link>
-														</Button>
-
-														{/* 状态切换下拉 */}
-														<Select
-															value={post.status}
-															onValueChange={(val) =>
-																handleStatusChange(post.id, val as StatusType)
-															}
-															disabled={isPending}
-														>
-															<SelectTrigger className="w-22.5 h-8 text-xs">
-																<SelectValue />
-															</SelectTrigger>
-															<SelectContent>
-																<SelectItem value="PUBLISHED">
-																	已发布
-																</SelectItem>
-																<SelectItem value="DRAFT">草稿</SelectItem>
-																<SelectItem value="ARCHIVED">归档</SelectItem>
-															</SelectContent>
-														</Select>
-
-														{/* 归档 / 恢复 */}
-														{post.archivedAt || post.status === 'ARCHIVED' ? (
-															<Button
-																variant="ghost"
-																size="sm"
-																title="恢复发布"
-																onClick={() => handleRestore(post.id)}
-																disabled={isPending}
-																className="text-green-600 hover:text-green-700"
-															>
-																<RotateCcw className="h-4 w-4" />
-															</Button>
-														) : (
-															<Button
-																variant="ghost"
-																size="sm"
-																title="归档下架"
-																onClick={() => handleArchive(post.id)}
-																disabled={isPending}
-																className="text-amber-600 hover:text-amber-700"
-															>
-																<Archive className="h-4 w-4" />
-															</Button>
-														)}
-
-														{/* 物理删除 */}
-														<Button
-															variant="ghost"
-															size="sm"
-															title="永久删除"
-															onClick={() => setDeleteTargetPost(post)}
-															className="text-destructive hover:text-destructive"
-														>
-															<Trash2 className="h-4 w-4" />
-														</Button>
-													</div>
-												</TableCell>
-											</TableRow>
-										)
-									})
-								)}
-							</TableBody>
-						</Table>
-					</CardContent>
-				</Card>
-
-				{/* 预览弹窗 */}
-				<Dialog
-					open={Boolean(previewPost)}
-					onOpenChange={(open) => !open && setPreviewPost(null)}
-				>
-					<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-						<DialogHeader>
-							<DialogTitle className="text-xl">
-								{previewPost?.title}
-							</DialogTitle>
-							<DialogDescription asChild className="space-y-1">
-								<div>
-									<div>Slug: /{previewPost?.slug}</div>
-									{previewPost?.excerpt && (
-										<div>摘要: {previewPost.excerpt}</div>
-									)}
-								</div>
-							</DialogDescription>
-						</DialogHeader>
-						{previewPost?.poster && (
-							<div className="relative aspect-video rounded-md overflow-hidden bg-muted border my-2">
-								<Image
-									src={previewPost.poster}
-									alt={previewPost.title}
-									fill
-									className="object-cover"
-									unoptimized
-								/>
-							</div>
-						)}
-
-						<div className="mt-4 p-4 bg-muted/40 rounded border font-mono text-xs whitespace-pre-wrap max-h-96 overflow-y-auto">
-							{previewPost?.content || '(无 Markdown 正文内容)'}
+			{/* 文章数据展示区：桌面端 Table + 移动端 Card List */}
+			<Card className="shadow-2xs">
+				<CardHeader className="p-4 border-b">
+					<div className="flex items-center justify-between">
+						<CardTitle className="text-base flex items-center gap-2">
+							文章列表 ({posts.length})
+						</CardTitle>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={toggleSelectAll}
+							className="text-xs gap-1.5 h-8 md:hidden"
+						>
+							{selectedIds.length === posts.length && posts.length > 0 ? (
+								<CheckSquare className="h-4 w-4 text-primary" />
+							) : (
+								<Square className="h-4 w-4 text-muted-foreground" />
+							)}
+							全选 / 取消
+						</Button>
+					</div>
+				</CardHeader>
+				<CardContent className="p-0">
+					{loading ? (
+						<div className="flex items-center justify-center p-12 text-muted-foreground">
+							<Loader2 className="h-6 w-6 animate-spin mr-2" />
+							正在加载文章列表...
 						</div>
-						<DialogFooter>
-							<Button variant="outline" onClick={() => setPreviewPost(null)}>
-								关闭
-							</Button>
-							<Button asChild>
-								<Link href={`/posts/${previewPost?.slug}`} target="_blank">
-									<ExternalLink className="h-4 w-4 mr-2" />
-									前往文章详情页
-								</Link>
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-
-				{/* 永久删除警告确认弹窗 */}
-				<Dialog
-					open={Boolean(deleteTargetPost)}
-					onOpenChange={(open) => !open && setDeleteTargetPost(null)}
-				>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle className="text-destructive flex items-center gap-2">
-								<AlertTriangle className="h-5 w-5" />
-								确认永久删除文章？
-							</DialogTitle>
-							<DialogDescription>
-								您即将彻底删除文章{' '}
-								<span className="font-semibold text-foreground">
-									[{deleteTargetPost?.title}]
-								</span>{' '}
-								(/{deleteTargetPost?.slug})。
-								此操作将直接清理数据库关联记录且不可撤销！
-							</DialogDescription>
-						</DialogHeader>
-						<DialogFooter>
+					) : posts.length === 0 ? (
+						<div className="text-center p-12 text-muted-foreground space-y-3">
+							<p className="text-sm">未找到符合筛选条件的文章</p>
 							<Button
 								variant="outline"
-								onClick={() => setDeleteTargetPost(null)}
+								size="sm"
+								onClick={() => {
+									setStatusFilter('ALL')
+									setTagFilter('ALL')
+									setSearchQuery('')
+								}}
 							>
-								取消
+								重置所有筛选
 							</Button>
-							<Button
-								variant="destructive"
-								onClick={handleDeletePermanently}
-								disabled={isPending}
-							>
-								{isPending ? '删除中...' : '确认彻底删除'}
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			</div>
+						</div>
+					) : (
+						<>
+							{/* 桌面端 Table 视图 */}
+							<div className="hidden md:block">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead className="w-12 text-center">
+												<button
+													type="button"
+													onClick={toggleSelectAll}
+													className="inline-flex items-center justify-center"
+												>
+													{selectedIds.length === posts.length &&
+													posts.length > 0 ? (
+														<CheckSquare className="h-4 w-4 text-primary" />
+													) : (
+														<Square className="h-4 w-4 text-muted-foreground" />
+													)}
+												</button>
+											</TableHead>
+											<TableHead className="w-16">封面</TableHead>
+											<TableHead>标题 / 摘要</TableHead>
+											<TableHead className="w-28">状态</TableHead>
+											<TableHead className="w-36">标签</TableHead>
+											<TableHead className="w-28">发布时间</TableHead>
+											<TableHead className="text-right w-44">操作</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{posts.map((post) => {
+											const statusConfig =
+												STATUS_BADGE_MAP[post.status] ||
+												STATUS_BADGE_MAP.PUBLISHED
+											const isSelected = selectedIds.includes(post.id)
+
+											return (
+												<TableRow
+													key={post.id}
+													className={isSelected ? 'bg-primary/5' : undefined}
+												>
+													<TableCell className="text-center">
+														<button
+															type="button"
+															onClick={() => toggleSelectOne(post.id)}
+															className="inline-flex items-center justify-center"
+														>
+															{isSelected ? (
+																<CheckSquare className="h-4 w-4 text-primary" />
+															) : (
+																<Square className="h-4 w-4 text-muted-foreground" />
+															)}
+														</button>
+													</TableCell>
+													<TableCell>
+														<div className="relative w-12 h-8 rounded overflow-hidden bg-muted border">
+															{post.poster ? (
+																<Image
+																	src={post.poster}
+																	alt={post.title}
+																	fill
+																	className="object-cover"
+																	unoptimized
+																/>
+															) : (
+																<div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground">
+																	无图
+																</div>
+															)}
+														</div>
+													</TableCell>
+													<TableCell className="max-w-xs">
+														<div className="font-semibold text-sm line-clamp-1">
+															{post.title}
+														</div>
+														<div className="text-xs text-muted-foreground line-clamp-1">
+															/{post.slug}
+														</div>
+													</TableCell>
+													<TableCell>
+														<Badge variant={statusConfig.variant}>
+															{statusConfig.label}
+														</Badge>
+													</TableCell>
+													<TableCell>
+														<div className="flex flex-wrap gap-1 max-w-36">
+															{post.tags && post.tags.length > 0 ? (
+																post.tags.slice(0, 2).map((t) => (
+																	<Badge
+																		key={t.slug}
+																		variant="outline"
+																		className="text-[10px] px-1 py-0"
+																	>
+																		{t.name}
+																	</Badge>
+																))
+															) : (
+																<span className="text-xs text-muted-foreground">
+																	-
+																</span>
+															)}
+														</div>
+													</TableCell>
+													<TableCell className="text-xs text-muted-foreground">
+														{post.publishedAt
+															? format(new Date(post.publishedAt), 'yyyy-MM-dd')
+															: '-'}
+													</TableCell>
+													<TableCell className="text-right">
+														<div className="flex items-center justify-end gap-1">
+															{/* 快速预览 */}
+															<Button
+																variant="ghost"
+																size="sm"
+																title="快速预览"
+																onClick={() => setPreviewPost(post)}
+															>
+																<Eye className="h-4 w-4" />
+															</Button>
+
+															{/* 查看详情页 */}
+															<Button
+																asChild
+																variant="ghost"
+																size="sm"
+																title="在新标签页查看"
+															>
+																<Link
+																	href={`/posts/${post.slug}`}
+																	target="_blank"
+																>
+																	<ExternalLink className="h-4 w-4" />
+																</Link>
+															</Button>
+
+															{/* 状态切换下拉 */}
+															<Select
+																value={post.status}
+																onValueChange={(val) =>
+																	handleStatusChange(post.id, val as StatusType)
+																}
+																disabled={isPending}
+															>
+																<SelectTrigger className="w-22.5 h-8 text-xs">
+																	<SelectValue />
+																</SelectTrigger>
+																<SelectContent>
+																	<SelectItem value="PUBLISHED">
+																		已发布
+																	</SelectItem>
+																	<SelectItem value="DRAFT">草稿</SelectItem>
+																	<SelectItem value="ARCHIVED">归档</SelectItem>
+																</SelectContent>
+															</Select>
+
+															{/* 归档 / 恢复 */}
+															{post.archivedAt || post.status === 'ARCHIVED' ? (
+																<Button
+																	variant="ghost"
+																	size="sm"
+																	title="恢复发布"
+																	onClick={() => handleRestore(post.id)}
+																	disabled={isPending}
+																	className="text-green-600 hover:text-green-700"
+																>
+																	<RotateCcw className="h-4 w-4" />
+																</Button>
+															) : (
+																<Button
+																	variant="ghost"
+																	size="sm"
+																	title="归档下架"
+																	onClick={() => handleArchive(post.id)}
+																	disabled={isPending}
+																	className="text-amber-600 hover:text-amber-700"
+																>
+																	<Archive className="h-4 w-4" />
+																</Button>
+															)}
+
+															{/* 物理删除 */}
+															<Button
+																variant="ghost"
+																size="sm"
+																title="永久删除"
+																onClick={() => setDeleteTargetPost(post)}
+																className="text-destructive hover:text-destructive"
+															>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</div>
+													</TableCell>
+												</TableRow>
+											)
+										})}
+									</TableBody>
+								</Table>
+							</div>
+
+							{/* 移动端 Card List 视图 */}
+							<div className="divide-y md:hidden">
+								{posts.map((post) => {
+									const statusConfig =
+										STATUS_BADGE_MAP[post.status] || STATUS_BADGE_MAP.PUBLISHED
+									const isSelected = selectedIds.includes(post.id)
+
+									return (
+										<div
+											key={post.id}
+											className={`p-4 space-y-3 ${isSelected ? 'bg-primary/5' : ''}`}
+										>
+											<div className="flex items-start gap-3">
+												<button
+													type="button"
+													onClick={() => toggleSelectOne(post.id)}
+													className="mt-1"
+												>
+													{isSelected ? (
+														<CheckSquare className="h-4 w-4 text-primary" />
+													) : (
+														<Square className="h-4 w-4 text-muted-foreground" />
+													)}
+												</button>
+
+												<div className="relative w-14 h-10 rounded overflow-hidden bg-muted border shrink-0">
+													{post.poster ? (
+														<Image
+															src={post.poster}
+															alt={post.title}
+															fill
+															className="object-cover"
+															unoptimized
+														/>
+													) : (
+														<div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground">
+															无图
+														</div>
+													)}
+												</div>
+
+												<div className="flex-1 min-w-0">
+													<h4 className="font-semibold text-sm line-clamp-1">
+														{post.title}
+													</h4>
+													<p className="text-xs text-muted-foreground line-clamp-1">
+														/{post.slug}
+													</p>
+												</div>
+
+												<Badge
+													variant={statusConfig.variant}
+													className="shrink-0 text-[10px]"
+												>
+													{statusConfig.label}
+												</Badge>
+											</div>
+
+											{/* 标签与日期 */}
+											<div className="flex items-center justify-between text-xs text-muted-foreground pl-7">
+												<div className="flex flex-wrap gap-1">
+													{post.tags?.slice(0, 3).map((t) => (
+														<Badge
+															key={t.slug}
+															variant="outline"
+															className="text-[10px] px-1 py-0"
+														>
+															{t.name}
+														</Badge>
+													))}
+												</div>
+												<span className="font-mono text-[11px]">
+													{post.publishedAt
+														? format(new Date(post.publishedAt), 'yyyy-MM-dd')
+														: '-'}
+												</span>
+											</div>
+
+											{/* 移动端操作按钮流 */}
+											<div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 pl-7">
+												<div className="flex items-center gap-1">
+													<Button
+														variant="outline"
+														size="sm"
+														className="h-8 text-xs"
+														onClick={() => setPreviewPost(post)}
+													>
+														<Eye className="h-3.5 w-3.5 mr-1" />
+														预览
+													</Button>
+													<Button
+														asChild
+														variant="outline"
+														size="sm"
+														className="h-8 text-xs"
+													>
+														<Link href={`/posts/${post.slug}`} target="_blank">
+															<ExternalLink className="h-3.5 w-3.5 mr-1" />
+															查看
+														</Link>
+													</Button>
+												</div>
+
+												<div className="flex items-center gap-1">
+													<Select
+														value={post.status}
+														onValueChange={(val) =>
+															handleStatusChange(post.id, val as StatusType)
+														}
+														disabled={isPending}
+													>
+														<SelectTrigger className="w-20 h-8 text-xs">
+															<SelectValue />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectItem value="PUBLISHED">发布</SelectItem>
+															<SelectItem value="DRAFT">草稿</SelectItem>
+															<SelectItem value="ARCHIVED">归档</SelectItem>
+														</SelectContent>
+													</Select>
+
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														onClick={() => setDeleteTargetPost(post)}
+														className="text-destructive hover:bg-destructive/10"
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
+											</div>
+										</div>
+									)
+								})}
+							</div>
+						</>
+					)}
+				</CardContent>
+			</Card>
+
+			{/* 预览弹窗 */}
+			<Dialog
+				open={Boolean(previewPost)}
+				onOpenChange={(open) => !open && setPreviewPost(null)}
+			>
+				<DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle className="text-xl">{previewPost?.title}</DialogTitle>
+						<DialogDescription asChild className="space-y-1">
+							<div>
+								<div>Slug: /{previewPost?.slug}</div>
+								{previewPost?.excerpt && <div>摘要: {previewPost.excerpt}</div>}
+							</div>
+						</DialogDescription>
+					</DialogHeader>
+					{previewPost?.poster && (
+						<div className="relative aspect-video rounded-md overflow-hidden bg-muted border my-2">
+							<Image
+								src={previewPost.poster}
+								alt={previewPost.title}
+								fill
+								className="object-cover"
+								unoptimized
+							/>
+						</div>
+					)}
+
+					<div className="mt-4 p-4 bg-muted/40 rounded border font-mono text-xs whitespace-pre-wrap max-h-96 overflow-y-auto">
+						{previewPost?.content || '(无 Markdown 正文内容)'}
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setPreviewPost(null)}>
+							关闭
+						</Button>
+						<Button asChild>
+							<Link href={`/posts/${previewPost?.slug}`} target="_blank">
+								<ExternalLink className="h-4 w-4 mr-2" />
+								前往文章详情页
+							</Link>
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* 永久删除警告确认弹窗 */}
+			<Dialog
+				open={Boolean(deleteTargetPost)}
+				onOpenChange={(open) => !open && setDeleteTargetPost(null)}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle className="text-destructive flex items-center gap-2">
+							<AlertTriangle className="h-5 w-5" />
+							确认永久删除文章？
+						</DialogTitle>
+						<DialogDescription>
+							您即将彻底删除文章{' '}
+							<span className="font-semibold text-foreground">
+								[{deleteTargetPost?.title}]
+							</span>{' '}
+							(/{deleteTargetPost?.slug})。
+							此操作将直接清理数据库关联记录且不可撤销！
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setDeleteTargetPost(null)}>
+							取消
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeletePermanently}
+							disabled={isPending}
+						>
+							{isPending ? '删除中...' : '确认彻底删除'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

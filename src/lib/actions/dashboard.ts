@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/db'
-import { accounts, comments, posts, sessions, users } from '@/db/schema'
+import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 
 /**
@@ -50,44 +50,43 @@ export async function resetUserPasswordByAdmin(data: {
 		})
 
 		if (!targetUser) {
-			return { success: false, error: '目标用户不存在' }
+			return { success: false, error: '用户不存在' }
 		}
 
+		// 使用 Better-Auth 的哈希算法加密密码
 		const hashedPassword = await hashPassword(parsed.data.newPassword)
 
-		const existingAccount = await db.query.accounts.findFirst({
+		const credentialAccount = await db.query.accounts.findFirst({
 			where: and(
 				eq(accounts.userId, targetUser.id),
 				eq(accounts.providerId, 'credential'),
 			),
 		})
 
-		if (existingAccount) {
+		if (credentialAccount) {
 			await db
 				.update(accounts)
 				.set({
 					password: hashedPassword,
 					updatedAt: new Date(),
 				})
-				.where(eq(accounts.id, existingAccount.id))
+				.where(eq(accounts.id, credentialAccount.id))
 		} else {
 			await db.insert(accounts).values({
-				id: crypto.randomUUID().replace(/-/g, '').slice(0, 32),
+				userId: targetUser.id,
 				accountId: targetUser.id,
 				providerId: 'credential',
-				userId: targetUser.id,
 				password: hashedPassword,
-				updatedAt: new Date(),
 			})
 		}
 
-		// 撤销该用户的所有 session，强制重新登录
+		// 清理该用户现有的全部登录会话，强制其使用新密码重新登录
 		await db.delete(sessions).where(eq(sessions.userId, targetUser.id))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to reset user password by admin:', error)
+		console.error('Reset user password by admin error:', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '重置密码失败',
@@ -95,6 +94,9 @@ export async function resetUserPasswordByAdmin(data: {
 	}
 }
 
+/**
+ * 获取仪表板核心统计指标
+ */
 export async function getDashboardStats() {
 	try {
 		await requireAdminSession()
@@ -129,6 +131,10 @@ export async function getDashboardStats() {
 			.from(posts)
 			.where(and(eq(posts.status, 'DRAFT'), isNull(posts.archivedAt)))
 		const draftPosts = draftPostCountResult?.value ?? 0
+
+		// 标签总数
+		const [tagCountResult] = await db.select({ value: count() }).from(tags)
+		const totalTags = tagCountResult?.value ?? 0
 
 		// 评论数前5的文章
 		const topCommentedPostsRaw = await db
@@ -190,6 +196,7 @@ export async function getDashboardStats() {
 				totalPosts,
 				publishedPosts,
 				draftPosts,
+				totalTags,
 			},
 			topCommentedPosts: topCommentedPostsRaw.map((p) => ({
 				id: p.id,
@@ -206,41 +213,28 @@ export async function getDashboardStats() {
 			recentComments: recentComments.map((c) => ({
 				id: c.id,
 				content: c.content,
-				status: c.status,
-				createdAt: c.createdAt,
-				authorName: c.author?.name || 'Unknown',
-				authorEmail: c.author?.email || 'Unknown',
-				postTitle: c.post?.title || 'Unknown',
+				authorName: c.author?.name || '匿名读者',
+				postTitle: c.post?.title || '未知文章',
 				postSlug: c.post?.slug || '',
+				createdAt: c.createdAt,
 			})),
 		}
 	} catch (error) {
-		console.error('Failed to fetch dashboard stats:', error)
-		throw new Error(
-			error instanceof Error
-				? error.message
-				: 'Failed to fetch dashboard statistics',
-		)
+		console.error('Get dashboard stats error:', error)
+		throw error
 	}
 }
 
+/**
+ * 获取全站用户列表（包含评论和封禁状态）
+ */
 export async function getUsersList() {
 	try {
 		await requireAdminSession()
 
 		const allUsers = await db.query.users.findMany({
-			orderBy: [desc(users.createdAt)],
-		})
-
-		const usersWithDetails = await Promise.all(
-			allUsers.map(async (u) => {
-				const [cCount] = await db
-					.select({ value: count() })
-					.from(comments)
-					.where(eq(comments.authorId, u.id))
-
-				const userComments = await db.query.comments.findMany({
-					where: eq(comments.authorId, u.id),
+			with: {
+				comments: {
 					with: {
 						post: {
 							columns: {
@@ -251,44 +245,43 @@ export async function getUsersList() {
 						},
 					},
 					orderBy: [desc(comments.createdAt)],
-					limit: 10,
-				})
+				},
+			},
+			orderBy: [desc(users.createdAt)],
+		})
 
-				return {
-					id: u.id,
-					name: u.name,
-					email: u.email,
-					image: u.image,
-					banned: u.banned,
-					role: u.role,
-					emailVerified: u.emailVerified,
-					createdAt: u.createdAt,
-					updatedAt: u.updatedAt,
-					totalComments: cCount?.value ?? 0,
-					comments: userComments.map((c) => ({
-						id: c.id,
-						content: c.content,
-						status: c.status,
-						createdAt: c.createdAt,
-						post: {
-							id: c.post?.id || '',
-							title: c.post?.title || '',
-							slug: c.post?.slug || '',
-						},
-					})),
-				}
-			}),
-		)
-
-		return usersWithDetails
+		return allUsers.map((u) => ({
+			id: u.id,
+			name: u.name,
+			email: u.email,
+			image: u.image,
+			banned: Boolean(u.banned),
+			role: u.role || 'USER',
+			emailVerified: u.emailVerified,
+			createdAt: u.createdAt,
+			updatedAt: u.updatedAt,
+			totalComments: u.comments?.length || 0,
+			comments: (u.comments || []).map((c) => ({
+				id: c.id,
+				content: c.content,
+				status: c.status,
+				createdAt: c.createdAt,
+				post: {
+					id: c.post?.id || '',
+					title: c.post?.title || '未知文章',
+					slug: c.post?.slug || '',
+				},
+			})),
+		}))
 	} catch (error) {
-		console.error('Failed to fetch users list:', error)
-		throw new Error(
-			error instanceof Error ? error.message : 'Failed to fetch users list',
-		)
+		console.error('Get users list error:', error)
+		throw error
 	}
 }
 
+/**
+ * 切换用户封禁状态
+ */
 export async function toggleUserBan(userId: string, banned: boolean) {
 	try {
 		await requireAdminSession()
@@ -298,52 +291,48 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 		revalidatePath('/dashboard/users')
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to toggle user ban:', error)
-		throw new Error(
-			error instanceof Error ? error.message : 'Failed to update user status',
-		)
+		console.error('Toggle user ban error:', error)
+		throw error
 	}
 }
 
+/**
+ * 切换评论垃圾/正常状态
+ */
 export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
 	try {
 		await requireAdminSession()
 
 		await db
 			.update(comments)
-			.set({ status: isSpam ? 'SPAM' : 'PUBLISHED' })
-			.where(eq(comments.id, commentId))
-
-		revalidatePath('/dashboard/users')
-		return { success: true }
-	} catch (error) {
-		console.error('Failed to toggle comment spam status:', error)
-		throw new Error(
-			error instanceof Error
-				? error.message
-				: 'Failed to toggle comment spam status',
-		)
-	}
-}
-
-export async function deleteComment(commentId: string) {
-	try {
-		await requireAdminSession()
-
-		await db
-			.update(comments)
 			.set({
-				deleted: true,
-				content: '[已删除]',
+				status: isSpam ? 'SPAM' : 'PUBLISHED',
 			})
 			.where(eq(comments.id, commentId))
 
 		revalidatePath('/dashboard/users')
+		revalidatePath('/dashboard')
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to delete comment:', error)
-		throw new Error(
-			error instanceof Error ? error.message : 'Failed to delete comment',
-		)
+		console.error('Toggle comment spam error:', error)
+		throw error
+	}
+}
+
+/**
+ * 删除评论
+ */
+export async function deleteComment(commentId: string) {
+	try {
+		await requireAdminSession()
+
+		await db.delete(comments).where(eq(comments.id, commentId))
+
+		revalidatePath('/dashboard/users')
+		revalidatePath('/dashboard')
+		return { success: true }
+	} catch (error) {
+		console.error('Delete comment error:', error)
+		throw error
 	}
 }

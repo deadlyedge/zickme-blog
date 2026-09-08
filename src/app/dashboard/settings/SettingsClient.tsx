@@ -1,16 +1,6 @@
 'use client'
 
-import {
-	ArrowLeft,
-	Layout,
-	Palette,
-	Pin,
-	Plus,
-	Save,
-	Trash2,
-	User,
-} from 'lucide-react'
-import Link from 'next/link'
+import { Layout, Palette, Pin, Plus, Save, Trash2, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -23,7 +13,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -53,9 +43,9 @@ export function SettingsClient({
 	const [isPending, startTransition] = useTransition()
 
 	// 1. 主题状态
-	const [themePreset, setThemePreset] = useState<string>(
-		initialProfile?.themeConfig?.preset || 'default',
-	)
+	const [themePreset, setThemePreset] = useState<
+		'default' | 'minimal-slate' | 'cyber-green' | 'warm-amber' | 'custom'
+	>(initialProfile?.themeConfig?.preset || 'default')
 	const [customCss, setCustomCss] = useState<string>(
 		initialProfile?.themeConfig?.customCss || '',
 	)
@@ -112,10 +102,17 @@ export function SettingsClient({
 		initialProfile?.aboutPageConfig?.featuredProjects || [],
 	)
 
-	// 选择预设主题时自动填充变量
-	const handleSelectPreset = (presetId: string) => {
-		setThemePreset(presetId)
-		const found = THEME_PRESETS.find((p) => p.id === presetId)
+	// 应用预设主题变量
+	const handleApplyPreset = (presetKey: string) => {
+		setThemePreset(
+			presetKey as
+				| 'default'
+				| 'minimal-slate'
+				| 'cyber-green'
+				| 'warm-amber'
+				| 'custom',
+		)
+		const found = THEME_PRESETS.find((p) => p.id === presetKey)
 		if (found) {
 			setLightVars((found.config.light as Record<string, string>) || {})
 			setDarkVars((found.config.dark as Record<string, string>) || {})
@@ -160,17 +157,12 @@ export function SettingsClient({
 		setFeaturedProjects([...featuredProjects, newProject])
 	}
 
-	// 保存所有设置
+	// 保存全部配置
 	const handleSaveAll = () => {
 		startTransition(async () => {
 			try {
 				const themeConfig: ThemeConfig = {
-					preset: themePreset as
-						| 'default'
-						| 'minimal-slate'
-						| 'cyber-green'
-						| 'warm-amber'
-						| 'custom',
+					preset: themePreset,
 					customCss,
 					light: lightVars,
 					dark: darkVars,
@@ -220,555 +212,523 @@ export function SettingsClient({
 	}
 
 	return (
-		<div className="h-svh overflow-y-auto">
-			<div className="container mx-auto p-6 pt-24 space-y-8 max-w-6xl pb-24">
-				{/* 顶部导航与保存按钮 */}
-				<div className="flex flex-wrap items-center justify-between gap-4 border-b pb-6">
-					<div className="flex items-center gap-4">
-						<Button asChild variant="outline" size="sm">
-							<Link href="/dashboard">
-								<ArrowLeft className="h-4 w-4 mr-2" />
-								返回控制台
-							</Link>
-						</Button>
-						<div>
-							<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-								站点定制与页面可视化配置
-							</h1>
-							<p className="text-sm text-muted-foreground">
-								动态调整主题调色板、首页模块开关与置顶、About 页面经历与项目
-							</p>
-						</div>
-					</div>
-
-					<Button
-						onClick={handleSaveAll}
-						disabled={isPending}
-						className="gap-2 shadow-sm"
-					>
-						<Save className="h-4 w-4" />
-						{isPending ? '保存中...' : '保存全部配置'}
-					</Button>
+		<div className="container mx-auto p-4 sm:p-6 py-8 space-y-6 max-w-6xl pb-24">
+			{/* 顶部标题与保存按钮 */}
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6">
+				<div>
+					<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+						站点定制与页面可视化配置
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						动态调整主题调色板、首页模块开关与置顶、About 页面经历与项目
+					</p>
 				</div>
 
-				{/* 核心配置 Tabs */}
-				<Tabs defaultValue="theming" className="w-full space-y-6">
-					<TabsList className="grid grid-cols-3 max-w-md">
-						<TabsTrigger value="theming" className="gap-2">
-							<Palette className="h-4 w-4" />
-							<span>动态主题</span>
-						</TabsTrigger>
-						<TabsTrigger value="landing" className="gap-2">
-							<Layout className="h-4 w-4" />
-							<span>Landing 首页</span>
-						</TabsTrigger>
-						<TabsTrigger value="about" className="gap-2">
-							<User className="h-4 w-4" />
-							<span>About 履历</span>
-						</TabsTrigger>
-					</TabsList>
+				<Button
+					size="lg"
+					onClick={handleSaveAll}
+					disabled={isPending}
+					className="gap-2 shadow-xs self-start sm:self-auto"
+				>
+					<Save className="h-4 w-4" />
+					{isPending ? '正在保存...' : '保存全部修改'}
+				</Button>
+			</div>
 
-					{/* 1. 主题与样式编辑器 */}
-					<TabsContent value="theming" className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
-									<Palette className="h-5 w-5 text-primary" />
-									预设调色板与配色方案
-								</CardTitle>
-								<CardDescription>
-									选择内置精心调配的 Shadcn / Tailwind 4
-									配色系统，免重新编译热更新。
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-									{THEME_PRESETS.map((preset) => {
-										const isSelected = themePreset === preset.id
+			{/* 选项卡面板 */}
+			<Tabs defaultValue="theme" className="space-y-6">
+				<TabsList className="grid w-full grid-cols-3 max-w-md shadow-2xs">
+					<TabsTrigger value="theme" className="gap-2 text-xs sm:text-sm">
+						<Palette className="h-3.5 w-3.5" />
+						动态主题
+					</TabsTrigger>
+					<TabsTrigger value="landing" className="gap-2 text-xs sm:text-sm">
+						<Layout className="h-3.5 w-3.5" />
+						首页编排
+					</TabsTrigger>
+					<TabsTrigger value="about" className="gap-2 text-xs sm:text-sm">
+						<User className="h-3.5 w-3.5" />
+						关于页内容
+					</TabsTrigger>
+				</TabsList>
+
+				{/* 1. 动态主题定制 */}
+				<TabsContent value="theme" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-lg">
+								主题调色板预设 (Theme Presets)
+							</CardTitle>
+							<CardDescription>
+								选择全站经典配色预设，或在下方自定义 CSS 变量覆盖
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+								{THEME_PRESETS.map((preset) => {
+									const isSelected = themePreset === preset.id
+									return (
+										<div
+											key={preset.id}
+											onClick={() => handleApplyPreset(preset.id)}
+											onKeyDown={(e) => {
+												if (e.key === 'Enter' || e.key === ' ') {
+													handleApplyPreset(preset.id)
+												}
+											}}
+											className={`p-4 rounded-xl border-2 cursor-pointer transition-all space-y-3 ${
+												isSelected
+													? 'border-primary bg-primary/5 shadow-xs'
+													: 'border-border/60 hover:border-primary/40 bg-card'
+											}`}
+										>
+											<div className="flex items-center justify-between">
+												<span className="font-bold text-sm">{preset.name}</span>
+												{isSelected && (
+													<Badge className="text-[10px] px-1.5 py-0">
+														当前激活
+													</Badge>
+												)}
+											</div>
+											<div className="flex items-center gap-2">
+												<div
+													className="size-5 rounded-full border shadow-2xs"
+													style={{
+														backgroundColor:
+															preset.config.light?.primary || '#000',
+													}}
+												/>
+												<div
+													className="size-5 rounded-full border shadow-2xs"
+													style={{
+														backgroundColor:
+															preset.config.light?.background || '#fff',
+													}}
+												/>
+												<div
+													className="size-5 rounded-full border shadow-2xs"
+													style={{
+														backgroundColor:
+															preset.config.dark?.background || '#09090b',
+													}}
+												/>
+											</div>
+											<p className="text-xs text-muted-foreground line-clamp-2">
+												{preset.description}
+											</p>
+										</div>
+									)
+								})}
+							</div>
+
+							<div className="space-y-3 pt-4 border-t">
+								<FieldLabel>全局注入自定义 CSS 代码 (可选)</FieldLabel>
+								<Textarea
+									value={customCss}
+									onChange={(e) => setCustomCss(e.target.value)}
+									placeholder=":root { --custom-glow: #38bdf8; }"
+									rows={4}
+									className="font-mono text-xs"
+								/>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				{/* 2. 首页模块编排 */}
+				<TabsContent value="landing" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-lg">首页分区块与开关编排</CardTitle>
+							<CardDescription>
+								按需开启或隐藏 Landing Page 各功能区块
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-2xs">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-sm font-bold">
+											Landing Page 落地页总开关
+										</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											若关闭，访问首页将直接重定向至文章列表
+										</p>
+									</div>
+									<Switch
+										checked={landingEnabled}
+										onCheckedChange={setLandingEnabled}
+									/>
+								</div>
+
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-2xs">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-sm font-bold">
+											TOP 5 热门文章 3D 翻页区
+										</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											在首页置顶呈现全站热议文章轮播
+										</p>
+									</div>
+									<Switch
+										checked={showTopHottest}
+										onCheckedChange={setShowTopHottest}
+									/>
+								</div>
+
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-2xs">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-sm font-bold">
+											Slogan 视差口号区
+										</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											展示多条视差滚动的品牌 Slogan
+										</p>
+									</div>
+									<Switch
+										checked={showSlogans}
+										onCheckedChange={setShowSlogans}
+									/>
+								</div>
+
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-2xs">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-sm font-bold">
+											置顶精选文章区 (Pinned Posts)
+										</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											在首页重点展示管理员勾选的置顶文章
+										</p>
+									</div>
+									<Switch
+										checked={showPinnedPosts}
+										onCheckedChange={setShowPinnedPosts}
+									/>
+								</div>
+
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-2xs">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-sm font-bold">
+											最新发布文章区 (Latest Posts)
+										</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											展示近期最新发布的文章瀑布流
+										</p>
+									</div>
+									<Switch
+										checked={showLatestPosts}
+										onCheckedChange={setShowLatestPosts}
+									/>
+								</div>
+							</div>
+
+							{/* 置顶文章选择器 */}
+							<div className="pt-6 border-t space-y-3">
+								<div className="flex items-center justify-between">
+									<FieldLabel className="text-sm font-bold flex items-center gap-2">
+										<Pin className="h-4 w-4 text-primary" />
+										配置置顶文章 (已勾选: {pinnedPostIds.length} 篇)
+									</FieldLabel>
+								</div>
+
+								<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-72 overflow-y-auto p-2 border rounded-xl bg-muted/10">
+									{allPosts.map((post) => {
+										const isPinned = pinnedPostIds.includes(post.id)
 										return (
 											<div
-												key={preset.id}
-												onClick={() => handleSelectPreset(preset.id)}
+												key={post.id}
+												onClick={() => togglePinnedPost(post.id)}
 												onKeyDown={(e) => {
 													if (e.key === 'Enter' || e.key === ' ') {
-														handleSelectPreset(preset.id)
+														togglePinnedPost(post.id)
 													}
 												}}
-												className={`cursor-pointer rounded-xl border p-4 transition-all flex flex-col justify-between ${
-													isSelected
-														? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-														: 'hover:border-border/80 hover:bg-muted/40'
+												className={`p-3 rounded-lg border text-left cursor-pointer transition-all space-y-1 ${
+													isPinned
+														? 'border-primary bg-primary/10 shadow-xs'
+														: 'border-border/60 hover:border-border bg-card'
 												}`}
 											>
-												<div className="space-y-2">
-													<div className="flex items-center justify-between">
-														<span className="font-bold text-sm">
-															{preset.name}
-														</span>
-														<div
-															className={`size-3.5 rounded-full ${preset.badgeColor}`}
-														/>
-													</div>
-													<p className="text-xs text-muted-foreground leading-relaxed">
-														{preset.description}
-													</p>
-												</div>
-
-												<div className="pt-4 flex items-center justify-between text-xs font-medium">
-													<Badge variant={isSelected ? 'default' : 'secondary'}>
-														{isSelected ? '生效中' : '点击应用'}
+												<div className="flex items-center justify-between">
+													<Badge
+														variant={isPinned ? 'default' : 'outline'}
+														className="text-[10px] px-1.5 py-0"
+													>
+														{isPinned ? '已置顶' : '未置顶'}
 													</Badge>
+												</div>
+												<div className="font-semibold text-xs line-clamp-1">
+													{post.title}
+												</div>
+												<div className="text-[10px] text-muted-foreground line-clamp-1">
+													/{post.slug}
 												</div>
 											</div>
 										)
 									})}
 								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-								{/* 自定义 CSS 变量与额外样式 */}
-								<div className="space-y-4 pt-4 border-t">
-									<div className="space-y-1">
-										<h4 className="text-sm font-semibold">
-											自定义 CSS 变量注入 (shadcn / globals.css 格式)
-										</h4>
-										<p className="text-xs text-muted-foreground">
-											支持直接编写自定义全局 CSS 代码，将被动态挂载至 HTML Head
-											标签。
-										</p>
-									</div>
-
-									<Textarea
-										value={customCss}
-										onChange={(e) => setCustomCss(e.target.value)}
-										placeholder=":root { --radius: 0.75rem; }"
-										rows={6}
-										className="font-mono text-xs"
+				{/* 3. 关于页内容管理 */}
+				<TabsContent value="about" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-lg">Hero 个人导语与在线状态</CardTitle>
+							<CardDescription>配置关于页面顶部的标语与状态</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div>
+								<FieldLabel className="text-xs">主标语 (Headline)</FieldLabel>
+								<InputGroup>
+									<InputGroupInput
+										value={aboutHeadline}
+										onChange={(e) => setAboutHeadline(e.target.value)}
+										placeholder="e.g. Full-Stack Engineer & Designer"
 									/>
-								</div>
-							</CardContent>
-						</Card>
-					</TabsContent>
+								</InputGroup>
+							</div>
 
-					{/* 2. Landing Page 模块与置顶管理 */}
-					<TabsContent value="landing" className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
-									<Layout className="h-5 w-5 text-primary" />
-									首页区块组合与开关
-								</CardTitle>
-								<CardDescription>
-									控制首页各个展示分区的可见性与落地页行为。若关闭落地页，访问首页将直接定向至文章流。
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-										<div className="space-y-0.5">
-											<div className="font-semibold text-sm">
-												开启 Landing Page
-											</div>
-											<div className="text-xs text-muted-foreground">
-												关闭后访问 / 将自动跳转至 /posts 文章流
-											</div>
-										</div>
-										<Switch
-											checked={landingEnabled}
-											onCheckedChange={setLandingEnabled}
-										/>
-									</div>
-
-									<div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-										<div className="space-y-0.5">
-											<div className="font-semibold text-sm">
-												TOP 5 热门文章翻页动效区
-											</div>
-											<div className="text-xs text-muted-foreground">
-												展示全站评论/热度最高的 5 篇文章 3D 卡片
-											</div>
-										</div>
-										<Switch
-											checked={showTopHottest}
-											onCheckedChange={setShowTopHottest}
-										/>
-									</div>
-
-									<div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-										<div className="space-y-0.5">
-											<div className="font-semibold text-sm">
-												口号视差滚动区 (Slogans)
-											</div>
-											<div className="text-xs text-muted-foreground">
-												展示个人宣言与技术座右铭
-											</div>
-										</div>
-										<Switch
-											checked={showSlogans}
-											onCheckedChange={setShowSlogans}
-										/>
-									</div>
-
-									<div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-										<div className="space-y-0.5">
-											<div className="font-semibold text-sm">
-												置顶推荐文章区 (Pinned Posts)
-											</div>
-											<div className="text-xs text-muted-foreground">
-												展示管理员手动指定的置顶精选文章
-											</div>
-										</div>
-										<Switch
-											checked={showPinnedPosts}
-											onCheckedChange={setShowPinnedPosts}
-										/>
-									</div>
-
-									<div className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-										<div className="space-y-0.5">
-											<div className="font-semibold text-sm">
-												最新发布文章瀑布区 (Latest Posts)
-											</div>
-											<div className="text-xs text-muted-foreground">
-												按时间倒序展示最新的发布文章网格
-											</div>
-										</div>
-										<Switch
-											checked={showLatestPosts}
-											onCheckedChange={setShowLatestPosts}
-										/>
-									</div>
-								</div>
-
-								{/* 可视化置顶文章选择器 */}
-								<div className="pt-6 border-t space-y-4">
-									<div className="flex items-center justify-between">
-										<div className="space-y-1">
-											<h4 className="text-sm font-semibold flex items-center gap-2">
-												<Pin className="h-4 w-4 text-primary" />
-												置顶文章选择 (Pinned Posts Selector)
-											</h4>
-											<p className="text-xs text-muted-foreground">
-												点击文章卡片将其添加或移出首页“置顶推荐”区块（已选{' '}
-												{pinnedPostIds.length} 篇）
-											</p>
-										</div>
-									</div>
-
-									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-										{allPosts.map((post) => {
-											const isPinned = pinnedPostIds.includes(post.id)
-											return (
-												<div
-													key={post.id}
-													onClick={() => togglePinnedPost(post.id)}
-													onKeyDown={(e) => {
-														if (e.key === 'Enter' || e.key === ' ') {
-															togglePinnedPost(post.id)
-														}
-													}}
-													className={`cursor-pointer rounded-xl border p-3.5 transition-all flex flex-col justify-between gap-3 ${
-														isPinned
-															? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-															: 'hover:border-border/80 bg-card'
-													}`}
-												>
-													<div className="space-y-1.5">
-														<div className="flex items-start justify-between gap-2">
-															<span className="font-bold text-sm line-clamp-1">
-																{post.title}
-															</span>
-															{isPinned && (
-																<Badge
-																	variant="default"
-																	className="text-[10px]"
-																>
-																	已置顶
-																</Badge>
-															)}
-														</div>
-														<p className="text-xs text-muted-foreground line-clamp-2">
-															{post.excerpt || '暂无摘要'}
-														</p>
-													</div>
-
-													<div className="flex items-center justify-between text-[11px] text-muted-foreground border-t pt-2">
-														<span>/posts/{post.slug}</span>
-														<span>
-															{new Date(
-																post.publishedAt || post.createdAt,
-															).toLocaleDateString('zh-CN')}
-														</span>
-													</div>
-												</div>
-											)
-										})}
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-					</TabsContent>
-
-					{/* 3. About 页面内容编辑器 */}
-					<TabsContent value="about" className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
-									<User className="h-5 w-5 text-primary" />
-									About 导语与状态维护
-								</CardTitle>
-								<CardDescription>
-									自定义关于页面的大字号标语、自我定位与实时在线状态。
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<Field>
-									<FieldLabel>页面大标题 (Headline)</FieldLabel>
-									<InputGroup>
-										<InputGroupInput
-											value={aboutHeadline}
-											onChange={(e) => setAboutHeadline(e.target.value)}
-											placeholder="Hi, I'm Zick — Senior Full Stack Engineer."
-										/>
-									</InputGroup>
-								</Field>
-
-								<Field>
-									<FieldLabel>副标题 / 导语描述 (Subheadline)</FieldLabel>
-									<Textarea
+							<div>
+								<FieldLabel className="text-xs">
+									副标语 (Subheadline)
+								</FieldLabel>
+								<InputGroup>
+									<InputGroupInput
 										value={aboutSubheadline}
 										onChange={(e) => setAboutSubheadline(e.target.value)}
-										placeholder="A comprehensive introduction to my philosophy and architectural focus..."
-										rows={3}
+										placeholder="e.g. Building delightful web experiences..."
 									/>
-								</Field>
+								</InputGroup>
+							</div>
 
-								<Field>
-									<FieldLabel>实时在线状态文本 (Status Badge)</FieldLabel>
-									<InputGroup>
-										<InputGroupInput
-											value={aboutStatusText}
-											onChange={(e) => setAboutStatusText(e.target.value)}
-											placeholder="Available for new opportunities / Based in Shenzhen"
-										/>
-									</InputGroup>
-								</Field>
-							</CardContent>
-						</Card>
+							<div>
+								<FieldLabel className="text-xs">
+									在线状态标识 (Status Badge)
+								</FieldLabel>
+								<InputGroup>
+									<InputGroupInput
+										value={aboutStatusText}
+										onChange={(e) => setAboutStatusText(e.target.value)}
+										placeholder="e.g. Available for interesting projects"
+									/>
+								</InputGroup>
+							</div>
+						</CardContent>
+					</Card>
 
-						{/* 职业经历时间线维护 */}
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between">
-								<div>
-									<CardTitle className="text-lg">
-										职业生涯经历 (Career Timeline)
-									</CardTitle>
-									<CardDescription>
-										管理关于页面的工作履历、职责描述与成就亮点
-									</CardDescription>
-								</div>
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={addCareerItem}
-									className="gap-1 text-xs"
+					{/* 职业经历时间线维护 */}
+					<Card className="shadow-2xs">
+						<CardHeader className="flex flex-row items-center justify-between">
+							<div>
+								<CardTitle className="text-lg">
+									职业经历时间线 (Career Timeline)
+								</CardTitle>
+								<CardDescription>
+									管理关于页面的工作经历与重要里程碑
+								</CardDescription>
+							</div>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={addCareerItem}
+								className="gap-1 text-xs"
+							>
+								<Plus className="h-3.5 w-3.5" />
+								添加经历
+							</Button>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							{careerTimeline.map((item, index) => (
+								<div
+									key={item.id || `career-${index}`}
+									className="p-4 rounded-xl border bg-muted/20 space-y-3 relative"
 								>
-									<Plus className="h-3.5 w-3.5" />
-									添加经历
-								</Button>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								{careerTimeline.map((item, index) => (
-									<div
-										key={item.id || `career-${index}`}
-										className="p-4 rounded-xl border bg-muted/20 space-y-3 relative group"
-									>
-										<div className="flex items-center justify-between">
-											<span className="font-bold text-xs text-primary uppercase">
-												经历 #{index + 1}
-											</span>
-											<Button
-												size="icon-sm"
-												variant="ghost"
-												className="text-destructive hover:bg-destructive/10"
-												onClick={() =>
-													setCareerTimeline(
-														careerTimeline.filter((_, i) => i !== index),
-													)
-												}
-											>
-												<Trash2 className="h-3.5 w-3.5" />
-											</Button>
+									<div className="flex items-center justify-between">
+										<span className="font-bold text-xs text-primary uppercase">
+											经历 #{index + 1}
+										</span>
+										<Button
+											size="icon-sm"
+											variant="ghost"
+											className="text-destructive hover:bg-destructive/10"
+											onClick={() =>
+												setCareerTimeline(
+													careerTimeline.filter((_, i) => i !== index),
+												)
+											}
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</Button>
+									</div>
+
+									<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+										<div>
+											<FieldLabel className="text-xs">职位 / 角色</FieldLabel>
+											<InputGroup>
+												<InputGroupInput
+													value={item.role}
+													onChange={(e) => {
+														const updated = [...careerTimeline]
+														updated[index].role = e.target.value
+														setCareerTimeline(updated)
+													}}
+													placeholder="Software Engineer"
+												/>
+											</InputGroup>
 										</div>
 
-										<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-											<div>
-												<FieldLabel className="text-xs">职位名称</FieldLabel>
-												<InputGroup>
-													<InputGroupInput
-														value={item.role}
-														onChange={(e) => {
-															const updated = [...careerTimeline]
-															updated[index].role = e.target.value
-															setCareerTimeline(updated)
-														}}
-														placeholder="Tech Lead / Senior Engineer"
-													/>
-												</InputGroup>
-											</div>
+										<div>
+											<FieldLabel className="text-xs">公司 / 组织</FieldLabel>
+											<InputGroup>
+												<InputGroupInput
+													value={item.company}
+													onChange={(e) => {
+														const updated = [...careerTimeline]
+														updated[index].company = e.target.value
+														setCareerTimeline(updated)
+													}}
+													placeholder="Company Name"
+												/>
+											</InputGroup>
+										</div>
 
-											<div>
-												<FieldLabel className="text-xs">公司 / 组织</FieldLabel>
-												<InputGroup>
-													<InputGroupInput
-														value={item.company}
-														onChange={(e) => {
-															const updated = [...careerTimeline]
-															updated[index].company = e.target.value
-															setCareerTimeline(updated)
-														}}
-														placeholder="Acme Inc."
-													/>
-												</InputGroup>
-											</div>
+										<div>
+											<FieldLabel className="text-xs">时间周期</FieldLabel>
+											<InputGroup>
+												<InputGroupInput
+													value={item.period}
+													onChange={(e) => {
+														const updated = [...careerTimeline]
+														updated[index].period = e.target.value
+														setCareerTimeline(updated)
+													}}
+													placeholder="2023 - Present"
+												/>
+											</InputGroup>
+										</div>
+									</div>
 
-											<div>
-												<FieldLabel className="text-xs">
-													任职周期 (Period)
-												</FieldLabel>
-												<InputGroup>
-													<InputGroupInput
-														value={item.period}
-														onChange={(e) => {
-															const updated = [...careerTimeline]
-															updated[index].period = e.target.value
-															setCareerTimeline(updated)
-														}}
-														placeholder="2022 - Present"
-													/>
-												</InputGroup>
-											</div>
+									<div>
+										<FieldLabel className="text-xs">职责与成就描述</FieldLabel>
+										<Textarea
+											value={item.description}
+											onChange={(e) => {
+												const updated = [...careerTimeline]
+												updated[index].description = e.target.value
+												setCareerTimeline(updated)
+											}}
+											placeholder="Briefly describe the architectural impact..."
+											rows={2}
+											className="text-xs"
+										/>
+									</div>
+								</div>
+							))}
+						</CardContent>
+					</Card>
+
+					{/* 精选项目维护 */}
+					<Card className="shadow-2xs">
+						<CardHeader className="flex flex-row items-center justify-between">
+							<div>
+								<CardTitle className="text-lg">
+									精选项目与开源亮点 (Featured Projects)
+								</CardTitle>
+								<CardDescription>
+									展示在关于页面的代表作与开源实验
+								</CardDescription>
+							</div>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={addFeaturedProject}
+								className="gap-1 text-xs"
+							>
+								<Plus className="h-3.5 w-3.5" />
+								添加项目
+							</Button>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							{featuredProjects.map((proj, pIndex) => (
+								<div
+									key={proj.id || `proj-${pIndex}`}
+									className="p-4 rounded-xl border bg-muted/20 space-y-3 relative"
+								>
+									<div className="flex items-center justify-between">
+										<span className="font-bold text-xs text-primary uppercase">
+											项目 #{pIndex + 1}
+										</span>
+										<Button
+											size="icon-sm"
+											variant="ghost"
+											className="text-destructive hover:bg-destructive/10"
+											onClick={() =>
+												setFeaturedProjects(
+													featuredProjects.filter((_, i) => i !== pIndex),
+												)
+											}
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</Button>
+									</div>
+
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+										<div>
+											<FieldLabel className="text-xs">项目名称</FieldLabel>
+											<InputGroup>
+												<InputGroupInput
+													value={proj.title}
+													onChange={(e) => {
+														const updated = [...featuredProjects]
+														updated[pIndex].title = e.target.value
+														setFeaturedProjects(updated)
+													}}
+													placeholder="Project Title"
+												/>
+											</InputGroup>
 										</div>
 
 										<div>
 											<FieldLabel className="text-xs">
-												工作概要与系统架构
+												GitHub 仓库地址
 											</FieldLabel>
-											<Textarea
-												value={item.description || ''}
-												onChange={(e) => {
-													const updated = [...careerTimeline]
-													updated[index].description = e.target.value
-													setCareerTimeline(updated)
-												}}
-												placeholder="Briefly describe the architectural impact..."
-												rows={2}
-												className="text-xs"
-											/>
+											<InputGroup>
+												<InputGroupInput
+													value={proj.githubUrl || ''}
+													onChange={(e) => {
+														const updated = [...featuredProjects]
+														updated[pIndex].githubUrl = e.target.value
+														setFeaturedProjects(updated)
+													}}
+													placeholder="https://github.com/user/repo"
+												/>
+											</InputGroup>
 										</div>
 									</div>
-								))}
-							</CardContent>
-						</Card>
 
-						{/* 精选项目维护 */}
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between">
-								<div>
-									<CardTitle className="text-lg">
-										精选项目与开源亮点 (Featured Projects)
-									</CardTitle>
-									<CardDescription>
-										展示在关于页面的代表作与开源实验
-									</CardDescription>
+									<div>
+										<FieldLabel className="text-xs">项目描述</FieldLabel>
+										<Textarea
+											value={proj.description}
+											onChange={(e) => {
+												const updated = [...featuredProjects]
+												updated[pIndex].description = e.target.value
+												setFeaturedProjects(updated)
+											}}
+											placeholder="Short introduction..."
+											rows={2}
+											className="text-xs"
+										/>
+									</div>
 								</div>
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={addFeaturedProject}
-									className="gap-1 text-xs"
-								>
-									<Plus className="h-3.5 w-3.5" />
-									添加项目
-								</Button>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								{featuredProjects.map((proj, pIndex) => (
-									<div
-										key={proj.id || `proj-${pIndex}`}
-										className="p-4 rounded-xl border bg-muted/20 space-y-3 relative"
-									>
-										<div className="flex items-center justify-between">
-											<span className="font-bold text-xs text-primary uppercase">
-												项目 #{pIndex + 1}
-											</span>
-											<Button
-												size="icon-sm"
-												variant="ghost"
-												className="text-destructive hover:bg-destructive/10"
-												onClick={() =>
-													setFeaturedProjects(
-														featuredProjects.filter((_, i) => i !== pIndex),
-													)
-												}
-											>
-												<Trash2 className="h-3.5 w-3.5" />
-											</Button>
-										</div>
-
-										<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-											<div>
-												<FieldLabel className="text-xs">项目名称</FieldLabel>
-												<InputGroup>
-													<InputGroupInput
-														value={proj.title}
-														onChange={(e) => {
-															const updated = [...featuredProjects]
-															updated[pIndex].title = e.target.value
-															setFeaturedProjects(updated)
-														}}
-														placeholder="Project Title"
-													/>
-												</InputGroup>
-											</div>
-
-											<div>
-												<FieldLabel className="text-xs">
-													GitHub 仓库地址
-												</FieldLabel>
-												<InputGroup>
-													<InputGroupInput
-														value={proj.githubUrl || ''}
-														onChange={(e) => {
-															const updated = [...featuredProjects]
-															updated[pIndex].githubUrl = e.target.value
-															setFeaturedProjects(updated)
-														}}
-														placeholder="https://github.com/user/repo"
-													/>
-												</InputGroup>
-											</div>
-										</div>
-
-										<div>
-											<FieldLabel className="text-xs">项目描述</FieldLabel>
-											<Textarea
-												value={proj.description}
-												onChange={(e) => {
-													const updated = [...featuredProjects]
-													updated[pIndex].description = e.target.value
-													setFeaturedProjects(updated)
-												}}
-												placeholder="Short introduction..."
-												rows={2}
-												className="text-xs"
-											/>
-										</div>
-									</div>
-								))}
-							</CardContent>
-						</Card>
-					</TabsContent>
-				</Tabs>
-			</div>
+							))}
+						</CardContent>
+					</Card>
+				</TabsContent>
+			</Tabs>
 		</div>
 	)
 }

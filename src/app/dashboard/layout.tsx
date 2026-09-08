@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { DashboardNavHeader } from '@/components/dashboard/DashboardNavHeader'
 import { auth } from '@/lib/auth'
 
 export default async function DashboardLayout({
@@ -16,5 +17,10 @@ export default async function DashboardLayout({
 		redirect('/')
 	}
 
-	return <>{children}</>
+	return (
+		<div className="min-h-screen bg-muted/20 flex flex-col">
+			<DashboardNavHeader />
+			<main className="flex-1">{children}</main>
+		</div>
+	)
 }
