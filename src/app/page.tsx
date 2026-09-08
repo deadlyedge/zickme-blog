@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { HomeScrollArea } from '@/components/HomeScrollArea'
 import { fetchHomeContent } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
@@ -12,6 +13,11 @@ export const metadata: Metadata = buildMetadata({
 
 export default async function HomePage() {
 	const data = await fetchHomeContent()
+
+	// 如果后台配置关闭了落地页，则平滑重定向至文章列表页
+	if (data.profile?.landingPageConfig?.enabled === false) {
+		redirect('/posts')
+	}
 
 	return <HomeScrollArea data={data} />
 }

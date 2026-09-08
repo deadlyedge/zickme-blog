@@ -164,6 +164,8 @@ export interface SiteProfile {
 export interface ContentResponse {
 	profile: SiteProfile | null
 	posts: PostWithTags[]
+	hottestPosts?: PostWithTags[]
+	pinnedPosts?: PostWithTags[]
 }
 
 // Post with tags type

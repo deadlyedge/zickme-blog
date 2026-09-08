@@ -1,23 +1,20 @@
 'use client'
 
-import type { MotionStyle, MotionValue, Variants } from 'motion/react'
-import { useMotionValueEvent } from 'motion/react'
+import type { Variants } from 'motion/react'
 import * as motion from 'motion/react-client'
 import Link from 'next/link'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { SiteProfile } from '@/types'
 import CurvedLoop from './ui/effects/CurvedLoop'
 
 type HeroProps = {
 	profile: SiteProfile | null
-	scale: MotionValue<number>
 }
 
 const blockVariantsH: Variants = {
 	offscreen: {
 		opacity: 0,
-		x: 120,
+		x: 80,
 		transition: {
 			type: 'spring',
 			bounce: 0.2,
@@ -30,57 +27,31 @@ const blockVariantsH: Variants = {
 		transition: {
 			type: 'tween',
 			bounce: 0.8,
-			duration: 1,
+			duration: 0.8,
 		},
 	},
 }
 
-export const Hero = ({ profile, scale }: HeroProps) => {
-	const [scaleValue, setScaleValue] = useState(0)
-	useMotionValueEvent(scale, 'change', (value) => {
-		setScaleValue(value)
-	})
-
-	const style: MotionStyle = {
-		scale: scaleValue < 0.4 ? 1 - scaleValue : 0.6,
-		opacity: 1,
-		x: scaleValue * 200,
-		y: scaleValue * 100,
-		rotate: scaleValue * 360 * 2,
-	}
-
+export const Hero = ({ profile }: HeroProps) => {
 	const sloganList = profile?.slogans || [
-		{ text: 'WE REBRANDED WITH PURPOSE. READ THE STORY →' },
+		{ text: 'EXPLORE THOUGHTS & INSPIRATIONS. READ THE BLOG →' },
 		{
 			text: 'A good design is not just a design, it is a future.',
 			fontSize: 'text-3xl',
 			color: 'text-slate-900',
 		},
-		{ text: 'We are a team of designers and developers.' },
+		{ text: 'Crafting modern web apps and intelligent systems.' },
 	]
 
 	return (
 		<section className="overflow-hidden">
-			{/* 绿色背景撑高，内部使用 flex + 间距把元素分布开 */}
 			<div
-				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-24 h-[300vh]"
-				style={{ height: `${(6 + Number(profile?.slogans?.length)) * 30}vh` }}
+				className="mx-auto w-full flex flex-col gap-y-20 justify-evenly max-w-7xl px-3 sm:px-6 py-20 min-h-[120vh]"
+				style={{
+					height: `${(3 + Number(profile?.slogans?.length || 3)) * 22}vh`,
+				}}
 			>
-				<div
-					className={cn(
-						'fixed top-24 left-4 sm:top-36 sm:left-36 z-0 select-none pointer-events-none',
-						scaleValue > 0.5 ? '-z-10' : '',
-					)}
-				>
-					<motion.div
-						id="hero-ball"
-						className="flex h-44 w-44 sm:h-80 sm:w-80 items-center justify-center rounded-full border-4 sm:border-8 border-white/80 bg-orange-400 shadow-2xl"
-						style={style}
-					>
-						<div className="text-4xl sm:text-8xl font-bold text-white">🏀</div>
-					</motion.div>
-				</div>
-				{/* 背景 JUICE：单独一个 scroll 动画块 */}
+				{/* 背景标题：单独一个 scroll 动画块 */}
 				<motion.div
 					id="hero-title"
 					className="flex items-start justify-center z-10"
@@ -89,8 +60,8 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					viewport={{ amount: 0.5, once: false }}
 					variants={blockVariantsH}
 				>
-					<span className="pointer-events-none text-6xl leading-none font-extrabold">
-						{profile?.title || 'JUICE'}
+					<span className="pointer-events-none text-5xl sm:text-7xl lg:text-8xl leading-none font-black tracking-tighter text-foreground/90 uppercase select-none">
+						{profile?.title || 'ZICKME BLOG'}
 					</span>
 				</motion.div>
 
@@ -104,14 +75,15 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					variants={blockVariantsH}
 				>
 					<Link
-						href="/projects"
-						className="inline-flex items-center gap-2 bg-white/90 px-4 py-2 text-xs font-medium text-slate-900 shadow-sm"
+						href="/posts"
+						className="inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background/80 dark:bg-card/80 backdrop-blur-md px-5 py-2.5 text-xs font-semibold text-foreground shadow-sm hover:bg-background transition-all"
 					>
-						查看我的项目 →
+						<span>探索全站文章与随笔</span>
+						<span className="text-primary font-bold">→</span>
 					</Link>
 				</motion.div>
 
-				{/* 2. 标题 */}
+				{/* 2. 标语列表 */}
 				{sloganList.map((slogan) => (
 					<motion.div
 						id={`slogan-${slogan.text}`}
@@ -124,9 +96,8 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					>
 						<h2
 							className={cn(
-								'max-w-xl lg:max-w-md text-3xl leading-tight font-extrabold text-slate-900 text-pretty uppercase',
+								'max-w-2xl text-2xl sm:text-4xl leading-snug font-extrabold text-foreground text-pretty uppercase tracking-tight',
 								slogan.fontSize,
-								`text-${slogan.color}`,
 							)}
 						>
 							{slogan.text ||
@@ -135,7 +106,7 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					</motion.div>
 				))}
 
-				{/* 3. 段落 */}
+				{/* 3. 个人简介段落 */}
 				<motion.div
 					id="profile-bio"
 					className="flex justify-start z-10"
@@ -144,27 +115,26 @@ export const Hero = ({ profile, scale }: HeroProps) => {
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}
 				>
-					<p className="max-w-lg text-slate-900/90 text-2xl">
+					<p className="max-w-xl text-muted-foreground text-lg sm:text-2xl font-medium leading-relaxed">
 						{profile?.bio ??
 							'We craft impactful digital experiences for ambitious brands.'}
 					</p>
 				</motion.div>
 
-				{/* 4–6. 按钮 / 标签 / 次按钮 也拆成三个块 */}
-				{/* 5. 标签 */}
+				{/* 4. 底部曲线文字 */}
 				<motion.div
 					id="curved-text"
-					className="flex h-40 items-center justify-start z-10"
+					className="flex h-36 items-center justify-start z-10"
 					initial="offscreen"
 					whileInView="onscreen"
 					viewport={{ amount: 0.7, once: false }}
 					variants={blockVariantsH}
 				>
 					<CurvedLoop
-						marqueeText={'We are a team of designers and developers.'}
+						marqueeText={'INNOVATION • ENGINEERING • DESIGN • AI AGENTS • '}
 						speed={1}
-						curveAmount={300}
-						className="fill-lime-700"
+						curveAmount={260}
+						className="fill-primary/80 font-bold"
 					/>
 				</motion.div>
 			</div>

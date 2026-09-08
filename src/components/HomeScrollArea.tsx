@@ -1,18 +1,30 @@
 'use client'
 
 import { useScroll, useSpring, useTransform } from 'motion/react'
-import Link from 'next/link'
 import { useEffect, useRef } from 'react'
+import {
+	LatestPostsSection,
+	PinnedPostsSection,
+	TopHottestSection,
+} from '@/components/home'
 import type { ContentResponse } from '@/types'
 import { FooterAbout } from './Footer'
 import { Hero } from './Hero'
-import { PostCard } from './PostCard'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
-	const scrollRef = useRef(null)
-	const { profile, posts } = data
+	const scrollRef = useRef<HTMLDivElement>(null)
+	const { profile, posts, hottestPosts = [], pinnedPosts = [] } = data
+
+	const landingConfig = profile?.landingPageConfig
+
+	// 模块开关，默认在未设置时均为开启
+	const showTopHottest = landingConfig?.showTopHottest ?? true
+	const showSlogans = landingConfig?.showSlogans ?? true
+	const showPinnedPosts = landingConfig?.showPinnedPosts ?? true
+	const showLatestPosts = landingConfig?.showLatestPosts ?? true
+
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,
 		offset: ['0 0', '1 1'],
@@ -23,16 +35,14 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 		restDelta: 0.001,
 	})
 
-	const scaleX = useTransform(smoothed, [0, 1], [0, 1])
-
-	// 将滚动进度映射到背景颜色
+	// 滚动背景渐变映射
 	const backgroundColor = useTransform(
 		smoothed,
 		[0, 1],
 		['hsl(108,31%,50%)', 'hsl(0, 0, 95%)'],
 	)
 
-	// 监听背景颜色变化并应用到CSS变量
+	// 监听背景颜色变化并应用到 CSS 变量
 	useEffect(() => {
 		const updateBackground = () => {
 			document.documentElement.style.setProperty(
@@ -41,19 +51,13 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 			)
 		}
 
-		// 初始设置
 		updateBackground()
-
-		// 监听颜色变化
 		const unsubscribe = backgroundColor.on('change', updateBackground)
-
 		return () => unsubscribe()
 	}, [backgroundColor])
 
-	// 在组件挂载时给body添加类，卸载时移除类
 	useEffect(() => {
 		document.body.classList.add('has-scroll-bg')
-
 		return () => {
 			document.body.classList.remove('has-scroll-bg')
 		}
@@ -65,31 +69,29 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 			id="page-scroll"
 			className="h-svh overflow-y-auto overflow-x-hidden"
 		>
-			<div className="mx-auto max-w-7xl sm:px-6 py-16 sm:py-24">
-				<Hero profile={profile} scale={scaleX} />
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20">
+				{/* 1. TOP 5 热门文章轮播/翻页区（置顶在最前，带自适应呼吸光晕与更高视野） */}
+				{showTopHottest && hottestPosts.length > 0 && (
+					<TopHottestSection posts={hottestPosts} />
+				)}
 
-				{/* LATEST POSTS */}
-				<section
-					id="posts"
-					className="pt-20 px-2 bg-linear-to-b from-[hsla(49,80%,92%,0.8)] rounded-t-3xl"
-				>
-					<div className="flex items-baseline justify-between">
-						<h2 className="text-3xl font-semibold">Latest Posts</h2>
-						<Link
-							href="/posts"
-							className="text-sm text-slate-500 hover:underline"
-						>
-							See all posts
-						</Link>
-					</div>
+				{/* 2. Slogan 视差 Hero 区 */}
+				{showSlogans && <Hero profile={profile} />}
 
-					<div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-						{posts?.map((post) => (
-							<PostCard key={post.id} post={post} />
-						))}
-					</div>
-				</section>
+				{/* 内容卡片聚合容器 */}
+				<div className="pt-10 px-3 sm:px-6 bg-linear-to-b from-background/80 via-background/95 to-background rounded-3xl border border-border/40 shadow-sm backdrop-blur-xs">
+					{/* 3. 置顶文章推荐区 */}
+					{showPinnedPosts && pinnedPosts.length > 0 && (
+						<PinnedPostsSection posts={pinnedPosts} />
+					)}
 
+					{/* 4. 最新发布文章区 */}
+					{showLatestPosts && posts && posts.length > 0 && (
+						<LatestPostsSection posts={posts} />
+					)}
+				</div>
+
+				{/* 5. 底部关于与社交区 */}
 				<FooterAbout profileData={profile} />
 			</div>
 		</div>
