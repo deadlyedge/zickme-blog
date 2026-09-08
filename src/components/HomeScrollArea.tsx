@@ -1,7 +1,7 @@
 'use client'
 
 import { useScroll, useSpring, useTransform } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
 	LatestPostsSection,
 	PinnedPostsSection,
@@ -13,8 +13,18 @@ import { Hero } from './Hero'
 
 type HomeScrollAreaProps = { data: ContentResponse }
 
+// 沉浸式全局环境背景色谱（与 TOP5 热门文章轮播联动）
+const PALETTE_COLORS = [
+	'rgba(249, 115, 22, 0.08)', // 燃橙
+	'rgba(59, 130, 246, 0.08)', // 极光蓝
+	'rgba(168, 85, 247, 0.08)', // 赛博紫
+	'rgba(16, 185, 129, 0.08)', // 翡翠绿
+	'rgba(244, 63, 94, 0.08)', // 霓虹红
+]
+
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const scrollRef = useRef<HTMLDivElement>(null)
+	const [activeHottestIndex, setActiveHottestIndex] = useState(0)
 	const { profile, posts, hottestPosts = [], pinnedPosts = [] } = data
 
 	const landingConfig = profile?.landingPageConfig
@@ -63,23 +73,44 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 		}
 	}, [])
 
+	const handleHottestChange = useCallback((index: number) => {
+		setActiveHottestIndex(index)
+	}, [])
+
+	const currentAmbientColor =
+		PALETTE_COLORS[activeHottestIndex % PALETTE_COLORS.length]
+
 	return (
 		<div
 			ref={scrollRef}
 			id="page-scroll"
-			className="h-svh overflow-y-auto overflow-x-hidden"
+			className="h-svh overflow-y-auto overflow-x-hidden relative transition-colors duration-1000"
+			style={{
+				backgroundColor: currentAmbientColor,
+			}}
 		>
-			<div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20">
-				{/* 1. TOP 5 热门文章轮播/翻页区（置顶在最前，带自适应呼吸光晕与更高视野） */}
+			{/* 全屏环境光呼吸晕染层 */}
+			<div
+				className="fixed inset-0 pointer-events-none transition-all duration-1000 -z-10"
+				style={{
+					background: `radial-gradient(circle at 50% 20%, ${currentAmbientColor.replace('0.08', '0.15')}, transparent 70%)`,
+				}}
+			/>
+
+			<div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20 relative z-10">
+				{/* 1. TOP 5 热门文章轮播/翻页区（置顶在最前，带自适应呼吸光晕与全屏色彩联动） */}
 				{showTopHottest && hottestPosts.length > 0 && (
-					<TopHottestSection posts={hottestPosts} />
+					<TopHottestSection
+						posts={hottestPosts}
+						onActiveChange={handleHottestChange}
+					/>
 				)}
 
 				{/* 2. Slogan 视差 Hero 区 */}
 				{showSlogans && <Hero profile={profile} />}
 
 				{/* 内容卡片聚合容器 */}
-				<div className="pt-10 px-3 sm:px-6 bg-linear-to-b from-background/80 via-background/95 to-background rounded-3xl border border-border/40 shadow-sm backdrop-blur-xs">
+				<div className="pt-10 px-3 sm:px-6 bg-background/85 dark:bg-background/90 rounded-3xl border border-border/50 shadow-sm backdrop-blur-md">
 					{/* 3. 置顶文章推荐区 */}
 					{showPinnedPosts && pinnedPosts.length > 0 && (
 						<PinnedPostsSection posts={pinnedPosts} />

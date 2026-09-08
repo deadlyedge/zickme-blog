@@ -1,8 +1,11 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { v2 as cloudinary } from 'cloudinary'
+import sharp from 'sharp'
 
 const POSTS_DIR = path.join(process.cwd(), 'content/posts')
+const MAX_IMAGE_WIDTH = 3840
+const MAX_IMAGE_HEIGHT = 2160
 
 /**
  * 递归扫描所有 images 文件夹中的图片文件
@@ -22,7 +25,7 @@ async function scanAllImages(dirPath: string): Promise<string[]> {
 					for (const imgEntry of imageFiles) {
 						if (
 							imgEntry.isFile() &&
-							/\.(jpg|jpeg|png|webp|gif)$/i.test(imgEntry.name)
+							/\.(jpg|jpeg|png|webp|gif|bmp|tiff)$/i.test(imgEntry.name)
 						) {
 							images.push(path.join(fullPath, imgEntry.name))
 						}
@@ -45,6 +48,45 @@ function generateCloudinaryPublicId(imagePath: string): string {
 	const relativePath = path.relative(POSTS_DIR, imagePath)
 	const pathWithoutExt = relativePath.replace(/\.[^/.]+$/, '')
 	return pathWithoutExt.replace(/[\\/]/g, '-')
+}
+
+/**
+ * 在内存中将图片优化并预转为高质量 WebP
+ */
+async function optimizeImageToWebp(
+	inputBuffer: Buffer,
+	ext: string,
+): Promise<{ buffer: Buffer; isWebp: boolean }> {
+	// 如果本身是 gif 或 svg，保留原生动画/矢量特性
+	if (/^\.(gif|svg)$/i.test(ext)) {
+		return { buffer: inputBuffer, isWebp: false }
+	}
+
+	try {
+		const image = sharp(inputBuffer)
+		const metadata = await image.metadata()
+
+		let pipeline = image
+		if (
+			(metadata.width && metadata.width > MAX_IMAGE_WIDTH) ||
+			(metadata.height && metadata.height > MAX_IMAGE_HEIGHT)
+		) {
+			pipeline = pipeline.resize({
+				width: MAX_IMAGE_WIDTH,
+				height: MAX_IMAGE_HEIGHT,
+				fit: 'inside',
+				withoutEnlargement: true,
+			})
+		}
+
+		const outputBuffer = await pipeline
+			.webp({ quality: 85, effort: 4 })
+			.toBuffer()
+		return { buffer: outputBuffer, isWebp: true }
+	} catch (err) {
+		console.warn('⚠️ WebP 预转换降级，使用原图:', err)
+		return { buffer: inputBuffer, isWebp: false }
+	}
 }
 
 async function main() {
@@ -74,25 +116,48 @@ async function main() {
 
 		const publicId = generateCloudinaryPublicId(imagePath)
 		const fileName = path.basename(imagePath)
+		const ext = path.extname(imagePath)
 
-		console.log(`📤 Uploading ${fileName}`)
+		console.log(`📤 Processing & Uploading ${fileName}`)
 		console.log(`   → publicId: ${publicId}`)
 
 		try {
-			const res = await cloudinary.uploader.upload(imagePath, {
-				public_id: publicId,
-				resource_type: 'image',
-				overwrite: true,
-			})
+			const originalBuffer = await fs.readFile(imagePath)
+			const { buffer: optimizedBuffer, isWebp } = await optimizeImageToWebp(
+				originalBuffer,
+				ext,
+			)
 
-			console.log(`✅ Uploaded: ${res.public_id}`)
+			const res = await new Promise<{ public_id: string; secure_url: string }>(
+				(resolve, reject) => {
+					const uploadStream = cloudinary.uploader.upload_stream(
+						{
+							public_id: publicId,
+							resource_type: 'image',
+							overwrite: true,
+						},
+						(error, result) => {
+							if (error || !result) {
+								reject(error || new Error('Upload result is undefined'))
+							} else {
+								resolve(result)
+							}
+						},
+					)
+					uploadStream.end(optimizedBuffer)
+				},
+			)
+
+			console.log(
+				`✅ Uploaded [${isWebp ? 'WebP 85%' : ext}]: ${res.public_id}`,
+			)
 			console.log(`   URL: ${res.secure_url}`)
 		} catch (error) {
 			console.error(`❌ Upload failed for ${fileName}:`, error)
 		}
 	}
 
-	console.log('🎉 Upload finished!')
+	console.log('🎉 All uploads finished!')
 }
 
 main().catch((err) => {

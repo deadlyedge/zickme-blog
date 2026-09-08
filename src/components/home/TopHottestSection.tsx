@@ -65,22 +65,19 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 	const handleNext = useCallback(() => {
 		if (total <= 1) return
 		setDirection(1)
-		setCurrentIndex((prev) => {
-			const next = (prev + 1) % total
-			onActiveChange?.(next)
-			return next
-		})
-	}, [total, onActiveChange])
+		setCurrentIndex((prev) => (prev + 1) % total)
+	}, [total])
 
 	const handlePrev = useCallback(() => {
 		if (total <= 1) return
 		setDirection(-1)
-		setCurrentIndex((prev) => {
-			const prevIdx = (prev - 1 + total) % total
-			onActiveChange?.(prevIdx)
-			return prevIdx
-		})
-	}, [total, onActiveChange])
+		setCurrentIndex((prev) => (prev - 1 + total) % total)
+	}, [total])
+
+	// 当 currentIndex 发生变化时通知外部父组件（通过 useEffect 避免在 render 过程中 setState）
+	useEffect(() => {
+		onActiveChange?.(currentIndex)
+	}, [currentIndex, onActiveChange])
 
 	// 自动轮播（悬停时暂停）
 	useEffect(() => {
@@ -133,70 +130,51 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 			onMouseLeave={() => setIsPaused(false)}
 		>
 			{/* 随当前热门文章切换的多重呼吸脉冲光晕与色彩变换 */}
-			<div className="absolute inset-x-0 -top-12 -bottom-12 pointer-events-none -z-10 overflow-hidden rounded-[3rem]">
-				{/* 动态主呼吸脉冲光环 */}
+			<div className="absolute inset-0 -z-10 pointer-events-none flex items-center justify-center overflow-visible">
 				<motion.div
-					key={`glow-primary-${currentIndex}`}
-					initial={{ opacity: 0, scale: 0.8 }}
-					animate={{
-						opacity: [0.6, 0.95, 0.6],
-						scale: [0.95, 1.08, 0.95],
-					}}
-					transition={{
-						opacity: {
-							duration: 4,
-							repeat: Number.POSITIVE_INFINITY,
-							ease: 'easeInOut',
-						},
-						scale: {
-							duration: 5,
-							repeat: Number.POSITIVE_INFINITY,
-							ease: 'easeInOut',
-						},
-					}}
-					className="absolute -top-20 left-1/4 h-96 w-[600px] -translate-x-1/2 rounded-full blur-3xl"
-					style={{
-						background: `radial-gradient(circle, ${currentGlow.primary} 0%, transparent 70%)`,
-					}}
-				/>
-
-				{/* 辅助副色调脉冲光晕 */}
-				<motion.div
-					key={`glow-secondary-${currentIndex}`}
+					key={`pulse-glow-primary-${currentIndex}`}
 					initial={{ opacity: 0, scale: 0.85 }}
 					animate={{
-						opacity: [0.4, 0.8, 0.4],
-						scale: [1, 1.15, 1],
+						opacity: [0.4, 0.8, 0.5],
+						scale: [0.95, 1.1, 1],
 					}}
 					transition={{
-						opacity: {
-							duration: 4.5,
-							repeat: Number.POSITIVE_INFINITY,
-							ease: 'easeInOut',
-							delay: 1,
-						},
-						scale: {
-							duration: 6,
-							repeat: Number.POSITIVE_INFINITY,
-							ease: 'easeInOut',
-							delay: 0.5,
-						},
+						duration: 4,
+						repeat: Number.POSITIVE_INFINITY,
+						repeatType: 'reverse',
+						ease: 'easeInOut',
 					}}
-					className="absolute -bottom-16 right-1/4 h-96 w-[550px] translate-x-1/3 rounded-full blur-3xl"
+					className="absolute w-[90%] sm:w-[85%] h-[320px] sm:h-[420px] rounded-full blur-[90px] transition-colors duration-1000"
 					style={{
-						background: `radial-gradient(circle, ${currentGlow.secondary} 0%, transparent 70%)`,
+						backgroundColor: currentGlow.primary,
+					}}
+				/>
+				<motion.div
+					key={`pulse-glow-secondary-${currentIndex}`}
+					initial={{ opacity: 0 }}
+					animate={{
+						opacity: [0.2, 0.5, 0.3],
+						scale: [1.05, 0.9, 1.05],
+					}}
+					transition={{
+						duration: 5,
+						repeat: Number.POSITIVE_INFINITY,
+						repeatType: 'reverse',
+						ease: 'easeInOut',
+					}}
+					className="absolute w-[75%] sm:w-[70%] h-[240px] sm:h-[300px] rounded-full blur-[70px] transition-colors duration-1000"
+					style={{
+						backgroundColor: currentGlow.secondary,
 					}}
 				/>
 			</div>
 
-			{/* 顶栏控制条 */}
-			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-				<div>
+			{/* 顶部标题区与左右切换按钮 */}
+			<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+				<div className="space-y-1.5">
 					<div
-						className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider mb-2 transition-colors duration-500"
+						className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-border/60 bg-background/80 dark:bg-card/80 backdrop-blur-md shadow-xs transition-colors duration-500"
 						style={{
-							backgroundColor: `${currentGlow.accent}15`,
-							borderColor: `${currentGlow.accent}35`,
 							color: currentGlow.accent,
 						}}
 					>
@@ -224,7 +202,6 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 									onClick={() => {
 										setDirection(idx > currentIndex ? 1 : -1)
 										setCurrentIndex(idx)
-										onActiveChange?.(idx)
 									}}
 									className={`h-2 rounded-full transition-all duration-500 ${
 										idx === currentIndex
@@ -243,19 +220,19 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 						<div className="flex items-center gap-1.5">
 							<Button
 								variant="outline"
-								size="icon-sm"
+								size="icon"
 								onClick={handlePrev}
+								className="rounded-full size-9 bg-background/80 dark:bg-card/80 backdrop-blur-md hover:scale-105 transition-all shadow-xs"
 								aria-label="上一篇热门文章"
-								className="rounded-full shadow-xs hover:bg-muted"
 							>
 								<ArrowLeft className="size-4" />
 							</Button>
 							<Button
 								variant="outline"
-								size="icon-sm"
+								size="icon"
 								onClick={handleNext}
+								className="rounded-full size-9 bg-background/80 dark:bg-card/80 backdrop-blur-md hover:scale-105 transition-all shadow-xs"
 								aria-label="下一篇热门文章"
-								className="rounded-full shadow-xs hover:bg-muted"
 							>
 								<ArrowRight className="size-4" />
 							</Button>
@@ -264,9 +241,9 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 				)}
 			</div>
 
-			{/* 增加高度后的主卡片展示区 */}
-			<div className="relative min-h-[460px] sm:min-h-[500px] lg:min-h-[540px] w-full [perspective:1400px]">
-				<AnimatePresence mode="wait" custom={direction}>
+			{/* 3D 翻页/滑动主卡片容器 */}
+			<div className="relative min-h-[460px] sm:min-h-[420px] w-full perspective-[1200px]">
+				<AnimatePresence initial={false} custom={direction} mode="wait">
 					{currentPost && (
 						<motion.div
 							key={currentPost.id}
@@ -275,10 +252,13 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 							initial="enter"
 							animate="center"
 							exit="exit"
-							className="relative w-full rounded-3xl border bg-card/95 text-card-foreground shadow-2xl backdrop-blur-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 group"
+							className="group relative w-full rounded-3xl border border-border/80 bg-card shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 backdrop-blur-xl transition-all duration-300"
+							style={{
+								boxShadow: `0 20px 50px -12px ${currentGlow.primary}, 0 0 0 1px rgba(255, 255, 255, 0.08)`,
+							}}
 						>
-							{/* 左侧封面大图区域（高度提升，视觉更宽广震撼） */}
-							<div className="relative lg:col-span-7 h-72 sm:h-96 lg:h-full min-h-[300px] sm:min-h-[420px] lg:min-h-[520px] bg-slate-950 overflow-hidden">
+							{/* 左侧/上方 封面大图区 */}
+							<div className="relative lg:col-span-7 h-64 sm:h-80 lg:h-full min-h-[260px] lg:min-h-[420px] overflow-hidden bg-muted">
 								{currentPost.poster ? (
 									<Image
 										src={currentPost.poster}
@@ -312,7 +292,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 								</div>
 							</div>
 
-							{/* 右侧信息与详情内容（上下充裕留白与更清晰的排版） */}
+							{/* 右侧信息与详情内容 */}
 							<div className="lg:col-span-5 p-6 sm:p-10 lg:p-12 flex flex-col justify-between bg-card/90">
 								<div className="space-y-5">
 									<div className="flex flex-wrap items-center gap-2">
