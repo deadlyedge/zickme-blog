@@ -10,9 +10,9 @@ import {
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
-import Link from 'next/link'
 import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
+import { NavigationLink } from '@/components/NavigationLink'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatPublishedDate } from '@/lib/utils'
@@ -144,7 +144,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 						repeatType: 'reverse',
 						ease: 'easeInOut',
 					}}
-					className="absolute w-[90%] sm:w-[85%] h-[320px] sm:h-[420px] rounded-full blur-[90px] transition-colors duration-1000"
+					className="absolute w-[90%] sm:w-[85%] h-80 sm:h-105 rounded-full blur-[90px] transition-colors duration-1000"
 					style={{
 						backgroundColor: currentGlow.primary,
 					}}
@@ -162,7 +162,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 						repeatType: 'reverse',
 						ease: 'easeInOut',
 					}}
-					className="absolute w-[75%] sm:w-[70%] h-[240px] sm:h-[300px] rounded-full blur-[70px] transition-colors duration-1000"
+					className="absolute w-[75%] sm:w-[70%] h-60 sm:h-75 rounded-full blur-[70px] transition-colors duration-1000"
 					style={{
 						backgroundColor: currentGlow.secondary,
 					}}
@@ -242,7 +242,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 			</div>
 
 			{/* 3D 翻页/滑动主卡片容器 */}
-			<div className="relative min-h-[460px] sm:min-h-[420px] w-full perspective-[1200px]">
+			<div className="relative min-h-115 sm:min-h-105 w-full perspective-distant">
 				<AnimatePresence initial={false} custom={direction} mode="wait">
 					{currentPost && (
 						<motion.div
@@ -258,7 +258,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 							}}
 						>
 							{/* 左侧/上方 封面大图区 */}
-							<div className="relative lg:col-span-7 h-64 sm:h-80 lg:h-full min-h-[260px] lg:min-h-[420px] overflow-hidden bg-muted">
+							<div className="relative lg:col-span-7 h-64 sm:h-80 lg:h-full min-h-65 lg:min-h-105 overflow-hidden bg-muted">
 								{currentPost.poster ? (
 									<Image
 										src={currentPost.poster}
@@ -310,14 +310,14 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 										))}
 									</div>
 
-									<Link
+									<NavigationLink
 										href={`/posts/${currentPost.slug}`}
 										className="block group-hover:text-primary transition-colors"
 									>
 										<h3 className="text-2xl sm:text-3xl lg:text-3xl font-black tracking-tight leading-snug line-clamp-2 sm:line-clamp-3">
 											{currentPost.title}
 										</h3>
-									</Link>
+									</NavigationLink>
 
 									<p className="text-sm sm:text-base text-muted-foreground line-clamp-4 leading-relaxed font-normal">
 										{currentPost.excerpt || '暂无摘要描述...'}
@@ -342,10 +342,10 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 										size="lg"
 										className="rounded-full shadow-lg group/btn gap-2 bg-foreground text-background hover:bg-foreground/90 transition-all font-semibold"
 									>
-										<Link href={`/posts/${currentPost.slug}`}>
+										<NavigationLink href={`/posts/${currentPost.slug}`}>
 											<span>阅读全文</span>
 											<BookOpen className="size-4 transition-transform group-hover/btn:scale-110" />
-										</Link>
+										</NavigationLink>
 									</Button>
 								</div>
 							</div>

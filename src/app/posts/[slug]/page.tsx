@@ -4,6 +4,9 @@ import { PostClient } from '@/components/PostClient'
 import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 
+// 文章详情页 10 分钟重新验证（ISR）
+export const revalidate = 600
+
 interface PageProps {
 	params: Promise<{
 		slug: string
@@ -45,8 +48,13 @@ export async function generateStaticParams() {
 		return []
 	}
 
-	const slugs = await fetchAllPostSlugs()
-	return slugs.map((slug) => ({
-		slug,
-	}))
+	try {
+		const slugs = await fetchAllPostSlugs()
+		return slugs.map((slug) => ({
+			slug,
+		}))
+	} catch (error) {
+		console.warn('generateStaticParams for posts failed:', error)
+		return []
+	}
 }

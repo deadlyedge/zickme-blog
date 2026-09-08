@@ -8,6 +8,7 @@ interface NavigationLinkProps
 	extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
 	href: string
 	children: ReactNode
+	prefetch?: boolean
 }
 
 export function NavigationLink({
@@ -15,9 +16,16 @@ export function NavigationLink({
 	children,
 	className,
 	onClick,
+	onMouseEnter,
+	prefetch = true,
 	...props
 }: NavigationLinkProps) {
-	const { preloadAndNavigate } = useNavigationPreload()
+	const { preloadAndNavigate, preloadData } = useNavigationPreload()
+
+	const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+		onMouseEnter?.(e)
+		preloadData(href)
+	}
 
 	const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
 		// 调用自定义onClick
@@ -27,7 +35,14 @@ export function NavigationLink({
 	}
 
 	return (
-		<Link href={href} className={className} onClick={handleClick} {...props}>
+		<Link
+			href={href}
+			prefetch={prefetch}
+			className={className}
+			onMouseEnter={handleMouseEnter}
+			onClick={handleClick}
+			{...props}
+		>
 			{children}
 		</Link>
 	)
