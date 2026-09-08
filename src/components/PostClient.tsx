@@ -1,13 +1,21 @@
 'use client'
 
+import { marked } from 'marked'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useMemo } from 'react'
 import { CommentsSection } from '@/components/comments'
 import { Badge } from '@/components/ui/badge'
 import { usePost } from '@/lib/hooks/useContent'
 import { formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types'
+
+// Configure marked options for standard GFM rendering
+marked.setOptions({
+	gfm: true,
+	breaks: true,
+})
 
 interface PostClientProps {
 	initialPost?: PostWithTags
@@ -22,6 +30,16 @@ export function PostClient({ initialPost }: PostClientProps) {
 		initialData: initialPost,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 	})
+
+	const renderedHtml = useMemo(() => {
+		if (!post?.content) return ''
+		try {
+			return marked.parse(post.content) as string
+		} catch (err) {
+			console.error('Error parsing markdown:', err)
+			return post.content
+		}
+	}, [post?.content])
 
 	if (isLoading) {
 		return (
@@ -107,8 +125,8 @@ export function PostClient({ initialPost }: PostClientProps) {
 					</header>
 
 					<div className="prose prose-lg prose-blog max-w-none">
-						{/** biome-ignore lint/security/noDangerouslySetInnerHtml: <need this for markdowns> */}
-						<div dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+						{/** biome-ignore lint/security/noDangerouslySetInnerHtml: <rendered via marked> */}
+						<div dangerouslySetInnerHTML={{ __html: renderedHtml }} />
 					</div>
 				</article>
 

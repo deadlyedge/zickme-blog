@@ -607,9 +607,13 @@ export default function DashboardPostsPage() {
 							<DialogTitle className="text-xl">
 								{previewPost?.title}
 							</DialogTitle>
-							<DialogDescription className="space-y-1">
-								<div>Slug: /{previewPost?.slug}</div>
-								{previewPost?.excerpt && <div>摘要: {previewPost.excerpt}</div>}
+							<DialogDescription asChild className="space-y-1">
+								<div>
+									<div>Slug: /{previewPost?.slug}</div>
+									{previewPost?.excerpt && (
+										<div>摘要: {previewPost.excerpt}</div>
+									)}
+								</div>
 							</DialogDescription>
 						</DialogHeader>
 						{previewPost?.poster && (
