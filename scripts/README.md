@@ -1,97 +1,103 @@
-# Content Management Scripts
+# 🛠️ 运维与内容管理脚本指南 (Scripts)
 
-本目录包含用于管理博客内容的工具脚本。
+本目录包含用于管理博客内容同步、媒体处理、数据库运维及管理员凭据找回的专用脚本工具，均基于 **Bun + Drizzle ORM + Better-Auth** 编写。
 
-## 📋 脚本概览
+---
 
-### 1. `sync-content.ts` - 内容同步脚本
-将本地 Markdown 文件同步到数据库。
+## 📋 脚本清单与功能概览
 
-**使用方法:**
+| 脚本文件 | 推荐调用命令 | 说明 |
+| :--- | :--- | :--- |
+| **`sync-content.ts`** | `bun run sync` | 将 `content/posts/` 下的 Markdown 文章同步入库至 PostgreSQL |
+| **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
+| **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
+| **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
+| **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
+
+---
+
+## 📖 详细使用说明
+
+### 1. `sync-content.ts` - 文章内容同步
+将本地 Markdown 解析并同步至 Neon PostgreSQL 数据库（支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除）。
+
 ```bash
-# 预览模式 (推荐先运行)
-npx tsx scripts/sync-content.ts --dry-run
+# 1. 默认执行同步
+bun run sync
 
-# 执行同步
-npx tsx scripts/sync-content.ts
+# 2. 预览模式（仅输出将要执行的改动日志，不修改数据库）
+bun run scripts/sync-content.ts --dry-run
 
-# 跳过删除已不存在的文件
-npx tsx scripts/sync-content.ts --no-delete
+# 3. 同步时跳过软删除（保留已在本地删除的文章）
+bun run scripts/sync-content.ts --no-delete
 ```
 
-### 2. `check-content.ts` - 内容检查和格式化脚本
-检查并格式化本地 Markdown 文件的 frontmatter。
+---
 
-**使用方法:**
+### 2. `check-content.ts` - 内容格式检查与自动修复
+自动扫描所有 Markdown 文章，验证必要字段（`title`, `slug`, `date`, `tags`, `status`）及本地图片路径的有效性。
+
 ```bash
-# 预览检查 (推荐先运行)
-npx tsx scripts/check-content.ts --dry-run
+# 1. 快速检查全量文件
+bun run content:check
 
-# 显示完整的字段指南和示例
-npx tsx scripts/check-content.ts
-
-# 自动修复发现的问题
-npx tsx scripts/check-content.ts --fix
-
-# 仅显示检查结果，不显示指南
-npx tsx scripts/check-content.ts --no-examples
+# 2. 自动格式化并补齐标准 Frontmatter
+bun run content:fix
 ```
 
-## 📚 Markdown Frontmatter 字段指南
+---
 
-### 🔹 通用字段 (所有文章都需要)
-- `title`: 文章标题 (必需)
-- `date`: 发布时间 (格式: YYYY-MM-DD, 建议填写)
-- `tags`: 标签数组或逗号分隔字符串 (建议填写)
-- `status`: 文章状态 (published/draft/archived/pending/spam)
-- `draft`: 布尔值，设为true表示草稿 (优先级高于status)
+### 3. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
+扫描 `content/posts/**/images/` 目录下的所有媒体资源，通过 `sharp` 在内存中自动压缩并转换为高质量 `.webp` 格式（降低上传体积并提升前端加载速度），随后推送至 Cloudinary。
 
-### 🔹 博客文章字段
-- `excerpt`: 文章摘要 (建议填写)
-- `image`: 封面图片路径 (./images/xxx.jpg)
+```bash
+# 执行图片预转换与上传（需配置 CLOUDINARY 相关环境变量）
+bun run scripts/upload-to-cloudinary.ts
+```
 
-### 🔹 项目展示字段
-- `excerpt`: 项目简介 (必需)
-- `images`: 项目截图数组
-  - `image`: 图片路径
-  - `caption`: 图片说明 (可选)
-- `sourceUrl`: 项目源码链接 (可选)
+---
 
-## 💡 使用建议
+### 4. `reset-admin-password.ts` - 管理员密码重置 (CLI)
+针对免邮件系统设计的管理员自救方案。直接使用 `better-auth/crypto` 安全哈希密码，更新指定管理员凭据并清空历史 Session 强制重新登录。
 
-1. **创建新内容时**: 先运行 `check-content.ts` 查看字段指南
-2. **批量检查**: 使用 `check-content.ts --dry-run` 检查所有文件
-3. **自动修复**: 使用 `check-content.ts --fix` 自动标准化格式
-4. **同步前检查**: 同步到数据库前先用 `check-content.ts` 确保格式正确
-5. **预览同步**: 使用 `sync-content.ts --dry-run` 预览将要进行的更改
+```bash
+# 交互式引导重置
+bun run reset-admin-password
 
-## 📝 示例
+# 指定参数直接重置
+bun run reset-admin-password --email admin@example.com --password myNewSecurePassword123
+```
 
-### 博客文章
+---
+
+### 5. `reset-db.ts` - 数据库数据重置
+使用 `TRUNCATE TABLE ... CASCADE` 一键清空全站数据表（文章、标签、评论、站点设置、用户、会话等）。
+
+```bash
+# 交互式提示确认清空
+bun run db:reset
+
+# 强制执行清空（跳过确认提示）
+bun run scripts/reset-db.ts --force
+```
+
+---
+
+## 📝 Markdown Frontmatter 字段规范
+
+所有存放在 `content/posts/` 下的 Markdown 文件应遵循以下 YAML Frontmatter 格式：
+
 ```yaml
 ---
-title: "React 最佳实践指南"
-date: "2025-12-09"
-tags: ["React", "JavaScript", "前端开发"]
-status: "published"
-excerpt: "本文介绍了React开发中的最佳实践和常见模式"
-image: "./images/react-guide.jpg"
+title: "深入理解 Next.js 16 架构"
+slug: "nextjs-16-deep-dive" # 可选，缺省时自动根据文件名转换拼音/英文字符串
+date: "2026-09-08"
+tags: ["Next.js", "React", "TypeScript"] # 标签数组或逗号分隔字符串
+status: "published" # published | draft | archived
+excerpt: "本文深入探讨 Next.js 16 全新特性与最佳实践" # 推荐填写
+image: "./images/cover.png" # 封面图本地相对路径（同步时自动转为 CDN 链接）
+sourceUrl: "https://github.com/your-name/repo" # 可选的项目开源地址
 ---
-```
 
-### 项目展示
-```yaml
----
-title: "个人博客网站"
-date: "2025-12-08"
-tags: ["Next.js", "React", "TypeScript"]
-status: "published"
-excerpt: "使用Next.js构建的现代化个人博客网站"
-images:
-  - image: "./images/homepage.jpg"
-    caption: "网站首页截图"
-  - image: "./images/blog-post.jpg"
-    caption: "博客文章页面"
-sourceUrl: "https://github.com/username/blog"
----
+这里是文章正文内容...
 ```

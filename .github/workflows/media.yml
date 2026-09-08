@@ -3,8 +3,9 @@ name: Upload Media to Cloudinary
 on:
   push:
     paths:
-      - 'content/images/**'
-      - 'content/posts/**'
+      - 'content/posts/**/images/**'
+      - 'content/posts/**/*.md'
+  workflow_dispatch:
 
 jobs:
   upload-media:
@@ -13,20 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '24'
+          bun-version: latest
 
       - name: Install dependencies
-        run: |
-          npm i --legacy-peer-deps
-          npm install tsx --legacy-peer-deps
+        run: bun install --frozen-lockfile
 
       - name: Upload images to Cloudinary
         env:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-          CLOUDINARY_URL: cloudinary://${{ secrets.CLOUDINARY_API_KEY }}:${{ secrets.CLOUDINARY_API_SECRET }}@${{ secrets.CLOUDINARY_CLOUD_NAME }}
-        run: npx tsx scripts/upload-to-cloudinary.ts
+        run: bun run scripts/upload-to-cloudinary.ts
