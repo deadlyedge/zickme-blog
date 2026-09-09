@@ -10,6 +10,7 @@
 | :--- | :--- | :--- |
 | **`sync-content.ts`** | `bun run sync` | 将 `content/posts/` 下的 Markdown 文章同步入库至 PostgreSQL |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
+| **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
@@ -45,9 +46,29 @@ bun run content:check
 bun run content:fix
 ```
 
+### 3. `init-content.ts` - 生成内容目录模板
+
+为新项目或新的内容目录生成可直接使用的模板：
+
+```bash
+# 在项目默认的 content/ 目录生成模板
+bun run content:init
+
+# 预览将要生成的文件，不修改任何内容
+bun run content:init -- --dry-run
+
+# 生成到指定目录，适合初始化新的内容仓库
+bun run content:init -- --dir ./my-content
+
+# 明确覆盖脚本管理的模板文件（不会覆盖文章和图片）
+bun run content:init -- --force
+```
+
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过，普通 Post 目前可以直接同步；Gallery 模板对应 Stage 6 规划，功能完成前不会被 `sync` 自动处理。
+
 ---
 
-### 3. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
+### 4. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
 扫描 `content/posts/**/images/` 目录下的所有媒体资源，通过 `sharp` 在内存中自动压缩并转换为高质量 `.webp` 格式（降低上传体积并提升前端加载速度），随后推送至 Cloudinary。
 
 ```bash
@@ -57,7 +78,7 @@ bun run scripts/upload-to-cloudinary.ts
 
 ---
 
-### 4. `reset-admin-password.ts` - 管理员密码重置 (CLI)
+### 5. `reset-admin-password.ts` - 管理员密码重置 (CLI)
 针对免邮件系统设计的管理员自救方案。直接使用 `better-auth/crypto` 安全哈希密码，更新指定管理员凭据并清空历史 Session 强制重新登录。
 
 ```bash
@@ -70,7 +91,7 @@ bun run reset-admin-password --email admin@example.com --password myNewSecurePas
 
 ---
 
-### 5. `reset-db.ts` - 数据库数据重置
+### 6. `reset-db.ts` - 数据库数据重置
 使用 `TRUNCATE TABLE ... CASCADE` 一键清空全站数据表（文章、标签、评论、站点设置、用户、会话等）。
 
 ```bash

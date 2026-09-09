@@ -1,164 +1,358 @@
 # Zick.me Blog & Portfolio
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://postgresql.org/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)](https://www.typescriptlang.org/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-0.45-green)](https://orm.drizzle.team/)
 [![Better Auth](https://img.shields.io/badge/Better--Auth-1.7-orange)](https://www.better-auth.com/)
 
-一个现代化的个人博客和作品集系统，采用最新的 Web 技术栈构建。
+基于 Next.js App Router、React 19、TypeScript、Bun、Drizzle ORM 和 PostgreSQL 构建的个人博客与作品集系统。
+
+项目采用以下核心架构：
+
+```text
+Git 管理的 Markdown 内容
+        ↓
+PostgreSQL / Drizzle 运行时数据
+        ↓
+Cloudinary 媒体 CDN
+```
+
+同时提供带有 ADMIN 权限控制的 Dashboard、内容同步、媒体管理和同步诊断工具。
 
 ---
 
-## ✨ 核心特性
+## ✨ 当前特性
 
-### 🎨 现代化交互与设计
-- **响应式布局**: 完美适配桌面端、平板和移动设备。
-- **暗色与多主题**: 基于 `next-themes` 的视觉设计。
-- **平滑动画与动效**: 基于 Motion 的页面过渡与 Lenis 平滑滚动。
+### 前台阅读体验
 
-### 📝 统一内容管理系统 (Post System)
-- **Markdown 驱动**: 基于 Git 与 Markdown 的纯文本内容管理。
-- **多维度组织**: 灵活的标签（Tags）与状态（Published / Draft / Archived）管理。
-- **自动化与手动同步**: 支持通过 GitHub Actions 自动化或在管理后台（Dashboard）手动一键同步。
-- **图片与媒体优化**: Cloudinary CDN 集成，支持智能图片压缩与多级路径映射。
+- 响应式博客与作品集布局；
+- 深色模式和主题配置；
+- 页面过渡动画与平滑滚动；
+- 文章阅读进度条；
+- 桌面 Sticky TOC 和移动端文章目录；
+- 中英文混合阅读时长和字数估算；
+- Markdown 代码块语言标识和一键复制；
+- 文章标签、搜索和状态管理；
+- 评论与回复功能。
 
-### 🔐 简易且安全的账户系统
-- **认证方案**: 基于 Better-Auth 的安全认证与 Session 管理。
-- **权限角色**: 支持 `ADMIN`、`EDITOR`、`USER` 多角色控制。
-- **免邮件系统方案**: 
-  - 管理员若遗失密码，可通过服务端 CLI 运维脚本直接重置。
-  - 用户若需重置密码，可向管理员申请，由管理员在后台用户管理面板手动重设，避免配置复杂的 SMTP/邮件服务。
+### Post 内容系统
+
+普通文章存放于：
+
+```text
+content/posts/**/*.md
+```
+
+文章通过 Frontmatter 管理：
+
+```yaml
+---
+title: 前端开发指南
+slug: qian-duan-kai-fa-zhi-nan
+date: 2026-09-09
+status: published
+tags:
+  - Next.js
+  - TypeScript
+excerpt: 一篇前端开发实践文章
+image: ./images/cover.webp
+links:
+  - label: GitHub
+    url: https://github.com/example/project
+    type: github
+---
+```
+
+支持 `links`、`github`、`twitter`、`demo`、`figma`、`paper`、`category`、`series`、`canonicalUrl`、`outdatedWarning` 和 `layout` 等扩展字段。
+
+文章外链会显示可识别图标和完整 URL。GitHub 与 X/Twitter 使用项目内置的自定义 SVG 图标。
+
+### Dashboard
+
+管理员可以：
+
+- 按状态、标签和关键词筛选文章；
+- 发布、转为草稿、归档和恢复文章；
+- 批量更新文章状态；
+- 预览文章；
+- 输入外部封面 URL；
+- 上传、替换和移除文章封面；
+- 通过 Cloudinary WebP 流程处理上传图片；
+- 手动触发内容同步；
+- 上传 Markdown 或 ZIP 内容；
+- 查看分阶段同步日志；
+- 导出数据库文章 ZIP；
+- 检查本地与数据库文章差异。
+
+所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
+
+### 内容同步与 slug 保护
+
+- 使用 Sharp 进行图片尺寸限制和 WebP 优化；
+- 支持本地 Markdown 图片路径解析和 CDN URL 替换；
+- 支持数据库封面回写至本地 Frontmatter；
+- 支持数据库文章导出为标准 Markdown；
+- 支持数据库文章安全拉取到本地；
+- 默认不覆盖已有本地文件；
+- 支持本地新增、远端新增和冲突诊断；
+- 中文 slug 冲突时拒绝同步，不静默覆盖其他文章；
+- `Post.sourcePath` 保存本地来源路径。
 
 ---
 
 ## 🛠️ 技术栈
 
-- **框架与运行时**: Next.js 16 (App Router + React 19) + TypeScript + Bun
-- **样式与 UI**: Tailwind CSS 4 + Radix UI + Motion
-- **数据库与 ORM**: PostgreSQL (Neon) + Drizzle ORM
-- **认证与鉴权**: Better Auth + RBAC 权限系统
-- **代码质量与格式化**: Biome
+- **框架**：Next.js 16、React 19、TypeScript；
+- **运行时**：Bun、Node.js 24+；
+- **样式与 UI**：Tailwind CSS 4、Radix UI、Motion、Lucide React；
+- **数据库**：PostgreSQL，推荐 Neon Serverless Postgres；
+- **ORM**：Drizzle ORM；
+- **认证**：Better Auth；
+- **媒体**：Sharp、Cloudinary；
+- **内容解析**：gray-matter、marked；
+- **校验**：Zod；
+- **质量工具**：Biome；
+- **客户端缓存**：TanStack Query。
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 环境准备
-- **Bun** (推荐) 或 Node.js 24+
-- **PostgreSQL** 17+ (推荐 Neon Serverless Postgres)
-
-### 2. 安装与配置
+### 安装
 
 ```bash
-# 1. 克隆项目
 git clone https://github.com/your-username/zickme-blog.git
 cd zickme-blog
-
-# 2. 安装依赖
 bun install
+```
 
-# 3. 配置环境变量
+### 环境变量
+
+```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，配置关键变量：
+至少配置：
+
 ```env
-# 数据库连接
-DATABASE_URL="postgresql://username:password@localhost:5432/zickme_blog"
-
-# Better Auth
+DATABASE_URL="postgresql://username:password@host/database?sslmode=require"
 BETTER_AUTH_SECRET="your-secret-key"
-# 本地开发填 http://localhost:3000；部署至 Vercel 时请务必设置为你的生产域名（如 https://zick.me 或 https://your-project.vercel.app）
 BETTER_AUTH_URL="http://localhost:3000"
+```
 
-# Cloudinary (可选)
+需要 Cloudinary 媒体上传时配置：
+
+```env
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
 CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
-### 3. 数据库与初始化
+不要将真实密钥提交到 Git。
 
-```bash
-# 推送 schema 到数据库 / 生成迁移
-bun run db:push
+### 初始化数据库和运行项目
 
-# 导入/同步本地文章至数据库
-bun run sync
+当前正式迁移目录使用单一 baseline：
+
+```text
+drizzle/0000_baseline.sql
+drizzle/meta/
 ```
 
-### 4. 启动开发环境
+新环境执行：
 
 ```bash
+bun run db:migrate
+bun run sync
 bun run dev
 ```
-访问 [http://localhost:3000](http://localhost:3000) 查看网站。
 
----
+访问：
 
-## 🌐 Vercel 部署注意事项
-
-在 Vercel 部署时，请在 **Project Settings ➡️ Environment Variables** 中配置以下环境变量：
-
-| 环境变量 | 必填 | 说明 | 示例 |
-| :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | **是** | PostgreSQL 数据库连接串 | `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require` |
-| `BETTER_AUTH_SECRET` | **是** | Better-Auth 密钥 (可通过 `openssl rand -base64 32` 生成) | `abcdef123456...` |
-| `BETTER_AUTH_URL` | **是** | **必须配置生产站点的完整 URL**（避免出现 `Base URL is not set` 警告及回调异常） | `https://zick.me` 或 `https://your-app.vercel.app` |
-| `CLOUDINARY_CLOUD_NAME` | 否 | Cloudinary 云名称（媒体同步用） | `my-cloud` |
-| `CLOUDINARY_API_KEY` | 否 | Cloudinary API Key | `1234567890` |
-| `CLOUDINARY_API_SECRET` | 否 | Cloudinary API Secret | `abcdefgh...` |
-
----
-
-## 📁 核心目录结构
-
-```
-zickme-blog/
-├── content/                 # Markdown 内容文件
-│   └── posts/               # 文章与本地图片仓库
-├── documents/               # 规划与设计文档 (Stage 2 规划等)
-│   └── development-plan-stage2.md
-├── scripts/                 # 运维与同步工具脚本
-│   ├── check-content.ts     # Markdown 内容检查
-│   ├── sync-content.ts      # 内容同步入库脚本
-│   ├── reset-db.ts          # 数据库快速重置脚本
-│   └── reset-admin-password.ts # 管理员密码重置脚本
-├── src/
-│   ├── app/                 # Next.js App Router (页面、路由、Dashboard)
-│   ├── components/          # React 业务与 UI 组件
-│   ├── db/                  # Drizzle ORM Schema 与数据库连接实例
-│   ├── lib/                 # 核心工具库 (auth, actions, queries, utils)
-│   └── types/               # 统一类型定义
-├── AGENTS.md                # AI Agent 开发指南与规范
-└── biome.json               # 代码格式化与 Linter 配置
+```text
+http://localhost:3000
 ```
 
+已有数据库如需根据当前 Schema 同步，可以使用 `bun run db:push`。生产环境不要执行 `bun run db:reset`。
+
 ---
 
-## 🛠️ 常用开发指令
+## 🔄 常用命令
 
-| 指令 | 说明 |
+| 命令 | 说明 |
 | :--- | :--- |
-| `bun run dev` | 启动本地 Next.js 开发服务器 |
-| `bun run build` | 编译生产版本 |
-| `bun run lint` | 运行 Biome 检查代码规范与类型 |
-| `bun run format` | 运行 Biome 自动格式化代码 |
-| `bun run sync` | 执行本地 Markdown 内容向数据库同步 |
-| `bun run content:check` | 校验本地 Markdown frontmatter 与格式 |
-| `bun run db:push` | 将 Drizzle Schema 同步推送到数据库 |
-| `bun run db:generate` | 生成 Drizzle 迁移文件 |
-| `bun run db:reset` | 重置/清空数据库所有数据表 |
-| `bun run reset-admin-password` | CLI 脚本直接重置管理员密码 |
+| `bun run dev` | 启动开发服务器 |
+| `bun run build` | 构建生产版本 |
+| `bun run lint` | 运行 Biome 检查 |
+| `bun run format` | 使用 Biome 格式化代码 |
+| `bun run sync` | 扫描 `content/posts` 并同步到数据库 |
+| `bun run sync:pull` | 拉取数据库中本地不存在的文章 |
+| `bun run sync:pull -- --force` | 强制覆盖同名本地 Markdown |
+| `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
+| `bun run content:fix` | 自动修复可安全修复的问题 |
+| `bun run content:init` | 生成内容目录模板和使用说明 |
+| `bun run db:generate` | 根据 Schema 生成迁移 |
+| `bun run db:migrate` | 执行未应用的迁移 |
+| `bun run db:push` | 将当前 Schema 推送到数据库 |
+| `bun run db:studio` | 启动 Drizzle Studio |
+| `bun run db:reset` | 重置数据库，危险操作 |
+| `bun run reset-admin-password` | CLI 重置管理员密码 |
+
+推荐提交流程：
+
+```bash
+bun run content:check
+bun run sync -- --dry-run
+bun run sync
+git diff -- content/posts
+git add content/posts
+git commit
+```
+
+首次准备内容目录时，可以运行：
+
+```bash
+bun run content:init
+```
+
+该命令会生成 `content/README.md`、文章模板、相册模板和 Gallery 索引模板。默认不会覆盖已有文件；使用 `--dry-run` 预览，使用 `--force` 才覆盖模板文件。具体放置规则见 [`content/README.md`](content/README.md)。
 
 ---
 
-## 📖 阶段开发与 AI 协作
+## 📁 项目结构
 
-- 详细的重构与功能演进计划请查阅：[`documents/development-plan-stage2.md`](documents/development-plan-stage2.md)
-- AI Coding Agents 协同开发规范请查阅：[`AGENTS.md`](AGENTS.md)
+```text
+zickme-blog/
+├── content/
+│   ├── posts/                     # Markdown Post 内容源
+│   │   ├── images/                # Post 本地媒体
+│   │   └── *.md
+│   └── .obsidian/                 # Obsidian 配置
+├── documents/
+│   ├── development-plan-stage2.md
+│   ├── development-plan-stage3.md
+│   ├── development-plan-stage4.md
+│   ├── development-plan-stage5.md
+│   ├── development-plan-stage6.md # 独立 Gallery 规划
+│   ├── stage4-summary.md
+│   └── stage5-summary.md
+├── drizzle/
+│   ├── 0000_baseline.sql           # 当前正式 baseline
+│   ├── meta/                       # 当前迁移元数据
+│   └── archive/                    # 历史迁移归档
+├── scripts/
+│   ├── check-content.ts
+│   ├── init-content.ts             # 生成 content 目录模板
+│   ├── sync-content.ts
+│   ├── sync-pull.ts
+│   ├── reset-db.ts
+│   └── reset-admin-password.ts
+├── src/
+│   ├── app/                        # 页面、路由和 Dashboard
+│   ├── components/                 # 业务组件和 UI 组件
+│   ├── db/                         # Drizzle Schema 与连接
+│   ├── lib/                        # Actions、查询、同步和工具
+│   └── types/                      # TypeScript 类型
+├── AGENTS.md
+├── biome.json
+└── package.json
+```
+
+---
+
+## 🧭 当前阶段与后续规划
+
+### 已完成：Stage 2–5
+
+- Post 内容架构统一；
+- Drizzle ORM 迁移；
+- Dashboard 文章状态管理与同步诊断；
+- WebP 图片处理；
+- 品牌与基础 UI 优化；
+- Frontmatter 外链和扩展元数据；
+- 文章封面在线管理与本地回写；
+- 数据库文章导出和 `sync:pull`；
+- 中文 slug 冲突保护；
+- Drizzle migration baseline 精简。
+
+详细总结：[Stage 5 交付总结](documents/stage5-summary.md)。
+
+### 规划中：Stage 6 独立 Gallery
+
+纯图片相册不会作为 Post 的 `layout: gallery` 分支，而是规划为独立内容系统：
+
+```text
+content/photo-gallery/
+├── gallery.yaml              # 自动生成的全局索引
+├── japan-autumn/
+│   ├── album.yaml            # 相册和图片元数据的人工编辑源
+│   └── images/*.webp         # 只保存处理后的 WebP，不保存原图
+```
+
+Stage 6 计划包括：
+
+- `Gallery` / `GalleryImage` 数据模型；
+- `GallerySyncService`；
+- Cloudinary `photo-gallery/{albumSlug}/...` folder；
+- `check-content --fix` 自动生成 `album.yaml` 骨架；
+- 自动生成 `gallery.yaml`；
+- 每张图片的 `title`、`description`、`alt`、`order` 和 `hidden`；
+- `/gallery` 和 `/gallery/[albumSlug]`；
+- Masonry/Grid、Lightbox 和受控 EXIF 展示；
+- Dashboard 添加、编辑、减少图片；
+- 基于 merge base、revision 和字段级合并的双向同步；
+- 不保存原始 JPEG/PNG/TIFF/BMP/RAW 文件。
+
+Stage 6 目前仅为开发计划，尚未在应用中实现。详见：[Stage 6 开发计划](documents/development-plan-stage6.md)。
+
+---
+
+## ☁️ 部署说明
+
+| 环境变量 | 必填 | 说明 |
+| :--- | :---: | :--- |
+| `DATABASE_URL` | 是 | PostgreSQL/Neon 连接字符串 |
+| `BETTER_AUTH_SECRET` | 是 | Better Auth 服务端密钥 |
+| `BETTER_AUTH_URL` | 是 | 生产环境完整 URL |
+| `CLOUDINARY_CLOUD_NAME` | 按功能 | Cloudinary 云名称 |
+| `CLOUDINARY_API_KEY` | 按功能 | Cloudinary API Key |
+| `CLOUDINARY_API_SECRET` | 按功能 | Cloudinary API Secret |
+
+部署注意：
+
+1. 部署环境的文件系统不应被当作开发机工作区；
+2. Dashboard 导出内容使用 ZIP 下载；
+3. 本地 Markdown 回写和 `sync:pull` 应在本地或 CI 工作区执行；
+4. 数据库迁移在受控环境执行 `bun run db:migrate`；
+5. 不要在生产环境执行 `bun run db:reset`。
+
+---
+
+## ✅ 质量检查
+
+提交前建议执行：
+
+```bash
+bun run lint
+bunx tsc --noEmit --pretty false
+bun run content:check -- --no-examples
+bun run build
+```
+
+项目统一使用 Biome，不使用 ESLint/Prettier 作为主格式化工具。
+
+---
+
+## 📚 项目文档
+
+- [Stage 2 开发计划](documents/development-plan-stage2.md)
+- [Stage 3 开发计划](documents/development-plan-stage3.md)
+- [Stage 4 开发计划](documents/development-plan-stage4.md)
+- [Stage 5 开发计划](documents/development-plan-stage5.md)
+- [Stage 5 交付总结](documents/stage5-summary.md)
+- [Stage 6 Gallery 开发计划](documents/development-plan-stage6.md)
+- [AI Agent 协作规范](AGENTS.md)
 
 ---
 
