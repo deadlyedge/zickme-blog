@@ -1,4 +1,4 @@
-import { BookOpenIcon, ClockIcon, CodeIcon } from 'lucide-react'
+import { BookOpenIcon, ClockIcon } from 'lucide-react'
 import Image from 'next/image'
 import React, { useMemo } from 'react'
 import { calculateReadingTime, formatPublishedDate } from '@/lib/utils'
@@ -84,14 +84,14 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 							</span>
 						</div>
 						<div className="flex items-center gap-2">
-							{post.sourceUrl && (
+							{/* {post.sourceUrl && (
 								<Button variant="link" asChild>
 									<a href={post.sourceUrl} target="_blank" rel="noopener">
 										<CodeIcon />
 										source
 									</a>
 								</Button>
-							)}
+							)} */}
 							<Button asChild>
 								<NavigationLink href={`${route}${post.slug}`}>
 									<BookOpenIcon />
