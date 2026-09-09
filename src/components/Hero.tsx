@@ -100,6 +100,7 @@ export const Hero = ({ profile }: HeroProps) => {
 					>
 						<div className="inline-block max-w-3xl rounded-2xl border border-border/60 bg-background/70 dark:bg-card/70 backdrop-blur-md px-5 py-4 sm:px-8 sm:py-6 shadow-sm hover:border-primary/30 transition-all">
 							<h2
+								style={slogan.color ? { color: slogan.color } : undefined}
 								className={cn(
 									'text-xl sm:text-3xl lg:text-4xl leading-snug font-extrabold text-foreground text-pretty uppercase tracking-tight drop-shadow-2xs',
 									slogan.fontSize,

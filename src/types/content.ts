@@ -84,6 +84,7 @@ export type Skill = {
 }
 
 export type Slogan = {
+	id?: string
 	text: string
 	fontSize?: string
 	color?: string

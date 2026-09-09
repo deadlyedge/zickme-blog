@@ -10,7 +10,9 @@ import { fetchProfile } from '@/lib/content-providers'
 import { buildMetadata } from '@/lib/seo'
 import type { TimelineItem } from '@/types'
 
-export const revalidate = 3600 // 每小时重新验证一次
+// About 内容平时变化不频繁，使用长时间 ISR 缓存；
+// Dashboard 保存后由 updateSiteProfile 通过 revalidatePath('/about') 立即失效。
+export const revalidate = 86400
 
 export const metadata: Metadata = buildMetadata({
 	title: 'About',

@@ -41,6 +41,7 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
 	author: one(users, {
 		fields: [comments.authorId],
 		references: [users.id],
+		relationName: 'CommentAuthor',
 	}),
 	parent: one(comments, {
 		fields: [comments.parentId],

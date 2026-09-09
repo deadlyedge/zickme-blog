@@ -1,0 +1,6 @@
+export { AboutSettings } from './AboutSettings'
+export { LandingSettings } from './LandingSettings'
+export { SettingsTabs } from './SettingsTabs'
+export { SocialSettings } from './SocialSettings'
+export { ThemeSettings } from './ThemeSettings'
+export type { EditableSocialLink, SettingsTabsProps } from './types'

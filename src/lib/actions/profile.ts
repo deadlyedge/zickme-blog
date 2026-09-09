@@ -1,6 +1,7 @@
 'use server'
 
 import { eq } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { db } from '@/db'
 import { siteProfile, users } from '@/db/schema'
@@ -173,6 +174,11 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 			})
 		}
 
+		// Site profile drives the public About page and homepage. Invalidate both
+		// routes so the new configuration is visible immediately after saving.
+		revalidatePath('/about')
+		revalidatePath('/')
+		revalidatePath('/dashboard/settings')
 		return { success: true }
 	} catch (error) {
 		console.error('Site profile update error:', error)
