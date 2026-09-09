@@ -41,6 +41,7 @@ interface StandardFrontmatter {
 
 interface ContentCheckResult {
 	filePath: string
+	slug?: string
 	issues: string[]
 	suggestions: string[]
 	formattedFrontmatter?: string
@@ -51,6 +52,7 @@ interface CheckConfig {
 	autoFix: boolean
 	showExamples: boolean
 	postsDir: string
+	conflictingSlugs?: Set<string>
 }
 
 const DEFAULT_CONFIG: CheckConfig = {
@@ -198,6 +200,9 @@ async function checkMarkdownFile(
 		const fileName = path.basename(filePath, '.md')
 
 		const { data: frontmatter, content } = matter(fileContent)
+		const slug =
+			frontmatter.slug || generateSlugFromPath(filePath, config.postsDir)
+		result.slug = slug
 
 		if (!frontmatter.title) {
 			result.issues.push('❌ 缺少 title 字段')
@@ -245,7 +250,11 @@ async function checkMarkdownFile(
 			result.issues.push('❌ canonicalUrl 必须使用 HTTP(S) URL')
 		}
 
-		if (config.autoFix && result.issues.length > 0) {
+		if (
+			config.autoFix &&
+			(!frontmatter.slug || result.issues.length > 0) &&
+			!config.conflictingSlugs?.has(slug)
+		) {
 			const standardFrontmatter = generateStandardFrontmatter(
 				frontmatter,
 				filePath,
@@ -278,9 +287,41 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 		const mdFiles = await scanMarkdownFiles(config.postsDir)
 		console.log(`📁 发现 ${mdFiles.length} 个Markdown文件\n`)
 
-		const results = await Promise.all(
-			mdFiles.map((file) => checkMarkdownFile(file, config)),
+		const slugSources = new Map<string, string[]>()
+		for (const filePath of mdFiles) {
+			const raw = await fsPromises.readFile(filePath, 'utf-8')
+			const { data } = matter(raw)
+			const slug =
+				typeof data.slug === 'string' && data.slug.trim()
+					? data.slug.trim()
+					: generateSlugFromPath(filePath, config.postsDir)
+			const sources = slugSources.get(slug) || []
+			sources.push(path.relative(config.postsDir, filePath))
+			slugSources.set(slug, sources)
+		}
+		const conflictingSlugs = new Set(
+			[...slugSources.entries()]
+				.filter(([, sources]) => sources.length > 1)
+				.map(([slug]) => slug),
 		)
+		for (const [slug, sources] of slugSources) {
+			if (sources.length > 1) {
+				console.log(
+					`❌ Slug 冲突 "${slug}": ${sources.join('、')}，请手动指定唯一 slug\n`,
+				)
+			}
+		}
+
+		const results = await Promise.all(
+			mdFiles.map((file) =>
+				checkMarkdownFile(file, { ...config, conflictingSlugs }),
+			),
+		)
+		for (const result of results) {
+			if (result.slug && conflictingSlugs.has(result.slug)) {
+				result.issues.push(`❌ Slug 冲突: "${result.slug}"，请修改为唯一值`)
+			}
+		}
 
 		let totalIssues = 0
 		let totalSuggestions = 0

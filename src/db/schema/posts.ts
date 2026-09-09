@@ -24,6 +24,7 @@ export const posts = pgTable(
 			.primaryKey()
 			.$defaultFn(() => crypto.randomUUID()),
 		slug: text('slug').notNull().unique(),
+		sourcePath: text('sourcePath'),
 		title: text('title').notNull(),
 		excerpt: text('excerpt'),
 		poster: text('poster'),

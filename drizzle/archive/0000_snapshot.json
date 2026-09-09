@@ -1,5 +1,5 @@
 {
-	"id": "2a41adbb-a74e-4384-8ac0-c68bec8d7cf1",
+	"id": "1d718ac6-2dca-4157-b856-7510645d1d32",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"version": "7",
 	"dialect": "postgresql",
@@ -520,12 +520,6 @@
 					"primaryKey": false,
 					"notNull": true
 				},
-				"sourcePath": {
-					"name": "sourcePath",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
 				"title": {
 					"name": "title",
 					"type": "text",
@@ -561,12 +555,6 @@
 				"sourceUrl": {
 					"name": "sourceUrl",
 					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"metadata": {
-					"name": "metadata",
-					"type": "jsonb",
 					"primaryKey": false,
 					"notNull": false
 				},
@@ -891,24 +879,6 @@
 					"primaryKey": false,
 					"notNull": false
 				},
-				"themeConfig": {
-					"name": "themeConfig",
-					"type": "jsonb",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"landingPageConfig": {
-					"name": "landingPageConfig",
-					"type": "jsonb",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"aboutPageConfig": {
-					"name": "aboutPageConfig",
-					"type": "jsonb",
-					"primaryKey": false,
-					"notNull": false
-				},
 				"createdAt": {
 					"name": "createdAt",
 					"type": "timestamp",
@@ -918,74 +888,6 @@
 				},
 				"updatedAt": {
 					"name": "updatedAt",
-					"type": "timestamp",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {},
-			"foreignKeys": {},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		},
-		"public.SyncLog": {
-			"name": "SyncLog",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "text",
-					"primaryKey": true,
-					"notNull": true
-				},
-				"triggerType": {
-					"name": "triggerType",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "'MANUAL'"
-				},
-				"status": {
-					"name": "status",
-					"type": "SyncStatus",
-					"typeSchema": "public",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "'SUCCESS'"
-				},
-				"totalPosts": {
-					"name": "totalPosts",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false,
-					"default": "'0'"
-				},
-				"successCount": {
-					"name": "successCount",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false,
-					"default": "'0'"
-				},
-				"errorCount": {
-					"name": "errorCount",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false,
-					"default": "'0'"
-				},
-				"logs": {
-					"name": "logs",
-					"type": "jsonb",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"createdAt": {
-					"name": "createdAt",
 					"type": "timestamp",
 					"primaryKey": false,
 					"notNull": true,
@@ -1011,11 +913,6 @@
 			"name": "StatusType",
 			"schema": "public",
 			"values": ["PUBLISHED", "DRAFT", "ARCHIVED", "PENDING", "SPAM"]
-		},
-		"public.SyncStatus": {
-			"name": "SyncStatus",
-			"schema": "public",
-			"values": ["SUCCESS", "FAILED", "PARTIAL"]
 		}
 	},
 	"schemas": {},

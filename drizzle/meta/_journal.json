@@ -5,29 +5,8 @@
 		{
 			"idx": 0,
 			"version": "7",
-			"when": 1788774795977,
-			"tag": "0000_soft_lila_cheney",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1788788259893,
-			"tag": "0001_giant_epoch",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1788792623411,
-			"tag": "0002_ancient_praxagora",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1788922849401,
-			"tag": "0003_parched_bill_hollister",
+			"when": 1788926797799,
+			"tag": "0000_baseline",
 			"breakpoints": true
 		}
 	]

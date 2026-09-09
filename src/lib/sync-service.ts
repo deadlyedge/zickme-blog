@@ -43,6 +43,7 @@ export interface MarkdownFrontmatter {
 
 export interface ProcessedPost {
 	slug: string
+	sourcePath: string
 	title: string
 	excerpt?: string
 	poster?: string
@@ -360,6 +361,7 @@ export class ContentSyncService {
 
 			return {
 				slug,
+				sourcePath: relativeFilePath.replace(/\\/g, '/'),
 				title,
 				excerpt: frontmatter.excerpt || undefined,
 				poster: poster || undefined,
@@ -534,10 +536,23 @@ export class ContentSyncService {
 
 				let postId: string
 				if (existingPost) {
+					if (
+						existingPost.sourcePath &&
+						existingPost.sourcePath !== post.sourcePath
+					) {
+						this.addLog(
+							'frontmatter',
+							'error',
+							`拒绝覆盖 Slug 冲突: ${post.slug}`,
+							`当前文件 ${post.sourcePath} 与数据库来源 ${existingPost.sourcePath} 不同，请修改 Frontmatter slug`,
+						)
+						continue
+					}
 					postId = existingPost.id
 					await db
 						.update(posts)
 						.set({
+							sourcePath: post.sourcePath,
 							title: post.title,
 							excerpt: post.excerpt,
 							poster: post.poster,
@@ -560,6 +575,7 @@ export class ContentSyncService {
 						.insert(posts)
 						.values({
 							slug: post.slug,
+							sourcePath: post.sourcePath,
 							title: post.title,
 							excerpt: post.excerpt,
 							poster: post.poster,
@@ -676,23 +692,29 @@ export class ContentSyncService {
 			}
 		}
 
-		const slugMap = new Map<string, string>()
+		const slugMap = new Map<string, ProcessedPost>()
+		const conflictingSlugs = new Set<string>()
 		const uniquePosts: ProcessedPost[] = []
 		for (const p of processedPosts) {
 			if (slugMap.has(p.slug)) {
+				conflictingSlugs.add(p.slug)
 				this.addLog(
 					'frontmatter',
-					'warn',
-					`发现重复的 Slug: "${p.slug}" (已跳过重复项: ${p.title})`,
+					'error',
+					`发现重复的 Slug: "${p.slug}"`,
+					`冲突文件: ${slugMap.get(p.slug)?.sourcePath} 与 ${p.sourcePath}，请手动指定唯一 slug`,
 				)
 			} else {
-				slugMap.set(p.slug, p.title)
+				slugMap.set(p.slug, p)
 				uniquePosts.push(p)
 			}
 		}
+		const safePosts = uniquePosts.filter(
+			(post) => !conflictingSlugs.has(post.slug),
+		)
 
-		const successCount = await this.savePostsToDb(uniquePosts, dryRun)
-		const errorCount = uniquePosts.length - successCount
+		const successCount = await this.savePostsToDb(safePosts, dryRun)
+		const errorCount = processedPosts.length - successCount
 
 		if (
 			options.deleteOld &&
@@ -701,7 +723,7 @@ export class ContentSyncService {
 			!dryRun
 		) {
 			try {
-				const existingSlugs = new Set(uniquePosts.map((p) => p.slug))
+				const existingSlugs = new Set(safePosts.map((p) => p.slug))
 				const dbPosts = await db
 					.select({ slug: posts.slug })
 					.from(posts)
@@ -739,7 +761,7 @@ export class ContentSyncService {
 				await db.insert(syncLogs).values({
 					triggerType,
 					status,
-					totalPosts: String(uniquePosts.length),
+					totalPosts: String(processedPosts.length),
 					successCount: String(successCount),
 					errorCount: String(errorCount),
 					logs: this.logs,
@@ -752,13 +774,13 @@ export class ContentSyncService {
 		this.addLog(
 			'general',
 			status === 'SUCCESS' ? 'success' : 'warn',
-			`🏁 同步任务结束: 总计 ${uniquePosts.length} 篇，成功 ${successCount} 篇，失败 ${errorCount} 篇`,
+			`🏁 同步任务结束: 总计 ${processedPosts.length} 篇，成功 ${successCount} 篇，失败 ${errorCount} 篇`,
 		)
 
 		return {
 			success: status !== 'FAILED',
 			status,
-			totalPosts: uniquePosts.length,
+			totalPosts: processedPosts.length,
 			successCount,
 			errorCount,
 			logs: this.logs,
