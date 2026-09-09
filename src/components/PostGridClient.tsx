@@ -2,7 +2,7 @@
 
 import { Tag as TagIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { usePosts } from '@/lib/hooks/useContent'
 import { PostCard } from './PostCard'
 import { PostTagFilter, type TagItem } from './PostTagFilter'
@@ -11,19 +11,16 @@ import { Spinner } from './ui/spinner'
 export function PostGridClient() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
-	const urlTag = searchParams.get('tag')
 
-	// 从URL参数初始化activeTag
-	const [activeTag, setActiveTag] = useState<string>(() => urlTag || 'All')
+	// 直接从 URL 推导当前激活标签（随浏览器前进/后退自动同步）
+	const urlTag = searchParams.get('tag')
+	const activeTag = urlTag || 'All'
 
 	// Use TanStack Query - data will be hydrated from server
 	const { data: posts, isLoading, isError } = usePosts()
 
-	// 处理标签点击，更新URL参数
+	// 处理标签点击，仅更新URL参数（activeTag 由 URL 派生，自动保持同步）
 	const handleTagClick = (tagSlug: string) => {
-		setActiveTag(tagSlug)
-
-		// 更新URL参数
 		const currentPath = window.location.pathname
 		if (tagSlug === 'All') {
 			router.push(currentPath)
