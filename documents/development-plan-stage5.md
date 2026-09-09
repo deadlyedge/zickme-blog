@@ -97,17 +97,16 @@ graph TD
 
 ---
 
-### 📸 阶段五：纯图片/摄影相册型 Blog 专用版式适配
+### 📸 阶段五：纯图片/摄影相册型 Blog 专用版式适配（已拆分至 Stage 6）
 
-**背景与目标**：针对摄影、作品集、设计稿展示等纯图片或图多字少的 Blog 形式，常规的纯文本排版无法带来最佳观感，需要单独的瀑布流/大图画廊版式适配。
+**架构决策**：该部分不再作为 Stage 5 的 Post `layout` 分支实施。摄影相册、设计稿集合和纯图片作品集拥有独立的内容源、媒体同步、数据模型和前台交互，因此整体拆分为独立的 Stage 6。
 
-1. **文章版式类型识别 (Layout Format Detection)**
-   - 在 Frontmatter 中支持 `layout: "gallery" | "photo" | "article"`（或根据正文图片占比自动提示）。
-2. **画廊/瀑布流沉浸式排版组件 (`GalleryPostView.tsx`)**
-   - **响应式 Masonry / 网格画廊**：多图自动瀑布流排列。
-   - **灯箱大图预览 (Lightbox)**：支持点击放大、EXIF 信息展示（如光圈、快门、ISO、相机型号）、全屏缩放与左右键切图。
-3. **首页与列表卡片流差异化渲染**
-   - 在 `PostCard.tsx` 与 `/posts` 列表中，为相册/纯图片型文章显示专属的 `Photo/Gallery` 徽标与多图九宫格/轮播缩略图。
+详细计划见：[`documents/development-plan-stage6.md`](development-plan-stage6.md)。
+1. 新增独立内容目录 `content/photo-gallery/` 与 `album.yaml` 规范；
+2. 新增 `Gallery` / `GalleryImage` 数据模型；
+3. 新增 `GallerySyncService` 与独立 Cloudinary folder；
+4. 新增 `/gallery` 与 `/gallery/[albumSlug]` 路由；
+5. 实现 Masonry、Lightbox、EXIF 和 Gallery Dashboard 管理。
 
 ---
 
@@ -119,7 +118,7 @@ graph TD
 | **Step 2** | **Frontmatter 扩展与外链/图标富媒体展示** | `src/lib/sync-service.ts`, `PostClient.tsx`, `PostCard.tsx`, `check-content.ts` | 标题/标题图下方渲染 GitHub/Demo 等外链图标胶囊；支持扩展元数据 |
 | **Step 3** | **Dashboard 配图修改与本地回写机制** | `src/app/dashboard/posts/*`, `src/lib/actions/posts-admin.ts`, `sync-service.ts` | 在线调整/上传文章配图；数据入库并回写至本地 Markdown 文件 |
 | **Step 4** | **双向内容同步与数据库文章拉取** | `scripts/sync-content.ts`, `src/lib/sync-service.ts`, `src/app/dashboard/sync/*` | 支持本地与数据库双向同步（`bun run sync:pull`），可将线上文章导出至本地 |
-| **Step 5** | **纯图片/相册型 Blog 专属版式与 Lightbox 画廊** | `src/components/gallery/*`, `PostClient.tsx`, `PostCard.tsx` | 支持 `gallery/photo` 布局类型，沉浸式瀑布流、灯箱缩放与 EXIF 展示 |
+| **Stage 6** | **独立图片相册与 Gallery 内容体系** | `documents/development-plan-stage6.md` | 独立 `Gallery/GalleryImage` 模型、Cloudinary folder、`/gallery` 路由与画廊体验 |
 
 ---
 
