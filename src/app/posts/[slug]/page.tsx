@@ -40,6 +40,12 @@ export async function generateMetadata({
 		title: post.title,
 		description: post.excerpt || `阅读 ${post.title}`,
 		image: post.poster || undefined,
+		url:
+			post.metadata &&
+			typeof post.metadata === 'object' &&
+			'canonicalUrl' in post.metadata
+				? String(post.metadata.canonicalUrl)
+				: undefined,
 	})
 }
 

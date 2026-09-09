@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import {
 	index,
+	jsonb,
 	pgEnum,
 	pgTable,
 	primaryKey,
@@ -29,6 +30,7 @@ export const posts = pgTable(
 		content: text('content'),
 		status: statusTypeEnum('status').default('PUBLISHED').notNull(),
 		sourceUrl: text('sourceUrl'),
+		metadata: jsonb('metadata'),
 		publishedAt: timestamp('publishedAt', { mode: 'date' }),
 		archivedAt: timestamp('archivedAt', { mode: 'date' }),
 		createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),

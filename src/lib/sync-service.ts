@@ -6,8 +6,15 @@ import matter from 'gray-matter'
 import sharp from 'sharp'
 import { db } from '@/db'
 import { posts, postsToTags, syncLogs, tags } from '@/db/schema'
+import { normalizePostMetadata } from '@/lib/post-metadata'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
-import type { StatusType, SyncLogItem, SyncResult, SyncStatus } from '@/types'
+import type {
+	PostMetadata,
+	StatusType,
+	SyncLogItem,
+	SyncResult,
+	SyncStatus,
+} from '@/types'
 
 const MAX_IMAGE_WIDTH = 3840
 const MAX_IMAGE_HEIGHT = 2160
@@ -22,6 +29,16 @@ export interface MarkdownFrontmatter {
 	status?: string
 	draft?: boolean
 	sourceUrl?: string
+	links?: unknown[]
+	github?: string
+	demo?: string
+	figma?: string
+	paper?: string
+	category?: string
+	series?: string
+	canonicalUrl?: string
+	outdatedWarning?: string
+	layout?: 'article' | 'gallery' | 'photo'
 }
 
 export interface ProcessedPost {
@@ -34,6 +51,7 @@ export interface ProcessedPost {
 	tags: string[]
 	status: StatusType
 	sourceUrl?: string
+	metadata: PostMetadata
 }
 
 export interface SyncRunnerOptions {
@@ -312,6 +330,10 @@ export class ContentSyncService {
 				: new Date()
 			const status = parseStatusType(frontmatter.status, frontmatter.draft)
 			const tags = normalizeTags(frontmatter.tags)
+			const metadata = normalizePostMetadata({
+				...frontmatter,
+				links: frontmatter.links,
+			})
 
 			return {
 				slug,
@@ -323,6 +345,7 @@ export class ContentSyncService {
 				tags,
 				status,
 				sourceUrl: frontmatter.sourceUrl || undefined,
+				metadata,
 			}
 		} catch (error) {
 			this.addLog(
@@ -499,6 +522,7 @@ export class ContentSyncService {
 							publishedAt: post.publishedAt,
 							status: post.status,
 							sourceUrl: post.sourceUrl,
+							metadata: post.metadata,
 							archivedAt: null,
 							updatedAt: new Date(),
 						})
@@ -520,6 +544,7 @@ export class ContentSyncService {
 							publishedAt: post.publishedAt,
 							status: post.status,
 							sourceUrl: post.sourceUrl,
+							metadata: post.metadata,
 						})
 						.returning()
 					postId = newPost.id

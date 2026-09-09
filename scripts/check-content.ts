@@ -2,6 +2,7 @@ import type { Stats } from 'node:fs'
 import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
 import matter from 'gray-matter'
+import { normalizePostMetadata } from '../src/lib/post-metadata'
 import { generateSlugFromPath } from '../src/lib/slug'
 
 interface MarkdownFrontmatter {
@@ -14,6 +15,16 @@ interface MarkdownFrontmatter {
 	status?: string
 	draft?: boolean
 	sourceUrl?: string
+	links?: unknown[]
+	github?: string
+	demo?: string
+	figma?: string
+	paper?: string
+	category?: string
+	series?: string
+	canonicalUrl?: string
+	outdatedWarning?: string
+	layout?: 'article' | 'gallery' | 'photo'
 }
 
 interface StandardFrontmatter {
@@ -25,6 +36,7 @@ interface StandardFrontmatter {
 	excerpt?: string
 	image?: string
 	sourceUrl?: string
+	metadata?: ReturnType<typeof normalizePostMetadata>
 }
 
 interface ContentCheckResult {
@@ -128,6 +140,18 @@ function generateStandardFrontmatter(
 		standard.sourceUrl = frontmatter.sourceUrl
 	}
 
+	const metadata = normalizePostMetadata(frontmatter)
+	if (
+		metadata.links.length > 0 ||
+		metadata.category ||
+		metadata.series ||
+		metadata.canonicalUrl ||
+		metadata.outdatedWarning ||
+		metadata.layout
+	) {
+		standard.metadata = metadata
+	}
+
 	const stringified = matter.stringify('', standard)
 	return stringified.trim()
 }
@@ -205,6 +229,20 @@ async function checkMarkdownFile(
 					`❌ 封面图片错误: ${frontmatter.image} (${imageValidation.error})`,
 				)
 			}
+		}
+
+		const metadata = normalizePostMetadata(frontmatter)
+		if (
+			frontmatter.links &&
+			metadata.links.length !== frontmatter.links.length
+		) {
+			result.issues.push('❌ links 中存在无效或非 HTTP(S) 外链')
+		}
+		if (
+			frontmatter.canonicalUrl &&
+			!/^https?:\/\//i.test(frontmatter.canonicalUrl)
+		) {
+			result.issues.push('❌ canonicalUrl 必须使用 HTTP(S) URL')
 		}
 
 		if (config.autoFix && result.issues.length > 0) {

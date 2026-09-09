@@ -35,7 +35,7 @@ export function calculateReadingTime(
 	wordsPerMinute = 300,
 ): { minutes: number; text: string; wordsCount: number } {
 	if (!content || typeof content !== 'string') {
-		return { minutes: 1, text: '1 分钟阅读', wordsCount: 0 }
+		return { minutes: 1, text: '1 min', wordsCount: 0 }
 	}
 
 	// 移除 HTML 标签和 Markdown 常见符号
@@ -55,7 +55,7 @@ export function calculateReadingTime(
 
 	return {
 		minutes,
-		text: `${minutes} 分钟阅读`,
+		text: `${minutes} min`,
 		wordsCount: totalWords,
 	}
 }

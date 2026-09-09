@@ -35,6 +35,7 @@ export function buildMetadata({
 			images: image ? [{ url: image }] : [],
 			type: 'website',
 		},
+		alternates: url ? { canonical: url } : undefined,
 		twitter: {
 			card: 'summary_large_image',
 			title: pageTitle,

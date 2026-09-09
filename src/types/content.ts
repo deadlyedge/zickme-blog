@@ -6,6 +6,31 @@ export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
 export type Role = 'ADMIN' | 'EDITOR' | 'USER'
 export type SyncStatus = 'SUCCESS' | 'FAILED' | 'PARTIAL'
 
+export type PostLinkType =
+	| 'github'
+	| 'twitter'
+	| 'demo'
+	| 'documentation'
+	| 'figma'
+	| 'paper'
+	| 'website'
+	| 'other'
+
+export interface PostLink {
+	url: string
+	label?: string
+	type: PostLinkType
+}
+
+export interface PostMetadata {
+	links: PostLink[]
+	category?: string
+	series?: string
+	canonicalUrl?: string
+	outdatedWarning?: string
+	layout?: 'article' | 'gallery' | 'photo'
+}
+
 // Base Models
 export type Post = InferSelectModel<typeof posts>
 export type Tag = InferSelectModel<typeof tags>

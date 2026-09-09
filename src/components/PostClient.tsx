@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CommentsSection } from '@/components/comments'
+import { PostLinks } from '@/components/PostLinks'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePost } from '@/lib/hooks/useContent'
@@ -269,7 +270,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 			className="pt-16 overflow-y-auto h-svh relative"
 		>
 			{/* 顶部阅读进度指示器 (Reading Progress Bar) - 轻量沉浸式 2px 渐变设计 */}
-			<div className="fixed top-16 left-0 right-0 h-[2.5px] bg-transparent z-40 pointer-events-none overflow-hidden">
+			<div className="fixed top-0 left-0 right-0 h-[2.5px] bg-transparent z-40 pointer-events-none overflow-hidden">
 				<div
 					className="h-full bg-linear-to-r from-primary/80 via-primary to-accent transition-[width] duration-150 ease-out shadow-[0_0_8px_rgba(var(--primary),0.6)]"
 					style={{ width: `${readingProgress}%` }}
@@ -296,6 +297,11 @@ export function PostClient({ initialPost }: PostClientProps) {
 										className="rounded-xl mb-6 object-cover h-auto w-full border border-border/40 shadow-md"
 									/>
 								)}
+
+								<PostLinks
+									metadata={post.metadata}
+									sourceUrl={post.sourceUrl}
+								/>
 
 								<div className="flex flex-wrap items-center gap-2 mb-3">
 									{post.tags?.map((tag) => (
