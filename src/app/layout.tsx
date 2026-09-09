@@ -5,6 +5,7 @@ import {
 	Noto_Sans_SC,
 	Noto_Serif,
 	Noto_Serif_SC,
+	Source_Code_Pro,
 } from 'next/font/google'
 import './globals.css'
 
@@ -43,6 +44,12 @@ const funnelDisplay = Funnel_Display({
 	weight: ['300', '600', '800'],
 })
 
+const sourceCodePro = Source_Code_Pro({
+	variable: '--font-mono',
+	subsets: ['latin'],
+	weight: ['300'],
+})
+
 export const metadata: Metadata = {
 	description:
 		'Blog and resume driven by Payload and a typed Elysia content API.',
@@ -66,7 +73,7 @@ export default async function RootLayout({
 	return (
 		<html lang="en">
 			<body
-				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} antialiased`}
+				className={`${notoSans.variable} ${notoSansSC.variable} ${notoSerif.variable} ${notoSerifSC.variable} ${funnelDisplay.variable} ${sourceCodePro.variable} antialiased`}
 			>
 				{dynamicThemeCss && (
 					<style
