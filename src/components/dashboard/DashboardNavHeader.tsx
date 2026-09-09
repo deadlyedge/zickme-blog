@@ -13,7 +13,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import type React from 'react'
 import { toast } from 'sonner'
 import { BrandLogo } from '@/components/BrandLogo'
-import { EditProfile } from '@/components/dashboard/EditProfile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -91,10 +90,6 @@ export const DashboardNavHeader: React.FC = () => {
 
 					{/* 快捷操作与用户信息 */}
 					<div className="flex items-center gap-2 sm:gap-3">
-						<EditProfile />
-
-						<div className="h-4 w-px bg-border hidden sm:block" />
-
 						{session?.user && (
 							<div className="flex items-center gap-2 pl-1">
 								<Avatar className="size-7 ring-1 ring-border">

@@ -79,6 +79,7 @@ export type Technology = {
 }
 
 export type Skill = {
+	id?: string
 	category: string
 	technologies: Technology[]
 }

@@ -9,6 +9,13 @@ import {
 } from '@/components/ui/card'
 import { FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { SettingsTabsProps } from './types'
 
@@ -26,6 +33,31 @@ type AboutSettingsProps = Pick<
 	| 'setFeaturedProjects'
 	| 'addCareerItem'
 	| 'addFeaturedProject'
+	| 'name'
+	| 'title'
+	| 'bio'
+	| 'avatar'
+	| 'location'
+	| 'email'
+	| 'website'
+	| 'skills'
+	| 'slogans'
+	| 'setName'
+	| 'setTitle'
+	| 'setBio'
+	| 'setAvatar'
+	| 'setLocation'
+	| 'setEmail'
+	| 'setWebsite'
+	| 'updateSlogan'
+	| 'addSlogan'
+	| 'removeSlogan'
+	| 'updateSkill'
+	| 'updateTechnology'
+	| 'addSkill'
+	| 'removeSkill'
+	| 'addTechnology'
+	| 'removeTechnology'
 >
 
 export function AboutSettings({
@@ -41,13 +73,38 @@ export function AboutSettings({
 	setFeaturedProjects,
 	addCareerItem,
 	addFeaturedProject,
+	name,
+	title,
+	bio,
+	avatar,
+	location,
+	email,
+	website,
+	skills,
+	slogans,
+	setName,
+	setTitle,
+	setBio,
+	setAvatar,
+	setLocation,
+	setEmail,
+	setWebsite,
+	updateSlogan,
+	addSlogan,
+	removeSlogan,
+	updateSkill,
+	updateTechnology,
+	addSkill,
+	removeSkill,
+	addTechnology,
+	removeTechnology,
 }: AboutSettingsProps) {
 	return (
 		<>
 			<Card className="shadow-2xs">
 				<CardHeader>
-					<CardTitle className="text-lg">Hero 个人导语与在线状态</CardTitle>
-					<CardDescription>配置关于页面顶部的标语与状态</CardDescription>
+					<CardTitle className="text-lg">About Hero</CardTitle>
+					<CardDescription>配置 About 页面顶部的导语与在线状态</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div>
@@ -55,23 +112,21 @@ export function AboutSettings({
 						<InputGroup>
 							<InputGroupInput
 								value={aboutHeadline}
-								onChange={(e) => setAboutHeadline(e.target.value)}
-								placeholder="e.g. Full-Stack Engineer & Designer"
+								onChange={(event) => setAboutHeadline(event.target.value)}
+								placeholder="Full-Stack Engineer & Designer"
 							/>
 						</InputGroup>
 					</div>
-
 					<div>
 						<FieldLabel className="text-xs">副标语 (Subheadline)</FieldLabel>
 						<InputGroup>
 							<InputGroupInput
 								value={aboutSubheadline}
-								onChange={(e) => setAboutSubheadline(e.target.value)}
-								placeholder="e.g. Building delightful web experiences..."
+								onChange={(event) => setAboutSubheadline(event.target.value)}
+								placeholder="Building delightful web experiences..."
 							/>
 						</InputGroup>
 					</div>
-
 					<div>
 						<FieldLabel className="text-xs">
 							在线状态标识 (Status Badge)
@@ -79,14 +134,207 @@ export function AboutSettings({
 						<InputGroup>
 							<InputGroupInput
 								value={aboutStatusText}
-								onChange={(e) => setAboutStatusText(e.target.value)}
-								placeholder="e.g. Available for interesting projects"
+								onChange={(event) => setAboutStatusText(event.target.value)}
+								placeholder="Available for interesting projects"
 							/>
 						</InputGroup>
 					</div>
 				</CardContent>
 			</Card>
 
+			<Card className="shadow-2xs">
+				<CardHeader>
+					<CardTitle className="text-lg">基础站点资料</CardTitle>
+					<CardDescription>
+						统一编辑首页、About 和 Footer 使用的个人资料
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					{[
+						['站点名称', name, setName],
+						['站点标题', title, setTitle],
+						['头像 URL', avatar, setAvatar],
+						['所在位置', location, setLocation],
+						['联系邮箱', email, setEmail],
+						['个人网站', website, setWebsite],
+					].map(([label, value, setter]) => (
+						<div key={label as string}>
+							<FieldLabel className="text-xs">{label as string}</FieldLabel>
+							<InputGroup>
+								<InputGroupInput
+									value={value as string}
+									onChange={(event) =>
+										(setter as (value: string) => void)(event.target.value)
+									}
+								/>
+							</InputGroup>
+						</div>
+					))}
+					<div className="md:col-span-2">
+						<FieldLabel className="text-xs">站点简介</FieldLabel>
+						<Textarea
+							value={bio}
+							onChange={(event) => setBio(event.target.value)}
+							rows={3}
+						/>
+					</div>
+				</CardContent>
+			</Card>
+
+			<Card className="shadow-2xs">
+				<CardHeader className="flex flex-row items-center justify-between">
+					<div>
+						<CardTitle className="text-lg">首页 Slogans</CardTitle>
+						<CardDescription>管理首页视差区域展示的品牌口号</CardDescription>
+					</div>
+					<Button type="button" size="sm" variant="outline" onClick={addSlogan}>
+						<Plus /> 添加 Slogan
+					</Button>
+				</CardHeader>
+				<CardContent className="space-y-3">
+					{slogans.map((slogan, index) => (
+						<div
+							key={slogan.id}
+							className="grid grid-cols-1 md:grid-cols-[1fr_10rem_10rem_auto] gap-2 items-end"
+						>
+							<InputGroup>
+								<InputGroupInput
+									value={slogan.text}
+									onChange={(event) =>
+										updateSlogan(index, 'text', event.target.value)
+									}
+									placeholder="口号文本"
+								/>
+							</InputGroup>
+							<InputGroup>
+								<InputGroupInput
+									value={slogan.fontSize ?? ''}
+									onChange={(event) =>
+										updateSlogan(index, 'fontSize', event.target.value)
+									}
+									placeholder="如 text-3xl"
+								/>
+							</InputGroup>
+							<InputGroup>
+								<InputGroupInput
+									value={slogan.color ?? ''}
+									onChange={(event) =>
+										updateSlogan(index, 'color', event.target.value)
+									}
+									placeholder="如 #000000"
+								/>
+							</InputGroup>
+							<Button
+								type="button"
+								variant="destructive"
+								size="icon"
+								onClick={() => removeSlogan(index)}
+							>
+								<Trash2 />
+							</Button>
+						</div>
+					))}
+				</CardContent>
+			</Card>
+
+			<Card className="shadow-2xs">
+				<CardHeader className="flex flex-row items-center justify-between">
+					<div>
+						<CardTitle className="text-lg">Skills</CardTitle>
+						<CardDescription>管理技能类别、技术栈和熟练度</CardDescription>
+					</div>
+					<Button type="button" size="sm" variant="outline" onClick={addSkill}>
+						<Plus /> 添加类别
+					</Button>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{skills.map((skill, skillIndex) => (
+						<div
+							key={skill.id}
+							className="rounded-xl border bg-muted/20 p-4 space-y-3"
+						>
+							<div className="flex gap-2">
+								<InputGroup>
+									<InputGroupInput
+										value={skill.category}
+										onChange={(event) =>
+											updateSkill(skillIndex, 'category', event.target.value)
+										}
+										placeholder="技能类别"
+									/>
+								</InputGroup>
+								<Button
+									type="button"
+									variant="destructive"
+									onClick={() => removeSkill(skillIndex)}
+								>
+									删除类别
+								</Button>
+							</div>
+							{skill.technologies.map((technology, technologyIndex) => (
+								<div
+									key={technology.id}
+									className="grid grid-cols-1 md:grid-cols-[1fr_10rem_auto] gap-2"
+								>
+									<InputGroup>
+										<InputGroupInput
+											value={technology.name}
+											onChange={(event) =>
+												updateTechnology(
+													skillIndex,
+													technologyIndex,
+													'name',
+													event.target.value,
+												)
+											}
+											placeholder="技术名称"
+										/>
+									</InputGroup>
+									<Select
+										value={technology.level ?? ''}
+										onValueChange={(value) =>
+											updateTechnology(
+												skillIndex,
+												technologyIndex,
+												'level',
+												value,
+											)
+										}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="熟练度" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="beginner">初级</SelectItem>
+											<SelectItem value="intermediate">中级</SelectItem>
+											<SelectItem value="advanced">高级</SelectItem>
+											<SelectItem value="expert">专家</SelectItem>
+										</SelectContent>
+									</Select>
+									<Button
+										type="button"
+										variant="destructive"
+										size="icon"
+										onClick={() =>
+											removeTechnology(skillIndex, technologyIndex)
+										}
+									>
+										<Trash2 />
+									</Button>
+								</div>
+							))}
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								onClick={() => addTechnology(skillIndex)}
+							>
+								<Plus /> 添加技术
+							</Button>
+						</div>
+					))}
+				</CardContent>
+			</Card>
 			{/* 职业经历时间线维护 */}
 			<Card className="shadow-2xs">
 				<CardHeader className="flex flex-row items-center justify-between">

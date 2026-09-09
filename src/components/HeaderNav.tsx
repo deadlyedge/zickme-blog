@@ -61,6 +61,11 @@ export const HeaderNav = () => {
 	const userRole = (session?.user as { role?: string } | undefined)?.role
 	const isAdmin = userRole === 'ADMIN'
 
+	// Dashboard 使用独立的 DashboardNavHeader，避免与全局 fixed navbar 重叠。
+	if (pathname.startsWith('/dashboard')) {
+		return null
+	}
+
 	const handleSignOut = async () => {
 		try {
 			await signOut()

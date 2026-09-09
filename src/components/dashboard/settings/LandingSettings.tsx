@@ -1,6 +1,5 @@
-import { Pin, Plus, Trash2 } from 'lucide-react'
+import { Pin } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
 	Card,
 	CardContent,
@@ -9,7 +8,6 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { FieldLabel } from '@/components/ui/field'
-import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Switch } from '@/components/ui/switch'
 import type { SettingsTabsProps } from './types'
 
@@ -21,16 +19,12 @@ type LandingSettingsProps = Pick<
 	| 'showPinnedPosts'
 	| 'showLatestPosts'
 	| 'pinnedPostIds'
-	| 'slogans'
 	| 'allPosts'
 	| 'setLandingEnabled'
 	| 'setShowTopHottest'
 	| 'setShowSlogans'
 	| 'setShowPinnedPosts'
 	| 'setShowLatestPosts'
-	| 'updateSlogan'
-	| 'addSlogan'
-	| 'removeSlogan'
 	| 'togglePinnedPost'
 >
 
@@ -41,16 +35,12 @@ export function LandingSettings({
 	showPinnedPosts,
 	showLatestPosts,
 	pinnedPostIds,
-	slogans,
 	allPosts,
 	setLandingEnabled,
 	setShowTopHottest,
 	setShowSlogans,
 	setShowPinnedPosts,
 	setShowLatestPosts,
-	updateSlogan,
-	addSlogan,
-	removeSlogan,
 	togglePinnedPost,
 }: LandingSettingsProps) {
 	return (
@@ -134,81 +124,6 @@ export function LandingSettings({
 							onCheckedChange={setShowLatestPosts}
 						/>
 					</div>
-				</div>
-
-				{/* Slogan 内容编辑器 */}
-				<div className="pt-6 border-t space-y-3">
-					<div className="flex items-center justify-between">
-						<div>
-							<FieldLabel className="text-sm font-bold">
-								首页 Slogan 内容
-							</FieldLabel>
-							<p className="text-xs text-muted-foreground">
-								编辑首页展示的口号、字体大小和颜色
-							</p>
-						</div>
-						<Button
-							type="button"
-							size="sm"
-							variant="outline"
-							onClick={addSlogan}
-						>
-							<Plus className="h-3.5 w-3.5" />
-							添加 Slogan
-						</Button>
-					</div>
-					{slogans.map((slogan, index) => (
-						<div
-							key={slogan.id}
-							className="grid grid-cols-1 md:grid-cols-[1fr_10rem_10rem_auto] gap-2 items-end"
-						>
-							<div className="space-y-1">
-								<FieldLabel className="text-xs">文本</FieldLabel>
-								<InputGroup>
-									<InputGroupInput
-										value={slogan.text}
-										onChange={(e) =>
-											updateSlogan(index, 'text', e.target.value)
-										}
-										placeholder="输入首页口号"
-									/>
-								</InputGroup>
-							</div>
-							<div className="space-y-1">
-								<FieldLabel className="text-xs">字体大小</FieldLabel>
-								<InputGroup>
-									<InputGroupInput
-										value={slogan.fontSize ?? ''}
-										onChange={(e) =>
-											updateSlogan(index, 'fontSize', e.target.value)
-										}
-										placeholder="如 text-3xl"
-									/>
-								</InputGroup>
-							</div>
-							<div className="space-y-1">
-								<FieldLabel className="text-xs">颜色</FieldLabel>
-								<InputGroup>
-									<InputGroupInput
-										value={slogan.color ?? ''}
-										onChange={(e) =>
-											updateSlogan(index, 'color', e.target.value)
-										}
-										placeholder="如 #000000"
-									/>
-								</InputGroup>
-							</div>
-							<Button
-								type="button"
-								variant="destructive"
-								size="icon"
-								onClick={() => removeSlogan(index)}
-								aria-label="删除 Slogan"
-							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
-						</div>
-					))}
 				</div>
 
 				{/* 置顶文章选择器 */}

@@ -35,7 +35,7 @@ export function SettingsTabs(props: SettingsTabsProps) {
 			<TabsContent value="landing">
 				<LandingSettings {...props} />
 			</TabsContent>
-			<TabsContent value="about">
+			<TabsContent value="about" className="space-y-6">
 				<AboutSettings {...props} />
 			</TabsContent>
 			<TabsContent value="social">

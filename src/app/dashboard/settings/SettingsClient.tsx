@@ -14,6 +14,7 @@ import type {
 	LandingPageConfig,
 	PostWithTags,
 	SiteProfile,
+	Skill,
 	Slogan,
 	SocialLink,
 	ThemeConfig,
@@ -105,6 +106,98 @@ export function SettingsClient({
 	const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>(
 		initialProfile?.aboutPageConfig?.featuredProjects || [],
 	)
+	const [name, setName] = useState(initialProfile?.name ?? '')
+	const [title, setTitle] = useState(initialProfile?.title ?? '')
+	const [bio, setBio] = useState(initialProfile?.bio ?? '')
+	const [avatar, setAvatar] = useState(initialProfile?.avatar ?? '')
+	const [location, setLocation] = useState(initialProfile?.location ?? '')
+	const [email, setEmail] = useState(initialProfile?.email ?? '')
+	const [website, setWebsite] = useState(initialProfile?.website ?? '')
+	const [skills, setSkills] = useState<Skill[]>(
+		(initialProfile?.skills ?? []).map((skill) => ({
+			...skill,
+			id: skill.id ?? crypto.randomUUID(),
+			technologies: skill.technologies.map((technology) => ({
+				...technology,
+				id: technology.id || crypto.randomUUID(),
+			})),
+		})),
+	)
+
+	const updateSkill = (index: number, field: 'category', value: string) => {
+		setSkills((current) =>
+			current.map((skill, skillIndex) =>
+				skillIndex === index ? { ...skill, [field]: value } : skill,
+			),
+		)
+	}
+
+	const updateTechnology = (
+		skillIndex: number,
+		technologyIndex: number,
+		field: 'name' | 'level',
+		value: string,
+	) => {
+		setSkills((current) =>
+			current.map((skill, currentSkillIndex) =>
+				currentSkillIndex === skillIndex
+					? {
+							...skill,
+							technologies: skill.technologies.map(
+								(technology, currentTechnologyIndex) =>
+									currentTechnologyIndex === technologyIndex
+										? { ...technology, [field]: value }
+										: technology,
+							),
+						}
+					: skill,
+			),
+		)
+	}
+
+	const addSkill = () =>
+		setSkills((current) => [
+			...current,
+			{
+				id: crypto.randomUUID(),
+				category: 'Frontend',
+				technologies: [
+					{ id: crypto.randomUUID(), name: '', level: 'intermediate' },
+				],
+			},
+		])
+	const removeSkill = (index: number) =>
+		setSkills((current) =>
+			current.filter((_, skillIndex) => skillIndex !== index),
+		)
+	const addTechnology = (skillIndex: number) =>
+		setSkills((current) =>
+			current.map((skill, index) =>
+				index === skillIndex
+					? {
+							...skill,
+							technologies: [
+								...skill.technologies,
+								{ id: crypto.randomUUID(), name: '', level: 'intermediate' },
+							],
+						}
+					: skill,
+			),
+		)
+	const removeTechnology = (skillIndex: number, technologyIndex: number) =>
+		setSkills((current) =>
+			current.map((skill, index) =>
+				index === skillIndex
+					? {
+							...skill,
+							technologies: skill.technologies.filter(
+								(_, technologyIndexInSkill) =>
+									technologyIndexInSkill !== technologyIndex,
+							),
+						}
+					: skill,
+			),
+		)
 
 	// 应用预设主题变量
 	const handleApplyPreset = (presetKey: string) => {
@@ -232,15 +325,15 @@ export function SettingsClient({
 				}
 
 				await updateSiteProfile({
-					name: initialProfile?.name || 'Zick',
-					title: initialProfile?.title || 'Engineer',
-					bio: initialProfile?.bio || '',
-					avatar: initialProfile?.avatar || undefined,
-					location: initialProfile?.location || undefined,
-					email: initialProfile?.email || undefined,
-					website: initialProfile?.website || undefined,
+					name,
+					title,
+					bio,
+					avatar: avatar || undefined,
+					location: location || undefined,
+					email: email || undefined,
+					website: website || undefined,
 					slogans,
-					skills: initialProfile?.skills || undefined,
+					skills,
 					socialLinks: socialLinks.map(({ id: _id, ...link }) => link),
 					themeConfig,
 					landingPageConfig,
@@ -296,6 +389,14 @@ export function SettingsClient({
 				aboutStatusText={aboutStatusText}
 				careerTimeline={careerTimeline}
 				featuredProjects={featuredProjects}
+				name={name}
+				title={title}
+				bio={bio}
+				avatar={avatar}
+				location={location}
+				email={email}
+				website={website}
+				skills={skills}
 				allPosts={allPosts}
 				setCustomCss={setCustomCss}
 				setLandingEnabled={setLandingEnabled}
@@ -308,6 +409,19 @@ export function SettingsClient({
 				setAboutStatusText={setAboutStatusText}
 				setCareerTimeline={setCareerTimeline}
 				setFeaturedProjects={setFeaturedProjects}
+				setName={setName}
+				setTitle={setTitle}
+				setBio={setBio}
+				setAvatar={setAvatar}
+				setLocation={setLocation}
+				setEmail={setEmail}
+				setWebsite={setWebsite}
+				updateSkill={updateSkill}
+				updateTechnology={updateTechnology}
+				addSkill={addSkill}
+				removeSkill={removeSkill}
+				addTechnology={addTechnology}
+				removeTechnology={removeTechnology}
 				handleApplyPreset={handleApplyPreset}
 				togglePinnedPost={togglePinnedPost}
 				updateSlogan={updateSlogan}
