@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { signOut, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from './BrandLogo'
 import { GlobalSearch } from './GlobalSearch'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Badge } from './ui/badge'
@@ -77,14 +78,13 @@ export const HeaderNav = () => {
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 h-16 flex items-center justify-between">
 					<Link
 						href="/"
-						className={cn(
-							'text-lg font-black tracking-tight flex items-center gap-2',
-							pathname === '/' && 'text-primary',
-						)}
+						className="group inline-flex items-center"
+						aria-label="返回首页"
 					>
-						<span className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
-							zick.me
-						</span>
+						<BrandLogo
+							size={32}
+							textClassName="text-lg font-black tracking-tight"
+						/>
 					</Link>
 
 					<nav className="flex items-center font-bold font-sans text-base gap-1 sm:gap-2">

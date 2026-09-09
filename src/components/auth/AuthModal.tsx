@@ -5,6 +5,7 @@ import { Key, Lock, Mail, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
+import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -590,7 +591,8 @@ export default function AuthModal() {
 	return (
 		<Dialog open={isAuthModalOpen} onOpenChange={closeAuthModal}>
 			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
+				<DialogHeader className="items-center text-center space-y-2">
+					<BrandLogo size={36} textClassName="text-xl font-black" />
 					<DialogTitle>{isLoggedIn ? '账户信息' : '用户认证'}</DialogTitle>
 					<DialogDescription>
 						{isLoggedIn

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
-export const siteName = 'xdream - Blog'
-export const defaultDescription = 'Personal blog and portfolio website'
+export const siteName = 'Zick.me'
+export const defaultDescription =
+	'Zick.me · Modern Personal Blog & Portfolio built with Next.js, Bun, and Drizzle'
 
 export function buildMetadata({
 	title,
@@ -14,12 +15,21 @@ export function buildMetadata({
 	image?: string
 	url?: string
 }): Metadata {
+	const pageTitle = `${title} | ${siteName}`
+	const desc = description || defaultDescription
 	return {
-		title: `${title} | ${siteName}`,
-		description: description || defaultDescription,
+		title: pageTitle,
+		description: desc,
+		icons: {
+			icon: [
+				{ url: '/icon.svg', type: 'image/svg+xml' },
+				{ url: '/favicon.ico', sizes: 'any' },
+			],
+			apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+		},
 		openGraph: {
-			title: `${title} | ${siteName}`,
-			description: description || defaultDescription,
+			title: pageTitle,
+			description: desc,
 			url,
 			siteName,
 			images: image ? [{ url: image }] : [],
@@ -27,8 +37,8 @@ export function buildMetadata({
 		},
 		twitter: {
 			card: 'summary_large_image',
-			title: `${title} | ${siteName}`,
-			description: description || defaultDescription,
+			title: pageTitle,
+			description: desc,
 			images: image ? [image] : [],
 		},
 	}

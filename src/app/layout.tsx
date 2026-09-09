@@ -52,8 +52,15 @@ const sourceCodePro = Source_Code_Pro({
 
 export const metadata: Metadata = {
 	description:
-		'Blog and resume driven by Payload and a typed Elysia content API.',
-	title: 'Zick.me · Blog & Resume',
+		'Personal blog and portfolio website powered by Next.js, React 19, Bun, and Drizzle.',
+	title: 'Zick.me · Blog & Portfolio',
+	icons: {
+		icon: [
+			{ url: '/icon.svg', type: 'image/svg+xml' },
+			{ url: '/favicon.ico', sizes: 'any' },
+		],
+		apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+	},
 }
 
 export const viewport = {

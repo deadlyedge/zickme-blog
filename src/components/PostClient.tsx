@@ -268,10 +268,10 @@ export function PostClient({ initialPost }: PostClientProps) {
 			ref={scrollContainerRef}
 			className="pt-16 overflow-y-auto h-svh relative"
 		>
-			{/* 顶部阅读进度指示器 (Reading Progress Bar) */}
-			<div className="fixed top-0 left-0 right-0 h-1 bg-border/40 z-50 pointer-events-none">
+			{/* 顶部阅读进度指示器 (Reading Progress Bar) - 轻量沉浸式 2px 渐变设计 */}
+			<div className="fixed top-16 left-0 right-0 h-[2.5px] bg-transparent z-40 pointer-events-none overflow-hidden">
 				<div
-					className="h-full bg-primary transition-all duration-150 ease-out shadow-xs"
+					className="h-full bg-linear-to-r from-primary/80 via-primary to-accent transition-[width] duration-150 ease-out shadow-[0_0_8px_rgba(var(--primary),0.6)]"
 					style={{ width: `${readingProgress}%` }}
 				/>
 			</div>
@@ -301,12 +301,19 @@ export function PostClient({ initialPost }: PostClientProps) {
 									{post.tags?.map((tag) => (
 										<Badge
 											key={tag.slug}
-											className="bg-secondary text-secondary-foreground"
+											variant="outline"
+											className="px-2.5 py-0.5 rounded-full text-xs font-medium border border-border/60 bg-muted/30 backdrop-blur-xs transition-colors hover:bg-muted/60"
 											style={{
-												backgroundColor: tag.color || undefined,
-												color: tag.color ? '#fff' : undefined,
+												borderColor: tag.color ? `${tag.color}40` : undefined,
+												color: tag.color || undefined,
 											}}
 										>
+											{tag.color && (
+												<span
+													className="size-1.5 rounded-full mr-1.5 shrink-0"
+													style={{ backgroundColor: tag.color }}
+												/>
+											)}
 											{tag.name}
 										</Badge>
 									))}

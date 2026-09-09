@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 358 358" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <title>Zick.me Logo</title>
+    <g transform="matrix(1,0,0,1,-16.755385,0)">
+        <g id="画板2" transform="matrix(0.916551,0,0,0.916551,16.755385,533.416654)">
+            <rect x="0" y="-581.983" width="389.619" height="389.619" style="fill:none;"/>
+            <clipPath id="_clip1">
+                <rect x="0" y="-581.983" width="389.619" height="389.619"/>
+            </clipPath>
+            <g clip-path="url(#_clip1)">
+                <g transform="matrix(1.091047,0,0,1.091047,-1142.059499,-1278.686047)">
+                    <g transform="matrix(1,0,0,1,574.451557,21.087065)">
+                        <rect x="472.379" y="639.049" width="335.616" height="335.616" style="fill:rgb(186,186,186);"/>
+                    </g>
+                    <g transform="matrix(1,0,0,1,595.538622,-0)">
+                        <rect x="472.379" y="639.049" width="335.616" height="335.616" style="fill:none;"/>
+                        <clipPath id="_clip2">
+                            <rect x="472.379" y="639.049" width="335.616" height="335.616"/>
+                        </clipPath>
+                        <g clip-path="url(#_clip2)">
+                            <g transform="matrix(0.466575,0.466575,-1.244803,1.244803,2106.149377,-1116.85606)">
+                                <rect x="424.804" y="1186.792" width="131.479" height="338.963" style="fill:rgb(217,0,60);"/>
+                            </g>
+                        </g>
+                    </g>
+                    <g transform="matrix(1,0,0,1,595.538622,-0)">
+                        <path d="M472.379,806.857L640.187,639.049L472.379,639.049L472.379,806.857Z" style="fill:rgb(217,0,60);"/>
+                    </g>
+                    <g transform="matrix(-1,-0,0,-1,1875.912405,1613.713997)">
+                        <path d="M472.379,806.857L640.187,639.049L472.379,639.049L472.379,806.857Z" style="fill:rgb(217,0,60);"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

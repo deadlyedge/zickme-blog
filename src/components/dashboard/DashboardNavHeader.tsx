@@ -6,13 +6,13 @@ import {
 	HardDriveUpload,
 	LogOut,
 	Palette,
-	Shield,
 	Users,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import type React from 'react'
 import { toast } from 'sonner'
+import { BrandLogo } from '@/components/BrandLogo'
 import { EditProfile } from '@/components/dashboard/EditProfile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -75,14 +75,11 @@ export const DashboardNavHeader: React.FC = () => {
 				{/* 顶部主条 */}
 				<div className="flex items-center justify-between h-16 gap-4">
 					<div className="flex items-center gap-3">
-						<Link
-							href="/dashboard"
-							className="flex items-center gap-2 font-black text-lg tracking-tight group"
-						>
-							<span className="bg-primary text-primary-foreground p-1.5 rounded-lg shadow-xs group-hover:scale-105 transition-transform">
-								<Shield className="size-4" />
+						<Link href="/dashboard" className="flex items-center gap-2.5 group">
+							<BrandLogo size={28} showText={false} />
+							<span className="font-black text-lg tracking-tight group-hover:text-primary transition-colors hidden sm:inline">
+								管理控制台
 							</span>
-							<span className="hidden sm:inline">管理控制台</span>
 						</Link>
 						<Badge
 							variant="outline"
@@ -109,7 +106,7 @@ export const DashboardNavHeader: React.FC = () => {
 										{session.user.name?.slice(0, 2).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
-								<span className="text-xs font-semibold max-w-[80px] truncate hidden md:inline">
+								<span className="text-xs font-semibold max-w-20 truncate hidden md:inline">
 									{session.user.name}
 								</span>
 							</div>

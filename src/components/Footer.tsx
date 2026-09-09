@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type React from 'react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { getSocialIcon } from '@/components/ui/icons/social'
 import type { SiteProfile, SocialLink } from '@/types'
@@ -130,8 +131,17 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 										</div>
 									)}
 							</div>
-							<div className="flex items-center pb-24 gap-4 border-t py-4 text-muted-foreground text-sm sm:flex-row">
-								<p>&copy; 2025 xdream, All rights reserved.</p>
+							<div className="flex flex-col sm:flex-row items-center justify-between pb-24 gap-4 border-t py-6 text-muted-foreground text-sm">
+								<Link href="/" className="group inline-flex items-center">
+									<BrandLogo
+										size={24}
+										textClassName="text-sm font-bold text-muted-foreground group-hover:text-foreground"
+									/>
+								</Link>
+								<p>
+									&copy; {new Date().getFullYear()} Zick.me, All rights
+									reserved.
+								</p>
 							</div>
 						</AnimatedContainer>
 					</div>

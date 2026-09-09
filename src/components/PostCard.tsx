@@ -48,15 +48,19 @@ export const PostCard = React.memo(({ post }: PostCardProps) => {
 						<span className="text-xl font-bold text-gray-50 drop-shadow-[0px_0px_13px_rgba(255,243,184,0.8)]">
 							{post.title}
 						</span>
-						<div className="mt-2 flex flex-wrap gap-1">
+						<div className="mt-2 flex flex-wrap gap-1.5">
 							{post.tags?.slice(0, 3).map((t) => (
 								<Badge
 									key={t.slug}
-									style={{
-										backgroundColor: t.color || undefined,
-										color: t.color ? '#fff' : undefined,
-									}}
+									variant="outline"
+									className="px-2 py-0.5 rounded-full text-[11px] font-medium border border-white/30 bg-black/40 text-white backdrop-blur-md shadow-xs"
 								>
+									{t.color && (
+										<span
+											className="size-1.5 rounded-full mr-1 shrink-0"
+											style={{ backgroundColor: t.color }}
+										/>
+									)}
 									{t.name}
 								</Badge>
 							))}
