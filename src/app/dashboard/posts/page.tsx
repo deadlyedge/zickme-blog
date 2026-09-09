@@ -9,7 +9,9 @@ import {
 	Eye,
 	FileText,
 	Filter,
+	ImageIcon,
 	Loader2,
+	Pencil,
 	RefreshCw,
 	RotateCcw,
 	Search,
@@ -55,7 +57,9 @@ import {
 	getDashboardPosts,
 	getDashboardTags,
 	restorePost,
+	updatePostPosterAction,
 	updatePostStatus,
+	uploadPostPosterAction,
 } from '@/lib/actions/posts-admin'
 import type { PostWithTags, StatusType, Tag } from '@/types'
 
@@ -95,6 +99,11 @@ export default function DashboardPostsPage() {
 	const [deleteTargetPost, setDeleteTargetPost] = useState<PostWithTags | null>(
 		null,
 	)
+	const [posterTargetPost, setPosterTargetPost] = useState<PostWithTags | null>(
+		null,
+	)
+	const [posterUrl, setPosterUrl] = useState('')
+	const [posterFile, setPosterFile] = useState<File | null>(null)
 
 	const loadData = useCallback(async () => {
 		try {
@@ -177,6 +186,59 @@ export default function DashboardPostsPage() {
 				loadData()
 			} else {
 				toast.error(res.error || '删除失败')
+			}
+		})
+	}
+
+	const openPosterEditor = (post: PostWithTags) => {
+		setPosterTargetPost(post)
+		setPosterUrl(post.poster || '')
+		setPosterFile(null)
+	}
+
+	const handlePosterSave = async () => {
+		if (!posterTargetPost) return
+		startTransition(async () => {
+			const result = posterFile
+				? await (() => {
+						const formData = new FormData()
+						formData.append('file', posterFile)
+						return uploadPostPosterAction(posterTargetPost.id, formData)
+					})()
+				: await updatePostPosterAction(
+						posterTargetPost.id,
+						posterUrl.trim() || null,
+					)
+			if (result.success) {
+				toast.success('文章封面已更新')
+				setPosts((prev) =>
+					prev.map((post) =>
+						post.id === posterTargetPost.id
+							? { ...post, poster: result.poster ?? null }
+							: post,
+					),
+				)
+				setPosterTargetPost(null)
+			} else {
+				toast.error(result.error || '封面更新失败')
+			}
+		})
+	}
+
+	const handlePosterRemove = async () => {
+		if (!posterTargetPost) return
+		startTransition(async () => {
+			const result = await updatePostPosterAction(posterTargetPost.id, null)
+			if (result.success) {
+				toast.success('文章封面已移除')
+				setPosts((prev) =>
+					prev.map((post) =>
+						post.id === posterTargetPost.id ? { ...post, poster: null } : post,
+					),
+				)
+				setPosterTargetPost(null)
+			} else {
+				toast.error(result.error || '移除封面失败')
 			}
 		})
 	}
@@ -511,6 +573,14 @@ export default function DashboardPostsPage() {
 															>
 																<Eye className="h-4 w-4" />
 															</Button>
+															<Button
+																variant="ghost"
+																size="sm"
+																title="编辑封面"
+																onClick={() => openPosterEditor(post)}
+															>
+																<ImageIcon className="h-4 w-4" />
+															</Button>
 
 															{/* 查看详情页 */}
 															<Button
@@ -770,6 +840,84 @@ export default function DashboardPostsPage() {
 								<ExternalLink className="h-4 w-4 mr-2" />
 								前往文章详情页
 							</Link>
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* 永久删除警告确认弹窗 */}
+			<Dialog
+				open={Boolean(posterTargetPost)}
+				onOpenChange={(open) => !open && setPosterTargetPost(null)}
+			>
+				<DialogContent className="max-w-lg">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Pencil className="h-4 w-4 text-primary" />
+							调整文章封面
+						</DialogTitle>
+						<DialogDescription>
+							{posterTargetPost?.title} · 推荐使用 16:9 图片
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4">
+						{(posterFile || posterUrl) && (
+							<div className="relative aspect-video overflow-hidden rounded-md border bg-muted">
+								{posterFile ? (
+									<Image
+										src={URL.createObjectURL(posterFile)}
+										alt="封面预览"
+										fill
+										unoptimized
+										className="object-cover"
+									/>
+								) : (
+									<Image
+										src={posterUrl}
+										alt="封面预览"
+										fill
+										unoptimized
+										className="object-cover"
+									/>
+								)}
+							</div>
+						)}
+						<Input
+							value={posterUrl}
+							onChange={(event) => {
+								setPosterUrl(event.target.value)
+								setPosterFile(null)
+							}}
+							placeholder="https://res.cloudinary.com/..."
+							disabled={Boolean(posterFile)}
+						/>
+						<div className="flex items-center gap-2">
+							<Input
+								type="file"
+								accept="image/*"
+								onChange={(event) => {
+									setPosterFile(event.target.files?.[0] || null)
+									setPosterUrl('')
+								}}
+							/>
+						</div>
+						<p className="text-xs text-muted-foreground">
+							上传图片会自动经过 Cloudinary WebP 压缩；留空并保存可移除封面。
+						</p>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setPosterTargetPost(null)}>
+							取消
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handlePosterRemove}
+							disabled={isPending}
+						>
+							移除封面
+						</Button>
+						<Button onClick={handlePosterSave} disabled={isPending}>
+							{isPending ? '保存中...' : '保存封面'}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

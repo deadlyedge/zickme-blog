@@ -6,6 +6,7 @@ import {
 	CheckCircle2,
 	Clock,
 	Database,
+	Download,
 	FileCode,
 	FileText,
 	HardDriveUpload,
@@ -37,6 +38,8 @@ import { Switch } from '@/components/ui/switch'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+	exportPostsZipAction,
+	getRemotePostDiffAction,
 	getSyncHistoryLogs,
 	importUploadedContent,
 	triggerManualSync,
@@ -91,6 +94,10 @@ export default function DashboardSyncPage() {
 	const [historyLogs, setHistoryLogs] = useState<SyncLog[]>([])
 	const [loadingHistory, setLoadingHistory] = useState(false)
 	const [selectedHistory, setSelectedHistory] = useState<SyncLog | null>(null)
+	const [diffItems, setDiffItems] = useState<
+		Array<{ slug: string; status: string }>
+	>([])
+	const [loadingDiff, setLoadingDiff] = useState(false)
 
 	// 文件上传状态
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -131,6 +138,43 @@ export default function DashboardSyncPage() {
 				toast.error('同步过程中发生错误，请查看日志详情')
 			}
 		})
+	}
+
+	const handleExportPosts = async () => {
+		startTransition(async () => {
+			const result = await exportPostsZipAction()
+			if (!result.success || !result.base64) {
+				toast.error(result.error || '导出文章失败')
+				return
+			}
+			const bytes = Uint8Array.from(atob(result.base64), (char) =>
+				char.charCodeAt(0),
+			)
+			const url = URL.createObjectURL(
+				new Blob([bytes], { type: 'application/zip' }),
+			)
+			const anchor = document.createElement('a')
+			anchor.href = url
+			anchor.download = result.fileName
+			anchor.click()
+			URL.revokeObjectURL(url)
+			toast.success('数据库文章 ZIP 已下载')
+		})
+	}
+
+	const handleDiffCheck = async () => {
+		setLoadingDiff(true)
+		try {
+			const result = await getRemotePostDiffAction()
+			if (result.success) {
+				setDiffItems(result.posts)
+				toast.success(`差异扫描完成，共 ${result.posts.length} 项`)
+			} else {
+				toast.error(result.error || '差异扫描失败')
+			}
+		} finally {
+			setLoadingDiff(false)
+		}
 	}
 
 	// 触发文件上传与导入
@@ -238,6 +282,64 @@ export default function DashboardSyncPage() {
 
 				{/* 选项卡 1：本地扫描同步 */}
 				<TabsContent value="sync" className="space-y-6">
+					<Card className="shadow-2xs">
+						<CardHeader>
+							<CardTitle className="text-base">双向内容工具</CardTitle>
+							<CardDescription>
+								检查本地与数据库文章差异，或下载数据库文章备份。网页端不会直接覆盖本地工作区。
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="flex flex-wrap gap-2">
+								<Button
+									variant="outline"
+									onClick={handleDiffCheck}
+									disabled={loadingDiff || isPending}
+								>
+									{loadingDiff ? (
+										<Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+									) : (
+										<RefreshCw className="h-4 w-4 mr-1.5" />
+									)}
+									检查双向差异
+								</Button>
+								<Button
+									variant="outline"
+									onClick={handleExportPosts}
+									disabled={isPending}
+								>
+									<Download className="h-4 w-4 mr-1.5" />
+									导出数据库文章 ZIP
+								</Button>
+							</div>
+							{diffItems.length > 0 && (
+								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+									{(
+										[
+											'LOCAL_ONLY',
+											'REMOTE_ONLY',
+											'CONFLICT',
+											'IN_SYNC',
+										] as const
+									).map((status) => (
+										<div
+											key={status}
+											className="rounded-md border bg-muted/20 p-3"
+										>
+											<div className="font-semibold">{status}</div>
+											<div className="text-muted-foreground">
+												{
+													diffItems.filter((item) => item.status === status)
+														.length
+												}{' '}
+												项
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</CardContent>
+					</Card>
 					<Card className="shadow-2xs">
 						<CardHeader>
 							<CardTitle className="text-base">扫描本地文件并入库</CardTitle>

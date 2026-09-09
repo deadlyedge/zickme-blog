@@ -1,14 +1,24 @@
 'use server'
 
+import * as path from 'node:path'
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import JSZip from 'jszip'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { z } from 'zod'
 import { db } from '@/db'
 import { posts, syncLogs, tags } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { diffContent, scanLocalContent } from '@/lib/content-diff'
+import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
 import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
+
+const postIdSchema = z.string().min(1).max(128)
+const posterSchema = z
+	.string()
+	.url()
+	.refine((value) => /^https?:\/\//i.test(value), '只允许 HTTP(S) 图片地址')
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -89,6 +99,112 @@ export async function getDashboardPosts(options?: {
 	} catch (error) {
 		console.error('Failed to get dashboard posts:', error)
 		throw new Error(error instanceof Error ? error.message : '获取文章列表失败')
+	}
+}
+
+export async function updatePostPosterAction(
+	postId: string,
+	poster: string | null,
+) {
+	try {
+		await requireAdminSession()
+		const parsedId = postIdSchema.safeParse(postId)
+		if (!parsedId.success) return { success: false, error: '文章 ID 无效' }
+		if (poster !== null && !posterSchema.safeParse(poster).success) {
+			return { success: false, error: '封面必须是有效的 HTTP(S) 图片地址' }
+		}
+		await db
+			.update(posts)
+			.set({ poster, updatedAt: new Date() })
+			.where(eq(posts.id, postId))
+		revalidatePath('/dashboard/posts')
+		revalidatePath('/posts')
+		revalidatePath('/')
+		return { success: true, poster }
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '更新封面失败',
+		}
+	}
+}
+
+export async function uploadPostPosterAction(
+	postId: string,
+	formData: FormData,
+) {
+	try {
+		await requireAdminSession()
+		const file = formData.get('file')
+		if (!(file instanceof File) || file.size === 0)
+			return { success: false, error: '未选择图片' }
+		if (!file.type.startsWith('image/'))
+			return { success: false, error: '只支持图片文件' }
+		if (file.size > 10 * 1024 * 1024)
+			return { success: false, error: '图片不能超过 10MB' }
+		const service = new ContentSyncService()
+		const url = await service.uploadImageBuffer(
+			Buffer.from(await file.arrayBuffer()),
+			`${postId}-${file.name}`,
+		)
+		if (!url) return { success: false, error: 'Cloudinary 未配置或上传失败' }
+		return await updatePostPosterAction(postId, url)
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '上传封面失败',
+		}
+	}
+}
+
+export async function exportPostsZipAction() {
+	try {
+		await requireAdminSession()
+		const rows = await db.query.posts.findMany({
+			where: isNull(posts.archivedAt),
+			with: { postsToTags: { with: { tag: true } } },
+		})
+		const zip = new JSZip()
+		for (const row of rows) {
+			const post = {
+				...row,
+				tags: row.postsToTags.map((item) => item.tag),
+			} as PostWithTags
+			zip.file(safeMarkdownFileName(post.slug), postToMarkdown(post))
+		}
+		return {
+			success: true,
+			fileName: `posts-backup-${new Date().toISOString().slice(0, 10)}.zip`,
+			base64: await zip.generateAsync({ type: 'base64' }),
+		}
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '导出文章失败',
+		}
+	}
+}
+
+export async function getRemotePostDiffAction() {
+	try {
+		await requireAdminSession()
+		const local = await scanLocalContent(
+			path.join(process.cwd(), 'content/posts'),
+		)
+		const rows = await db
+			.select({ slug: posts.slug, updatedAt: posts.updatedAt })
+			.from(posts)
+			.where(isNull(posts.archivedAt))
+		return {
+			success: true,
+			posts: diffContent(local, rows).map((item) => item),
+		}
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '获取远端文章失败',
+			posts: [],
+		}
 	}
 }
 

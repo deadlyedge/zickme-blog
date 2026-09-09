@@ -264,6 +264,29 @@ export class ContentSyncService {
 		}
 	}
 
+	public async uploadImageBuffer(
+		buffer: Buffer,
+		publicId: string,
+	): Promise<string | null> {
+		if (!this.cloudinaryConfigured) {
+			this.addLog('media', 'error', '封面上传失败：Cloudinary 未配置')
+			return null
+		}
+		const optimized = await sharp(buffer)
+			.resize({
+				width: MAX_IMAGE_WIDTH,
+				height: MAX_IMAGE_HEIGHT,
+				fit: 'inside',
+				withoutEnlargement: true,
+			})
+			.webp({ quality: 85, effort: 4 })
+			.toBuffer()
+		return this.uploadBufferToCloudinary(
+			optimized,
+			publicId.replace(/[^a-zA-Z0-9_-]/g, '-'),
+		)
+	}
+
 	private async parseMarkdown(
 		rawContent: string,
 		relativeFilePath: string,

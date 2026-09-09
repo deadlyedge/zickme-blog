@@ -17,6 +17,7 @@
 		"db:studio": "drizzle-kit studio",
 		"db:reset": "bun run scripts/reset-db.ts",
 		"sync": "bun run scripts/sync-content.ts",
+		"sync:pull": "bun run scripts/sync-pull.ts",
 		"reset-admin-password": "bun run scripts/reset-admin-password.ts"
 	},
 	"dependencies": {
