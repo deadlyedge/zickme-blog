@@ -198,14 +198,14 @@ export function PostClient({ initialPost }: PostClientProps) {
 			if (language) {
 				const langBadge = document.createElement('span')
 				langBadge.className =
-					'text-[10px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-slate-300 select-none'
+					'text-[10px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-white border border-slate-300 text-slate-600 select-none'
 				langBadge.textContent = language
 				toolbar.appendChild(langBadge)
 			}
 
 			const copyBtn = document.createElement('button')
 			copyBtn.className =
-				'p-1.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/50 transition-all text-xs flex items-center gap-1 shadow-sm'
+				'p-1.5 rounded-md bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-300 transition-all text-xs flex items-center gap-1 shadow-sm'
 			copyBtn.setAttribute('title', '复制代码')
 			copyBtn.innerHTML = `
 				<svg class="size-3.5 copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
