@@ -99,6 +99,7 @@ export function AboutHero({ profile, aboutConfig }: AboutHeroProps) {
 								src={profile.avatar}
 								alt={profile.name}
 								fill
+								sizes="(max-width: 639px) 128px, (max-width: 767px) 176px, 208px"
 								className="object-cover rounded-xl transition-transform duration-500 group-hover:scale-105"
 								priority
 							/>
