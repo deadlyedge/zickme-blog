@@ -69,20 +69,44 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 					ref={textareaRef}
 					value={content}
 					onChange={(e) => setContent(e.target.value)}
+					onKeyDown={(event) => {
+						if (
+							(event.ctrlKey || event.metaKey) &&
+							event.key === 'Enter' &&
+							content.trim() &&
+							!isPending
+						) {
+							event.preventDefault()
+							event.currentTarget.form?.requestSubmit()
+						}
+					}}
 					placeholder={parentId ? 'Write a reply...' : 'Write a comment...'}
+					aria-describedby="comment-shortcut-hint"
 					required
 				/>
 				<InputGroupAddon align="block-end">
-					{error && <p className="text-red-500 text-xs">{error}</p>}
-					<InputGroupButton
-						type="submit"
-						disabled={isPending || !content.trim()}
-						variant={parentId ? 'secondary' : 'default'}
-						className={parentId ? 'h-8 text-xs' : ''}
-					>
-						<ArrowUpIcon />
-						{isPending ? 'Posting...' : parentId ? 'Reply' : 'Post Comment'}
-					</InputGroupButton>
+					<div className="flex flex-1 items-center justify-between gap-4">
+						{error ? (
+							<p className="text-red-500 text-xs">{error}</p>
+						) : (
+							<p
+								id="comment-shortcut-hint"
+								className="text-muted-foreground text-xs"
+							>
+								<kbd className=" border p-1 rounded-md">Ctrl/⌘ + Enter</kbd>{' '}
+								to submit
+							</p>
+						)}
+						<InputGroupButton
+							type="submit"
+							disabled={isPending || !content.trim()}
+							variant={parentId ? 'secondary' : 'default'}
+							className={parentId ? 'h-8 text-xs' : ''}
+						>
+							<ArrowUpIcon />
+							{isPending ? 'Posting...' : parentId ? 'Reply' : 'Post Comment'}
+						</InputGroupButton>
+					</div>
 				</InputGroupAddon>
 			</InputGroup>
 

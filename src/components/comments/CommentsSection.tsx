@@ -3,7 +3,12 @@
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { signOut, useSession } from '@/lib/auth-client'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useSession } from '@/lib/auth-client'
 import { useComments } from '@/lib/hooks/useContent'
 import { useAppStore } from '@/lib/store'
 import { CommentForm } from './CommentForm'
@@ -25,17 +30,6 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 
 	const handleRegisterClick = () => {
 		openAuthModal('register')
-	}
-
-	const handleLogout = async () => {
-		try {
-			const result = await signOut()
-			if (result.error) {
-				console.error('Logout error:', result.error.message || 'Logout failed')
-			}
-		} catch (error) {
-			console.error('Logout error:', error)
-		}
 	}
 
 	if (isLoading) {
@@ -70,30 +64,30 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 				{/* 认证状态显示 */}
 				<div className="flex items-center gap-3">
 					{user ? (
-						<div className="flex items-center gap-3">
-							<Link href="/user" className="flex items-center gap-2">
-								<Avatar>
-									<AvatarImage
-										src={user?.image || 'https://github.com/shadcn.png'}
-										alt={user?.name || user?.email || '用户'}
-									/>
-									<AvatarFallback>
-										{user.name?.slice(0, 2).toUpperCase() || 'AN'}
-									</AvatarFallback>
-								</Avatar>
-								<span className="text-sm font-medium">
-									{user.name || user.email || '用户'}
-								</span>
-							</Link>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleLogout}
-								className="text-xs h-7 px-2"
-							>
-								登出
-							</Button>
-						</div>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Link
+									href="/user"
+									className="flex items-center gap-2"
+									// aria-label="进入个人设置与安全"
+									// title="进入个人设置与安全"
+								>
+									<Avatar>
+										<AvatarImage
+											src={user?.image || 'https://github.com/shadcn.png'}
+											alt={user?.name || user?.email || '用户'}
+										/>
+										<AvatarFallback>
+											{user.name?.slice(0, 2).toUpperCase() || 'AN'}
+										</AvatarFallback>
+									</Avatar>
+									<span className="text-sm font-medium">
+										{user.name || user.email || '用户'}
+									</span>
+								</Link>
+							</TooltipTrigger>
+							<TooltipContent>进入个人设置与安全</TooltipContent>
+						</Tooltip>
 					) : (
 						<div className="flex items-center gap-2">
 							<Button
