@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
@@ -394,7 +395,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 							>
 								<ReactMarkdown
 									remarkPlugins={[remarkGfm, remarkBreaks]}
-									rehypePlugins={[rehypeSanitize]}
+									rehypePlugins={[rehypeSanitize, rehypeHighlight]}
 									components={markdownComponents}
 								>
 									{markdownContent}
