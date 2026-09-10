@@ -13,11 +13,12 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import type React from 'react'
 import { toast } from 'sonner'
+
 import { BrandLogo } from '@/components/BrandLogo'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserDropdownMenu } from '@/components/UserDropdownMenu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { signOut, useSession } from '@/lib/auth-client'
+import { signOut } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -56,8 +57,6 @@ const NAV_ITEMS = [
 export const DashboardNavHeader: React.FC = () => {
 	const pathname = usePathname()
 	const router = useRouter()
-	const { data: session } = useSession()
-
 	const handleSignOut = async () => {
 		try {
 			await signOut()
@@ -102,22 +101,7 @@ export const DashboardNavHeader: React.FC = () => {
 
 					{/* 快捷操作与用户信息 */}
 					<div className="flex items-center gap-2 sm:gap-3">
-						{session?.user && (
-							<div className="flex items-center gap-2 pl-1">
-								<Avatar className="size-7 ring-1 ring-border">
-									<AvatarImage
-										src={session.user.image || ''}
-										alt={session.user.name}
-									/>
-									<AvatarFallback className="text-[10px] font-bold">
-										{session.user.name?.slice(0, 2).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-								<span className="text-xs font-semibold max-w-20 truncate hidden md:inline">
-									{session.user.name}
-								</span>
-							</div>
-						)}
+						<UserDropdownMenu onSignOut={handleSignOut} />
 
 						<Button
 							variant="ghost"

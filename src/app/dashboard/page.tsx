@@ -339,7 +339,7 @@ export default async function DashboardPage() {
 											<Link
 												href={`/posts/${comment.postSlug}`}
 												target="_blank"
-												className="hover:underline text-primary text-xs font-medium line-clamp-1 max-w-[200px]"
+												className="hover:underline text-primary text-xs font-medium line-clamp-1 max-w-50"
 											>
 												{comment.postTitle}
 											</Link>
