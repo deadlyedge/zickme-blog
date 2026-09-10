@@ -9,6 +9,7 @@ import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { fetchProfile } from '@/lib/content-providers'
 import { generateAvatarUri } from '@/lib/generate-avatar'
+import { createLogger } from '@/lib/logger'
 import type {
 	AboutPageConfig,
 	LandingPageConfig,
@@ -18,6 +19,8 @@ import type {
 	ThemeConfig,
 } from '@/types'
 import { formatZodError } from './types'
+
+const logger = createLogger('actions/profile')
 
 const updateProfileSchema = z.object({
 	username: z
@@ -100,7 +103,7 @@ export async function updateProfile(data: UpdateProfileData) {
 
 		return { success: true }
 	} catch (error) {
-		console.error('Profile update error:', error)
+		logger.error('Profile update error', error)
 		throw new Error(error instanceof Error ? error.message : '更新失败')
 	}
 }
@@ -130,7 +133,7 @@ export async function updateAvatar() {
 
 		return { success: true, avatarUrl: updatedUser?.image ?? bearAvatar }
 	} catch (error) {
-		console.error('Avatar update error:', error)
+		logger.error('Avatar update error', error)
 		throw new Error(error instanceof Error ? error.message : '更新失败')
 	}
 }
@@ -214,7 +217,7 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 		revalidatePath('/dashboard/settings')
 		return { success: true }
 	} catch (error) {
-		console.error('Site profile update error:', error)
+		logger.error('Site profile update error', error)
 		throw new Error(error instanceof Error ? error.message : '更新失败')
 	}
 }
@@ -234,7 +237,7 @@ export async function getSiteProfile() {
 
 		return { profile }
 	} catch (error) {
-		console.error('Get site profile error:', error)
+		logger.error('Get site profile error', error)
 		throw new Error(error instanceof Error ? error.message : '获取失败')
 	}
 }

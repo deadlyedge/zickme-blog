@@ -6,6 +6,7 @@ import matter from 'gray-matter'
 import sharp from 'sharp'
 import { db } from '@/db'
 import { posts, postsToTags, syncLogs, tags } from '@/db/schema'
+import { createLogger } from '@/lib/logger'
 import { normalizePostMetadata } from '@/lib/post-metadata'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
 import type {
@@ -15,6 +16,8 @@ import type {
 	SyncResult,
 	SyncStatus,
 } from '@/types'
+
+const logger = createLogger('lib/sync-service')
 
 const MAX_IMAGE_WIDTH = 3840
 const MAX_IMAGE_HEIGHT = 2160
@@ -767,7 +770,7 @@ export class ContentSyncService {
 					logs: this.logs,
 				})
 			} catch (err) {
-				console.error('Failed to save sync log to database:', err)
+				logger.error('Failed to save sync log to database', err)
 			}
 		}
 

@@ -7,9 +7,12 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
 import type { CommentWithReplies } from '@/types'
 import { formatZodError } from './types'
+
+const logger = createLogger('actions/comments')
 
 const createCommentSchema = z.object({
 	content: z
@@ -80,7 +83,7 @@ export async function createComment(data: CreateCommentData) {
 		revalidatePath(parsed.data.path)
 		return { success: true, comment: newComment }
 	} catch (error) {
-		console.error('Error creating comment:', error)
+		logger.error('Error creating comment', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '发表评论失败',
@@ -165,7 +168,7 @@ export async function getComments(
 
 		return rootComments
 	} catch (error) {
-		console.error('Error fetching comments:', error)
+		logger.error('Error fetching comments', error)
 		return []
 	}
 }

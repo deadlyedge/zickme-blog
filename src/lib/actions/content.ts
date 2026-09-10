@@ -11,10 +11,11 @@ import {
 	fetchTags,
 	fetchTopHottestPosts,
 } from '@/lib/content-providers'
+import { createLogger } from '@/lib/logger'
 import type { PostWithTags, Tag } from '@/types'
 import { getSiteProfile } from './profile'
 
-const isDevelopment = process.env.NODE_ENV === 'development'
+const logger = createLogger('actions/content')
 
 const limitSchema = z.number().int().min(1).max(200).default(100)
 const slugSchema = z.string().trim().min(1).max(200)
@@ -23,20 +24,20 @@ const pinnedIdsSchema = z.array(z.string().min(1).max(128))
 export async function fetchPostsAction(limit = 100): Promise<PostWithTags[]> {
 	try {
 		const safeLimit = limitSchema.safeParse(limit).data ?? 100
-		if (isDevelopment) console.log('[Drizzle fetch]: posts')
+		logger.debug('[Drizzle fetch]: posts')
 		return await fetchPosts(safeLimit)
 	} catch (error) {
-		console.error('Error fetching posts:', error)
+		logger.error('Error fetching posts', error)
 		throw new Error('Failed to fetch posts')
 	}
 }
 
 export async function fetchTagsAction(): Promise<Tag[]> {
 	try {
-		if (isDevelopment) console.log('[Drizzle fetch]: tags')
+		logger.debug('[Drizzle fetch]: tags')
 		return await fetchTags()
 	} catch (error) {
-		console.error('Error fetching tags:', error)
+		logger.error('Error fetching tags', error)
 		throw new Error('Failed to fetch tags')
 	}
 }
@@ -47,10 +48,10 @@ export async function fetchPostBySlugAction(
 	try {
 		const parsedSlug = slugSchema.safeParse(slug)
 		if (!parsedSlug.success) return null
-		if (isDevelopment) console.log(`[Drizzle fetch]: post "${parsedSlug.data}"`)
+		logger.debug(`[Drizzle fetch]: post "${parsedSlug.data}"`)
 		return await fetchPostBySlug(parsedSlug.data)
 	} catch (error) {
-		console.error(`Error fetching post ${slug}:`, error)
+		logger.error(`Error fetching post ${slug}`, error)
 		throw new Error(`Failed to fetch post ${slug}`)
 	}
 }
@@ -61,10 +62,10 @@ export async function fetchTopHottestPostsAction(
 	try {
 		const safeLimit =
 			z.number().int().min(1).max(20).default(5).safeParse(limit).data ?? 5
-		if (isDevelopment) console.log('[Drizzle fetch]: hottest posts')
+		logger.debug('[Drizzle fetch]: hottest posts')
 		return await fetchTopHottestPosts(safeLimit)
 	} catch (error) {
-		console.error('Error fetching hottest posts:', error)
+		logger.error('Error fetching hottest posts', error)
 		throw new Error('Failed to fetch hottest posts')
 	}
 }
@@ -75,10 +76,10 @@ export async function fetchPinnedPostsAction(
 	try {
 		const parsedIds = pinnedIdsSchema.safeParse(pinnedPostIds)
 		const safeIds = parsedIds.success ? parsedIds.data : []
-		if (isDevelopment) console.log('[Drizzle fetch]: pinned posts')
+		logger.debug('[Drizzle fetch]: pinned posts')
 		return await fetchPinnedPosts(safeIds)
 	} catch (error) {
-		console.error('Error fetching pinned posts:', error)
+		logger.error('Error fetching pinned posts', error)
 		throw new Error('Failed to fetch pinned posts')
 	}
 }
@@ -89,17 +90,17 @@ export async function fetchSiteProfile() {
 
 export async function fetchHomeContent() {
 	try {
-		if (isDevelopment) console.log('[Drizzle fetch]: home content')
+		logger.debug('[Drizzle fetch]: home content')
 		return await fetchHomeContentProvider()
 	} catch (error) {
-		console.error('Error fetching home content:', error)
+		logger.error('Error fetching home content', error)
 		throw new Error('Failed to fetch home content')
 	}
 }
 
 export async function fetchAllContentForSearchAction() {
 	try {
-		if (isDevelopment) console.log('[Drizzle fetch]: all content for search')
+		logger.debug('[Drizzle fetch]: all content for search')
 		const [allPosts, allTags] = await Promise.all([
 			fetchAllPostsForSearch(),
 			fetchAllTagsForSearch(),
@@ -110,7 +111,7 @@ export async function fetchAllContentForSearchAction() {
 			tags: allTags,
 		}
 	} catch (error) {
-		console.error('Error fetching content for search:', error)
+		logger.error('Error fetching content for search', error)
 		throw new Error('Failed to fetch content for search')
 	}
 }

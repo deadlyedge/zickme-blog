@@ -8,7 +8,10 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { createLogger } from '@/lib/logger'
 import { formatZodError } from './types'
+
+const logger = createLogger('actions/dashboard')
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -99,7 +102,7 @@ export async function resetUserPasswordByAdmin(data: {
 		revalidatePath('/dashboard/users')
 		return { success: true }
 	} catch (error) {
-		console.error('Reset user password by admin error:', error)
+		logger.error('Reset user password by admin error', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '重置密码失败',
@@ -233,7 +236,7 @@ export async function getDashboardStats() {
 			})),
 		}
 	} catch (error) {
-		console.error('Get dashboard stats error:', error)
+		logger.error('Get dashboard stats error', error)
 		throw error
 	}
 }
@@ -287,7 +290,7 @@ export async function getUsersList() {
 			})),
 		}))
 	} catch (error) {
-		console.error('Get users list error:', error)
+		logger.error('Get users list error', error)
 		throw error
 	}
 }
@@ -312,7 +315,7 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 		revalidatePath('/dashboard/users')
 		return { success: true }
 	} catch (error) {
-		console.error('Toggle user ban error:', error)
+		logger.error('Toggle user ban error', error)
 		throw error
 	}
 }
@@ -340,7 +343,7 @@ export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
 		revalidatePath('/dashboard')
 		return { success: true }
 	} catch (error) {
-		console.error('Toggle comment spam error:', error)
+		logger.error('Toggle comment spam error', error)
 		throw error
 	}
 }
@@ -363,7 +366,7 @@ export async function deleteComment(commentId: string) {
 		revalidatePath('/dashboard')
 		return { success: true }
 	} catch (error) {
-		console.error('Delete comment error:', error)
+		logger.error('Delete comment error', error)
 		throw error
 	}
 }

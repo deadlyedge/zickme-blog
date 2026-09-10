@@ -9,6 +9,9 @@ import { comments, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarAvatarUrl } from '@/lib/get-avatar'
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('actions/user-portal')
 
 const updateAvatarPresetSchema = z.enum(['dicebear', 'gravatar', 'custom'])
 
@@ -229,7 +232,7 @@ export async function updateUserAvatarPreset(
 		revalidatePath('/dashboard')
 		return { success: true, avatarUrl: targetAvatarUrl }
 	} catch (error) {
-		console.error('Update avatar failed:', error)
+		logger.error('Update avatar failed', error)
 		throw new Error(error instanceof Error ? error.message : '头像更新失败')
 	}
 }

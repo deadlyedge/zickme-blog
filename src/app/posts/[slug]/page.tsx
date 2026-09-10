@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PostClient } from '@/components/PostClient'
 import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/content-providers'
+import { createLogger } from '@/lib/logger'
 import { buildMetadata } from '@/lib/seo'
+
+const logger = createLogger('app/posts/[slug]')
 
 // 文章详情页 10 分钟重新验证（ISR）
 export const revalidate = 600
@@ -60,7 +63,7 @@ export async function generateStaticParams() {
 			slug,
 		}))
 	} catch (error) {
-		console.warn('generateStaticParams for posts failed:', error)
+		logger.warn('generateStaticParams for posts failed', { error })
 		return []
 	}
 }

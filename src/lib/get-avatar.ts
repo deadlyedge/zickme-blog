@@ -2,6 +2,10 @@ import crypto from 'node:crypto'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 
+import { createLogger } from '@/lib/logger'
+
+const logger = createLogger('lib/get-avatar')
+
 interface GravatarProfile {
 	display_name: string
 	profile_url: string
@@ -75,10 +79,7 @@ export async function getGravatarProfile(options: GetGravatarOptions = {}) {
 			avatarUrl: profile.avatar_url,
 		}
 	} catch (error) {
-		console.error('获取 Gravatar 资料失败:', error)
-		// throw new Error(
-		// 	error instanceof Error ? error.message : '获取 Gravatar 资料失败',
-		// )
+		logger.error('获取 Gravatar 资料失败', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '获取 Gravatar 资料失败',

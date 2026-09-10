@@ -10,9 +10,12 @@ import { db } from '@/db'
 import { posts, syncLogs, tags } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { diffContent, scanLocalContent } from '@/lib/content-diff'
+import { createLogger } from '@/lib/logger'
 import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
 import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
+
+const logger = createLogger('actions/posts-admin')
 
 const postIdSchema = z.string().min(1, '文章ID不能为空').max(128)
 const posterSchema = z
@@ -127,7 +130,7 @@ export async function getDashboardPosts(options?: {
 
 		return postList
 	} catch (error) {
-		console.error('Failed to get dashboard posts:', error)
+		logger.error('Failed to get dashboard posts', error)
 		throw new Error(error instanceof Error ? error.message : '获取文章列表失败')
 	}
 }
@@ -152,6 +155,7 @@ export async function updatePostPosterAction(
 		revalidatePath('/')
 		return { success: true, poster }
 	} catch (error) {
+		logger.error('Update post poster failed', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '更新封面失败',
@@ -274,7 +278,7 @@ export async function updatePostStatus(postId: string, status: StatusType) {
 
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to update post status:', error)
+		logger.error('Failed to update post status', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '更新状态失败',
@@ -321,7 +325,7 @@ export async function batchUpdatePostStatus(
 
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to batch update post status:', error)
+		logger.error('Failed to batch update post status', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '批量更新状态失败',
@@ -363,7 +367,7 @@ export async function deletePostPermanently(postId: string) {
 
 		return { success: true }
 	} catch (error) {
-		console.error('Failed to delete post permanently:', error)
+		logger.error('Failed to delete post permanently', error)
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : '永久删除文章失败',
@@ -381,7 +385,7 @@ export async function getDashboardTags() {
 			orderBy: [desc(tags.name)],
 		})
 	} catch (error) {
-		console.error('Failed to get tags for dashboard:', error)
+		logger.error('Failed to get tags for dashboard', error)
 		return []
 	}
 }
@@ -413,7 +417,7 @@ export async function triggerManualSync(options?: {
 
 		return result
 	} catch (error) {
-		console.error('Manual sync failed:', error)
+		logger.error('Manual sync failed', error)
 		return {
 			success: false,
 			status: 'FAILED',
@@ -507,7 +511,7 @@ export async function importUploadedContent(
 
 		return result
 	} catch (error) {
-		console.error('Import uploaded content failed:', error)
+		logger.error('Import uploaded content failed', error)
 		return {
 			success: false,
 			status: 'FAILED',
@@ -544,7 +548,7 @@ export async function getSyncHistoryLogs(limit = 20): Promise<SyncLog[]> {
 
 		return logs
 	} catch (error) {
-		console.error('Failed to get sync history logs:', error)
+		logger.error('Failed to get sync history logs', error)
 		return []
 	}
 }
