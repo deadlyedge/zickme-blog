@@ -14,11 +14,38 @@ import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
 import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
 
-const postIdSchema = z.string().min(1).max(128)
+const postIdSchema = z.string().min(1, '文章ID不能为空').max(128)
 const posterSchema = z
-	.string()
-	.url()
+	.url('必须是有效的URL地址')
 	.refine((value) => /^https?:\/\//i.test(value), '只允许 HTTP(S) 图片地址')
+
+const getDashboardPostsOptionsSchema = z
+	.object({
+		status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED', 'ALL']).optional(),
+		tagSlug: z.string().max(100).optional(),
+		search: z.string().max(100).optional(),
+		includeArchived: z.boolean().optional(),
+	})
+	.optional()
+
+const updatePostStatusSchema = z.object({
+	postId: postIdSchema,
+	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
+})
+
+const batchUpdatePostStatusSchema = z.object({
+	postIds: z.array(postIdSchema).min(1, '未选中任何文章'),
+	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
+})
+
+const manualSyncOptionsSchema = z
+	.object({
+		dryRun: z.boolean().optional(),
+		deleteOld: z.boolean().optional(),
+	})
+	.optional()
+
+const syncHistoryLimitSchema = z.number().int().min(1).max(100).default(20)
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -48,23 +75,26 @@ export async function getDashboardPosts(options?: {
 	try {
 		await requireAdminSession()
 
+		const parsedOptions = getDashboardPostsOptionsSchema.safeParse(options)
+		const opts = parsedOptions.success ? parsedOptions.data : options
+
 		const conditions = []
 
-		if (options?.status && options.status !== 'ALL') {
-			conditions.push(eq(posts.status, options.status))
+		if (opts?.status && opts.status !== 'ALL') {
+			conditions.push(eq(posts.status, opts.status))
 		}
 
-		if (options?.includeArchived) {
+		if (opts?.includeArchived) {
 			// 包含已归档
-		} else if (options?.status === 'ARCHIVED') {
+		} else if (opts?.status === 'ARCHIVED') {
 			// 显式查归档
 		} else {
 			// 默认排除已软删除/归档的
 			conditions.push(isNull(posts.archivedAt))
 		}
 
-		if (options?.search) {
-			const searchTerm = `%${options.search.trim()}%`
+		if (opts?.search) {
+			const searchTerm = `%${opts.search.trim()}%`
 			conditions.push(
 				sql`(${posts.title} ILIKE ${searchTerm} OR ${posts.slug} ILIKE ${searchTerm})`,
 			)
@@ -89,9 +119,9 @@ export async function getDashboardPosts(options?: {
 			tags: post.postsToTags.map((pt) => pt.tag),
 		})) as PostWithTags[]
 
-		if (options?.tagSlug && options.tagSlug !== 'ALL') {
+		if (opts?.tagSlug && opts.tagSlug !== 'ALL') {
 			postList = postList.filter((p) =>
-				p.tags?.some((t) => t.slug === options.tagSlug),
+				p.tags?.some((t) => t.slug === opts.tagSlug),
 			)
 		}
 
@@ -215,17 +245,28 @@ export async function updatePostStatus(postId: string, status: StatusType) {
 	try {
 		await requireAdminSession()
 
+		const parsed = updatePostStatusSchema.safeParse({ postId, status })
+		if (!parsed.success) {
+			return {
+				success: false,
+				error: parsed.error.issues[0]?.message || '参数错误',
+			}
+		}
+
 		const updatePayload: {
 			status: StatusType
 			updatedAt: Date
 			archivedAt: Date | null
 		} = {
-			status,
+			status: parsed.data.status,
 			updatedAt: new Date(),
-			archivedAt: status === 'ARCHIVED' ? new Date() : null,
+			archivedAt: parsed.data.status === 'ARCHIVED' ? new Date() : null,
 		}
 
-		await db.update(posts).set(updatePayload).where(eq(posts.id, postId))
+		await db
+			.update(posts)
+			.set(updatePayload)
+			.where(eq(posts.id, parsed.data.postId))
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/posts')
@@ -251,8 +292,12 @@ export async function batchUpdatePostStatus(
 	try {
 		await requireAdminSession()
 
-		if (!postIds || postIds.length === 0) {
-			return { success: false, error: '未选中任何文章' }
+		const parsed = batchUpdatePostStatusSchema.safeParse({ postIds, status })
+		if (!parsed.success) {
+			return {
+				success: false,
+				error: parsed.error.issues[0]?.message || '参数错误',
+			}
 		}
 
 		const updatePayload: {
@@ -260,12 +305,15 @@ export async function batchUpdatePostStatus(
 			updatedAt: Date
 			archivedAt: Date | null
 		} = {
-			status,
+			status: parsed.data.status,
 			updatedAt: new Date(),
-			archivedAt: status === 'ARCHIVED' ? new Date() : null,
+			archivedAt: parsed.data.status === 'ARCHIVED' ? new Date() : null,
 		}
 
-		await db.update(posts).set(updatePayload).where(inArray(posts.id, postIds))
+		await db
+			.update(posts)
+			.set(updatePayload)
+			.where(inArray(posts.id, parsed.data.postIds))
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/posts')
@@ -302,7 +350,12 @@ export async function deletePostPermanently(postId: string) {
 	try {
 		await requireAdminSession()
 
-		await db.delete(posts).where(eq(posts.id, postId))
+		const parsedId = postIdSchema.safeParse(postId)
+		if (!parsedId.success) {
+			return { success: false, error: '文章 ID 无效' }
+		}
+
+		await db.delete(posts).where(eq(posts.id, parsedId.data))
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/posts')
@@ -343,11 +396,14 @@ export async function triggerManualSync(options?: {
 	try {
 		await requireAdminSession()
 
+		const parsed = manualSyncOptionsSchema.safeParse(options)
+		const opts = parsed.success ? parsed.data : options
+
 		const service = new ContentSyncService()
 		const result = await service.runSync({
 			triggerType: 'MANUAL',
-			dryRun: options?.dryRun ?? false,
-			deleteOld: options?.deleteOld ?? true,
+			dryRun: opts?.dryRun ?? false,
+			deleteOld: opts?.deleteOld ?? true,
 		})
 
 		revalidatePath('/dashboard/posts')
@@ -478,9 +534,12 @@ export async function getSyncHistoryLogs(limit = 20): Promise<SyncLog[]> {
 	try {
 		await requireAdminSession()
 
+		const parsedLimit = syncHistoryLimitSchema.safeParse(limit)
+		const safeLimit = parsedLimit.success ? parsedLimit.data : 20
+
 		const logs = await db.query.syncLogs.findMany({
 			orderBy: [desc(syncLogs.createdAt)],
-			limit,
+			limit: safeLimit,
 		})
 
 		return logs

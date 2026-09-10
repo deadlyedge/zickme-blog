@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { formatZodError } from './types'
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -26,9 +27,21 @@ async function requireAdminSession() {
 }
 
 const adminResetPasswordSchema = z.object({
-	userId: z.string().min(1, '用户ID不能为空'),
-	newPassword: z.string().min(6, '密码长度至少6位'),
+	userId: z.string().min(1, '用户ID不能为空').max(128),
+	newPassword: z.string().min(6, '密码长度至少6位').max(128, '密码过长'),
 })
+
+const toggleUserBanSchema = z.object({
+	userId: z.string().min(1, '用户ID不能为空').max(128),
+	banned: z.boolean(),
+})
+
+const toggleCommentSpamSchema = z.object({
+	commentId: z.string().min(1, '评论ID不能为空').max(128),
+	isSpam: z.boolean(),
+})
+
+const deleteCommentSchema = z.string().min(1, '评论ID不能为空').max(128)
 
 export async function resetUserPasswordByAdmin(data: {
 	userId: string
@@ -41,7 +54,7 @@ export async function resetUserPasswordByAdmin(data: {
 		if (!parsed.success) {
 			return {
 				success: false,
-				error: parsed.error.issues[0]?.message || '输入参数有误',
+				error: formatZodError(parsed.error),
 			}
 		}
 
@@ -286,7 +299,15 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 	try {
 		await requireAdminSession()
 
-		await db.update(users).set({ banned }).where(eq(users.id, userId))
+		const parsed = toggleUserBanSchema.safeParse({ userId, banned })
+		if (!parsed.success) {
+			throw new Error(formatZodError(parsed.error))
+		}
+
+		await db
+			.update(users)
+			.set({ banned: parsed.data.banned })
+			.where(eq(users.id, parsed.data.userId))
 
 		revalidatePath('/dashboard/users')
 		return { success: true }
@@ -303,12 +324,17 @@ export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
 	try {
 		await requireAdminSession()
 
+		const parsed = toggleCommentSpamSchema.safeParse({ commentId, isSpam })
+		if (!parsed.success) {
+			throw new Error(formatZodError(parsed.error))
+		}
+
 		await db
 			.update(comments)
 			.set({
-				status: isSpam ? 'SPAM' : 'PUBLISHED',
+				status: parsed.data.isSpam ? 'SPAM' : 'PUBLISHED',
 			})
-			.where(eq(comments.id, commentId))
+			.where(eq(comments.id, parsed.data.commentId))
 
 		revalidatePath('/dashboard/users')
 		revalidatePath('/dashboard')
@@ -326,7 +352,12 @@ export async function deleteComment(commentId: string) {
 	try {
 		await requireAdminSession()
 
-		await db.delete(comments).where(eq(comments.id, commentId))
+		const parsed = deleteCommentSchema.safeParse(commentId)
+		if (!parsed.success) {
+			throw new Error(formatZodError(parsed.error))
+		}
+
+		await db.delete(comments).where(eq(comments.id, parsed.data))
 
 		revalidatePath('/dashboard/users')
 		revalidatePath('/dashboard')

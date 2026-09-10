@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import {
 	fetchAllPostsForSearch,
 	fetchAllTagsForSearch,
@@ -15,10 +16,15 @@ import { getSiteProfile } from './profile'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+const limitSchema = z.number().int().min(1).max(200).default(100)
+const slugSchema = z.string().trim().min(1).max(200)
+const pinnedIdsSchema = z.array(z.string().min(1).max(128))
+
 export async function fetchPostsAction(limit = 100): Promise<PostWithTags[]> {
 	try {
+		const safeLimit = limitSchema.safeParse(limit).data ?? 100
 		if (isDevelopment) console.log('[Drizzle fetch]: posts')
-		return await fetchPosts(limit)
+		return await fetchPosts(safeLimit)
 	} catch (error) {
 		console.error('Error fetching posts:', error)
 		throw new Error('Failed to fetch posts')
@@ -39,8 +45,10 @@ export async function fetchPostBySlugAction(
 	slug: string,
 ): Promise<PostWithTags | null> {
 	try {
-		if (isDevelopment) console.log(`[Drizzle fetch]: post "${slug}"`)
-		return await fetchPostBySlug(slug)
+		const parsedSlug = slugSchema.safeParse(slug)
+		if (!parsedSlug.success) return null
+		if (isDevelopment) console.log(`[Drizzle fetch]: post "${parsedSlug.data}"`)
+		return await fetchPostBySlug(parsedSlug.data)
 	} catch (error) {
 		console.error(`Error fetching post ${slug}:`, error)
 		throw new Error(`Failed to fetch post ${slug}`)
@@ -51,8 +59,10 @@ export async function fetchTopHottestPostsAction(
 	limit = 5,
 ): Promise<PostWithTags[]> {
 	try {
+		const safeLimit =
+			z.number().int().min(1).max(20).default(5).safeParse(limit).data ?? 5
 		if (isDevelopment) console.log('[Drizzle fetch]: hottest posts')
-		return await fetchTopHottestPosts(limit)
+		return await fetchTopHottestPosts(safeLimit)
 	} catch (error) {
 		console.error('Error fetching hottest posts:', error)
 		throw new Error('Failed to fetch hottest posts')
@@ -63,8 +73,10 @@ export async function fetchPinnedPostsAction(
 	pinnedPostIds: string[] = [],
 ): Promise<PostWithTags[]> {
 	try {
+		const parsedIds = pinnedIdsSchema.safeParse(pinnedPostIds)
+		const safeIds = parsedIds.success ? parsedIds.data : []
 		if (isDevelopment) console.log('[Drizzle fetch]: pinned posts')
-		return await fetchPinnedPosts(pinnedPostIds)
+		return await fetchPinnedPosts(safeIds)
 	} catch (error) {
 		console.error('Error fetching pinned posts:', error)
 		throw new Error('Failed to fetch pinned posts')

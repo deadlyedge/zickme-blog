@@ -3,50 +3,65 @@
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { z } from 'zod'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { getPublicUserName } from '@/lib/public-user'
 import type { CommentWithReplies } from '@/types'
+import { formatZodError } from './types'
 
-export type CreateCommentData = {
-	content: string
-	docId: string
-	parentId?: string
-	path: string
-}
+const createCommentSchema = z.object({
+	content: z
+		.string()
+		.trim()
+		.min(1, '评论内容不能为空')
+		.max(2000, '评论内容不能超过2000字'),
+	docId: z.string().min(1, '文章ID不能为空').max(128),
+	parentId: z.string().min(1).max(128).optional(),
+	path: z.string().min(1, '页面路径不能为空'),
+})
+
+const getCommentsSchema = z.string().min(1, '文章ID不能为空').max(128)
+
+export type CreateCommentData = z.infer<typeof createCommentSchema>
 
 export async function createComment(data: CreateCommentData) {
 	try {
+		const parsed = createCommentSchema.safeParse(data)
+		if (!parsed.success) {
+			return { success: false, error: formatZodError(parsed.error) }
+		}
+
 		// Get current user session
 		const session = await auth.api.getSession({
 			headers: await headers(),
 		})
 
 		if (!session?.user?.id) {
-			return { success: false, error: 'User not authenticated' }
+			return { success: false, error: '用户未登录' }
 		}
 
 		// Find the post by ID
 		const post = await db.query.posts.findFirst({
-			where: eq(posts.id, data.docId),
+			where: eq(posts.id, parsed.data.docId),
 		})
 
 		if (!post) {
-			return { success: false, error: 'Post not found' }
+			return { success: false, error: '文章不存在' }
 		}
 
 		// Validate parent comment if provided
-		if (data.parentId) {
+		if (parsed.data.parentId) {
 			const parentComment = await db.query.comments.findFirst({
 				where: and(
-					eq(comments.id, data.parentId),
-					eq(comments.postId, data.docId),
+					eq(comments.id, parsed.data.parentId),
+					eq(comments.postId, parsed.data.docId),
 				),
 			})
 
 			if (!parentComment) {
-				return { success: false, error: 'Parent comment not found' }
+				return { success: false, error: '引用的父评论不存在' }
 			}
 		}
 
@@ -54,19 +69,22 @@ export async function createComment(data: CreateCommentData) {
 		const [newComment] = await db
 			.insert(comments)
 			.values({
-				content: data.content,
-				postId: data.docId,
+				content: parsed.data.content,
+				postId: parsed.data.docId,
 				authorId: session.user.id,
-				parentId: data.parentId || null,
+				parentId: parsed.data.parentId || null,
 				status: 'PUBLISHED',
 			})
 			.returning()
 
-		revalidatePath(data.path)
+		revalidatePath(parsed.data.path)
 		return { success: true, comment: newComment }
 	} catch (error) {
 		console.error('Error creating comment:', error)
-		return { success: false, error: 'Failed to create comment' }
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '发表评论失败',
+		}
 	}
 }
 
@@ -74,10 +92,15 @@ export async function getComments(
 	docId: string,
 ): Promise<CommentWithReplies[]> {
 	try {
+		const parsed = getCommentsSchema.safeParse(docId)
+		if (!parsed.success) {
+			return []
+		}
+
 		// Fetch all comments for this post
 		const allComments = await db.query.comments.findMany({
 			where: and(
-				eq(comments.postId, docId),
+				eq(comments.postId, parsed.data),
 				inArray(comments.status, ['PUBLISHED', 'SPAM']),
 			),
 			with: {

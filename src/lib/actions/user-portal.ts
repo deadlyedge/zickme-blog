@@ -3,11 +3,14 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { z } from 'zod'
 import { db } from '@/db'
 import { comments, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarAvatarUrl } from '@/lib/get-avatar'
+
+const updateAvatarPresetSchema = z.enum(['dicebear', 'gravatar', 'custom'])
 
 export interface UserCommentItem {
 	id: string
@@ -181,6 +184,11 @@ export async function updateUserAvatarPreset(
 	type: 'dicebear' | 'gravatar' | 'custom',
 ) {
 	try {
+		const parsedType = updateAvatarPresetSchema.safeParse(type)
+		if (!parsedType.success) {
+			throw new Error('无效的头像类型')
+		}
+
 		const headersList = await headers()
 		const session = await auth.api.getSession({
 			headers: headersList,
@@ -190,16 +198,16 @@ export async function updateUserAvatarPreset(
 			throw new Error('未登录')
 		}
 
-		if (type === 'custom') {
+		if (parsedType.data === 'custom') {
 			throw new Error('不支持自定义外链头像')
 		}
 
 		const userId = session.user.id
 		let targetAvatarUrl = ''
 
-		if (type === 'gravatar') {
+		if (parsedType.data === 'gravatar') {
 			targetAvatarUrl = getGravatarAvatarUrl(session.user.email)
-		} else if (type === 'dicebear') {
+		} else if (parsedType.data === 'dicebear') {
 			targetAvatarUrl = generateAvatarUri({
 				seed: `${session.user.id}-${Date.now()}`,
 				variant: 'croodles',
