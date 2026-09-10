@@ -26,17 +26,7 @@
 		"rules": {
 			"preset": "recommended",
 			"suspicious": {
-				"noExplicitAny": "off"
-			},
-			"style": {
-				"noNonNullAssertion": "off"
-			},
-			"a11y": {
-				"noLabelWithoutControl": "off",
-				"useKeyWithClickEvents": "off",
-				"useAriaPropsSupportedByRole": "off",
-				"noStaticElementInteractions": "off",
-				"useButtonType": "off"
+				"noExplicitAny": "warn"
 			}
 		}
 	},

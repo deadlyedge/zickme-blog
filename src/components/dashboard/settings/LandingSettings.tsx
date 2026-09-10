@@ -139,15 +139,12 @@ export function LandingSettings({
 						{allPosts.map((post) => {
 							const isPinned = pinnedPostIds.includes(post.id)
 							return (
-								<div
+								<button
 									key={post.id}
+									type="button"
+									aria-pressed={isPinned}
 									onClick={() => togglePinnedPost(post.id)}
-									onKeyDown={(e) => {
-										if (e.key === 'Enter' || e.key === ' ') {
-											togglePinnedPost(post.id)
-										}
-									}}
-									className={`p-3 rounded-lg border text-left cursor-pointer transition-all space-y-1 ${
+									className={`w-full p-3 rounded-lg border text-left cursor-pointer transition-all space-y-1 ${
 										isPinned
 											? 'border-primary bg-primary/10 shadow-xs'
 											: 'border-border/60 hover:border-border bg-card'
@@ -167,7 +164,7 @@ export function LandingSettings({
 									<div className="text-[10px] text-muted-foreground line-clamp-1">
 										/{post.slug}
 									</div>
-								</div>
+								</button>
 							)
 						})}
 					</div>

@@ -215,15 +215,14 @@ export async function updatePostStatus(postId: string, status: StatusType) {
 	try {
 		await requireAdminSession()
 
-		const updatePayload: Record<string, any> = {
+		const updatePayload: {
+			status: StatusType
+			updatedAt: Date
+			archivedAt: Date | null
+		} = {
 			status,
 			updatedAt: new Date(),
-		}
-
-		if (status === 'ARCHIVED') {
-			updatePayload.archivedAt = new Date()
-		} else {
-			updatePayload.archivedAt = null
+			archivedAt: status === 'ARCHIVED' ? new Date() : null,
 		}
 
 		await db.update(posts).set(updatePayload).where(eq(posts.id, postId))
@@ -256,15 +255,14 @@ export async function batchUpdatePostStatus(
 			return { success: false, error: '未选中任何文章' }
 		}
 
-		const updatePayload: Record<string, any> = {
+		const updatePayload: {
+			status: StatusType
+			updatedAt: Date
+			archivedAt: Date | null
+		} = {
 			status,
 			updatedAt: new Date(),
-		}
-
-		if (status === 'ARCHIVED') {
-			updatePayload.archivedAt = new Date()
-		} else {
-			updatePayload.archivedAt = null
+			archivedAt: status === 'ARCHIVED' ? new Date() : null,
 		}
 
 		await db.update(posts).set(updatePayload).where(inArray(posts.id, postIds))

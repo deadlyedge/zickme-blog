@@ -420,14 +420,10 @@ export default function DashboardSyncPage() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
-							<div
-								className="border-2 border-dashed border-border/80 hover:border-primary/50 rounded-2xl p-8 text-center bg-muted/10 cursor-pointer transition-colors"
+							<button
+								type="button"
+								className="w-full border-2 border-dashed border-border/80 hover:border-primary/50 rounded-2xl p-8 text-center bg-muted/10 cursor-pointer transition-colors"
 								onClick={() => fileInputRef.current?.click()}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										fileInputRef.current?.click()
-									}
-								}}
 							>
 								<input
 									type="file"
@@ -450,7 +446,7 @@ export default function DashboardSyncPage() {
 										</p>
 									</div>
 								</div>
-							</div>
+							</button>
 
 							{selectedFiles.length > 0 && (
 								<div className="space-y-2">

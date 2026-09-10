@@ -37,15 +37,12 @@ export function ThemeSettings({
 					{THEME_PRESETS.map((preset) => {
 						const isSelected = themePreset === preset.id
 						return (
-							<div
+							<button
 								key={preset.id}
+								type="button"
+								aria-pressed={isSelected}
 								onClick={() => handleApplyPreset(preset.id)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										handleApplyPreset(preset.id)
-									}
-								}}
-								className={`p-4 rounded-xl border-2 cursor-pointer transition-all space-y-3 ${
+								className={`w-full p-4 rounded-xl border-2 text-left cursor-pointer transition-all space-y-3 ${
 									isSelected
 										? 'border-primary bg-primary/5 shadow-xs'
 										: 'border-border/60 hover:border-primary/40 bg-card'
@@ -82,7 +79,7 @@ export function ThemeSettings({
 								<p className="text-xs text-muted-foreground line-clamp-2">
 									{preset.description}
 								</p>
-							</div>
+							</button>
 						)
 					})}
 				</div>
