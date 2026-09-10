@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, LayoutGrid, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Check, Search, SlidersHorizontal, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -16,8 +16,7 @@ export type TagItem = {
 
 interface PostTagFilterProps {
 	tags: TagItem[]
-	activeTag: string
-	totalPostsCount: number
+	activeTag: string | null
 	getTagPostCount: (slug: string) => number
 	onTagSelect: (slug: string) => void
 }
@@ -25,7 +24,6 @@ interface PostTagFilterProps {
 export function PostTagFilter({
 	tags,
 	activeTag,
-	totalPostsCount,
 	getTagPostCount,
 	onTagSelect,
 }: PostTagFilterProps) {
@@ -43,7 +41,7 @@ export function PostTagFilter({
 	}, [tags, popoverSearchTerm])
 
 	const currentTag = useMemo(() => {
-		if (activeTag === 'All') return null
+		if (!activeTag) return null
 		return tags.find((t) => t.slug === activeTag) || null
 	}, [tags, activeTag])
 
@@ -52,32 +50,8 @@ export function PostTagFilter({
 
 	return (
 		<div className="flex items-center justify-between gap-3 select-none py-1">
-			{/* 左侧：全部 & 当前激活的标签 */}
+			{/* 当前激活的标签 */}
 			<div className="flex items-center gap-2 min-w-0">
-				<button
-					type="button"
-					onClick={() => onTagSelect('All')}
-					className={cn(
-						'relative flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full transition-all duration-200 shrink-0 cursor-pointer',
-						activeTag === 'All'
-							? 'bg-primary text-primary-foreground shadow-xs'
-							: 'text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 border border-border/40',
-					)}
-				>
-					<LayoutGrid className="size-3.5" />
-					<span>全部</span>
-					<span
-						className={cn(
-							'ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono',
-							activeTag === 'All'
-								? 'bg-primary-foreground/20 text-primary-foreground'
-								: 'bg-muted-foreground/15 text-muted-foreground',
-						)}
-					>
-						{totalPostsCount}
-					</span>
-				</button>
-
 				{currentTag && (
 					<motion.div
 						initial={{ opacity: 0, scale: 0.9 }}
@@ -99,7 +73,7 @@ export function PostTagFilter({
 						</span>
 						<button
 							type="button"
-							onClick={() => onTagSelect('All')}
+							onClick={() => onTagSelect('')}
 							className="ml-1 p-0.5 rounded-full hover:bg-primary/20 text-primary/70 hover:text-primary transition-colors cursor-pointer"
 							aria-label="清除当前标签过滤"
 						>
@@ -156,32 +130,6 @@ export function PostTagFilter({
 
 						{/* 标签快捷切换列表 */}
 						<div className="max-h-60 overflow-y-auto space-y-1 pr-1">
-							{/* 全部选项 */}
-							<button
-								type="button"
-								onClick={() => {
-									onTagSelect('All')
-									setIsSearchOpen(false)
-								}}
-								className={cn(
-									'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer',
-									activeTag === 'All'
-										? 'bg-primary/10 text-primary font-bold'
-										: 'hover:bg-muted/60 text-foreground',
-								)}
-							>
-								<span className="flex items-center gap-2">
-									<LayoutGrid className="size-3.5 opacity-70" />
-									全部文章
-								</span>
-								<span className="flex items-center gap-1.5">
-									<span className="text-[10px] font-mono text-muted-foreground">
-										{totalPostsCount}
-									</span>
-									{activeTag === 'All' && <Check className="size-3.5" />}
-								</span>
-							</button>
-
 							{/* 过滤结果 */}
 							{searchFilteredTags.map((tag) => {
 								const isSelected = activeTag === tag.slug
@@ -228,7 +176,7 @@ export function PostTagFilter({
 							)}
 						</div>
 
-						{activeTag !== 'All' && (
+						{activeTag && (
 							<div className="pt-2 mt-2 border-t border-border/40 flex justify-between items-center text-[11px]">
 								<span className="text-muted-foreground truncate pr-2">
 									当前筛选：
@@ -239,7 +187,7 @@ export function PostTagFilter({
 								<button
 									type="button"
 									onClick={() => {
-										onTagSelect('All')
+										onTagSelect('')
 										setIsSearchOpen(false)
 									}}
 									className="text-primary hover:underline font-medium shrink-0 cursor-pointer"

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { signOut, useSession } from '@/lib/auth-client'
@@ -24,10 +25,6 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 
 	const handleRegisterClick = () => {
 		openAuthModal('register')
-	}
-
-	const handleEditProfile = () => {
-		openAuthModal('profile')
 	}
 
 	const handleLogout = async () => {
@@ -74,22 +71,20 @@ export function CommentsSection({ docId }: CommentsSectionProps) {
 				<div className="flex items-center gap-3">
 					{user ? (
 						<div className="flex items-center gap-3">
-							<Button
-								variant="link"
-								onClick={handleEditProfile}
-								className="flex items-center gap-2"
-							>
+							<Link href="/user" className="flex items-center gap-2">
 								<Avatar>
 									<AvatarImage
 										src={user?.image || 'https://github.com/shadcn.png'}
 										alt={user?.name || user?.email || '用户'}
 									/>
-									<AvatarFallback>CN</AvatarFallback>
+									<AvatarFallback>
+										{user.name?.slice(0, 2).toUpperCase() || 'AN'}
+									</AvatarFallback>
 								</Avatar>
 								<span className="text-sm font-medium">
 									{user.name || user.email || '用户'}
 								</span>
-							</Button>
+							</Link>
 							<Button
 								variant="outline"
 								size="sm"

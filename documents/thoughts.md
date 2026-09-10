@@ -3,6 +3,10 @@
 
 # Todos
 
-- about page内容更新后，可能是因为读取缓存，展示页面未及时更新。似乎应该强制更新一次。
-- dashboard用户权限页面读取失败, Failed to load users: Error: There are multiple relations between "comments" and "user". Please specify relation name (src/app/dashboard/users/page.tsx:91:13)
-- 首页slogans定制的功能消失
+- 已经有了用户信息和安全页面，评论区用户点击自己名字后，不应该继续显示修改密码
+- 现在dicebear/gravatar头像生成逻辑不稳定，似乎每次访问用户页面都在切换，这个功能应该只有在注册时被触发一次，以后应该由用户主动切换
+- 管理控制台最需要的不是退出登录，而是返回blog
+- 自定义外链头像功能可能会造成跨站问题，应禁用。
+- 应提供一个生成gravatar头像的方法和链接。
+- 评论区现在显示用户的完整email，存在安全隐患，应切换为头像+email中@之前的名字，评论显示时，可以将头像放大到评论内容区等高，稍作淡化，作为评论区文字的背景显示。编辑评论的部分可以保持现有效果，避免编辑受到背景图片干扰。
+- 既然过滤出的标签可以被关闭，也就是回到“全部文章”，那么全部文章标签可以删除，将过滤器放置在最左边即可。

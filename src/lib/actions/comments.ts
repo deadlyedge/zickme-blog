@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { getPublicUserName } from '@/lib/public-user'
 import type { CommentWithReplies } from '@/types'
 
 export type CreateCommentData = {
@@ -80,7 +81,15 @@ export async function getComments(
 				inArray(comments.status, ['PUBLISHED', 'SPAM']),
 			),
 			with: {
-				author: true,
+				author: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						image: true,
+						banned: true,
+					},
+				},
 			},
 			orderBy: [asc(comments.createdAt)],
 		})
@@ -96,8 +105,7 @@ export async function getComments(
 						: c.content,
 			author: {
 				id: c.author.id,
-				name: c.author.name,
-				email: c.author.email,
+				displayName: getPublicUserName(c.author.name, c.author.email),
 				image: c.author.image,
 				banned: c.author.banned,
 			},

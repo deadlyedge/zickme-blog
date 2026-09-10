@@ -28,8 +28,8 @@ export type {
 	TimelineItem,
 	User,
 } from './content'
-
 export { isPostWithTags, isSiteProfile, isSocialLink } from './content'
+export type { PublicCommentAuthor } from './public-user'
 
 // UI types
 export type {
@@ -59,8 +59,7 @@ export interface CommentWithReplies extends Comment {
 	depth?: number
 	author: {
 		id: string
-		name: string
-		email: string
+		displayName: string
 		image: string | null
 		banned: boolean
 	}

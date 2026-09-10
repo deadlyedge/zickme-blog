@@ -53,9 +53,6 @@ export function UserPortalClient({ initialData }: UserPortalClientProps) {
 	const [newPassword, setNewPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 
-	// 自定义头像输入
-	const [customAvatarUrl, setCustomAvatarUrl] = useState('')
-
 	// 保存个人资料 / 密码
 	const handleUpdateProfile = () => {
 		if (newPassword && newPassword !== confirmPassword) {
@@ -88,13 +85,10 @@ export function UserPortalClient({ initialData }: UserPortalClientProps) {
 	}
 
 	// 快速切换头像
-	const handleAvatarSwitch = (
-		type: 'dicebear' | 'gravatar' | 'custom',
-		url?: string,
-	) => {
+	const handleAvatarSwitch = (type: 'dicebear' | 'gravatar') => {
 		startTransition(async () => {
 			try {
-				await updateUserAvatarPreset(type, url)
+				await updateUserAvatarPreset(type)
 				toast.success('头像已更新！')
 				router.refresh()
 			} catch (error) {
@@ -313,31 +307,18 @@ export function UserPortalClient({ initialData }: UserPortalClientProps) {
 											<span>同步 Gravatar 邮箱官方头像</span>
 										</Button>
 
-										<div className="pt-2 border-t space-y-2">
-											<FieldLabel className="text-xs">
-												自定义外链头像
-											</FieldLabel>
-											<div className="flex gap-2">
-												<InputGroup className="flex-1">
-													<InputGroupInput
-														value={customAvatarUrl}
-														onChange={(e) => setCustomAvatarUrl(e.target.value)}
-														placeholder="https://..."
-														className="text-xs"
-													/>
-												</InputGroup>
-												<Button
-													size="sm"
-													variant="secondary"
-													onClick={() =>
-														handleAvatarSwitch('custom', customAvatarUrl)
-													}
-													disabled={isPending || !customAvatarUrl}
-												>
-													应用
-												</Button>
-											</div>
-										</div>
+										<p className="border-t pt-3 text-xs text-muted-foreground">
+											Gravatar 会根据你的邮箱匹配头像。没有 Gravatar
+											头像时，会显示 identicon 默认图案。{' '}
+											<a
+												href="https://gravatar.com/"
+												target="_blank"
+												rel="noopener noreferrer"
+												className="text-primary underline underline-offset-2"
+											>
+												前往 Gravatar 管理头像
+											</a>
+										</p>
 									</div>
 								</CardContent>
 							</Card>

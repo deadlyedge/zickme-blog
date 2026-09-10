@@ -5,6 +5,7 @@ import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toggleCommentSpam } from '@/lib/actions/dashboard'
 import { useAppStore } from '@/lib/store'
 import type { CommentWithReplies } from '@/types'
@@ -35,7 +36,7 @@ export const CommentItem = React.memo(
 
 		const authorName = comment.author?.banned
 			? '[已封禁用户]'
-			: comment.author?.name || 'Anonymous'
+			: comment.author?.displayName || 'Anonymous'
 
 		const handleToggleSpam = async () => {
 			try {
@@ -64,6 +65,12 @@ export const CommentItem = React.memo(
 
 				<div className={`relative ${isCollapsed ? 'opacity-60' : ''}`}>
 					<header className="flex items-center gap-2 text-sm mb-2">
+						<Avatar className="size-8">
+							<AvatarImage src={comment.author?.image || undefined} alt="" />
+							<AvatarFallback>
+								{authorName.slice(0, 2).toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
 						<span className="font-medium text-slate-900">{authorName}</span>
 						<span className="text-slate-400 text-xs">•</span>
 						<time

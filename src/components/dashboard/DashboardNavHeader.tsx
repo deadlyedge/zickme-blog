@@ -1,6 +1,7 @@
 'use client'
 
 import {
+	ArrowLeft,
 	BarChart3,
 	FileText,
 	HardDriveUpload,
@@ -80,6 +81,17 @@ export const DashboardNavHeader: React.FC = () => {
 								管理控制台
 							</span>
 						</Link>
+						<Button
+							asChild
+							variant="outline"
+							size="sm"
+							className="h-8 gap-1.5 rounded-lg text-xs"
+						>
+							<Link href="/" aria-label="返回博客">
+								<ArrowLeft className="size-3.5" />
+								<span className="hidden sm:inline">返回博客</span>
+							</Link>
+						</Button>
 						<Badge
 							variant="outline"
 							className="text-[10px] font-mono uppercase tracking-widest hidden md:inline-flex"

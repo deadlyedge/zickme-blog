@@ -140,24 +140,6 @@ function LoginForm({ onSuccess }: AuthFormProps) {
 				throw new Error(result.error.message || '登录失败')
 			}
 
-			// 登录成功后同步 Gravatar 头像
-			try {
-				// console.log('[login] 尝试同步 Gravatar 头像')
-				// const syncResponse = await fetch('/api/sync-gravatar', {
-				// 	method: 'POST',
-				// 	headers: {
-				// 		'Content-Type': 'application/json',
-				// 	},
-				// })
-
-				// const syncResult = await syncResponse.json()
-				await updateAvatar()
-				console.log('[login] Gravatar 同步成功')
-			} catch (syncError) {
-				console.error('[login] Gravatar 同步失败:', syncError)
-				// 不影响登录流程
-			}
-
 			onSuccess()
 			form.reset()
 		} catch (error) {
@@ -255,6 +237,9 @@ function RegisterForm({ onSuccess }: AuthFormProps) {
 			if (result.error) {
 				throw new Error(result.error.message || '注册失败')
 			}
+
+			// 仅在注册后初始化一次默认头像；后续登录不会覆盖用户选择。
+			await updateAvatar()
 
 			onSuccess()
 			form.reset()

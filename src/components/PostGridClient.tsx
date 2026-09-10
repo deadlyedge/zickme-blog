@@ -14,15 +14,15 @@ export function PostGridClient() {
 
 	// 直接从 URL 推导当前激活标签（随浏览器前进/后退自动同步）
 	const urlTag = searchParams.get('tag')
-	const activeTag = urlTag || 'All'
+	const activeTag = urlTag || null
 
 	// Use TanStack Query - data will be hydrated from server
 	const { data: posts, isLoading, isError } = usePosts()
 
 	// 处理标签点击，仅更新URL参数（activeTag 由 URL 派生，自动保持同步）
-	const handleTagClick = (tagSlug: string) => {
+	const handleTagClick = (tagSlug: string | null) => {
 		const currentPath = window.location.pathname
-		if (tagSlug === 'All') {
+		if (!tagSlug) {
 			router.push(currentPath)
 		} else {
 			router.push(`${currentPath}?tag=${tagSlug}`)
@@ -45,7 +45,7 @@ export function PostGridClient() {
 
 	const filteredPosts = useMemo(() => {
 		if (!posts) return []
-		if (activeTag === 'All') return posts
+		if (!activeTag) return posts
 		return posts.filter((post) =>
 			post.tags?.some((tag: TagItem) => tag.slug === activeTag),
 		)
@@ -75,9 +75,7 @@ export function PostGridClient() {
 	}
 
 	const activeTagName =
-		activeTag === 'All'
-			? '全部文章'
-			: tags.find((t) => t.slug === activeTag)?.name || activeTag
+		tags.find((t) => t.slug === activeTag)?.name || activeTag
 
 	return (
 		<div className="space-y-8">
@@ -85,7 +83,6 @@ export function PostGridClient() {
 			<PostTagFilter
 				tags={tags}
 				activeTag={activeTag}
-				totalPostsCount={posts?.length || 0}
 				getTagPostCount={(slug) =>
 					posts?.filter((p) => p.tags?.some((t) => t.slug === slug)).length || 0
 				}
@@ -107,13 +104,13 @@ export function PostGridClient() {
 					</div>
 					<h3 className="text-base font-semibold mb-1">未找到匹配文章</h3>
 					<p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-						{activeTag === 'All'
+						{!activeTag
 							? '当前博客库中暂无文章。'
 							: `标签「${activeTagName}」下暂未收录已发布的文章。`}
 					</p>
 					<button
 						type="button"
-						onClick={() => handleTagClick('All')}
+						onClick={() => handleTagClick(null)}
 						className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors cursor-pointer"
 					>
 						返回查看全部

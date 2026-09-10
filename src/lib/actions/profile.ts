@@ -1,6 +1,6 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { db } from '@/db'
@@ -8,7 +8,6 @@ import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { fetchProfile } from '@/lib/content-providers'
 import { generateAvatarUri } from '@/lib/generate-avatar'
-import { getGravatarProfile } from '@/lib/get-avatar'
 import type {
 	AboutPageConfig,
 	LandingPageConfig,
@@ -85,22 +84,18 @@ export async function updateAvatar() {
 		}
 
 		const userId = session.user.id
-		const { avatarUrl } = await getGravatarProfile({
-			email: session.user.email,
-		})
 		const bearAvatar = generateAvatarUri({
-			seed: session.user.name,
+			seed: session.user.id,
 			variant: 'croodles',
 		})
 
-		await db
+		const [updatedUser] = await db
 			.update(users)
-			.set({
-				image: avatarUrl || bearAvatar,
-			})
-			.where(eq(users.id, userId))
+			.set({ image: bearAvatar })
+			.where(and(eq(users.id, userId), isNull(users.image)))
+			.returning({ image: users.image })
 
-		return { success: true }
+		return { success: true, avatarUrl: updatedUser?.image ?? bearAvatar }
 	} catch (error) {
 		console.error('Avatar update error:', error)
 		throw new Error(error instanceof Error ? error.message : '更新失败')

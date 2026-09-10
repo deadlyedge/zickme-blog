@@ -7,7 +7,7 @@ import { db } from '@/db'
 import { comments, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { generateAvatarUri } from '@/lib/generate-avatar'
-import { getGravatarProfile } from '@/lib/get-avatar'
+import { getGravatarAvatarUrl } from '@/lib/get-avatar'
 
 export interface UserCommentItem {
 	id: string
@@ -175,11 +175,10 @@ export async function getUserPortalData(): Promise<UserPortalData> {
 }
 
 /**
- * 2. 用户自选头像更新方式（Dicebear / Gravatar / 自定义 URL）
+ * 2. 用户自选头像更新方式（Dicebear / Gravatar）
  */
 export async function updateUserAvatarPreset(
 	type: 'dicebear' | 'gravatar' | 'custom',
-	customUrl?: string,
 ) {
 	try {
 		const headersList = await headers()
@@ -191,26 +190,20 @@ export async function updateUserAvatarPreset(
 			throw new Error('未登录')
 		}
 
+		if (type === 'custom') {
+			throw new Error('不支持自定义外链头像')
+		}
+
 		const userId = session.user.id
 		let targetAvatarUrl = ''
 
 		if (type === 'gravatar') {
-			const { avatarUrl } = await getGravatarProfile({
-				email: session.user.email,
-			})
-			targetAvatarUrl =
-				avatarUrl ||
-				generateAvatarUri({
-					seed: session.user.name,
-					variant: 'initials',
-				})
+			targetAvatarUrl = getGravatarAvatarUrl(session.user.email)
 		} else if (type === 'dicebear') {
 			targetAvatarUrl = generateAvatarUri({
-				seed: `${session.user.name}-${Date.now()}`,
+				seed: `${session.user.id}-${Date.now()}`,
 				variant: 'croodles',
 			})
-		} else if (type === 'custom' && customUrl) {
-			targetAvatarUrl = customUrl
 		}
 
 		if (!targetAvatarUrl) {
