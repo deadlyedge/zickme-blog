@@ -1,11 +1,14 @@
 'use client'
 
 import { Clock, FileText, List } from 'lucide-react'
-import { marked } from 'marked'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import rehypeSanitize from 'rehype-sanitize'
+import remarkBreaks from 'remark-breaks'
+import remarkGfm from 'remark-gfm'
 import { CommentsSection } from '@/components/comments'
 import { PostLinks } from '@/components/PostLinks'
 import { Badge } from '@/components/ui/badge'
@@ -13,12 +16,6 @@ import { Button } from '@/components/ui/button'
 import { usePost } from '@/lib/hooks/useContent'
 import { calculateReadingTime, cn, formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types'
-
-// Configure marked options for standard GFM rendering
-marked.setOptions({
-	gfm: true,
-	breaks: true,
-})
 
 interface TocItem {
 	id: string
@@ -28,6 +25,30 @@ interface TocItem {
 
 interface PostClientProps {
 	initialPost?: PostWithTags
+}
+
+function isExternalHttpUrl(url?: string) {
+	if (!url) return false
+	try {
+		const parsedUrl = new URL(url, 'https://markdown.invalid')
+		return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:'
+	} catch {
+		return false
+	}
+}
+
+const markdownComponents = {
+	a: ({ href, children, ...props }: React.ComponentProps<'a'>) => (
+		<a
+			{...props}
+			href={href}
+			{...(isExternalHttpUrl(href)
+				? { target: '_blank', rel: 'noopener noreferrer' }
+				: {})}
+		>
+			{children}
+		</a>
+	),
 }
 
 export function PostClient({ initialPost }: PostClientProps) {
@@ -54,20 +75,14 @@ export function PostClient({ initialPost }: PostClientProps) {
 		return calculateReadingTime(post?.content)
 	}, [post?.content])
 
-	// 解析 Markdown HTML
-	const renderedHtml = useMemo(() => {
-		if (!post?.content) return ''
-		try {
-			return marked.parse(post.content) as string
-		} catch (err) {
-			console.error('Error parsing markdown:', err)
-			return post.content
-		}
-	}, [post?.content])
+	const markdownContent = post?.content || ''
 
-	// 提取目录（从 HTML 标题中生成带 ID 的结构）
+	// 提取目录（从渲染后的标题中生成带 ID 的结构）
 	useEffect(() => {
-		if (!renderedHtml || !articleContentRef.current) return
+		if (!markdownContent || !articleContentRef.current) {
+			setTocItems([])
+			return
+		}
 
 		const container = articleContentRef.current
 		const headings = container.querySelectorAll('h1, h2, h3, h4')
@@ -88,7 +103,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 		})
 
 		setTocItems(items)
-	}, [renderedHtml])
+	}, [markdownContent])
 
 	// 滚动监听：计算阅读进度条与 TOC 高亮
 	useEffect(() => {
@@ -158,7 +173,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 
 	// 增强代码块：注入复制按钮与语言提示
 	useEffect(() => {
-		if (!renderedHtml || !articleContentRef.current) return
+		if (!markdownContent || !articleContentRef.current) return
 
 		const container = articleContentRef.current
 		const preElements = container.querySelectorAll('pre')
@@ -219,7 +234,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 			toolbar.appendChild(copyBtn)
 			pre.appendChild(toolbar)
 		})
-	}, [renderedHtml])
+	}, [markdownContent])
 
 	if (isLoading) {
 		return (
@@ -377,8 +392,13 @@ export function PostClient({ initialPost }: PostClientProps) {
 								ref={articleContentRef}
 								className="prose prose-lg prose-blog max-w-none dark:prose-invert"
 							>
-								{/** biome-ignore lint/security/noDangerouslySetInnerHtml: <rendered via marked> */}
-								<div dangerouslySetInnerHTML={{ __html: renderedHtml }} />
+								<ReactMarkdown
+									remarkPlugins={[remarkGfm, remarkBreaks]}
+									rehypePlugins={[rehypeSanitize]}
+									components={markdownComponents}
+								>
+									{markdownContent}
+								</ReactMarkdown>
 							</div>
 						</article>
 
