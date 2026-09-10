@@ -49,40 +49,8 @@ export function PostTagFilter({
 	const currentTagCount = currentTag ? getTagPostCount(currentTag.slug) : 0
 
 	return (
-		<div className="flex items-center justify-between gap-3 select-none py-1">
-			{/* 当前激活的标签 */}
-			<div className="flex items-center gap-2 min-w-0">
-				{currentTag && (
-					<motion.div
-						initial={{ opacity: 0, scale: 0.9 }}
-						animate={{ opacity: 1, scale: 1 }}
-						exit={{ opacity: 0, scale: 0.9 }}
-						className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-primary/10 text-primary border border-primary/30 shadow-2xs"
-					>
-						<span
-							className="size-2 rounded-full shrink-0"
-							style={{
-								backgroundColor: currentTag.color || 'var(--primary)',
-							}}
-						/>
-						<span className="truncate max-w-30 sm:max-w-50">
-							{currentTag.name}
-						</span>
-						<span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-primary/15 text-primary ml-0.5">
-							{currentTagCount}
-						</span>
-						<button
-							type="button"
-							onClick={() => onTagSelect('')}
-							className="ml-1 p-0.5 rounded-full hover:bg-primary/20 text-primary/70 hover:text-primary transition-colors cursor-pointer"
-							aria-label="清除当前标签过滤"
-						>
-							<X className="size-3.5" />
-						</button>
-					</motion.div>
-				)}
-			</div>
-			{/* 右侧：过滤标签 Popover 菜单 */}
+		<div className="flex items-center gap-3 select-none py-1">
+			{/* 过滤标签 Popover 菜单 */}
 			<div className="shrink-0">
 				<Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
 					<PopoverTrigger asChild>
@@ -104,7 +72,7 @@ export function PostTagFilter({
 					</PopoverTrigger>
 
 					<PopoverContent
-						align="end"
+						align="start"
 						className="w-80 p-3 rounded-2xl shadow-xl border-border/70 backdrop-blur-xl bg-card/95"
 					>
 						{/* Popover 搜索栏 */}
@@ -198,6 +166,38 @@ export function PostTagFilter({
 						)}
 					</PopoverContent>
 				</Popover>
+			</div>
+			{/* 当前激活的标签 */}
+			<div className="flex items-center gap-2 min-w-0">
+				{currentTag && (
+					<motion.div
+						initial={{ opacity: 0, scale: 0.9 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.9 }}
+						className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-primary/10 text-primary border border-primary/30 shadow-2xs"
+					>
+						<span
+							className="size-2 rounded-full shrink-0"
+							style={{
+								backgroundColor: currentTag.color || 'var(--primary)',
+							}}
+						/>
+						<span className="truncate max-w-30 sm:max-w-50">
+							{currentTag.name}
+						</span>
+						<span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-primary/15 text-primary ml-0.5">
+							{currentTagCount}
+						</span>
+						<button
+							type="button"
+							onClick={() => onTagSelect('')}
+							className="ml-1 p-0.5 rounded-full hover:bg-primary/20 text-primary/70 hover:text-primary transition-colors cursor-pointer"
+							aria-label="清除当前标签过滤"
+						>
+							<X className="size-3.5" />
+						</button>
+					</motion.div>
+				)}
 			</div>
 		</div>
 	)
