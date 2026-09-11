@@ -29,6 +29,20 @@ export type {
 	User,
 } from './content'
 export { isPostWithTags, isSiteProfile, isSocialLink } from './content'
+export type {
+	Gallery,
+	GalleryAlbumFrontmatter,
+	GalleryExif,
+	GalleryImage,
+	GalleryImageFrontmatter,
+	GalleryImageSyncStatus,
+	GalleryIndexEntry,
+	GalleryLayout,
+	GalleryPublic,
+	GalleryPublicImage,
+	GallerySort,
+	GalleryStatus,
+} from './gallery'
 export type { PublicCommentAuthor } from './public-user'
 
 // UI types

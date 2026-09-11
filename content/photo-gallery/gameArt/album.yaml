@@ -1,0 +1,18 @@
+slug: gameart
+title: gameArt
+description: ""
+status: draft
+cover: images/elden_ring_20240708182520_1.webp
+tags: []
+location: ""
+layout: masonry
+sort: filename
+showExif: false
+showLocation: false
+images:
+  - file: images/elden_ring_20240708182520_1.webp
+    title: ""
+    description: ""
+    alt: ""
+    order: 1
+    hidden: false

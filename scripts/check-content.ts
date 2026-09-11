@@ -2,6 +2,13 @@ import type { Stats } from 'node:fs'
 import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
 import matter from 'gray-matter'
+import {
+	createAlbumSkeleton,
+	GALLERY_ROOT,
+	scanGalleryDirectory,
+	stringify,
+	writeGalleryIndex,
+} from '../src/lib/gallery/gallery-parser'
 import { normalizePostMetadata } from '../src/lib/post-metadata'
 import { generateSlugFromPath } from '../src/lib/slug'
 
@@ -347,6 +354,10 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 			console.log('')
 		}
 
+		const galleryResult = await checkGalleryContent(config)
+		totalIssues += galleryResult.issues
+		totalSuggestions += galleryResult.suggestions
+
 		console.log('📊 检查结果统计:')
 		console.log(`   🔍 检查文件: ${mdFiles.length}`)
 		console.log(`   ⚠️ 发现问题: ${totalIssues}`)
@@ -361,6 +372,74 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 		console.error('❌ 检查失败:', error)
 		process.exit(1)
 	}
+}
+
+async function checkGalleryContent(
+	config: CheckConfig,
+): Promise<{ issues: number; suggestions: number }> {
+	const scan = await scanGalleryDirectory(GALLERY_ROOT)
+	const issues = scan.issues.length
+	let suggestions = 0
+	console.log('🖼️ 检查 Gallery 内容...')
+
+	for (const album of scan.albums) {
+		const albumName = path.basename(album.directory)
+		console.log(`📷 ${albumName}`)
+		for (const issue of album.issues) console.log(`   ❌ ${issue}`)
+
+		if (config.autoFix) {
+			const imageFiles = album.files
+			const configMissing = album.issues.includes('缺少 album.yaml')
+			const skeleton = createAlbumSkeleton(albumName, imageFiles)
+			const nextData = configMissing
+				? { ...skeleton, images: skeleton.images ?? [] }
+				: {
+						...album.data,
+						images: [
+							...album.data.images,
+							...imageFiles
+								.filter(
+									(file) =>
+										!album.data.images.some(
+											(image) => image.file === `images/${file}`,
+										),
+								)
+								.map((file, index) => ({
+									file: `images/${file}`,
+									title: '',
+									description: '',
+									alt: '',
+									order: album.data.images.length + index + 1,
+									hidden: false,
+								})),
+						],
+					}
+			const shouldWrite =
+				configMissing || nextData.images.length !== album.data.images.length
+			if (shouldWrite && !config.dryRun) {
+				await fsPromises.writeFile(
+					album.configPath,
+					stringify(nextData, { lineWidth: 120 }),
+					'utf8',
+				)
+				suggestions++
+				console.log('   ✅ 已生成/补齐 album.yaml（保留已有人工字段）')
+			}
+		}
+	}
+
+	if (config.autoFix && !config.dryRun) {
+		const refreshed = await scanGalleryDirectory(GALLERY_ROOT)
+		await writeGalleryIndex(refreshed.albums, GALLERY_ROOT)
+		console.log(
+			'   ✅ 已生成 photo-gallery/gallery.yaml（自动文件，请勿手动编辑）',
+		)
+	} else if (scan.albums.length > 0) {
+		console.log('   💡 使用 --fix 可生成/补齐 album.yaml 和 gallery.yaml')
+		suggestions++
+	}
+
+	return { issues, suggestions }
 }
 
 if (require.main === module) {

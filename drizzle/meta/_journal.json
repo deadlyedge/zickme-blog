@@ -8,6 +8,20 @@
 			"when": 1788926797799,
 			"tag": "0000_baseline",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1789110722397,
+			"tag": "0001_mean_chimera",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1789111372327,
+			"tag": "0002_damp_black_bolt",
+			"breakpoints": true
 		}
 	]
 }

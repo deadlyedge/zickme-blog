@@ -2,7 +2,56 @@
 
 > 来源：从 `documents/development-plan-stage5.md` 拆分出的纯图片/摄影相册需求  
 > 制定日期：2026-09-09  
-> 前置总结：`documents/stage5-summary.md`
+> 前置总结：`documents/stage5-summary.md`  
+> 当前状态更新：2026-09-11，已完成前端交互原型，尚未开始数据层与同步层实施
+
+---
+
+## 当前完成状况与下一步入口
+
+### 已完成：前端体验原型
+
+当前仓库已经可以通过 `/gallery` 预览第一版 Gallery 交互，但该页面仍是演示实现，不代表 Stage 6 的最终数据架构已经完成。
+
+已完成文件与能力：
+
+```text
+src/app/gallery/page.tsx
+src/components/gallery/GalleryDemo.tsx
+src/components/HeaderNav.tsx
+src/app/globals.css
+next.config.ts
+```
+
+原型目前包含：
+
+1. Gallery 导航入口，Gallery 页面下 navbar 和站点 Logo 使用深色背景适配的浅灰色；
+2. 页面级深灰背景，body 和 main 不随页面整体滚动；
+3. 顶部单行 album 切换栏，支持横向滚动和切换硬编码 album；
+4. 桌面端“主图展示区 + 右侧缩略图区域”两部分布局；
+5. 桌面主图保持静态展示，点击主图不会打开全屏；点击缩略图切换主图；
+6. 桌面主图右下角 info 图标 hover/focus 时显示等宽、半透明、带毛玻璃效果的信息层；
+7. 移动端双列纵向图片瀑布布局，使用两个明确的纵向 Grid 列，避免 CSS Columns 在固定高度容器中产生横向滚动；
+8. 移动端点击图片后打开全屏 Lightbox，支持关闭、上一张、下一张、Escape 和左右方向键；
+9. 移动端 Lightbox 信息卡支持展开/最小化，最小化后只显示标题；展开时显示描述和当前原型的模拟 EXIF；
+10. 图片展示和缩略图使用图片自身 `width / height` 比例，避免统一裁剪；
+11. 使用现有的 `next/image`、Tailwind CSS、Lucide 图标和项目已有图片交互能力，没有新增 Gallery 专用第三方依赖。
+
+### 原型的明确限制
+
+当前 `/gallery` 仍然直接渲染 `GalleryDemo`，图片、album、标题、描述、地点和 EXIF 都是客户端硬编码或模拟数据：
+
+- 没有读取 `content/photo-gallery/`；
+- 没有访问 PostgreSQL、Cloudinary 或 Gallery API；
+- 没有 `/gallery/[slug]` 详情路由；
+- 模拟 EXIF 不能作为真实隐私策略的实现；
+- 尚未建立 Radix Dialog 的正式 Lightbox 组件、焦点陷阱和焦点恢复；
+- 移动端触摸滑动尚未实现，仅完成键盘和按钮切换；
+- 尚未有 Gallery 专用测试、Schema migration、同步命令或 Dashboard。
+
+### 下一步实施入口
+
+后续开发必须从“硬编码原型 → 类型化数据模型 → 本地内容解析 → 数据库副本 → Cloudinary 同步 → 真实路由”逐步替换，不能直接在 `GalleryDemo` 中拼接数据库查询。建议第一步实施“阶段一：Schema 与解析器”，完成后再将原型拆为真实的 `GalleryShell`、`GalleryGrid`、`GalleryLightbox` 和 `GalleryImageInfo` 组件。
 
 ---
 
@@ -234,9 +283,6 @@ GalleryImage
 - fileHash
 - fileSize
 - sourceModifiedAt
-- fileHash
-- fileSize
-- sourceModifiedAt
 - lastSyncedAt
 - syncVersion
 - revision
@@ -322,6 +368,8 @@ WebP hash 变化 → 覆盖同一 public ID 并更新记录
 
 ### 阶段一：Schema 与解析器
 
+状态：**未开始，下一阶段优先实施**。
+
 目标文件：
 
 ```text
@@ -335,6 +383,8 @@ drizzle/*
 任务：新增 Gallery/GalleryImage 表、类型、`album.yaml` 解析、slug/封面/状态校验、WebP 图片扫描和稳定排序；扩展 `check-content --fix`，自动为缺少配置的相册生成 `album.yaml` 骨架、补齐图片级配置并生成 `gallery.yaml`。检查工具必须拒绝未处理的原始图片进入受 Git 管理的 Gallery 目录。
 
 ### 阶段二：GallerySyncService
+
+状态：**未开始，依赖阶段一**。
 
 目标文件：
 
@@ -355,6 +405,8 @@ bun run sync:galleries
 可选地由 `bun run sync` 串联执行，但 Post 与 Gallery 的日志、错误和统计必须保持可区分。
 
 ### 阶段三：Gallery 索引与内容检查工具
+
+状态：**未开始，依赖阶段一**。
 
 目标文件：
 
@@ -399,6 +451,10 @@ bun run gallery:pull -- --force
 
 ### 阶段四：查询与路由
 
+状态：**部分完成原型，不算真实实现**。
+
+当前只存在 `src/app/gallery/page.tsx`，它渲染硬编码的 `GalleryDemo`。尚不存在 `src/app/gallery/[slug]/page.tsx`、真实查询函数、相册列表查询、`notFound()`、数据库过滤或真实 SEO metadata。完成本阶段时必须用 `fetchGalleries()` 和 `fetchGalleryBySlug()` 替换演示数据。
+
 目标文件：
 
 ```text
@@ -412,6 +468,19 @@ src/components/gallery/GalleryCard.tsx
 
 ### 阶段五：Masonry 与 Lightbox
 
+状态：**前端原型已完成，生产组件尚未拆分**。
+
+当前原型已经验证以下视觉方向：
+
+1. 桌面端使用左侧主图展示区和右侧缩略图列；主图普通显示模式不可点击全屏；
+2. 桌面缩略图保留单张图片的原始宽高比，超过展示上限时才限制高度；
+3. 桌面 info 图标 hover/focus 后，信息层从主图底部向上滑入，信息层等宽且半透明；
+4. 移动端使用双列纵向瀑布，不能使用会在固定高度容器中形成横向滚动的 CSS Columns 方案；
+5. 移动端点击图片才打开全屏 Lightbox；Lightbox 信息层固定在底部，并支持折叠为只显示标题；
+6. 图片不能通过 hover 放大，避免破坏摄影作品的比例和浏览稳定性。
+
+后续必须将这些行为从 `GalleryDemo.tsx` 拆分为正式组件，并补足 Radix Dialog 语义、焦点管理、触摸滑动、加载失败和 reduced motion。
+
 目标文件：
 
 ```text
@@ -424,6 +493,8 @@ src/components/gallery/GalleryPostView.tsx
 
 ### 阶段六：EXIF 与隐私
 
+状态：**未开始；当前仅有硬编码模拟 EXIF**。
+
 目标文件：
 
 ```text
@@ -434,6 +505,8 @@ src/components/gallery/ExifPanel.tsx
 任务：读取 EXIF 白名单字段，根据 `showExif` 控制显示，默认关闭 GPS，解析失败时不影响图片展示。
 
 ### 阶段七：Dashboard 管理与双向同步
+
+状态：**未开始**。
 
 目标文件：
 
@@ -499,6 +572,17 @@ Dashboard 删除图片 → 先更新状态，再生成本地回写变更
 
 比较必须基于上一次同步快照（merge base）进行字段级合并，而不是简单地整份覆盖 `album.yaml`。Dashboard 保存时使用 `revision` 或 `expectedUpdatedAt` 乐观锁；版本不一致时拒绝保存并要求重新加载。
 
+### 原型迁移门禁
+
+真实数据接入前必须满足以下条件：
+
+1. 新增 `src/types/gallery.ts`，定义 `Gallery`、`GalleryImage`、EXIF 白名单和前台 DTO；
+2. `GalleryDemo.tsx` 不再承担真实业务查询、权限判断或数据转换；
+3. 硬编码的 Unsplash URL、album 数组和模拟 EXIF 仅保留在演示分支，正式 Gallery 页面不得依赖它们；
+4. 正式组件必须接收类型化 props，图片 URL、宽高、alt、标题和 EXIF 均来自服务端已过滤 DTO；
+5. 通过本地 fixture 或数据库测试数据验证空相册、隐藏图片、缺少封面、EXIF 缺失、图片加载失败和未知 slug；
+6. 完成迁移后才允许删除 `GalleryDemo.tsx`，或将其改名为明确的 `GalleryPrototype` 并从生产路由移除。
+
 ---
 
 ## 七、集成规则
@@ -555,9 +639,11 @@ PENDING_DELETE
 
 ### 前台
 
-- `/gallery` 和 `/gallery/[slug]` 可访问；
-- Masonry/Grid 适配手机、平板和桌面；
-- Lightbox 支持鼠标、触摸和键盘；
+- `/gallery` 原型可访问；`/gallery/[slug]` 尚未实现；
+- 原型已验证桌面主图/缩略图布局；真实 Gallery 数据驱动布局尚未完成；
+- 原型已验证移动端双列纵向瀑布，正式实现必须使用明确的双列纵向 Grid 或经过验证的 Masonry 方案，禁止出现横向滚动；
+- 原型已验证移动端 Lightbox 的按钮和键盘切换；触摸手势、焦点陷阱和焦点恢复尚未完成；
+- 原型已验证桌面 info 浮层、移动端信息卡最小化和模拟 EXIF 展示；真实 EXIF 白名单尚未接入；
 - 处理后的 WebP、缩略图、空相册和失败状态处理正确；
 - GPS 默认不公开；
 - SEO metadata 正确。
@@ -582,6 +668,16 @@ bun run content:check -- --no-examples
 bun run build
 bun run db:migrate
 ```
+
+当前前端原型已验证：
+
+```bash
+bunx biome check src/app/gallery/page.tsx src/components/gallery/GalleryDemo.tsx src/components/HeaderNav.tsx src/app/globals.css next.config.ts
+bunx tsc --noEmit --pretty false
+bun run build
+```
+
+说明：当前全量 `bun run lint` 可能受仓库内其他既有文件的格式问题影响；提交真实 Gallery 功能前必须恢复全量 lint 通过，不能只依赖定向检查。
 
 ---
 

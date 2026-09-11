@@ -1,0 +1,30 @@
+slug: testalbum
+title: testAlbum
+description: ""
+status: draft
+cover: images/_The_School_of_Athens__by_Raffaello_Sanzio_da_Urbino.webp
+tags: []
+location: ""
+layout: masonry
+sort: filename
+showExif: false
+showLocation: false
+images:
+  - file: images/_The_School_of_Athens__by_Raffaello_Sanzio_da_Urbino.webp
+    title: ""
+    description: ""
+    alt: ""
+    order: 1
+    hidden: false
+  - file: images/-2a9a3ed89583ede.webp
+    title: ""
+    description: ""
+    alt: ""
+    order: 2
+    hidden: false
+  - file: images/Nipic_2572038_20151125135111269000.webp
+    title: ""
+    description: ""
+    alt: ""
+    order: 3
+    hidden: false

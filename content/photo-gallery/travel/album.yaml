@@ -1,0 +1,18 @@
+slug: travel
+title: travel
+description: ""
+status: draft
+cover: images/EM5X1647.webp
+tags: []
+location: ""
+layout: masonry
+sort: filename
+showExif: false
+showLocation: false
+images:
+  - file: images/EM5X1647.webp
+    title: ""
+    description: ""
+    alt: ""
+    order: 1
+    hidden: false

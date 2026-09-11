@@ -1,5 +1,6 @@
 export * from './auth'
 export * from './comments'
+export * from './gallery'
 export * from './posts'
 export * from './site-profile'
 export * from './sync-logs'

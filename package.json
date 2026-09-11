@@ -18,6 +18,7 @@
 		"db:studio": "drizzle-kit studio",
 		"db:reset": "bun run scripts/reset-db.ts",
 		"sync": "bun run scripts/sync-content.ts",
+		"sync:galleries": "bun run scripts/sync-galleries.ts",
 		"sync:pull": "bun run scripts/sync-pull.ts",
 		"reset-admin-password": "bun run scripts/reset-admin-password.ts"
 	},
@@ -48,6 +49,7 @@
 		"cmdk": "^1.1.1",
 		"date-fns": "^4.4.0",
 		"drizzle-orm": "^0.45.2",
+		"exifr": "^7.1.3",
 		"gray-matter": "^4.0.3",
 		"lenis": "^1.3.26",
 		"lucide-react": "^1.42.0",
@@ -68,6 +70,7 @@
 		"slugify": "^1.6.9",
 		"sonner": "^2.0.8",
 		"tailwind-merge": "^3.6.0",
+		"yaml": "^2.9.0",
 		"zod": "^4.5.4",
 		"zustand": "^5.0.15"
 	},
