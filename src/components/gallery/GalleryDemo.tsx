@@ -1,6 +1,13 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react'
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	ChevronUp,
+	Info,
+	X,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -159,6 +166,7 @@ export function GalleryDemo() {
 	const [selectedAlbumIndex, setSelectedAlbumIndex] = useState(0)
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [lightboxOpen, setLightboxOpen] = useState(false)
+	const [mobileInfoMinimized, setMobileInfoMinimized] = useState(false)
 	const selectedAlbum = albums[selectedAlbumIndex]
 	const selectedPhotos = selectedAlbum.photos
 	const selectedPhoto = selectedPhotos[selectedIndex] ?? selectedPhotos[0]
@@ -242,9 +250,10 @@ export function GalleryDemo() {
 								key={photo.id}
 								type="button"
 								onClick={() => setSelectedIndex(index)}
-								className={`group relative aspect-3/4 shrink-0 overflow-hidden rounded-sm text-left ring-1 transition ${index === selectedIndex ? 'ring-white' : 'ring-white/10 opacity-55 hover:opacity-100'}`}
+								className={`group relative max-h-40 shrink-0 overflow-hidden rounded-sm text-left ring-1 transition ${index === selectedIndex ? 'ring-white' : 'ring-white/10 opacity-55 hover:opacity-100'}`}
 								aria-label={`选择 ${photo.title}`}
 								aria-current={index === selectedIndex}
+								style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
 							>
 								<Image
 									src={photo.src}
@@ -346,8 +355,32 @@ export function GalleryDemo() {
 								className="object-contain"
 							/>
 						</div>
-						<div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-2xl rounded-sm bg-[#2f2f2f]/95 p-5 text-white shadow-2xl backdrop-blur">
-							<PhotoInfo photo={selectedPhoto} compact />
+						<div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-2xl rounded-sm bg-black/60 p-4 text-white shadow-2xl backdrop-blur-md sm:p-5">
+							<div className="flex items-start justify-between gap-4">
+								{mobileInfoMinimized ? (
+									<h2 className="truncate text-base font-semibold">
+										{selectedPhoto.title}
+									</h2>
+								) : (
+									<div className="min-w-0 flex-1">
+										<PhotoInfo photo={selectedPhoto} compact />
+									</div>
+								)}
+								<button
+									type="button"
+									className="shrink-0 rounded-full border border-white/20 bg-white/10 p-2 text-white/80 hover:bg-white/20"
+									onClick={() => setMobileInfoMinimized((current) => !current)}
+									aria-label={
+										mobileInfoMinimized ? '展开图片信息' : '最小化图片信息'
+									}
+								>
+									{mobileInfoMinimized ? (
+										<ChevronUp className="size-4" />
+									) : (
+										<ChevronDown className="size-4" />
+									)}
+								</button>
+							</div>
 						</div>
 					</div>
 					<button
