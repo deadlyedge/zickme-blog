@@ -9,7 +9,7 @@ export function GalleryCard({ gallery }: { gallery: GalleryPublic }) {
 			className="group block overflow-hidden rounded-sm bg-[#2f2f2f] text-white"
 			href={`/gallery/${gallery.slug}`}
 		>
-			<div className="relative aspect-[4/3] overflow-hidden">
+			<div className="relative aspect-4/3 overflow-hidden">
 				{image ? (
 					<Image
 						src={gallery.cover || image.url}

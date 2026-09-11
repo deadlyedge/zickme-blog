@@ -15,7 +15,7 @@ export function GalleryImageInfo({
 		<div className={compact ? 'space-y-2' : 'space-y-4'}>
 			<div>
 				{(location || exif?.capturedAt) && (
-					<p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-white/45">
+					<p className="mb-1 text-[10px] uppercase text-white/45">
 						{[location, exif?.capturedAt].filter(Boolean).join(' · ')}
 					</p>
 				)}

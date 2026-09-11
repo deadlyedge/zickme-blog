@@ -4,6 +4,7 @@ import { Info } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
+import { cn } from '@/lib/utils'
 import type { GalleryPublicImage } from '@/types/gallery'
 
 function GalleryImage({
@@ -80,7 +81,10 @@ export function GalleryGrid({
 							key={image.id}
 							type="button"
 							onClick={() => onSelect(index)}
-							className={`relative max-h-40 shrink-0 overflow-hidden rounded-sm text-left ring-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${index === selectedIndex ? 'ring-white' : 'ring-white/10 opacity-55 hover:opacity-100'}`}
+							className={cn(
+								'relative max-h-40 shrink-0 overflow-hidden rounded-sm text-left',
+								index !== selectedIndex && 'opacity-55 hover:opacity-100',
+							)}
 							aria-label={`选择 ${image.title || `第 ${index + 1} 张图片`}`}
 							aria-current={index === selectedIndex}
 							style={{

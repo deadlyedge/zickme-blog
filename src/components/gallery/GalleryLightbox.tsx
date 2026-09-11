@@ -4,7 +4,6 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronUp,
-	ExternalLink,
 	X,
 } from 'lucide-react'
 import Image from 'next/image'
@@ -139,14 +138,14 @@ export function GalleryLightbox({
 								/>
 							</button>
 						</div>
-						<a
+						{/* <a
 							href={image.url}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="mt-3 inline-flex items-center gap-1 text-xs text-white/60 underline-offset-4 hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
 						>
 							在新标签页打开 <ExternalLink className="size-3" />
-						</a>
+						</a> */}
 					</div>
 				</div>
 			</DialogContent>

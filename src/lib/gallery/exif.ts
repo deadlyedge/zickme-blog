@@ -25,14 +25,20 @@ const EXIF_ALIASES: Record<(typeof GALLERY_EXIF_KEYS)[number], string[]> = {
 const MAX_EXIF_TEXT_LENGTH = 160
 
 function normalizeText(value: unknown): string | undefined {
-	if (typeof value !== 'string') return undefined
-	const text = value.trim().slice(0, MAX_EXIF_TEXT_LENGTH)
+	if (value === undefined || value === null) return undefined
+	const text = String(value).trim().slice(0, MAX_EXIF_TEXT_LENGTH)
 	return text || undefined
 }
 
 function normalizeIso(value: unknown): number | undefined {
-	if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
-	return Math.max(0, Math.round(value))
+	const number =
+		typeof value === 'number'
+			? value
+			: typeof value === 'string'
+				? Number(value)
+				: Number.NaN
+	if (!Number.isFinite(number)) return undefined
+	return Math.max(0, Math.round(number))
 }
 
 /** Extract only the public EXIF allowlist. GPS and device identifiers are never copied. */

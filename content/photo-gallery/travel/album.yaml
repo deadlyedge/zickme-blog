@@ -7,12 +7,18 @@ tags: []
 location: ""
 layout: masonry
 sort: filename
-showExif: false
-showLocation: false
+showExif: true
+showLocation: true
 images:
   - file: images/EM5X1647.webp
-    title: ""
+    title: 美国的夕阳
     description: ""
     alt: ""
     order: 1
+    hidden: false
+  - file: images/GOPR0027.webp
+    title: 回家
+    description: ""
+    alt: ""
+    order: 2
     hidden: false
