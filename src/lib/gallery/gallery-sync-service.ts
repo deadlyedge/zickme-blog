@@ -152,6 +152,62 @@ async function readExistingConfig(albumDirectory: string, files: string[]) {
 	}
 }
 
+async function syncAlbumOnlyMetadata(
+	galleryRoot: string,
+	knownSlugs: Set<string>,
+	dryRun: boolean,
+): Promise<string[]> {
+	if (dryRun) return []
+	const scan = await scanGalleryDirectory(galleryRoot)
+	const syncedSlugs: string[] = []
+	for (const album of scan.albums) {
+		const albumName = path.basename(album.directory)
+		if (knownSlugs.has(album.data.slug) || album.issues.length > 0) continue
+		const [gallery] = await db
+			.select({ id: galleries.id })
+			.from(galleries)
+			.where(eq(galleries.slug, album.data.slug))
+		if (!gallery) continue
+		const status =
+			album.data.status === 'published'
+				? ('PUBLISHED' as const)
+				: album.data.status === 'archived'
+					? ('ARCHIVED' as const)
+					: ('DRAFT' as const)
+		await db
+			.update(galleries)
+			.set({
+				title: album.data.title,
+				description: album.data.description || null,
+				cover: album.data.cover || null,
+				status,
+				publishedAt: status === 'PUBLISHED' ? new Date() : null,
+				sourcePath: `${albumName}/album.yaml`,
+				metadata: {
+					tags: album.data.tags,
+					location: album.data.location,
+					showExif: album.data.showExif,
+					showLocation: album.data.showLocation,
+				},
+			})
+			.where(eq(galleries.id, gallery.id))
+		for (const image of album.data.images ?? []) {
+			await db
+				.update(galleryImages)
+				.set({
+					title: image.title || null,
+					description: image.description || null,
+					alt: image.alt || album.data.title,
+					sortOrder: image.order ?? 0,
+					hidden: image.hidden ?? false,
+				})
+				.where(eq(galleryImages.sourcePath, `${albumName}/${image.file}`))
+		}
+		syncedSlugs.push(album.data.slug)
+	}
+	return syncedSlugs
+}
+
 export async function syncGalleries(
 	options: GallerySyncOptions = {},
 ): Promise<GallerySyncSummary> {
@@ -181,9 +237,10 @@ export async function syncGalleries(
 			logger.warn('Gallery input directory does not exist; nothing to sync', {
 				inputRoot,
 			})
-			return summary
+			inputAlbums = []
+		} else {
+			throw error
 		}
-		throw error
 	}
 	if (!dryRun) {
 		// Validate credentials before changing local or database state.
@@ -194,10 +251,8 @@ export async function syncGalleries(
 				'Cloudinary credentials are required for a non-dry Gallery sync',
 			)
 	}
-
 	const seenSlugs: string[] = []
 	const seenSourcePaths = new Set<string>()
-	const inputAlbumNames = new Set(inputAlbums.map((album) => album.name))
 	for (const inputAlbum of inputAlbums.sort((a, b) =>
 		a.name.localeCompare(b.name),
 	)) {
@@ -282,6 +337,7 @@ export async function syncGalleries(
 								: config.data.status === 'archived'
 									? ('ARCHIVED' as const)
 									: ('DRAFT' as const),
+						publishedAt: config.data.status === 'published' ? new Date() : null,
 						sourcePath: `${inputAlbum.name}/album.yaml`,
 						metadata: {
 							tags: config.data.tags,
@@ -299,7 +355,10 @@ export async function syncGalleries(
 								title: config.data.title,
 								description: config.data.description || null,
 								cover: config.data.cover || null,
+								status: galleryValues.status,
+								publishedAt: galleryValues.publishedAt,
 								sourcePath: `${inputAlbum.name}/album.yaml`,
+								metadata: galleryValues.metadata,
 							},
 						})
 						.returning({ id: galleries.id })
@@ -333,6 +392,11 @@ export async function syncGalleries(
 								publicId: upload?.publicId || null,
 								url: upload?.url || null,
 								thumbnailUrl: upload?.thumbnailUrl || null,
+								title: existing?.title || null,
+								description: existing?.description || null,
+								alt: existing?.alt || config.data.title,
+								sortOrder: existing?.order ?? processedImages.length + 1,
+								hidden: existing?.hidden ?? false,
 								width: prepared.width,
 								height: prepared.height,
 								exif: prepared.exif,
@@ -372,6 +436,12 @@ export async function syncGalleries(
 				'utf8',
 			)
 	}
+	const metadataSlugs = await syncAlbumOnlyMetadata(
+		galleryRoot,
+		new Set(seenSlugs),
+		dryRun,
+	)
+	seenSlugs.push(...metadataSlugs)
 
 	if (!dryRun) {
 		const persistedImages = await db.query.galleryImages.findMany({
@@ -379,7 +449,8 @@ export async function syncGalleries(
 		})
 		for (const image of persistedImages) {
 			const albumName = image.sourcePath.split('/')[0]
-			if (!albumName || !inputAlbumNames.has(albumName)) continue
+			if (!albumName || !inputAlbums.some((album) => album.name === albumName))
+				continue
 			if (seenSourcePaths.has(image.sourcePath)) continue
 			await db
 				.update(galleryImages)

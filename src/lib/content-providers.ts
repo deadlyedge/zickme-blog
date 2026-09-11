@@ -1,7 +1,10 @@
 import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { comments, posts, tags } from '@/db/schema'
+import { createLogger } from '@/lib/logger'
 import type { ContentResponse, PostWithTags, SiteProfile, Tag } from '@/types'
+
+const logger = createLogger('lib/content-providers')
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
@@ -77,66 +80,33 @@ export const fetchTags = async (): Promise<Tag[]> => {
 export const fetchTopHottestPosts = async (
 	limit = 5,
 ): Promise<PostWithTags[]> => {
-	// 查询全站评论数最多的已发布文章
-	const topCommentedPostsRaw = await db
-		.select({
-			id: posts.id,
-			commentsCount: count(comments.id),
-		})
-		.from(posts)
-		.innerJoin(
-			comments,
-			and(eq(comments.postId, posts.id), eq(comments.status, 'PUBLISHED')),
-		)
-		.where(and(eq(posts.status, 'PUBLISHED'), isNull(posts.archivedAt)))
-		.groupBy(posts.id)
-		.orderBy(desc(count(comments.id)))
-		.limit(limit)
+	try {
+		// 查询全站评论数最多的已发布文章
+		const topCommentedPostsRaw = await db
+			.select({
+				id: posts.id,
+				commentsCount: count(comments.id),
+			})
+			.from(posts)
+			.innerJoin(
+				comments,
+				and(eq(comments.postId, posts.id), eq(comments.status, 'PUBLISHED')),
+			)
+			.where(and(eq(posts.status, 'PUBLISHED'), isNull(posts.archivedAt)))
+			.groupBy(posts.id)
+			.orderBy(desc(count(comments.id)))
+			.limit(limit)
 
-	const topIds = topCommentedPostsRaw.map((p) => p.id)
+		const topIds = topCommentedPostsRaw.map((p) => p.id)
 
-	if (topIds.length === 0) {
-		// 如果暂无评论，退化为获取最新发布的文章
-		return await fetchPosts(limit)
-	}
+		if (topIds.length === 0) {
+			// 如果暂无评论，退化为获取最新发布的文章
+			return await fetchPosts(limit)
+		}
 
-	// 如果有评论数排名，拉取详情并补充不足 limit 的最新文章
-	const results = await db.query.posts.findMany({
-		where: inArray(posts.id, topIds),
-		with: {
-			postsToTags: {
-				with: {
-					tag: true,
-				},
-			},
-		},
-	})
-
-	const mappedResults = results.map((post) => ({
-		...post,
-		tags: post.postsToTags.map((pt) => pt.tag),
-	})) as PostWithTags[]
-
-	// 保持评论数从高到低的排序
-	const sorted = topIds
-		.map((id) => mappedResults.find((p) => p.id === id))
-		.filter((p): p is PostWithTags => Boolean(p))
-
-	if (sorted.length < limit) {
-		const excludeIds = sorted.map((p) => p.id)
-		const fallbackPosts = await db.query.posts.findMany({
-			where: and(
-				eq(posts.status, 'PUBLISHED'),
-				isNull(posts.archivedAt),
-				excludeIds.length > 0
-					? sql`${posts.id} NOT IN (${sql.join(
-							excludeIds.map((id) => sql`${id}`),
-							sql`, `,
-						)})`
-					: undefined,
-			),
-			orderBy: [desc(posts.publishedAt)],
-			limit: limit - sorted.length,
+		// 如果有评论数排名，拉取详情并补充不足 limit 的最新文章
+		const results = await db.query.posts.findMany({
+			where: inArray(posts.id, topIds),
 			with: {
 				postsToTags: {
 					with: {
@@ -146,15 +116,66 @@ export const fetchTopHottestPosts = async (
 			},
 		})
 
-		const fallbackMapped = fallbackPosts.map((post) => ({
+		const mappedResults = results.map((post) => ({
 			...post,
 			tags: post.postsToTags.map((pt) => pt.tag),
 		})) as PostWithTags[]
 
-		return [...sorted, ...fallbackMapped]
-	}
+		// 保持评论数从高到低的排序
+		const sorted = topIds
+			.map((id) => mappedResults.find((p) => p.id === id))
+			.filter((p): p is PostWithTags => Boolean(p))
 
-	return sorted
+		if (sorted.length < limit) {
+			const excludeIds = sorted.map((p) => p.id)
+			const fallbackPosts = await db.query.posts.findMany({
+				where: and(
+					eq(posts.status, 'PUBLISHED'),
+					isNull(posts.archivedAt),
+					excludeIds.length > 0
+						? sql`${posts.id} NOT IN (${sql.join(
+								excludeIds.map((id) => sql`${id}`),
+								sql`, `,
+							)})`
+						: undefined,
+				),
+				orderBy: [desc(posts.publishedAt)],
+				limit: limit - sorted.length,
+				with: {
+					postsToTags: {
+						with: {
+							tag: true,
+						},
+					},
+				},
+			})
+
+			const fallbackMapped = fallbackPosts.map((post) => ({
+				...post,
+				tags: post.postsToTags.map((pt) => pt.tag),
+			})) as PostWithTags[]
+
+			return [...sorted, ...fallbackMapped]
+		}
+
+		return sorted
+	} catch (error) {
+		logger.error(
+			'Failed to fetch hottest posts; falling back to latest posts',
+			error,
+			{
+				limit,
+			},
+		)
+		try {
+			return await fetchPosts(limit)
+		} catch (fallbackError) {
+			logger.error('Failed to fetch fallback latest posts', fallbackError, {
+				limit,
+			})
+			return []
+		}
+	}
 }
 
 export const fetchPinnedPosts = async (

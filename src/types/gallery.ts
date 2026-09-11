@@ -79,5 +79,6 @@ export interface GalleryPublic {
 	description: string | null
 	cover: string | null
 	status: GalleryStatus
+	location?: string
 	images: GalleryPublicImage[]
 }
