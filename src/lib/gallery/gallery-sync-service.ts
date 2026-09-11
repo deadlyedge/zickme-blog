@@ -23,8 +23,8 @@ import type { GalleryExif, GalleryImageFrontmatter } from '@/types/gallery'
 const logger = createLogger('lib/gallery/gallery-sync-service')
 const DEFAULT_INPUT_DIR = path.join(process.cwd(), 'content/.gallery-input')
 // Gallery keeps substantially more detail than regular post media.
-const MAX_WIDTH = 6000
-const MAX_HEIGHT = 4000
+const MAX_WIDTH = 4000
+const MAX_HEIGHT = 3000
 const QUALITY = 95
 const EFFORT = 6
 const INPUT_EXTENSIONS = /\.(jpe?g|png|tiff?|bmp|gif|webp|avif|heic|heif)$/i

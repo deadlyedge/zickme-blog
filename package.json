@@ -12,6 +12,7 @@
 		"content:check": "bun run scripts/check-content.ts",
 		"content:fix": "bun run scripts/check-content.ts --fix",
 		"content:init": "bun run scripts/init-content.ts",
+		"gallery:index": "bun run scripts/gallery-index.ts",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",

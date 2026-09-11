@@ -75,6 +75,52 @@ function normalizeImage(
 	return image
 }
 
+function validateAlbumShape(raw: Record<string, unknown>): string[] {
+	const issues: string[] = []
+	if (raw.slug !== undefined && typeof raw.slug !== 'string')
+		issues.push('slug 必须是字符串')
+	if (raw.title !== undefined && typeof raw.title !== 'string')
+		issues.push('title 必须是字符串')
+	if (raw.description !== undefined && typeof raw.description !== 'string')
+		issues.push('description 必须是字符串')
+	if (raw.date !== undefined && typeof raw.date !== 'string')
+		issues.push('date 必须是 YYYY-MM-DD 字符串')
+	if (typeof raw.date === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(raw.date))
+		issues.push(`date 格式无效: ${raw.date}`)
+	if (raw.status !== undefined && !ALBUM_STATUSES.has(String(raw.status)))
+		issues.push(`status 无效: ${String(raw.status)}`)
+	if (raw.layout !== undefined && !LAYOUTS.has(raw.layout as GalleryLayout))
+		issues.push(`layout 无效: ${String(raw.layout)}`)
+	if (raw.sort !== undefined && !SORTS.has(raw.sort as GallerySort))
+		issues.push(`sort 无效: ${String(raw.sort)}`)
+	if (
+		raw.tags !== undefined &&
+		(!Array.isArray(raw.tags) ||
+			raw.tags.some((tag) => typeof tag !== 'string'))
+	)
+		issues.push('tags 必须是字符串数组')
+	if (raw.images !== undefined && !Array.isArray(raw.images))
+		issues.push('images 必须是数组')
+	if (Array.isArray(raw.images)) {
+		for (const [index, image] of raw.images.entries()) {
+			if (!isRecord(image)) {
+				issues.push(`images[${index}] 必须是对象`)
+				continue
+			}
+			if (typeof image.file !== 'string' || !image.file.trim())
+				issues.push(`images[${index}].file 必须是非空字符串`)
+			if (
+				image.order !== undefined &&
+				(typeof image.order !== 'number' || !Number.isInteger(image.order))
+			)
+				issues.push(`images[${index}].order 必须是整数`)
+			if (image.hidden !== undefined && typeof image.hidden !== 'boolean')
+				issues.push(`images[${index}].hidden 必须是布尔值`)
+		}
+	}
+	return issues
+}
+
 export function parseAlbumData(
 	raw: unknown,
 	albumDirectory: string,
@@ -165,10 +211,10 @@ export async function scanGalleryDirectory(
 		const albumIssues: string[] = []
 		let data: ParsedGalleryAlbum['data']
 		try {
-			data = parseAlbumData(
-				await parse(await fs.readFile(configPath, 'utf8')),
-				directory,
-			)
+			const raw = await parse(await fs.readFile(configPath, 'utf8'))
+			if (!isRecord(raw)) throw new Error('album.yaml 必须解析为对象')
+			albumIssues.push(...validateAlbumShape(raw))
+			data = parseAlbumData(raw, directory)
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
 				data = parseAlbumData({}, directory)
@@ -186,6 +232,8 @@ export async function scanGalleryDirectory(
 		const imageEntries = await fs
 			.readdir(imagesDirectory, { withFileTypes: true })
 			.catch(() => [])
+		for (const entry of imageEntries.filter((item) => item.isDirectory()))
+			albumIssues.push(`images/ 下不允许嵌套目录: ${entry.name}`)
 		const albumRootFiles = (
 			await fs.readdir(directory, { withFileTypes: true })
 		).filter(
@@ -214,7 +262,9 @@ export async function scanGalleryDirectory(
 			imageStats.filter((file) => WEBP_PATTERN.test(file.name)),
 			data.sort,
 		)
-		const registered = new Set(data.images.map((image) => image.file))
+		const registered = new Set(
+			data.images.map((image) => image.file.replaceAll('\\', '/')),
+		)
 		for (const file of files)
 			if (!registered.has(`images/${file}`))
 				albumIssues.push(`图片未登记: images/${file}`)
@@ -226,13 +276,17 @@ export async function scanGalleryDirectory(
 			if (pathIssue) albumIssues.push(pathIssue)
 			if (!WEBP_PATTERN.test(image.file))
 				albumIssues.push(`图片必须为 WebP: ${image.file}`)
-			if (!files.includes(path.posix.basename(image.file)))
+			if (
+				!files.includes(path.posix.basename(image.file.replaceAll('\\', '/')))
+			)
 				albumIssues.push(`配置图片不存在: ${image.file}`)
 		}
 		if (data.cover) {
 			const coverIssue = validateRelativePath(data.cover, 'cover')
 			if (coverIssue) albumIssues.push(coverIssue)
-			else if (!files.includes(path.posix.basename(data.cover)))
+			else if (
+				!files.includes(path.posix.basename(data.cover.replaceAll('\\', '/')))
+			)
 				albumIssues.push(`封面图片不存在: ${data.cover}`)
 		}
 		const orders = data.images
