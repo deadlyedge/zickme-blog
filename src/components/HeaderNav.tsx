@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, SearchIcon, User, UserIcon } from 'lucide-react'
+import { Aperture, BookOpen, SearchIcon, User, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -40,6 +40,14 @@ export const HeaderNav = () => {
 		return null
 	}
 
+	const isGallery = pathname.startsWith('/gallery')
+	const navClass = isGallery
+		? 'bg-[#242424]/85 text-white border-white/10'
+		: 'bg-white/70 dark:bg-background/80 border-border'
+	const mutedNavClass = isGallery
+		? 'text-white/75 hover:text-white hover:bg-white/10'
+		: 'text-primary'
+
 	const handleSignOut = async () => {
 		try {
 			await signOut()
@@ -53,7 +61,9 @@ export const HeaderNav = () => {
 
 	return (
 		<>
-			<nav className="fixed w-full top-0 z-40 h-16 bg-white/70 dark:bg-background/80 backdrop-blur-md border-b">
+			<nav
+				className={`fixed w-full top-0 z-40 h-16 backdrop-blur-md border-b transition-colors duration-300 ${navClass}`}
+			>
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 h-16 flex items-center justify-between">
 					<Link
 						href="/"
@@ -62,7 +72,7 @@ export const HeaderNav = () => {
 					>
 						<BrandLogo
 							size={32}
-							textClassName="text-lg font-black tracking-tight"
+							textClassName={`text-lg font-black tracking-tight ${isGallery ? 'text-[#d4d4d4] [&_.text-primary]:text-[#d4d4d4]' : ''}`}
 						/>
 					</Link>
 
@@ -82,6 +92,17 @@ export const HeaderNav = () => {
 							<Link href="/posts" className="gap-1.5">
 								<BookOpen className="size-4 opacity-70" />
 								<span>posts</span>
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="ghost"
+							size="sm"
+							className={`font-bold transition-all duration-200 ${isGallery ? 'bg-white/12 text-white' : ''}`}
+						>
+							<Link href="/gallery" className="gap-1.5">
+								<Aperture className="size-4 opacity-70" />
+								<span>gallery</span>
 							</Link>
 						</Button>
 						<Button
@@ -123,7 +144,7 @@ export const HeaderNav = () => {
 									variant="ghost"
 									size="sm"
 									onClick={() => setIsSearchOpen(true)}
-									className="ml-1 h-8 w-8 p-0 text-primary hover:fill-white hover:bg-accent rounded-full border border-border/50"
+									className={`ml-1 h-8 w-8 p-0 rounded-full border ${mutedNavClass} ${isGallery ? 'border-white/15' : 'border-border/50'}`}
 								>
 									<SearchIcon className="h-4 w-4" />
 									<span className="sr-only">搜索</span>
