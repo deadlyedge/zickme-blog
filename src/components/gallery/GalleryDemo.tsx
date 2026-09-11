@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Info, Maximize2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -216,11 +216,7 @@ export function GalleryDemo() {
 
 				<section className="hidden min-h-0 flex-1 grid-cols-[minmax(0,1fr)_clamp(6rem,13vw,10rem)] gap-5 md:grid">
 					<div className="relative min-h-0 overflow-hidden pr-1">
-						<button
-							type="button"
-							onClick={() => setLightboxOpen(true)}
-							className="group/stage relative h-full w-full overflow-hidden rounded-sm bg-[#2f2f2f] text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-						>
+						<div className="group/stage relative h-full w-full overflow-hidden rounded-sm bg-[#2f2f2f]">
 							<Image
 								src={selectedPhoto.src}
 								alt={selectedPhoto.alt}
@@ -230,9 +226,6 @@ export function GalleryDemo() {
 								sizes="(min-width: 768px) 75vw, 100vw"
 								className="object-contain"
 							/>
-							<span className="absolute right-4 top-4 rounded-full bg-black/45 p-2 text-white/80 opacity-0 backdrop-blur transition group-hover/stage:opacity-100">
-								<Maximize2 className="size-4" />
-							</span>
 							<span className="group/info absolute inset-x-0 bottom-0 z-10 flex justify-end">
 								<span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-black/55 p-5 text-white opacity-0 shadow-2xl backdrop-blur-md transition duration-300 group-hover/info:pointer-events-auto group-hover/info:translate-y-0 group-hover/info:opacity-100 group-focus-within/info:pointer-events-auto group-focus-within/info:translate-y-0 group-focus-within/info:opacity-100">
 									<PhotoInfo photo={selectedPhoto} compact />
@@ -241,7 +234,7 @@ export function GalleryDemo() {
 									<Info className="size-4" />
 								</span>
 							</span>
-						</button>
+						</div>
 					</div>
 					<div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
 						{selectedPhotos.map((photo, index) => (
@@ -268,36 +261,45 @@ export function GalleryDemo() {
 					</div>
 				</section>
 
-				<section className="min-h-0 flex-1 space-y-3 overflow-y-auto md:hidden">
-					{selectedPhotos.map((photo, index) => (
-						<button
-							key={photo.id}
-							type="button"
-							onClick={() => {
-								setSelectedIndex(index)
-								setLightboxOpen(true)
-							}}
-							className="group block w-full text-left"
-						>
-							<div
-								className="relative overflow-hidden rounded-sm bg-[#2f2f2f]"
-								style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
-							>
-								<Image
-									src={photo.src}
-									alt={photo.alt}
-									fill
-									sizes="50vw"
-									className="object-cover"
-								/>
-							</div>
-							<div className="px-1 pb-1 pt-2">
-								<p className="text-sm font-medium">{photo.title}</p>
-								<p className="mt-1 text-[10px] uppercase tracking-wider text-white/40">
-									0{index + 1} · {photo.location}
-								</p>
-							</div>
-						</button>
+				<section className="grid min-h-0 flex-1 grid-cols-2 items-start gap-3 overflow-x-hidden overflow-y-auto md:hidden">
+					{[0, 1].map((column) => (
+						<div key={column} className="min-w-0 space-y-3">
+							{selectedPhotos.map((photo, index) => {
+								if (index % 2 !== column) return null
+								return (
+									<button
+										key={photo.id}
+										type="button"
+										onClick={() => {
+											setSelectedIndex(index)
+											setLightboxOpen(true)
+										}}
+										className="group block w-full text-left"
+									>
+										<div
+											className="relative overflow-hidden rounded-sm bg-[#2f2f2f]"
+											style={{
+												aspectRatio: `${photo.width} / ${photo.height}`,
+											}}
+										>
+											<Image
+												src={photo.src}
+												alt={photo.alt}
+												fill
+												sizes="50vw"
+												className="object-cover"
+											/>
+										</div>
+										<div className="px-1 pb-1 pt-2">
+											<p className="text-sm font-medium">{photo.title}</p>
+											<p className="mt-1 text-[10px] uppercase tracking-wider text-white/40">
+												0{index + 1} · {photo.location}
+											</p>
+										</div>
+									</button>
+								)
+							})}
+						</div>
 					))}
 				</section>
 			</div>
