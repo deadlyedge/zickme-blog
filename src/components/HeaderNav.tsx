@@ -64,19 +64,19 @@ export const HeaderNav = () => {
 			<nav
 				className={`fixed w-full top-0 z-40 h-16 backdrop-blur-md border-b transition-colors duration-300 ${navClass}`}
 			>
-				<div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 h-16 flex items-center justify-between">
+				<div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-6">
 					<Link
 						href="/"
-						className="group inline-flex items-center"
+						className="group inline-flex shrink-0 items-center"
 						aria-label="返回首页"
 					>
 						<BrandLogo
-							size={32}
-							textClassName={`text-lg font-black tracking-tight ${isGallery ? 'text-[#d4d4d4] [&_.text-primary]:text-[#d4d4d4]' : ''}`}
+							size={28}
+							textClassName={`text-base font-black tracking-tight sm:text-lg ${isGallery ? 'text-[#d4d4d4] [&_.text-primary]:text-[#d4d4d4]' : ''}`}
 						/>
 					</Link>
 
-					<nav className="flex items-center font-bold font-sans text-base gap-1 sm:gap-2">
+					<nav className="flex min-w-0 items-center gap-0.5 overflow-x-auto font-sans text-base font-bold scrollbar-none sm:gap-2">
 						<Button
 							asChild
 							variant={
@@ -89,9 +89,9 @@ export const HeaderNav = () => {
 							size="sm"
 							className="font-bold transition-all duration-200"
 						>
-							<Link href="/posts" className="gap-1.5">
+							<Link href="/posts" aria-label="posts" className="gap-1.5">
 								<BookOpen className="size-4 opacity-70" />
-								<span>posts</span>
+								<span className="hidden sm:inline">posts</span>
 							</Link>
 						</Button>
 						<Button
@@ -100,9 +100,9 @@ export const HeaderNav = () => {
 							size="sm"
 							className={`font-bold transition-all duration-200 ${isGallery ? 'bg-white/12 text-white' : ''}`}
 						>
-							<Link href="/gallery" className="gap-1.5">
+							<Link href="/gallery" aria-label="gallery" className="gap-1.5">
 								<Aperture className="size-4 opacity-70" />
-								<span>gallery</span>
+								<span className="hidden sm:inline">gallery</span>
 							</Link>
 						</Button>
 						<Button
@@ -111,9 +111,9 @@ export const HeaderNav = () => {
 							size="sm"
 							className="font-bold transition-all duration-200"
 						>
-							<Link href="/about" className="gap-1.5">
+							<Link href="/about" aria-label="about" className="gap-1.5">
 								<User className="size-4 opacity-70" />
-								<span>about</span>
+								<span className="hidden sm:inline">about</span>
 							</Link>
 						</Button>
 
@@ -127,10 +127,10 @@ export const HeaderNav = () => {
 										variant="ghost"
 										size="sm"
 										onClick={() => openAuthModal('login')}
-										className="h-8 px-2.5 gap-1.5 ml-1 text-xs font-semibold rounded-full border border-border/50"
+										className="ml-0 h-8 gap-1.5 rounded-full border border-border/50 px-2.5 text-xs font-semibold sm:ml-1"
 									>
 										<UserIcon className="size-3.5" />
-										<span>登录</span>
+										<span className="hidden sm:inline">登录</span>
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent>登录 / 注册</TooltipContent>

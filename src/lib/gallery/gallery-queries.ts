@@ -1,36 +1,8 @@
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
-import type {
-	GalleryExif,
-	GalleryPublic,
-	GalleryPublicImage,
-} from '@/types/gallery'
-
-const PUBLIC_EXIF_KEYS: Array<keyof GalleryExif> = [
-	'make',
-	'model',
-	'lensModel',
-	'iso',
-	'aperture',
-	'exposureTime',
-	'focalLength',
-	'capturedAt',
-]
-
-function toPublicExif(value: unknown): GalleryExif | null {
-	if (typeof value !== 'object' || value === null || Array.isArray(value))
-		return null
-
-	const source = value as Record<string, unknown>
-	const exif: GalleryExif = {}
-	for (const key of PUBLIC_EXIF_KEYS) {
-		const item = source[key]
-		if (typeof item === 'string' || (key === 'iso' && typeof item === 'number'))
-			exif[key] = item as never
-	}
-	return Object.keys(exif).length > 0 ? exif : null
-}
+import { parseGalleryExif } from '@/lib/gallery/exif'
+import type { GalleryPublic, GalleryPublicImage } from '@/types/gallery'
 
 function toPublicImage(
 	image: typeof galleryImages.$inferSelect,
@@ -46,7 +18,7 @@ function toPublicImage(
 		alt: image.alt || image.title || 'Gallery image',
 		width: image.width,
 		height: image.height,
-		exif: showExif ? toPublicExif(image.exif) : null,
+		exif: showExif ? parseGalleryExif(image.exif) : null,
 	}
 }
 

@@ -11,6 +11,7 @@ import {
 	buildGalleryPublicId,
 	uploadGalleryWebp,
 } from '@/lib/gallery/cloudinary'
+import { parseGalleryExif } from '@/lib/gallery/exif'
 import {
 	createAlbumSkeleton,
 	GALLERY_ROOT,
@@ -60,31 +61,6 @@ interface PreparedImage {
 	exif: GalleryExif | null
 }
 
-function publicExif(value: Record<string, unknown> | null): GalleryExif | null {
-	if (!value) return null
-	const pickString = (...keys: string[]) =>
-		keys
-			.map((key) => value[key])
-			.find((item): item is string => typeof item === 'string')
-	const pickNumber = (...keys: string[]) =>
-		keys
-			.map((key) => value[key])
-			.find((item): item is number => typeof item === 'number')
-	const result: GalleryExif = {
-		make: pickString('Make', 'make'),
-		model: pickString('Model', 'model'),
-		lensModel: pickString('LensModel', 'lensModel'),
-		iso: pickNumber('ISO', 'iso'),
-		aperture: pickString('FNumber', 'ApertureValue', 'aperture'),
-		exposureTime: pickString('ExposureTime', 'exposureTime'),
-		focalLength: pickString('FocalLength', 'focalLength'),
-		capturedAt: pickString('DateTimeOriginal', 'CreateDate', 'capturedAt'),
-	}
-	return Object.values(result).some((item) => item !== undefined)
-		? result
-		: null
-}
-
 export async function prepareGalleryImage(
 	sourcePath: string,
 ): Promise<PreparedImage> {
@@ -115,7 +91,7 @@ export async function prepareGalleryImage(
 		hash: createHash('sha256').update(processed).digest('hex'),
 		size: processed.byteLength,
 		mtime: stat.mtime,
-		exif: publicExif(rawExif as Record<string, unknown> | null),
+		exif: parseGalleryExif(rawExif),
 	}
 }
 

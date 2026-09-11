@@ -1,3 +1,4 @@
+import { ExifPanel } from '@/components/gallery/ExifPanel'
 import type { GalleryPublicImage } from '@/types/gallery'
 
 export function GalleryImageInfo({
@@ -31,54 +32,7 @@ export function GalleryImageInfo({
 					{image.description}
 				</p>
 			)}
-			{exif && (
-				<div className="grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-xs text-white/45 sm:grid-cols-3">
-					{(exif.model || exif.make) && (
-						<span>
-							相机
-							<br />
-							<b className="font-medium text-white/80">
-								{[exif.make, exif.model].filter(Boolean).join(' ')}
-							</b>
-						</span>
-					)}
-					{exif.lensModel && (
-						<span>
-							镜头
-							<br />
-							<b className="font-medium text-white/80">{exif.lensModel}</b>
-						</span>
-					)}
-					{exif.iso !== undefined && (
-						<span>
-							ISO
-							<br />
-							<b className="font-medium text-white/80">{exif.iso}</b>
-						</span>
-					)}
-					{exif.aperture && (
-						<span>
-							光圈
-							<br />
-							<b className="font-medium text-white/80">{exif.aperture}</b>
-						</span>
-					)}
-					{exif.exposureTime && (
-						<span>
-							曝光
-							<br />
-							<b className="font-medium text-white/80">{exif.exposureTime}</b>
-						</span>
-					)}
-					{exif.focalLength && (
-						<span>
-							焦距
-							<br />
-							<b className="font-medium text-white/80">{exif.focalLength}</b>
-						</span>
-					)}
-				</div>
-			)}
+			<ExifPanel exif={exif} />
 		</div>
 	)
 }
