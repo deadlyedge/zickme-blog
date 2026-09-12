@@ -493,7 +493,7 @@ src/components/gallery/GalleryPostView.tsx
 
 ### 阶段六：EXIF 与隐私
 
-状态：**未开始；当前仅有硬编码模拟 EXIF**。
+状态：**已完成**。
 
 目标文件：
 
@@ -504,73 +504,32 @@ src/components/gallery/ExifPanel.tsx
 
 任务：读取 EXIF 白名单字段，根据 `showExif` 控制显示，默认关闭 GPS，解析失败时不影响图片展示。
 
-### 阶段七：Dashboard 管理与双向同步
+### 阶段七：Dashboard 管理与双向同步（已拆分至 Stage 7）
 
-状态：**未开始**。
+状态：**从本计划拆出，统一进入 [`development-plan-stage7.md`](development-plan-stage7.md)**。
 
-目标文件：
+Stage 6 到此只负责 Gallery 的内容基础、同步媒体基础、查询路由、响应式前台、Lightbox、EXIF 白名单与隐私策略。Dashboard、ADMIN 写操作、patch/ZIP 回写、merge base、revision、冲突处理、删除确认、CI 和 Forker 初始化流程不再在 Stage 6 中继续扩展。
+
+Stage 7 的目标文件包括：
 
 ```text
 src/app/dashboard/gallery/page.tsx
 src/lib/actions/gallery-admin.ts
+src/lib/gallery/gallery-conflicts.ts
+src/lib/gallery/gallery-writeback.ts
+scripts/gallery-pull.ts
+README.md
+content/README.md
+scripts/README.md
 ```
 
-任务：相册列表、手动同步、同步错误、封面设置、图片排序、图片标题和描述编辑、图片添加/减少、隐藏和归档。所有写操作要求 ADMIN Session。
-
-Dashboard 编辑、添加或减少相册/图片时，必须同时更新数据库和本地内容同步状态：
-
-1. 可直接回写 `album.yaml` 的变更生成结果；
-2. 在无法写入部署环境工作区时，提供 ZIP 或 patch 下载；
-3. 不直接编辑 `gallery.yaml`，由索引工具重新生成；
-4. 本地与数据库均发生修改时标记 `CONFLICT`，不自动覆盖；
-5. 本地删除图片时先标记待删除，Cloudinary 删除需要管理员确认；
-6. Dashboard 新增图片后应进入 `album.yaml` 的 `images` 列表或待回写队列。
-
-### 三方同步与防信息流失
-
-三方同步不把三个系统都视为独立真相源：
+完整计划见：
 
 ```text
-album.yaml       单个相册及图片人工元数据的内容源
-gallery.yaml     自动生成的全局索引，不是编辑源
-PostgreSQL       Gallery/GalleryImage 运行时副本
-Dashboard        数据库管理入口和本地回写变更生成器
-Cloudinary       与本地 WebP 一致的媒体存储和 CDN
-CLI              本地文件应用、合并和冲突处理
+documents/development-plan-stage7.md
 ```
 
-同步必须区分两类字段：
-
-```text
-自动字段：fileHash、fileSize、width、height、exif、publicId、url、sourceModifiedAt
-人工字段：title、description、alt、sortOrder、hidden、cover、tags、location
-```
-
-自动字段可以重新计算；人工字段不能被图片重新处理覆盖。
-
-建议保存：
-
-```text
-contentHash
-fileHash
-sourceModifiedAt
-lastSyncedAt
-syncVersion
-revision
-mergeBase
-```
-
-冲突规则：
-
-```text
-本地变更，数据库未变更 → 接受本地并推送
-数据库变更，本地未变更 → 生成 album.yaml 回写或 patch
-本地和数据库都变更 → CONFLICT，不自动覆盖
-本地删除图片 → PENDING_DELETE，等待确认
-Dashboard 删除图片 → 先更新状态，再生成本地回写变更
-```
-
-比较必须基于上一次同步快照（merge base）进行字段级合并，而不是简单地整份覆盖 `album.yaml`。Dashboard 保存时使用 `revision` 或 `expectedUpdatedAt` 乐观锁；版本不一致时拒绝保存并要求重新加载。
+以上 Dashboard 写入、三方同步、字段级合并、冲突保护和 Cloudinary 删除确认已迁移到 Stage 7，详见 `documents/development-plan-stage7.md`。
 
 ### 原型迁移门禁
 
@@ -619,7 +578,7 @@ PENDING_DELETE
 
 ## 八、验收标准
 
-### 内容与同步
+### 内容与同步（Stage 6 范围）
 
 - `content/photo-gallery/{album}/album.yaml` 可创建相册；
 - `bun run content:check -- --fix` 能为缺少配置的相册生成 `album.yaml` 内容骨架；
@@ -632,32 +591,28 @@ PENDING_DELETE
 - 公开 EXIF 由数据库白名单字段提供；
 - 图片进入 `photo-gallery/{albumSlug}/`；
 - 未修改图片不会重复上传；
-- 本地删除图片后数据库状态正确更新；
-- Dashboard 添加、编辑或减少图片后能生成可回写 `album.yaml` 的变更；
-- 本地和数据库同时修改时能识别冲突且不自动覆盖；
+- 本地删除图片后能够进入同步服务定义的归档/待删除流程；
 - 普通 Post 同步不受 Gallery 影响。
 
 ### 前台
 
-- `/gallery` 原型可访问；`/gallery/[slug]` 尚未实现；
-- 原型已验证桌面主图/缩略图布局；真实 Gallery 数据驱动布局尚未完成；
+- `/gallery` 和 `/gallery/[slug]` 使用真实 Gallery 数据；
+- 桌面主图/缩略图布局由类型化 DTO 驱动；
 - 原型已验证移动端双列纵向瀑布，正式实现必须使用明确的双列纵向 Grid 或经过验证的 Masonry 方案，禁止出现横向滚动；
-- 原型已验证移动端 Lightbox 的按钮和键盘切换；触摸手势、焦点陷阱和焦点恢复尚未完成；
-- 原型已验证桌面 info 浮层、移动端信息卡最小化和模拟 EXIF 展示；真实 EXIF 白名单尚未接入；
+- 移动端 Lightbox 支持按钮、键盘、触摸手势、焦点陷阱和焦点恢复；
+- 桌面 info 浮层、移动端信息卡和真实 EXIF 白名单已接入；
 - 处理后的 WebP、缩略图、空相册和失败状态处理正确；
 - GPS 默认不公开；
 - SEO metadata 正确。
 
-### 后台与安全
+### 后台与安全边界
 
-- 只有 ADMIN 可执行同步和编辑；
 - 凭证仅来自环境变量；
 - 文件路径防止路径穿越；
 - public ID 不允许非法路径注入；
 - 图片格式和大小有限制；
-- 删除操作支持 dry-run。
-- Dashboard 编辑、添加和减少图片不会静默丢失本地人工字段；
-- 三方同时修改时能通过 merge base 识别冲突；
+- 同步删除支持 dry-run；
+- ADMIN Dashboard 和双向同步验收由 Stage 7 负责。
 
 ### 质量验证
 
