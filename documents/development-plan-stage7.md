@@ -1,8 +1,8 @@
-# 第七阶段开发计划（Stage 7：Dashboard、双向同步与 Forker 工程化）
+# 第七阶段开发计划（Stage 7：Gallery 内容同步与管理闭环）
 
 > 制定日期：2026-09-12  
 > 前置阶段：Stage 6 独立 Gallery 内容体系  
-> 本阶段定位：在 Stage 6 的本地内容、数据库副本、Cloudinary 和前台路由基础上，补齐管理后台、可恢复同步、冲突保护、初始化文档和代码库责任边界。
+> 本阶段定位：在 Stage 6 的本地 Gallery 内容、数据库副本、Cloudinary 和前台路由基础上，补齐 Gallery 管理后台、可恢复同步、冲突保护、回写协议和独立运行文档。
 
 ---
 
@@ -20,15 +20,17 @@ Stage 6 主要解决 Gallery 的内容基础和前台展示：
 
 这些能力已经构成了一个可运行的只读 Gallery，但还没有解决“谁可以编辑、编辑后如何回写、两端同时变更怎么办、Forker 如何从零部署”的工程问题。因此 Dashboard 和双向同步不应继续堆在 Stage 6 中，而应作为独立的 Stage 7 实施。
 
-Stage 7 的目标不是再增加一个孤立的后台页面，而是整理全站内容生命周期，使新 Forker 能够清楚回答以下问题：
+Stage 7 的目标不是重构整个 Blog App 的同步体系，而是让 Gallery 形成可独立运行的内容管理闭环，并为 Stage 8 的 Post/Gallery 同步整合提供清晰、可迁移的协议边界。新 Forker 应能够清楚回答以下 Gallery 相关问题：
 
 1. 哪些文件是人工编辑源？
 2. 哪些数据是数据库运行时副本？
 3. 哪些文件只属于临时输入，不能提交 Git？
 4. 哪条命令负责检查、转换、上传、入库和回写？
 5. 同时修改本地文件和 Dashboard 时，系统如何避免覆盖？
-6. 新环境如何配置数据库、Cloudinary、管理员和内容目录？
-7. 出错后如何 dry-run、查看日志、恢复和重试？
+6. 新环境如何配置数据库、Cloudinary、管理员和 Gallery 内容目录？
+7. Gallery 出错后如何 dry-run、查看日志、恢复和重试？
+
+Post 在本阶段继续使用现有 `sync` / `sync:pull` 流程。Stage 7 可以参考 Post 的现有约定，但不重写 Post 同步、不合并 CLI 入口，也不建立跨 Post/Gallery 的原子同步。两种内容域的最终整合属于 Stage 8。
 
 ---
 
@@ -94,16 +96,16 @@ PostgreSQL Gallery / GalleryImage
 | Gallery 双向回写 | `gallery:pull` / patch / ZIP | 未实现 |
 | 字段级冲突合并 | merge base / revision | 未实现 |
 
-### 2.2 当前必须在 Stage 7 修复或明确的风险
+### 2.2 当前必须在 Stage 7 修复或明确的 Gallery 风险
 
 1. `album.yaml` 的人工字段和数据库字段必须继续保持明确优先级，不能在同步时用数据库旧值覆盖本地新值。
 2. 只修改 `album.yaml` 时也必须能够同步，不能强依赖本次存在新的原始图片输入。
 3. `gallery.yaml` 不能成为 Dashboard 编辑入口，必须始终由索引命令重新生成。
 4. Cloudinary 删除不能由本地删除直接触发，必须经过 `PENDING_DELETE` 和管理员确认。
 5. `revision`、`syncVersion`、`contentHash`、`mergeBase` 目前还没有形成完整的冲突协议。
-6. 新 Forker 不应被要求理解隐藏的数据库表名、Cloudinary public ID 或内部脚本顺序。
-7. Post 同步和 Gallery 同步必须有独立日志、独立错误统计和独立文档。
-8. 代码库中 README、`content/README.md`、`scripts/README.md` 和 Stage 6 文档存在过时描述，必须统一。
+6. 新 Forker 不应被要求理解隐藏的 Gallery 数据库表名、Cloudinary public ID 或内部脚本顺序。
+7. Gallery 必须拥有独立日志、错误统计、重试和故障排查说明；与 Post 的日志整合留给 Stage 8。
+8. Gallery 相关 README、`content/README.md`、`scripts/README.md` 和 Stage 6 文档中的过时描述必须统一，但不在本阶段重写 Post 同步文档。
 
 ---
 
@@ -120,9 +122,9 @@ PostgreSQL Gallery / GalleryImage
 7. 使用 `revision` 或 `expectedUpdatedAt` 实现乐观锁。
 8. 使用 merge base 进行字段级冲突识别，不整份静默覆盖。
 9. Cloudinary 删除必须支持 dry-run 和管理员确认。
-10. 为 Forker 提供从环境变量、数据库迁移、管理员初始化到首次同步的完整路径。
-11. 统一日志、错误码、同步摘要、重试和故障排查说明。
-12. 整理 Gallery、Post、Dashboard、脚本和文档的责任边界。
+10. 为启用 Gallery 的 Forker 提供从环境变量、数据库迁移、管理员初始化到首次同步的完整路径。
+11. 定义 Gallery 独立的日志、错误码、同步摘要、重试和故障排查说明。
+12. 记录与 Post 的兼容边界和 Stage 8 的整合输入，不在本阶段实施全站同步整合。
 
 ### 3.2 非目标
 
@@ -134,6 +136,10 @@ PostgreSQL Gallery / GalleryImage
 6. 不用“最后一次写入覆盖全部字段”的方式实现同步。
 7. 不把管理员权限扩大到普通 USER。
 8. 不为了兼容旧环境而在生产代码中保留多套不可解释的 Gallery 数据源。
+9. 不重写 Post 的 `sync`、`sync:pull` 或现有数据库同步逻辑。
+10. 不把 `sync` 与 `sync:galleries` 合并为一个入口。
+11. 不建立统一的全站 `/dashboard/sync`、跨域事务或全站审计模型。
+12. 不要求 Post 在 Stage 7 立即采用 Gallery 的快照表、状态枚举或冲突 UI。
 
 ---
 
@@ -225,7 +231,7 @@ ARCHIVED         相册已归档，不从前台公开
 
 ---
 
-## 五、Forker 从零搭建流程
+## 五、启用 Gallery 的 Forker 搭建流程
 
 ### 5.1 最小环境
 
@@ -279,13 +285,15 @@ bun run dev
 bun run reset-admin-password
 ```
 
-Stage 7 需要补充：
+Stage 7 需要补充 Gallery 相关说明：
 
 - 首次管理员创建/升级方式；
 - 数据库连接失败提示；
 - 迁移已执行检测；
 - 空数据库和空内容目录的可运行状态；
 - 不允许生产环境使用 `db:reset` 的醒目警告。
+
+Post-only Forker 不要求配置 Cloudinary，也不要求执行 Gallery 同步。Stage 7 只保证 Gallery 配置缺失时，Post 流程仍可独立运行；Post/Gallery 的统一初始化向导和统一同步命令属于 Stage 8。
 
 ### 5.3 首次 Gallery 流程
 
@@ -466,7 +474,7 @@ CLI 输出适合人阅读的摘要；数据库日志保存结构化统计；生�
 
 ---
 
-## 八、CI、部署和发布流程
+## 八、Gallery 的 CI、部署和发布流程
 
 ### 8.1 Pull Request 检查
 
@@ -488,15 +496,15 @@ PR 不执行真实 Cloudinary 删除，不执行生产数据库写入。
 1. 确认 DATABASE_URL 指向目标环境
 2. 执行 bun run db:migrate
 3. 确认 BETTER_AUTH_SECRET 和 BETTER_AUTH_URL
-4. 确认 Cloudinary 三项 Secret
+4. 如果启用 Gallery，确认 Cloudinary 三项 Secret
 5. 执行 Gallery dry-run
 6. 检查 unsupported/errors/conflicts
-7. 执行媒体同步
-8. 执行 Post 同步
-9. 验证 /gallery、/posts、/dashboard
+7. 确认后执行 Gallery 媒体同步
+8. 按现有独立流程执行 Post 同步（本阶段不改造）
+9. 验证 /gallery、/dashboard/gallery；Post 验证沿用现有流程
 ```
 
-Post 和 Gallery 同步可以串联，但日志、失败码和统计必须分开。
+如果部署脚本暂时串联 Post 和 Gallery 命令，二者仍必须保持独立的退出状态、日志、失败码和统计。Stage 8 才评估统一编排、部分成功策略和全站同步锁。
 
 ### 8.3 回滚
 
@@ -512,7 +520,7 @@ Post 和 Gallery 同步可以串联，但日志、失败码和统计必须分开
 
 ---
 
-## 九、Forker 文档整理任务
+## 九、Gallery Forker 文档整理任务
 
 Stage 7 必须同步更新以下文档，不能只新增计划而不更新入口：
 
@@ -526,7 +534,7 @@ documents/photo-gallery-design.md
 documents/development-plan-stage6.md
 ```
 
-README 应提供一条最短路径：
+README 和 Gallery 专题文档应提供 Gallery 最短路径；全站基础启动路径继续沿用现有 README，不在本阶段重写 Post 流程：
 
 ```bash
 bun install
@@ -555,7 +563,9 @@ bun run sync:galleries
 - 如何创建管理员；
 - 如何处理 Cloudinary 缺失；
 - 如何从空数据库启动；
-- 如何确认 Gallery 数据库副本已更新。
+- 如何确认 Gallery 数据库副本已更新；
+- Post-only 环境为什么可以不配置 Cloudinary；
+- Stage 7 与 Stage 8 的同步边界。
 
 ---
 
@@ -592,6 +602,14 @@ bun run sync:galleries
 - GitHub Actions Gallery dry-run；
 - Forker 文档和模板收敛。
 
+### Stage 8 输入清单（本阶段只记录，不实施）
+
+- 比较 Post 与 Gallery 的 `contentHash` 规范化策略；
+- 评估是否抽取通用 Snapshot、merge base 和 revision 模型；
+- 评估统一 `sync` / `sync:galleries` 的编排入口；
+- 评估统一同步锁、重试、审计和 Dashboard 同步中心；
+- 评估统一 dry-run 输出、CI 门禁和 Forker 初始化文档。
+
 ### 交付门禁
 
 - 没有 ADMIN Session 不能修改 Gallery；
@@ -601,7 +619,8 @@ bun run sync:galleries
 - 本地和数据库同时变更必须进入 `CONFLICT`；
 - `gallery.yaml` 不允许作为编辑源；
 - 新 Forker 能按 README 完成空数据库启动；
-- Post 流程和 Gallery 流程可以独立运行；
+- Post 流程和 Gallery 流程可以独立运行，Gallery 不依赖 Post 同步成功；
+- Stage 7 不声称已经完成 Post/Gallery 全站同步整合；
 - 文档命令必须与 `package.json` 和实际脚本一致。
 
 ---
