@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Sync Markdown to PostgreSQL (Neon)
+      - name: Sync all content domains to PostgreSQL (Neon)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: bun run scripts/sync-content.ts
+        run: bun run sync -- --scope all

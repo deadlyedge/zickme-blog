@@ -197,7 +197,7 @@ http://localhost:3000
 | `bun run build` | 构建生产版本 |
 | `bun run lint` | 运行 Biome 检查 |
 | `bun run format` | 使用 Biome 格式化代码 |
-| `bun run sync` | 扫描 `content/posts` 并同步到数据库 |
+| `bun run sync` | 同步所有内容域（等价于 `--scope all`） |
 | `bun run sync -- --scope posts --dry-run --json` | 预览 Post scope 同步并输出 JSON 摘要 |
 | `bun run sync -- --scope galleries --dry-run --json` | 预览 Gallery scope 同步并输出 JSON 摘要 |
 | `bun run sync -- --scope all --dry-run --json` | 预览全站同步并输出双域摘要 |
@@ -221,13 +221,17 @@ http://localhost:3000
 推荐提交流程：
 
 ```bash
-bun run content:check
-bun run sync -- --dry-run
+bun run content:check -- --no-examples
+bun run gallery:index
+bun run sync -- --scope all --dry-run --json
+git diff --check
+git status --short
+git add content/posts content/photo-gallery
+git commit -m "content: update blog"
 bun run sync
-git diff -- content/posts
-git add content/posts
-git commit
 ```
+
+`bun run sync` 未指定 scope 时会依次尝试同步 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只同步单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。
 
 首次准备内容目录时，可以运行：
 
@@ -247,14 +251,16 @@ zickme-blog/
 │   ├── posts/                     # Markdown Post 内容源
 │   │   ├── images/                # Post 本地媒体
 │   │   └── *.md
-│   └── .obsidian/                 # Obsidian 配置
+│   ├── photo-gallery/             # album.yaml 与自动生成的 Gallery 文件
+│   └── .gallery-input/            # Git 忽略的原始图片输入
 ├── documents/
 │   ├── development-plan-stage2.md
 │   ├── development-plan-stage3.md
 │   ├── development-plan-stage4.md
 │   ├── development-plan-stage5.md
 │   ├── development-plan-stage6.md # 独立 Gallery 规划
-│   ├── stage4-summary.md
+│   ├── stage5-summary.md
+│   └── stage9.1-architecture-and-content-flow.md
 │   └── stage5-summary.md
 ├── drizzle/
 │   ├── 0000_baseline.sql           # 当前正式 baseline
@@ -264,6 +270,7 @@ zickme-blog/
 │   ├── check-content.ts
 │   ├── init-content.ts             # 生成 content 目录模板
 │   ├── sync-content.ts
+│   ├── sync-galleries.ts
 │   ├── sync-pull.ts
 │   ├── reset-db.ts
 │   └── reset-admin-password.ts

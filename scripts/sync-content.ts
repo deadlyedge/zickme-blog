@@ -26,8 +26,9 @@ const deleteOld = !args.includes('--no-delete')
 
 function usage(): never {
 	console.error(
-		'用法：bun run sync -- --scope posts|galleries|all [--dry-run] [--json] [--no-delete]',
+		'用法：bun run sync [--scope posts|galleries|all] [--dry-run] [--json] [--no-delete]',
 	)
+	console.error('未指定 --scope 时默认同步所有内容域（等价于 --scope all）。')
 	process.exit(2)
 }
 
@@ -50,11 +51,10 @@ function printSummary(summary: SyncRunSummary) {
 async function main() {
 	let scope: SyncScope
 	try {
-		// Without --scope, preserve the historical `bun run sync` Post behavior.
 		if (retryIndex >= 0 && (!retryOf || retryOf.startsWith('--'))) usage()
 		if (retryOf && !requestedScope)
 			throw new Error('--retry 必须同时指定 --scope')
-		scope = requestedScope ? parseSyncScope(requestedScope) : 'POSTS'
+		scope = requestedScope ? parseSyncScope(requestedScope) : 'ALL'
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : String(error))
 		usage()

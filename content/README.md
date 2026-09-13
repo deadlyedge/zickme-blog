@@ -28,7 +28,7 @@ image: ./images/cover.webp
 
 建议手动填写唯一 `slug`。中文标题会自动转换为拼音，但重名时同步会失败，不会覆盖其他文章。
 
-## 图片相册（Stage 7）
+## 图片相册（Gallery）
 
 相册未来放在 `content/photo-gallery/{album-name}/`，每个相册使用 `album.yaml`，图片只保存处理后的 WebP：
 
@@ -40,20 +40,24 @@ content/photo-gallery/japan-autumn/
     └── 002.webp
 ```
 
-Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gallery.yaml` 是自动生成索引，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 `content/.gallery-input/{album}/`，先执行 `bun run sync:galleries -- --dry-run`。
+Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gallery.yaml` 是自动生成索引，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 `content/.gallery-input/{album}/`。处理图片后执行 `bun run gallery:index`，再进行检查和同步。
 
 ## 常用命令
 
 ```bash
 bun run content:check
 bun run content:fix
-bun run sync -- --dry-run
-bun run sync
-bun run sync:pull
 bun run gallery:index
-bun run sync:galleries -- --dry-run
+bun run content:check -- --no-examples
+bun run sync -- --scope all --dry-run --json
+bun run sync
+bun run sync -- --scope posts --dry-run --json
+bun run sync -- --scope galleries --dry-run --json
+bun run sync:pull
 bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
+
+不带 `--scope` 的 `bun run sync` 默认同步 Post 和 Gallery，等价于 `bun run sync -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域检查或失败后的单域重跑；`sync:galleries` 仍作为支持 `--input-dir` 的 Gallery 专用兼容入口保留。
 
 `sync:pull` 默认不会覆盖已有本地文件。确认无冲突后才使用：
 
@@ -63,4 +67,4 @@ bun run sync:pull -- --force
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。
 
-Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。生产环境禁止使用 `bun run db:reset`。
+Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。若全站同步中 Gallery 配置不可用，先使用 `--scope posts` 完成 Post 同步，再修复 Gallery 配置并按 scope 重跑。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。生产环境禁止使用 `bun run db:reset`。

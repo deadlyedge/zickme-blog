@@ -8,7 +8,7 @@
 
 | 脚本文件 | 推荐调用命令 | 说明 |
 | :--- | :--- | :--- |
-| **`sync-content.ts`** | `bun run sync` | 将 `content/posts/` 下的 Markdown 文章同步入库至 PostgreSQL |
+| **`sync-content.ts`** | `bun run sync` | 统一同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
@@ -21,17 +21,21 @@
 ## 📖 详细使用说明
 
 ### 1. `sync-content.ts` - 文章内容同步
-将本地 Markdown 解析并同步至 Neon PostgreSQL 数据库（支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除）。
+统一入口解析本地 Post 与 Gallery 内容并同步至 Neon PostgreSQL 数据库。Post 支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除；Gallery 负责 album.yaml、处理后的 WebP、EXIF 与相册媒体同步。
 
 ```bash
-# 1. 默认执行同步
+# 1. 默认执行全站同步（等价于 --scope all）
 bun run sync
 
-# 2. 预览模式（仅输出将要执行的改动日志，不修改数据库）
-bun run scripts/sync-content.ts --dry-run
+# 2. 预览全站同步并输出机器可读摘要
+bun run sync -- --scope all --dry-run --json
 
-# 3. 同步时跳过软删除（保留已在本地删除的文章）
-bun run scripts/sync-content.ts --no-delete
+# 3. 只同步 Post 或 Gallery
+bun run sync -- --scope posts --dry-run
+bun run sync -- --scope galleries --dry-run
+
+# 4. 同步 Post 时跳过软删除
+bun run sync -- --scope posts --no-delete
 ```
 
 ---
@@ -65,7 +69,7 @@ bun run content:init -- --dir ./my-content
 bun run content:init -- --force
 ```
 
-脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过，Post 和 Gallery 使用独立同步入口，Gallery 不会被 `sync` 自动处理。
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `sync` 编排器按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
 
 ---
 
