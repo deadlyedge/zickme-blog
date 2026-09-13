@@ -9,6 +9,11 @@ if (inputIndex >= 0 && (!inputDir || inputDir.startsWith('--'))) {
 	process.exit(1)
 }
 
+if (args.includes('--dry-run'))
+	console.warn(
+		'⚠️ 兼容入口 sync:galleries 的 dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
+	)
+
 runSync({
 	scope: 'GALLERIES',
 	dryRun: args.includes('--dry-run'),

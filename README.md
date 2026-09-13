@@ -18,7 +18,9 @@ PostgreSQL / Drizzle 运行时数据
 Cloudinary 媒体 CDN
 ```
 
-同时提供带有 ADMIN 权限控制的 Dashboard、内容同步、媒体管理和同步诊断工具。
+同时提供带有 ADMIN 权限控制的 Dashboard、运行时发布兼容入口、媒体管理和同步诊断工具。
+
+> **架构减法（阶段 A）**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源。数据库是运行时副本，Cloudinary 只负责媒体 CDN。当前 `sync`、`sync:pull`、`gallery:pull` 等命令处于兼容期冻结状态，不再新增双向同步、merge 或 write-back 能力；详见 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
 
 ---
 
@@ -85,16 +87,16 @@ links:
 - 导出数据库文章 ZIP；
 - 检查本地与数据库文章差异。
 
-Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gallery.yaml` 只能由索引命令生成，原始图片只能放在 Git 忽略的 `content/.gallery-input/`。管理员可通过 `/dashboard/gallery` 编辑并使用 revision 乐观锁：
+Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gallery.yaml` 只能由索引命令生成，原始图片只能放在 Git 忽略的 `content/.gallery-input/`。Dashboard 的旧内容编辑/patch 能力仅为兼容期能力，不应作为新的内容源：
 
 ```bash
 bun run gallery:index
 bun run sync:galleries -- --dry-run
 bun run sync:galleries
-bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
+bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run # 兼容期检查，非正常内容流程
 ```
 
-RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。统一入口支持按 scope 执行；不要同时从 CLI 和 Dashboard 启动同一 scope，重复触发会提示已有同步正在运行，请稍后重试。异常退出后的运行保护会在 TTL 到期后自动释放。
+RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。真实同步仍使用运行保护；`dry-run` 完全只读，不获取数据库锁、不创建或更新 `SyncRun`，也不写文件或上传媒体。
 
 所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
 
@@ -102,9 +104,7 @@ RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF
 
 - 使用 Sharp 进行图片尺寸限制和 WebP 优化；
 - 支持本地 Markdown 图片路径解析和 CDN URL 替换；
-- 支持数据库封面回写至本地 Frontmatter；
-- 支持数据库文章导出为标准 Markdown；
-- 支持数据库文章安全拉取到本地；
+- 数据库封面回写、文章导出和 `sync:pull` 仅作为废弃兼容能力保留，不得作为内容恢复流程；
 - 默认不覆盖已有本地文件；
 - 支持本地新增、远端新增和冲突诊断；
 - 中文 slug 冲突时拒绝同步，不静默覆盖其他文章；
@@ -197,13 +197,13 @@ http://localhost:3000
 | `bun run build` | 构建生产版本 |
 | `bun run lint` | 运行 Biome 检查 |
 | `bun run format` | 使用 Biome 格式化代码 |
-| `bun run sync` | 同步所有内容域（等价于 `--scope all`） |
+| `bun run sync` | 兼容期同步所有内容域（等价于 `--scope all`）；不会发展为新的双向入口 |
 | `bun run sync -- --scope posts --dry-run --json` | 预览 Post scope 同步并输出 JSON 摘要 |
 | `bun run sync -- --scope galleries --dry-run --json` | 预览 Gallery scope 同步并输出 JSON 摘要 |
 | `bun run sync -- --scope all --dry-run --json` | 预览全站同步并输出双域摘要 |
 | `bun run sync -- --retry <run-id> --scope galleries` | 按 scope 重新执行同步；不支持实体级重试 |
-| `bun run sync:pull` | 拉取数据库中本地不存在的文章 |
-| `bun run sync:pull -- --force` | 强制覆盖同名本地 Markdown |
+| `bun run sync:pull` | **已废弃**：数据库→Markdown 兼容入口；内容恢复请使用 Git 历史 |
+| `bun run sync:pull -- --force` | **已废弃**：强制覆盖本地 Markdown，禁止作为正常流程 |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
 | `bun run content:fix` | 自动修复可安全修复的问题 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
@@ -219,19 +219,19 @@ http://localhost:3000
 | `bun run gallery:index` | 重新生成 Gallery 索引 |
 | `bun run sync:galleries -- --dry-run` | 预览 Gallery 同步 |
 | `bun run sync:galleries` | 执行 Gallery 媒体同步 |
-| `bun run gallery:pull` | 校验并应用 Gallery patch |
+| `bun run gallery:pull` | **已废弃**：兼容期校验/应用 Gallery patch |
 
-推荐提交流程：
+推荐提交流程（阶段 A 兼容期）：
 
 ```bash
 bun run content:check -- --no-examples
 bun run gallery:index
-bun run sync -- --scope all --dry-run --json
+bun run sync -- --scope all --dry-run --json # 只读预览，不写 DB/Cloudinary/工作区
 git diff --check
 git status --short
 git add content/posts content/photo-gallery
 git commit -m "content: update blog"
-bun run sync
+bun run sync # 受控发布；提交 Git 后再执行
 ```
 
 提交前也可以直接运行：
@@ -310,8 +310,7 @@ zickme-blog/
 - WebP 图片处理；
 - 品牌与基础 UI 优化；
 - Frontmatter 外链和扩展元数据；
-- 文章封面在线管理与本地回写；
-- 数据库文章导出和 `sync:pull`；
+- 文章封面在线管理（本地回写与 `sync:pull` 已进入废弃兼容期）；
 - 中文 slug 冲突保护；
 - Drizzle migration baseline 精简。
 
@@ -362,10 +361,10 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 
 1. 部署环境的文件系统不应被当作开发机工作区；
 2. Dashboard 导出内容使用 ZIP 下载；
-3. 本地 Markdown 回写和 `sync:pull` 应在本地或 CI 工作区执行；
-4. 数据库迁移在受控环境执行 `bun run db:migrate`；
+3. 本地 Markdown 回写和 `sync:pull` 属于废弃兼容能力，不是内容恢复方式；内容恢复优先使用 Git revert/分支/tag；
+4. 数据库迁移在受控环境执行 `bun run db:migrate`；质量门禁不执行生产数据库写入；
 5. 不要在生产环境执行 `bun run db:reset`；受控发布使用 `bun run db:migrate`。
-6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary。
+6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。
 
 ---
 

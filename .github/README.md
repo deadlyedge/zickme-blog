@@ -2,7 +2,7 @@
 
 本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的内容质量门禁和受控发布流水线。
 
-Post 与 Gallery 保持独立领域，但通过统一 `bun run sync` 编排器按 scope 管理。PR/Push 质量门禁只执行内容检查、索引预览和 Post/Gallery/ALL dry-run；受控发布工作流才执行数据库迁移和真实全站同步。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。Dashboard 生成的 patch 必须通过 `gallery:pull` 的 dry-run 和 hash 检查后再应用。
+Post 与 Gallery 保持独立领域。阶段 A 将现有 `bun run sync` 及相关入口冻结为兼容能力：Git 是唯一人工内容源，质量门禁只执行本地内容检查和真正只读的 dry-run；受控发布工作流才执行数据库迁移和真实同步。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。`gallery:pull` 仅保留兼容期提示，不是正常内容流程。
 
 ---
 
@@ -11,7 +11,7 @@ Post 与 Gallery 保持独立领域，但通过统一 `bun run sync` 编排器�
 ```mermaid
 graph TD
     A[Push / Pull Request] --> Q[quality.yml]
-    Q -->|检查、格式预览、双域 dry-run| R[只读质量门禁]
+    Q -->|本地检查、格式预览、双域只读 dry-run| R[只读质量门禁]
     P[受控发布 / workflow_dispatch] --> M[media.yml]
     M -->|媒体处理| C[Cloudinary CDN]
     C --> S[sync-db.yml]
@@ -41,9 +41,9 @@ graph TD
 
 ### 3. `quality.yml` - PR/Push 质量门禁
 
-- 只读执行 `bun run lint`、TypeScript、`bun run content:verify` 和生产构建；
+- 只读执行 `bun run lint`、TypeScript、`bun run content:verify` 和生产构建，不需要生产数据库或 Cloudinary secrets；
 - `content:verify` 包含 Gallery 原始输入保护、索引预览、Post/Gallery/ALL dry-run 和 `git diff --check`；
-- 不执行 `db:reset`、真实数据库同步、真实 Cloudinary 删除或自动 Git commit/push。
+- 不执行 `db:reset`、真实数据库同步、真实 Cloudinary 上传/删除或自动 Git commit/push。
 
 ---
 
@@ -53,10 +53,10 @@ graph TD
 
 | Secret 变量名 | 必填 | 说明 | 示例 |
 | :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | **是** | Neon PostgreSQL 数据库连接字符串（事务/连接池模式） | `postgresql://user:pass@ep-xyz.neon.tech/neondb?sslmode=require` |
-| `CLOUDINARY_CLOUD_NAME` | **是** | Cloudinary 账户云名称 | `my-cloud-name` |
-| `CLOUDINARY_API_KEY` | **是** | Cloudinary API Key | `123456789012345` |
-| `CLOUDINARY_API_SECRET` | **是** | Cloudinary API Secret | `abcdefghijklmnopqrstuv_wxyz` |
+| `DATABASE_URL` | 发布时 | Neon PostgreSQL 数据库连接字符串（质量门禁不需要） | `postgresql://user:pass@ep-xyz.neon.tech/neondb?sslmode=require` |
+| `CLOUDINARY_CLOUD_NAME` | 发布时 | Cloudinary 账户云名称 | `my-cloud-name` |
+| `CLOUDINARY_API_KEY` | 发布时 | Cloudinary API Key | `123456789012345` |
+| `CLOUDINARY_API_SECRET` | 发布时 | Cloudinary API Secret | `abcdefghijklmnopqrstuv_wxyz` |
 
 ---
 

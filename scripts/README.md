@@ -1,6 +1,6 @@
 # 🛠️ 运维与内容管理脚本指南 (Scripts)
 
-本目录包含用于管理博客内容同步、媒体处理、数据库运维及管理员凭据找回的专用脚本工具，均基于 **Bun + Drizzle ORM + Better-Auth** 编写。
+本目录包含用于管理博客内容校验、兼容期内容同步、媒体处理、数据库运维及管理员凭据找回的专用脚本工具，均基于 **Bun + Drizzle ORM + Better-Auth** 编写。Git 内容源是唯一人工内容源；禁止新增数据库回写、merge 或新的双向同步入口。
 
 ---
 
@@ -8,7 +8,7 @@
 
 | 脚本文件 | 推荐调用命令 | 说明 |
 | :--- | :--- | :--- |
-| **`sync-content.ts`** | `bun run sync` | 统一同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
+| **`sync-content.ts`** | `bun run sync` | 兼容期同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
@@ -24,7 +24,7 @@
 ## 📖 详细使用说明
 
 ### 1. `sync-content.ts` - 文章内容同步
-统一入口解析本地 Post 与 Gallery 内容并同步至 Neon PostgreSQL 数据库。Post 支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除；Gallery 负责 album.yaml、处理后的 WebP、EXIF 与相册媒体同步。
+兼容入口读取本地 Post 与 Gallery 内容并同步至 Neon PostgreSQL 数据库。Post 支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除；Gallery 负责 album.yaml、处理后的 WebP、EXIF 与相册媒体同步。它不是新的双向内容入口。
 
 ```bash
 # 1. 默认执行全站同步（等价于 --scope all）

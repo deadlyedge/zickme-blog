@@ -49,6 +49,10 @@ function printSummary(summary: SyncRunSummary) {
 }
 
 async function main() {
+	if (dryRun)
+		console.warn(
+			'⚠️ 兼容入口 sync 的 dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
+		)
 	let scope: SyncScope
 	try {
 		if (retryIndex >= 0 && (!retryOf || retryOf.startsWith('--'))) usage()
@@ -60,7 +64,8 @@ async function main() {
 		usage()
 	}
 
-	if (scope === 'POSTS' || scope === 'ALL') await writeBackDatabasePosters()
+	if (!dryRun && (scope === 'POSTS' || scope === 'ALL'))
+		await writeBackDatabasePosters()
 	const summary = await runSync({
 		scope,
 		dryRun,

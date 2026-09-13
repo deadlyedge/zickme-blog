@@ -23,6 +23,9 @@ interface GalleryPatch {
 }
 
 async function main() {
+	console.warn(
+		'⚠️ gallery:pull 已废弃：请直接编辑并提交 album.yaml。此兼容入口仅在兼容期保留，禁止作为正常内容流程。',
+	)
 	const parsed = parse(
 		await fs.readFile(path.resolve(resolvedPatchPath), 'utf8'),
 	) as unknown

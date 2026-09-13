@@ -26,11 +26,6 @@ jobs:
         run: bunx tsc --noEmit --pretty false
 
       - name: Verify content and dry-run sync
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: bun run content:verify
 
       - name: Build production application

@@ -41,6 +41,7 @@ export {
 export class ContentSyncService {
 	private logs: SyncLogItem[] = []
 	private cloudinaryConfigured = false
+	private dryRun = false
 	private cloudinaryBaseUrl =
 		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/'
 
@@ -136,6 +137,14 @@ export class ContentSyncService {
 		buffer: Buffer,
 		publicId: string,
 	): Promise<string | null> {
+		if (this.dryRun) {
+			this.addLog(
+				'media',
+				'info',
+				`[DRY RUN] 跳过 Cloudinary 上传: ${publicId}`,
+			)
+			return null
+		}
 		if (!this.cloudinaryConfigured) {
 			this.addLog(
 				'media',
@@ -554,6 +563,7 @@ export class ContentSyncService {
 		this.logs = []
 		const triggerType = options.triggerType || 'MANUAL'
 		const dryRun = options.dryRun || false
+		this.dryRun = dryRun
 
 		this.addLog(
 			'general',

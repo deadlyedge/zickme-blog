@@ -7,6 +7,9 @@ const postsDir = path.join(process.cwd(), 'content/posts')
 const force = process.argv.includes('--force')
 
 async function main() {
+	console.warn(
+		'⚠️ sync:pull 已废弃：Git 内容源是唯一人工内容源。请使用 Git 历史恢复 Markdown；此兼容入口将在后续阶段移除。',
+	)
 	await fs.mkdir(postsDir, { recursive: true })
 	const remotePosts = await db.query.posts.findMany({
 		where: (table, { isNull }) => isNull(table.archivedAt),

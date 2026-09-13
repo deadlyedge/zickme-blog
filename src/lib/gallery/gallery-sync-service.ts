@@ -237,7 +237,8 @@ export async function syncGalleries(
 		)
 		if (sourceFiles.length === 0) continue
 		const albumDirectory = path.join(galleryRoot, inputAlbum.name)
-		await fs.mkdir(path.join(albumDirectory, 'images'), { recursive: true })
+		if (!dryRun)
+			await fs.mkdir(path.join(albumDirectory, 'images'), { recursive: true })
 		const config = await readExistingConfig(
 			albumDirectory,
 			sourceFiles.map(

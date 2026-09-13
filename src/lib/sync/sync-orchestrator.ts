@@ -55,20 +55,22 @@ export async function runSync(
 	const runId = randomUUID()
 	const startedAt = new Date().toISOString()
 	const started = new Date(startedAt)
-	await acquireSyncLock({
-		runId,
-		scope: options.scope,
-		dryRun: options.dryRun === true,
-		triggeredBy: options.triggeredBy ?? 'CLI',
-		retryOf: options.retryOf,
-		actorId: options.actorId,
-		startedAt: started,
-	})
+	const dryRun = options.dryRun === true
+	if (!dryRun)
+		await acquireSyncLock({
+			runId,
+			scope: options.scope,
+			dryRun,
+			triggeredBy: options.triggeredBy ?? 'CLI',
+			retryOf: options.retryOf,
+			actorId: options.actorId,
+			startedAt: started,
+		})
 	const summary: SyncRunSummary = {
 		runId,
 		scope: options.scope,
 		status: 'RUNNING',
-		dryRun: options.dryRun === true,
+		dryRun,
 		triggeredBy: options.triggeredBy ?? 'CLI',
 		startedAt,
 		finishedAt: null,
@@ -139,7 +141,8 @@ export async function runSync(
 		summary.errors++
 	} finally {
 		summary.finishedAt = new Date().toISOString()
-		await finishSyncRun(summary, summary.status === 'SUCCEEDED' ? 0 : 1)
+		if (!dryRun)
+			await finishSyncRun(summary, summary.status === 'SUCCEEDED' ? 0 : 1)
 	}
 	return summary
 }

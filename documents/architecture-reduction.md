@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：提案，作为 Stage 9.6 之后的架构治理基线
+> 状态：阶段 A 已实施，作为 Stage 9.6 之后的架构治理基线
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -189,6 +189,8 @@ bun run publish -- --scope galleries
 - 修复 `dry-run` 的所有文件、数据库和 Cloudinary 副作用；
 - 让质量门禁不依赖生产数据库写入；
 - 为现有兼容入口增加废弃提示。
+
+实施记录：已更新项目协作规范、README、脚本说明和 CI 文档；兼容入口已增加废弃提示；质量门禁不再注入生产数据库/Cloudinary secrets；dry-run 已在编排器、Post write-back、Gallery 目录创建、Cloudinary 上传和 `SyncRun` 记录层统一阻断。
 
 验收：dry-run 不写文件、不上传媒体、不创建或更新生产 `SyncRun`。
 
