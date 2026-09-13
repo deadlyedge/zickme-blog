@@ -1,71 +1,25 @@
-# GitHub Actions 自动化工作流
+# GitHub Actions 自动化已暂停
 
-本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的内容质量门禁和受控发布流水线。
+根据架构减法实施计划，GitHub Actions 当前**明确停用**。仓库不会执行质量 workflow、媒体 workflow、数据库 workflow，也不会响应 `workflow_dispatch` 或 `workflow_run`。
 
-Post 与 Gallery 保持独立领域。阶段 E 已删除旧双向 CLI；Git 是唯一人工内容源，质量门禁只执行本地内容检查和真正只读的 publish dry-run；受控发布工作流才执行数据库迁移和真实 publish。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。
+`.github/workflows/README.md` 是当前唯一的归档说明。恢复自动化前，必须完成离线验收、人工发布演练，并重新评估为单一受控 publish workflow；不得恢复独立 media workflow 或 workflow_run 级联。
 
----
+Git 是唯一人工内容源。暂停期间请使用本地 Bun 命令完成检查、dry-run 和人工 publish；`.gallery-input` 原始照片必须在仓库外自行备份。Snapshot 只保护数据库业务副本，不能恢复 Git 内容源或 Cloudinary 原始媒体。
+## 本地验证
 
-## 🔄 工作流架构与流程
-
-```mermaid
-graph TD
-    A[Push / Pull Request] --> Q[quality.yml]
-    Q -->|本地检查、格式预览、双域 publish dry-run| R[只读质量门禁]
-    P[受控发布 / workflow_dispatch] --> M[media.yml]
-    M -->|媒体处理| C[Cloudinary CDN]
-    C --> S[sync-db.yml]
-    S -->|迁移、统一 ALL publish| E[Neon PostgreSQL 运行时副本]
+```bash
+bun run content:check -- --scope all --no-examples
+bun run content:verify
+bun run publish -- --scope all --dry-run --json
+bun run test
+bunx tsc --noEmit --pretty false
+bun run build
 ```
 
----
-
-## 📋 工作流列表
-
-### 1. `media.yml` - 媒体资源自动优化与上传
-- **触发条件**：
-  - 当 `content/posts/**/images/**` 或 `content/posts/**/*.md` 产生变更并推送到仓库时自动触发。
-  - 支持在 GitHub Actions 控制台手动运行（`workflow_dispatch`）。
-- **执行任务**：
-  - 使用 `oven-sh/setup-bun` 配置高效的 Bun 运行环境。
-  - 执行 `bun run scripts/upload-to-cloudinary.ts`。
-  - 自动将本地 JPG / PNG / BMP 格式图片在内存中预压缩为高质量 WebP（quality: 85, effort: 4），并按文件路径映射唯一 Public ID 上传至 Cloudinary。
-
-### 2. `sync-db.yml` - 内容解析与单向发布
-- **触发条件**：
-  - 在 `Upload Media to Cloudinary` 工作流运行完成且状态为 `success` 时自动级联触发。
-  - 支持手动触发（`workflow_dispatch`）。
-- **执行任务**：
-   - 受控环境先执行 `bun run db:migrate`，再执行 `bun run publish -- --scope all`。
-   - 统一 publish service 按顺序处理 Post 和 Gallery，并写入 SyncRun 发布摘要；失败时保留 scope 结果，不执行队列或自动 Cloudinary 删除。
-
-### 3. `quality.yml` - PR/Push 质量门禁
-
-- 只读执行 `bun run lint`、TypeScript、`bun run content:verify` 和生产构建，不需要生产数据库或 Cloudinary secrets；
-- `content:verify` 包含 Gallery 原始输入保护、索引预览、Post/Gallery/ALL dry-run 和 `git diff --check`；
-- 不执行 `db:reset`、真实数据库同步、真实 Cloudinary 上传/删除或自动 Git commit/push。
-
----
-
-## 🔐 必需的 GitHub Secrets 配置
-
-为了确保 GitHub Actions 顺利执行，请在仓库的 **Settings ➡️ Secrets and variables ➡️ Actions** 中配置以下密钥：
-
-| Secret 变量名 | 必填 | 说明 | 示例 |
-| :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | 发布时 | Neon PostgreSQL 数据库连接字符串（质量门禁不需要） | `postgresql://user:pass@ep-xyz.neon.tech/neondb?sslmode=require` |
-| `CLOUDINARY_CLOUD_NAME` | 发布时 | Cloudinary 账户云名称 | `my-cloud-name` |
-| `CLOUDINARY_API_KEY` | 发布时 | Cloudinary API Key | `123456789012345` |
-| `CLOUDINARY_API_SECRET` | 发布时 | Cloudinary API Secret | `abcdefghijklmnopqrstuv_wxyz` |
-
----
-
-## 💡 本地与 CI 联动建议
-
+Dashboard 不是内容编辑器，也不提供 ZIP 导入、数据库导出恢复或旧同步触发。请修改 Markdown、`album.yaml` 和处理后的 WebP，审查 Git diff 后再进行受控的本地 publish。
 1. **本地推送前验证**：
    在向 GitHub 提交文章前，推荐先在本地执行：
    ```bash
     bun run content:prepare
    ```
-2. **免 CI 紧急同步**：
-   管理员可以直接在网站后台控制台（`/dashboard/sync`）点击“扫描本地文章”或直接上传 ZIP 压缩包手动完成入库，无需等待 Actions 队列。
+2. 暂停期间不提供 CI 紧急发布或 Dashboard 导入；请按本地验证命令执行人工流程。

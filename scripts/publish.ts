@@ -4,7 +4,7 @@ import {
 	type SyncRunSummary,
 	type SyncScope,
 } from '../src/lib/sync/sync-types'
-import { preparePostFrontmatter } from './prepare-post-frontmatter'
+import { checkContent } from './check-content'
 
 const args = process.argv.slice(2)
 const scopeIndex = args.indexOf('--scope')
@@ -53,22 +53,22 @@ async function main() {
 			'ℹ️ publish dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
 		)
 
-	if (scope === 'POSTS' || scope === 'ALL') {
-		console.log('▶ 检查并准备 Post Frontmatter')
-		const frontmatter = await preparePostFrontmatter(undefined, dryRun)
-		if (frontmatter.changed.length > 0) {
-			for (const file of frontmatter.changed)
-				console.log(
-					`${dryRun ? '🔎 将补齐' : '✅ 已补齐'} Frontmatter：${file}`,
-				)
-			if (dryRun) {
-				console.error(
-					'❌ 发布已停止：请确认 Frontmatter 预览后，再运行非 dry-run publish 写入缺失字段。',
-				)
-				process.exitCode = 1
-				return
-			}
-		}
+	const scopeName =
+		scope === 'POSTS' ? 'posts' : scope === 'GALLERIES' ? 'galleries' : 'all'
+	console.log(`▶ 发布前只读检查（scope=${scopeName}）`)
+	const valid = await checkContent({
+		...(await import('./check-content')).DEFAULT_CONFIG,
+		scope: scopeName,
+		autoFix: false,
+		dryRun: true,
+		showExamples: false,
+	})
+	if (!valid) {
+		console.error(
+			`发布已停止：${scopeName} 内容检查失败。请按检查结果执行显式修复命令，然后重新运行 bun run publish -- --scope ${scopeName}`,
+		)
+		process.exitCode = 1
+		return
 	}
 
 	const summary = await runSync({

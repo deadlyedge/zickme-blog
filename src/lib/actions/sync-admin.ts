@@ -3,19 +3,11 @@
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
-import { runSync } from '@/lib/sync/sync-orchestrator'
 import { getSyncRun, listRecentSyncRuns } from '@/lib/sync/sync-repository'
 
-const scopeSchema = z.enum(['POSTS', 'GALLERIES', 'ALL'])
 const listSchema = z
 	.object({ limit: z.number().int().min(1).max(100).optional() })
 	.optional()
-const triggerSchema = z.object({
-	scope: scopeSchema,
-	dryRun: z.boolean().optional(),
-	deleteOld: z.boolean().optional(),
-})
-
 async function requireAdmin() {
 	const session = await auth.api.getSession({ headers: await headers() })
 	if (!session?.user?.id || session.user.role !== 'ADMIN')
@@ -71,23 +63,10 @@ export async function getSyncRunAction(runId: string) {
 }
 
 export async function triggerSyncAction(input: unknown) {
-	try {
-		const actorId = await requireAdmin()
-		const parsed = triggerSchema.safeParse(input)
-		if (!parsed.success)
-			return { success: false as const, error: '同步参数无效' }
-		const summary = await runSync({
-			scope: parsed.data.scope,
-			dryRun: parsed.data.dryRun ?? false,
-			deleteOld: parsed.data.deleteOld ?? true,
-			triggeredBy: 'DASHBOARD',
-			actorId,
-		})
-		return { success: true as const, summary }
-	} catch (error) {
-		return {
-			success: false as const,
-			error: error instanceof Error ? error.message : '启动同步失败',
-		}
+	void input
+	return {
+		success: false as const,
+		error:
+			'内容源由 Git 管理，请修改 Markdown 或 album.yaml，执行 content:check 后再 publish。',
 	}
 }

@@ -3,7 +3,6 @@
 import {
 	Bell,
 	FileText,
-	HardDriveUpload,
 	LayoutDashboard,
 	LogOut,
 	MessageSquare,
@@ -118,15 +117,6 @@ export const UserDropdownMenu = ({ onSignOut }: UserDropdownMenuProps) => {
 								>
 									<FileText className="size-4 text-primary" />
 									<span>文章管理</span>
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem asChild>
-								<Link
-									href="/dashboard/sync"
-									className="flex items-center gap-2 cursor-pointer"
-								>
-									<HardDriveUpload className="size-4 text-primary" />
-									<span>导入与同步</span>
 								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem asChild>

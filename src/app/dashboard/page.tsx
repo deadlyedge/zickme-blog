@@ -1,7 +1,6 @@
 import {
 	Eye,
 	FileText,
-	HardDriveUpload,
 	MessageSquare,
 	Palette,
 	TrendingUp,
@@ -60,17 +59,6 @@ export default async function DashboardPage() {
 				</div>
 
 				<div className="flex items-center gap-2">
-					<Button
-						asChild
-						variant="outline"
-						size="sm"
-						className="text-xs shadow-2xs"
-					>
-						<Link href="/dashboard/sync">
-							<HardDriveUpload className="size-3.5 mr-1.5 text-primary" />
-							快速同步
-						</Link>
-					</Button>
 					<Button asChild size="sm" className="text-xs shadow-xs">
 						<Link href="/dashboard/posts">
 							<FileText className="size-3.5 mr-1.5" />

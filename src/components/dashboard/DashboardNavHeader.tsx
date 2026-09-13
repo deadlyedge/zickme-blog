@@ -3,9 +3,7 @@
 import {
 	ArrowLeft,
 	BarChart3,
-	DatabaseBackup,
 	FileText,
-	HardDriveUpload,
 	Images,
 	LogOut,
 	Palette,
@@ -37,12 +35,6 @@ const NAV_ITEMS = [
 		exact: false,
 	},
 	{
-		title: '导入与同步',
-		href: '/dashboard/sync',
-		icon: HardDriveUpload,
-		exact: false,
-	},
-	{
 		title: 'Gallery 管理',
 		href: '/dashboard/gallery',
 		icon: Images,
@@ -58,12 +50,6 @@ const NAV_ITEMS = [
 		title: '用户权限',
 		href: '/dashboard/users',
 		icon: Users,
-		exact: false,
-	},
-	{
-		title: '数据库快照',
-		href: '/dashboard/snapshots',
-		icon: DatabaseBackup,
 		exact: false,
 	},
 ]

@@ -43,6 +43,7 @@ interface CheckConfig {
 	showExamples: boolean
 	postsDir: string
 	conflictingSlugs?: Set<string>
+	scope?: 'posts' | 'galleries' | 'all'
 }
 
 const DEFAULT_CONFIG: CheckConfig = {
@@ -50,6 +51,7 @@ const DEFAULT_CONFIG: CheckConfig = {
 	autoFix: process.argv.includes('--fix'),
 	showExamples: !process.argv.includes('--no-examples'),
 	postsDir: path.join(process.cwd(), 'content/posts'),
+	scope: 'all',
 }
 
 /**
@@ -315,9 +317,11 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 			console.log('')
 		}
 
-		const galleryResult = await checkGalleryContent(config)
-		totalIssues += galleryResult.issues
-		totalSuggestions += galleryResult.suggestions
+		if (config.scope !== 'posts') {
+			const galleryResult = await checkGalleryContent(config)
+			totalIssues += galleryResult.issues
+			totalSuggestions += galleryResult.suggestions
+		}
 
 		console.log('📊 检查结果统计:')
 		console.log(`   🔍 检查文件: ${mdFiles.length}`)
@@ -330,9 +334,11 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 			console.log(`\n⚠️ 发现 ${totalIssues} 个问题需要处理`)
 			process.exitCode = 1
 		}
+		return totalIssues === 0
 	} catch (error) {
 		console.error('❌ 检查失败:', error)
-		process.exit(1)
+		process.exitCode = 1
+		return false
 	}
 }
 
@@ -405,7 +411,14 @@ async function checkGalleryContent(
 }
 
 if (require.main === module) {
-	checkContent().catch(console.error)
+	const scopeArg = process.argv[process.argv.indexOf('--scope') + 1]
+	const scope =
+		scopeArg === 'posts' || scopeArg === 'galleries' ? scopeArg : 'all'
+	checkContent({ ...DEFAULT_CONFIG, scope })
+		.then((valid) => {
+			if (!valid) process.exitCode = 1
+		})
+		.catch(console.error)
 }
 
 export type { CheckConfig, ContentCheckResult }

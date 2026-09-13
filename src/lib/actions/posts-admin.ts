@@ -1,7 +1,7 @@
 'use server'
 
 import * as path from 'node:path'
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import JSZip from 'jszip'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
@@ -14,13 +14,12 @@ import { createLogger } from '@/lib/logger'
 import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
 import { runSync } from '@/lib/sync/sync-orchestrator'
 import { failedSyncResult, syncResultFromSummary } from '@/lib/sync/sync-result'
-import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
 
 const logger = createLogger('actions/posts-admin')
 
 const postIdSchema = z.string().min(1, '文章ID不能为空').max(128)
-const posterSchema = z
+const _posterSchema = z
 	.url('必须是有效的URL地址')
 	.refine((value) => /^https?:\/\//i.test(value), '只允许 HTTP(S) 图片地址')
 
@@ -33,12 +32,12 @@ const getDashboardPostsOptionsSchema = z
 	})
 	.optional()
 
-const updatePostStatusSchema = z.object({
+const _updatePostStatusSchema = z.object({
 	postId: postIdSchema,
 	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
 })
 
-const batchUpdatePostStatusSchema = z.object({
+const _batchUpdatePostStatusSchema = z.object({
 	postIds: z.array(postIdSchema).min(1, '未选中任何文章'),
 	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
 })
@@ -141,32 +140,12 @@ export async function updatePostPosterAction(
 	postId: string,
 	poster: string | null,
 ) {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return {
-			success: false as const,
-			error: '文章内容源由 Git 管理，请直接编辑 Markdown 后通过 publish 发布。',
-		}
-	try {
-		await requireAdminSession()
-		const parsedId = postIdSchema.safeParse(postId)
-		if (!parsedId.success) return { success: false, error: '文章 ID 无效' }
-		if (poster !== null && !posterSchema.safeParse(poster).success) {
-			return { success: false, error: '封面必须是有效的 HTTP(S) 图片地址' }
-		}
-		await db
-			.update(posts)
-			.set({ poster, updatedAt: new Date() })
-			.where(eq(posts.id, postId))
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/posts')
-		revalidatePath('/')
-		return { success: true, poster }
-	} catch (error) {
-		logger.error('Update post poster failed', error)
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '更新封面失败',
-		}
+	void postId
+	void poster
+	return {
+		success: false as const,
+		error: '文章内容源由 Git 管理，请直接编辑 Markdown 后通过 publish 发布。',
+		poster: null,
 	}
 }
 
@@ -174,33 +153,13 @@ export async function uploadPostPosterAction(
 	postId: string,
 	formData: FormData,
 ) {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return {
-			success: false as const,
-			error:
-				'文章封面不能通过 Dashboard 回写内容源，请编辑 Markdown 后通过 publish 发布。',
-		}
-	try {
-		await requireAdminSession()
-		const file = formData.get('file')
-		if (!(file instanceof File) || file.size === 0)
-			return { success: false, error: '未选择图片' }
-		if (!file.type.startsWith('image/'))
-			return { success: false, error: '只支持图片文件' }
-		if (file.size > 10 * 1024 * 1024)
-			return { success: false, error: '图片不能超过 10MB' }
-		const service = new ContentSyncService()
-		const url = await service.uploadImageBuffer(
-			Buffer.from(await file.arrayBuffer()),
-			`${postId}-${file.name}`,
-		)
-		if (!url) return { success: false, error: 'Cloudinary 未配置或上传失败' }
-		return await updatePostPosterAction(postId, url)
-	} catch (error) {
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '上传封面失败',
-		}
+	void postId
+	void formData
+	return {
+		success: false as const,
+		error:
+			'文章封面不能通过 Dashboard 回写内容源，请编辑 Markdown 后通过 publish 发布。',
+		poster: null,
 	}
 }
 
@@ -259,49 +218,12 @@ export async function getRemotePostDiffAction() {
  * 2. 更新文章状态 (PUBLISHED / DRAFT / ARCHIVED 等)
  */
 export async function updatePostStatus(postId: string, status: StatusType) {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return {
-			success: false as const,
-			error:
-				'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
-		}
-	try {
-		await requireAdminSession()
-
-		const parsed = updatePostStatusSchema.safeParse({ postId, status })
-		if (!parsed.success) {
-			return {
-				success: false,
-				error: parsed.error.issues[0]?.message || '参数错误',
-			}
-		}
-
-		const updatePayload: {
-			status: StatusType
-			updatedAt: Date
-			archivedAt: Date | null
-		} = {
-			status: parsed.data.status,
-			updatedAt: new Date(),
-			archivedAt: parsed.data.status === 'ARCHIVED' ? new Date() : null,
-		}
-
-		await db
-			.update(posts)
-			.set(updatePayload)
-			.where(eq(posts.id, parsed.data.postId))
-
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/posts')
-		revalidatePath('/')
-
-		return { success: true }
-	} catch (error) {
-		logger.error('Failed to update post status', error)
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '更新状态失败',
-		}
+	void postId
+	void status
+	return {
+		success: false as const,
+		error:
+			'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
 	}
 }
 
@@ -312,49 +234,12 @@ export async function batchUpdatePostStatus(
 	postIds: string[],
 	status: StatusType,
 ) {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return {
-			success: false as const,
-			error:
-				'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
-		}
-	try {
-		await requireAdminSession()
-
-		const parsed = batchUpdatePostStatusSchema.safeParse({ postIds, status })
-		if (!parsed.success) {
-			return {
-				success: false,
-				error: parsed.error.issues[0]?.message || '参数错误',
-			}
-		}
-
-		const updatePayload: {
-			status: StatusType
-			updatedAt: Date
-			archivedAt: Date | null
-		} = {
-			status: parsed.data.status,
-			updatedAt: new Date(),
-			archivedAt: parsed.data.status === 'ARCHIVED' ? new Date() : null,
-		}
-
-		await db
-			.update(posts)
-			.set(updatePayload)
-			.where(inArray(posts.id, parsed.data.postIds))
-
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/posts')
-		revalidatePath('/')
-
-		return { success: true }
-	} catch (error) {
-		logger.error('Failed to batch update post status', error)
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '批量更新状态失败',
-		}
+	void postIds
+	void status
+	return {
+		success: false as const,
+		error:
+			'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
 	}
 }
 
@@ -376,33 +261,11 @@ export async function restorePost(postId: string) {
  * 6. 彻底物理删除文章（永久删除）
  */
 export async function deletePostPermanently(postId: string) {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return {
-			success: false as const,
-			error:
-				'不能从 Dashboard 删除 Git 内容源。请删除或恢复 Markdown 后通过 publish 发布。',
-		}
-	try {
-		await requireAdminSession()
-
-		const parsedId = postIdSchema.safeParse(postId)
-		if (!parsedId.success) {
-			return { success: false, error: '文章 ID 无效' }
-		}
-
-		await db.delete(posts).where(eq(posts.id, parsedId.data))
-
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/posts')
-		revalidatePath('/')
-
-		return { success: true }
-	} catch (error) {
-		logger.error('Failed to delete post permanently', error)
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '永久删除文章失败',
-		}
+	void postId
+	return {
+		success: false as const,
+		error:
+			'不能从 Dashboard 删除 Git 内容源，请删除 Markdown 后通过 publish 发布。',
 	}
 }
 
@@ -460,97 +323,11 @@ export async function triggerManualSync(options?: {
 export async function importUploadedContent(
 	formData: FormData,
 ): Promise<SyncResult> {
-	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
-		return failedSyncResult(
-			'内容导入已禁用：请将 Markdown 和媒体提交到 Git，再通过 publish 发布。',
-			new Error('LEGACY_CONTENT_IMPORT_DISABLED'),
-		)
-	try {
-		await requireAdminSession()
-
-		const files = formData.getAll('files') as File[]
-		if (!files || files.length === 0) {
-			return {
-				success: false,
-				status: 'FAILED',
-				totalPosts: 0,
-				successCount: 0,
-				errorCount: 1,
-				logs: [
-					{
-						stage: 'frontmatter',
-						level: 'error',
-						message: '未选择任何上传文件',
-						timestamp: new Date().toISOString(),
-					},
-				],
-			}
-		}
-
-		const virtualFiles: Array<{ relativePath: string; content: string }> = []
-		const virtualImages: Array<{ relativePath: string; buffer: Buffer }> = []
-
-		for (const file of files) {
-			const fileName = file.name
-			const arrayBuffer = await file.arrayBuffer()
-			const buffer = Buffer.from(arrayBuffer)
-
-			if (fileName.endsWith('.zip')) {
-				const zip = await JSZip.loadAsync(buffer)
-				for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-					if (zipEntry.dir) continue
-					if (relativePath.startsWith('__MACOSX/')) continue
-
-					if (relativePath.endsWith('.md')) {
-						const content = await zipEntry.async('string')
-						virtualFiles.push({ relativePath, content })
-					} else if (/\.(png|jpe?g|webp|gif|svg)$/i.test(relativePath)) {
-						const imgBuffer = await zipEntry.async('nodebuffer')
-						virtualImages.push({ relativePath, buffer: imgBuffer })
-					}
-				}
-			} else if (fileName.endsWith('.md')) {
-				const content = buffer.toString('utf-8')
-				virtualFiles.push({ relativePath: fileName, content })
-			} else if (/\.(png|jpe?g|webp|gif|svg)$/i.test(fileName)) {
-				virtualImages.push({ relativePath: fileName, buffer })
-			}
-		}
-
-		const service = new ContentSyncService()
-		const result = await service.runSync({
-			triggerType: 'UPLOAD',
-			virtualFiles,
-			virtualImages,
-			dryRun: false,
-			deleteOld: false,
-		})
-
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/dashboard/sync')
-		revalidatePath('/posts')
-		revalidatePath('/')
-
-		return result
-	} catch (error) {
-		logger.error('Import uploaded content failed', error)
-		return {
-			success: false,
-			status: 'FAILED',
-			totalPosts: 0,
-			successCount: 0,
-			errorCount: 1,
-			logs: [
-				{
-					stage: 'general',
-					level: 'error',
-					message: '文件上传解析失败',
-					detail: error instanceof Error ? error.message : String(error),
-					timestamp: new Date().toISOString(),
-				},
-			],
-		}
-	}
+	void formData
+	return failedSyncResult(
+		'内容导入已禁用：请将 Markdown 和媒体提交到 Git，再通过 publish 发布。',
+		new Error('CONTENT_IMPORT_DISABLED'),
+	)
 }
 
 /**
