@@ -8,42 +8,69 @@ import {
 	shouldWriteBackPoster,
 	writeBackPostPoster,
 } from '../src/lib/frontmatter-writeback'
-import { ContentSyncService } from '../src/lib/sync-service'
+import { runSync } from '../src/lib/sync/sync-orchestrator'
+import {
+	parseSyncScope,
+	type SyncRunSummary,
+	type SyncScope,
+} from '../src/lib/sync/sync-types'
 
-const dryRun = process.argv.includes('--dry-run')
-const deleteOld = !process.argv.includes('--no-delete')
+const args = process.argv.slice(2)
+const scopeIndex = args.indexOf('--scope')
+const requestedScope = scopeIndex >= 0 ? args[scopeIndex + 1] : undefined
+const retryIndex = args.indexOf('--retry')
+const retryOf = retryIndex >= 0 ? args[retryIndex + 1] : undefined
+const dryRun = args.includes('--dry-run')
+const json = args.includes('--json')
+const deleteOld = !args.includes('--no-delete')
+
+function usage(): never {
+	console.error(
+		'用法：bun run sync -- --scope posts|galleries|all [--dry-run] [--json] [--no-delete]',
+	)
+	process.exit(2)
+}
+
+function printSummary(summary: SyncRunSummary) {
+	if (json) {
+		console.log(JSON.stringify(summary))
+		return
+	}
+	console.log(
+		`\n=== 同步运行 ${summary.runId}：${summary.status}（scope=${summary.scope}, dry-run=${summary.dryRun}）===`,
+	)
+	console.log(
+		`Post：${summary.posts.succeeded}/${summary.posts.total} 成功，${summary.posts.errors} 错误；` +
+			`Gallery：${summary.galleries.processed} 处理，${summary.galleries.uploaded} 上传，` +
+			`${summary.galleries.unsupported} unsupported，${summary.galleries.errors} 错误`,
+	)
+	if (summary.finishedAt) console.log(`完成时间：${summary.finishedAt}`)
+}
 
 async function main() {
-	await writeBackDatabasePosters()
-	const service = new ContentSyncService()
-	const result = await service.runSync({
-		triggerType: 'CLI',
+	let scope: SyncScope
+	try {
+		// Without --scope, preserve the historical `bun run sync` Post behavior.
+		if (retryIndex >= 0 && (!retryOf || retryOf.startsWith('--'))) usage()
+		if (retryOf && !requestedScope)
+			throw new Error('--retry 必须同时指定 --scope')
+		scope = requestedScope ? parseSyncScope(requestedScope) : 'POSTS'
+	} catch (error) {
+		console.error(error instanceof Error ? error.message : String(error))
+		usage()
+	}
+
+	if (scope === 'POSTS' || scope === 'ALL') await writeBackDatabasePosters()
+	const summary = await runSync({
+		scope,
 		dryRun,
 		deleteOld,
+		triggeredBy: 'CLI',
+		retryOf,
 	})
-
-	console.log(
-		`\n=== 同步结果: ${result.status} (总计: ${result.totalPosts}, 成功: ${result.successCount}, 失败: ${result.errorCount}) ===`,
-	)
-
-	for (const log of result.logs) {
-		const icon =
-			log.level === 'success'
-				? '✅'
-				: log.level === 'warn'
-					? '⚠️'
-					: log.level === 'error'
-						? '❌'
-						: 'ℹ️'
-		console.log(`${icon} [${log.stage.toUpperCase()}] ${log.message}`)
-		if (log.detail) {
-			console.log(`   └─ ${log.detail}`)
-		}
-	}
-
-	if (!result.success) {
-		process.exit(1)
-	}
+	printSummary(summary)
+	if (summary.status === 'FAILED' || summary.status === 'PARTIAL_SUCCESS')
+		process.exitCode = 1
 }
 
 async function writeBackDatabasePosters() {
@@ -60,22 +87,24 @@ async function writeBackDatabasePosters() {
 		if (!databasePost.poster) continue
 		const localPost = localPosts.get(databasePost.slug)
 		if (!localPost) continue
-		const filePath = localPost.path
 		try {
-			if (!(await shouldWriteBackPoster(filePath, databasePost.updatedAt)))
+			if (
+				!(await shouldWriteBackPoster(localPost.path, databasePost.updatedAt))
+			)
 				continue
-			const content = await fs.readFile(filePath, 'utf8')
-			const parsed = matter(content)
+			const parsed = matter(await fs.readFile(localPost.path, 'utf8'))
 			if (parsed.data.image === databasePost.poster) continue
-			await writeBackPostPoster(filePath, databasePost.poster)
-			console.log(`↩️ 已将数据库封面回写至本地: ${databasePost.slug}`)
+			await writeBackPostPoster(localPost.path, databasePost.poster)
 		} catch {
-			// 本地文件不存在或不可读时交由正常同步流程处理
+			// The normal domain sync reports unreadable or missing local files.
 		}
 	}
 }
 
-main().catch((err) => {
-	console.error('Fatal sync error:', err)
-	process.exit(1)
+main().catch((error) => {
+	console.error(
+		'Fatal sync error:',
+		error instanceof Error ? error.message : String(error),
+	)
+	process.exitCode = 1
 })
