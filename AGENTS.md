@@ -56,7 +56,7 @@
 - Dashboard 支持运行状态、内容管理和数据库快照；
 - 快照只保护数据库业务副本，不回滚 Git 内容源、Cloudinary 或原始图片。
 
-当前实施方向：架构减法（阶段 A 已实施）
+当前实施方向：架构减法（阶段 A、B 已实施）
 - 将现有同步体系收敛为 Git-first、单向 publish；
 - 先冻结双向同步能力，再逐步禁用 pull、patch、write-back 和 merge；
 - 修复 `dry-run` 的所有副作用；
@@ -64,6 +64,8 @@
 - 具体阶段、兼容期、删除边界和验收标准见 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
 
 阶段 A 边界：现有 `sync`、`sync:galleries`、`sync:pull` 和 `gallery:pull` 仅作为兼容入口保留并输出迁移提示；不得新增依赖它们的双向内容流程。`dry-run` 不得获取数据库锁、创建或更新 `SyncRun`、写入工作区、写入数据库或上传 Cloudinary。质量门禁必须不依赖生产数据库和 Cloudinary secrets。
+
+阶段 B 边界：`publish` 是正式单向发布入口，支持 `posts|galleries|all` scope；Dashboard 和受控 CI 必须复用同一个 publish service。publish 不执行数据库到 Markdown/YAML 的回写、不执行 merge、实体级重试、自动 commit 或 push。
 
 ---
 

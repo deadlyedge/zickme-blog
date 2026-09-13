@@ -13,6 +13,10 @@ if (args.includes('--dry-run'))
 	console.warn(
 		'⚠️ 兼容入口 sync:galleries 的 dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
 	)
+else
+	console.warn(
+		'⚠️ sync:galleries 是兼容入口，新的单向发布流程请使用 bun run publish。',
+	)
 
 runSync({
 	scope: 'GALLERIES',

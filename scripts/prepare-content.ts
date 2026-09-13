@@ -24,14 +24,7 @@ async function main() {
 			'Gallery 索引预览',
 		),
 		runBunScript(
-			[
-				'run',
-				'scripts/sync-content.ts',
-				'--scope',
-				'all',
-				'--dry-run',
-				'--json',
-			],
+			['run', 'scripts/publish.ts', '--scope', 'all', '--dry-run', '--json'],
 			'全站同步预览',
 		),
 		runGitCheck(),

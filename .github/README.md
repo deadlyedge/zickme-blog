@@ -15,7 +15,7 @@ graph TD
     P[受控发布 / workflow_dispatch] --> M[media.yml]
     M -->|媒体处理| C[Cloudinary CDN]
     C --> S[sync-db.yml]
-    S -->|迁移、统一 ALL 同步| E[Neon PostgreSQL 运行时副本]
+    S -->|迁移、统一 ALL publish| E[Neon PostgreSQL 运行时副本]
 ```
 
 ---
@@ -31,13 +31,13 @@ graph TD
   - 执行 `bun run scripts/upload-to-cloudinary.ts`。
   - 自动将本地 JPG / PNG / BMP 格式图片在内存中预压缩为高质量 WebP（quality: 85, effort: 4），并按文件路径映射唯一 Public ID 上传至 Cloudinary。
 
-### 2. `sync-db.yml` - 内容解析与数据库同步
+### 2. `sync-db.yml` - 内容解析与单向发布
 - **触发条件**：
   - 在 `Upload Media to Cloudinary` 工作流运行完成且状态为 `success` 时自动级联触发。
   - 支持手动触发（`workflow_dispatch`）。
 - **执行任务**：
-   - 受控环境先执行 `bun run db:migrate`，再执行 `bun run sync -- --scope all`。
-   - 统一编排器按顺序处理 Post 和 Gallery，并写入 SyncRun 运行摘要；失败时保留 scope 结果，不执行队列或自动 Cloudinary 删除。
+   - 受控环境先执行 `bun run db:migrate`，再执行 `bun run publish -- --scope all`。
+   - 统一 publish service 按顺序处理 Post 和 Gallery，并写入 SyncRun 发布摘要；失败时保留 scope 结果，不执行队列或自动 Cloudinary 删除。
 
 ### 3. `quality.yml` - PR/Push 质量门禁
 

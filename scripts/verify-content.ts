@@ -30,21 +30,14 @@ async function main() {
 		) && valid
 	valid =
 		runBunScript(
-			[
-				'run',
-				'scripts/sync-content.ts',
-				'--scope',
-				'posts',
-				'--dry-run',
-				'--json',
-			],
+			['run', 'scripts/publish.ts', '--scope', 'posts', '--dry-run', '--json'],
 			'Post dry-run',
 		) && valid
 	valid =
 		runBunScript(
 			[
 				'run',
-				'scripts/sync-content.ts',
+				'scripts/publish.ts',
 				'--scope',
 				'galleries',
 				'--dry-run',
@@ -54,14 +47,7 @@ async function main() {
 		) && valid
 	valid =
 		runBunScript(
-			[
-				'run',
-				'scripts/sync-content.ts',
-				'--scope',
-				'all',
-				'--dry-run',
-				'--json',
-			],
+			['run', 'scripts/publish.ts', '--scope', 'all', '--dry-run', '--json'],
 			'全站 dry-run',
 		) && valid
 	valid = runGitCheck() && valid

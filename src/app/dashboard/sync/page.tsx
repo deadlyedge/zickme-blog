@@ -125,7 +125,7 @@ export default function DashboardSyncPage() {
 		}
 	}, [activeTab, loadHistory])
 
-	// 触发本地手动同步
+	// 触发单向发布 service
 	const handleManualSync = () => {
 		startTransition(async () => {
 			toast.info(
@@ -152,7 +152,7 @@ export default function DashboardSyncPage() {
 						: `同步完成：成功 ${result.successCount} 篇，失败 ${result.errorCount} 篇`,
 				)
 			} else {
-				toast.error('同步过程中发生错误，请查看日志详情')
+				toast.error('发布过程中发生错误，请查看日志详情')
 			}
 		})
 	}
@@ -249,10 +249,10 @@ export default function DashboardSyncPage() {
 				<div>
 					<h1 className="text-2xl font-bold flex items-center gap-2">
 						<HardDriveUpload className="h-6 w-6 text-primary" />
-						可视化内容同步与导入中心
+						可视化内容发布与导入中心
 					</h1>
 					<p className="text-sm text-muted-foreground">
-						多阶段日志追踪：Markdown解析 ➡️ Cloudinary图片规范 ➡️ 数据库落库
+						单向发布日志：Markdown 解析 ➡️ Cloudinary 媒体 ➡️ 数据库运行时副本
 					</p>
 				</div>
 
@@ -369,9 +369,9 @@ export default function DashboardSyncPage() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20 md:col-span-2">
 									<div className="space-y-0.5">
-										<Label className="text-sm font-semibold">同步范围</Label>
+										<Label className="text-sm font-semibold">发布范围</Label>
 										<p className="text-xs text-muted-foreground">
-											不要同时从 CLI 和 Dashboard 启动同一范围的同步
+											不要同时从 CLI 和 Dashboard 启动同一范围的发布
 										</p>
 									</div>
 									<select

@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：阶段 A 已实施，作为 Stage 9.6 之后的架构治理基线
+> 状态：阶段 A、阶段 B 已实施，作为 Stage 9.6 之后的架构治理基线
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -202,6 +202,8 @@ bun run publish -- --scope galleries
 - 输出成功、跳过、待处理、失败文件和媒体摘要；
 - 发布流程默认不回写内容源；
 - Dashboard 仅触发同一个 publish service。
+
+实施记录：已新增 `bun run publish` 统一 CLI，支持 `posts|galleries|all`、`--dry-run`、`--json` 和 `--no-delete`；Post 与 Gallery 继续复用同一个单向编排 service；质量检查和受控 CI 已迁移到 publish dry-run/real publish；旧 `sync` 入口保留为兼容入口并输出迁移提示。发布流程不支持实体级重试，不自动 commit/push，也不回写内容源。
 
 验收：本地 CLI、Dashboard 和受控 CI 发布使用同一个单向 Service。
 

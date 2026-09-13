@@ -52,15 +52,15 @@ bun run content:verify
 bun run content:prepare
 bun run gallery:index
 bun run content:check -- --no-examples
-bun run sync -- --scope all --dry-run --json
-bun run sync
-bun run sync -- --scope posts --dry-run --json
+bun run publish -- --scope all --dry-run --json
+bun run publish -- --scope all
+bun run publish -- --scope posts --dry-run --json
 bun run sync -- --scope galleries --dry-run --json
 bun run sync:pull
 bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
-不带 `--scope` 的 `bun run sync` 默认同步 Post 和 Gallery，等价于 `bun run sync -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域检查或失败后的单域重跑；`sync:galleries` 仍作为支持 `--input-dir` 的 Gallery 专用兼容入口保留。
+不带 `--scope` 的 `bun run publish` 默认发布 Post 和 Gallery，等价于 `bun run publish -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域预览或受控发布；`sync` 与 `sync:galleries` 仍作为兼容入口保留。
 
 `content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，`content:prepare` 是提交前预览流程，默认不写文件、不执行真实同步、不 commit、不 push。
 

@@ -8,6 +8,7 @@
 
 | 脚本文件 | 推荐调用命令 | 说明 |
 | :--- | :--- | :--- |
+| **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
 | **`sync-content.ts`** | `bun run sync` | 兼容期同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
@@ -23,11 +24,23 @@
 
 ## 📖 详细使用说明
 
-### 1. `sync-content.ts` - 文章内容同步
-兼容入口读取本地 Post 与 Gallery 内容并同步至 Neon PostgreSQL 数据库。Post 支持 Frontmatter 校验、Cloudinary CDN 图片自动映射、标签级联入库与废弃文章软删除；Gallery 负责 album.yaml、处理后的 WebP、EXIF 与相册媒体同步。它不是新的双向内容入口。
+### 1. `publish.ts` - 单向内容发布
+正式发布入口只读取 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，并将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
 
 ```bash
-# 1. 默认执行全站同步（等价于 --scope all）
+# 预览全站发布，不写入文件、数据库、Cloudinary 或 SyncRun
+bun run publish -- --scope all --dry-run --json
+
+# 发布单个内容域
+bun run publish -- --scope posts
+bun run publish -- --scope galleries
+```
+
+### 2. `sync-content.ts` - 兼容期同步入口
+该入口仍读取本地 Post 与 Gallery 内容并复用相同的单向发布 service，但仅用于兼容旧流程。新文档和新脚本应使用 `bun run publish`。
+
+```bash
+# 1. 兼容期默认执行全站同步（等价于 --scope all）
 bun run sync
 
 # 2. 预览全站同步并输出机器可读摘要
@@ -72,9 +85,9 @@ bun run content:init -- --dir ./my-content
 bun run content:init -- --force
 ```
 
-脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `sync` 编排器按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
 
-### 4. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
+### 5. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
 
 ```bash
 # 默认只预览格式变化
@@ -128,7 +141,7 @@ bun run gallery:index
 
 `expectedHash` 不匹配时会停止，避免覆盖本地人工修改；Gallery 删除仅标记 `PENDING_DELETE`，不会自动调用 Cloudinary 删除。
 
-当前版本不直接解码 ORF、RAW、CR2、CR3、NEF、ARW 等 RAW 格式。发现这些文件时会报告为 `unsupported`，不会写入 WebP 或上传。请先将 RAW 转换为 JPEG、PNG 或 TIFF，再重新执行同步。
+当前版本不直接解码 ORF、RAW、CR2、CR3、NEF、ARW 等 RAW 格式。发现这些文件时会报告为 `unsupported`，不会写入 WebP 或上传。请先将 RAW 转换为 JPEG、PNG 或 TIFF，再重新执行 publish。
 
 ---
 

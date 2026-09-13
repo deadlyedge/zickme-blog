@@ -21,6 +21,7 @@
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"db:reset": "bun run scripts/reset-db.ts",
+		"publish": "bun run scripts/publish.ts",
 		"sync": "bun run scripts/sync-content.ts",
 		"sync:galleries": "bun run scripts/sync-galleries.ts",
 		"gallery:pull": "bun run scripts/gallery-pull.ts",

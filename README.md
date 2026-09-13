@@ -197,11 +197,15 @@ http://localhost:3000
 | `bun run build` | 构建生产版本 |
 | `bun run lint` | 运行 Biome 检查 |
 | `bun run format` | 使用 Biome 格式化代码 |
+| `bun run publish` | 单向发布所有内容域；未指定 scope 时等价于 `all` |
+| `bun run publish -- --scope posts --dry-run --json` | 只读预览 Post 发布并输出 JSON 摘要 |
+| `bun run publish -- --scope galleries --dry-run --json` | 只读预览 Gallery 发布并输出 JSON 摘要 |
+| `bun run publish -- --scope all --dry-run --json` | 只读预览全站发布并输出双域摘要 |
 | `bun run sync` | 兼容期同步所有内容域（等价于 `--scope all`）；不会发展为新的双向入口 |
-| `bun run sync -- --scope posts --dry-run --json` | 预览 Post scope 同步并输出 JSON 摘要 |
-| `bun run sync -- --scope galleries --dry-run --json` | 预览 Gallery scope 同步并输出 JSON 摘要 |
-| `bun run sync -- --scope all --dry-run --json` | 预览全站同步并输出双域摘要 |
-| `bun run sync -- --retry <run-id> --scope galleries` | 按 scope 重新执行同步；不支持实体级重试 |
+| `bun run sync -- --scope posts --dry-run --json` | 兼容入口：预览 Post 同步并输出 JSON 摘要 |
+| `bun run sync -- --scope galleries --dry-run --json` | 兼容入口：预览 Gallery 同步并输出 JSON 摘要 |
+| `bun run sync -- --scope all --dry-run --json` | 兼容入口：预览全站同步并输出双域摘要 |
+| `bun run sync -- --retry <run-id> --scope galleries` | 兼容入口：按 scope 重跑；正式 publish 不支持 retry |
 | `bun run sync:pull` | **已废弃**：数据库→Markdown 兼容入口；内容恢复请使用 Git 历史 |
 | `bun run sync:pull -- --force` | **已废弃**：强制覆盖本地 Markdown，禁止作为正常流程 |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
@@ -221,17 +225,17 @@ http://localhost:3000
 | `bun run sync:galleries` | 执行 Gallery 媒体同步 |
 | `bun run gallery:pull` | **已废弃**：兼容期校验/应用 Gallery patch |
 
-推荐提交流程（阶段 A 兼容期）：
+推荐提交流程（阶段 B）：
 
 ```bash
 bun run content:check -- --no-examples
 bun run gallery:index
-bun run sync -- --scope all --dry-run --json # 只读预览，不写 DB/Cloudinary/工作区
+bun run publish -- --scope all --dry-run --json # 只读预览，不写 DB/Cloudinary/工作区
 git diff --check
 git status --short
 git add content/posts content/photo-gallery
 git commit -m "content: update blog"
-bun run sync # 受控发布；提交 Git 后再执行
+bun run publish -- --scope all # 受控单向发布；提交 Git 后再执行
 ```
 
 提交前也可以直接运行：
@@ -244,7 +248,7 @@ git status --short
 
 `content:format` 和 `content:prepare` 默认不会覆盖用户文件。确认格式预览后，单独执行 `bun run content:format -- --write` 才会重写白名单 Frontmatter/YAML 结构；正文语义不会被格式化器处理。
 
-`bun run sync` 未指定 scope 时会依次尝试同步 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只同步单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。
+`bun run publish` 未指定 scope 时会依次发布 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只发布单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。`bun run sync` 仅为兼容入口。
 
 首次准备内容目录时，可以运行：
 
