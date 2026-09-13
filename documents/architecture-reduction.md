@@ -228,6 +228,20 @@ bun run publish -- --scope galleries
 - 决定 `SiteSnapshot` 是继续保留为数据库保护工具，还是交由平台备份取代；
 - 删除对应 migration 和过期文档中的现行语义。
 
+阶段 D 审计记录（本次）：
+
+| 协议/字段 | 当前使用 | 阶段 D 处理 |
+| --- | --- | --- |
+| `mergeBase` | 旧 Gallery/Post 合并协议字段 | 标记 deprecated；publish 不再写入；暂不删除 schema |
+| `revision` | Dashboard 旧乐观锁兼容字段 | 标记 deprecated；publish 不再递增；暂不删除 schema |
+| `syncVersion` | GalleryImage 旧双向同步版本 | 标记 deprecated；publish 不再更新；暂不删除 schema |
+| `syncStatus` | 运行时状态/兼容查询字段 | 保留；publish 仍写入必要的 `IN_SYNC`，不新增冲突流程 |
+| `retryOf` | 旧 scope retry 运行记录关联 | 标记 deprecated；Dashboard retry 已禁用；仅保留历史读取 |
+| `SyncRun` | 发布运行摘要、锁和历史记录 | 冻结为兼容期发布记录；dry-run 不持久化 |
+| `SiteSnapshot` | 数据库业务副本保护 | 保留；不包含 Git 内容源、Cloudinary 二进制或 SyncRun |
+
+本阶段不删除生产字段、历史 migration、旧 merge helper 或数据库数据。删除前仍需完成生产读取审计、迁移说明和回滚方案。
+
 验收：核心发布链路不再依赖 merge base、实体冲突、反向拉取和双向 revision。
 
 ### 阶段 E：删除与验证

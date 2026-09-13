@@ -49,7 +49,9 @@ export const galleries = pgTable(
 		sourcePath: text('sourcePath').notNull(),
 		metadata: jsonb('metadata'),
 		contentHash: text('contentHash'),
+		/** @deprecated Legacy bidirectional-sync merge protocol. */
 		mergeBase: jsonb('mergeBase'),
+		/** @deprecated Legacy optimistic-lock protocol; publish no longer increments it. */
 		revision: integer('revision').notNull().default(0),
 		syncStatus: gallerySyncStatusEnum('syncStatus')
 			.notNull()
@@ -88,9 +90,12 @@ export const galleryImages = pgTable(
 		fileSize: integer('fileSize'),
 		sourceModifiedAt: timestamp('sourceModifiedAt', { mode: 'date' }),
 		lastSyncedAt: timestamp('lastSyncedAt', { mode: 'date' }),
+		/** @deprecated Legacy bidirectional-sync version protocol. */
 		syncVersion: integer('syncVersion').notNull().default(0),
+		/** @deprecated Legacy optimistic-lock protocol; publish no longer increments it. */
 		revision: integer('revision').notNull().default(0),
 		contentHash: text('contentHash'),
+		/** @deprecated Legacy bidirectional-sync merge protocol. */
 		mergeBase: jsonb('mergeBase'),
 		syncStatus: galleryImageSyncStatusEnum('syncStatus')
 			.notNull()

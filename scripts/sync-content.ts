@@ -40,6 +40,13 @@ function printSummary(summary: SyncRunSummary) {
 
 async function main() {
 	console.warn('⚠️ sync 是兼容入口，新的单向发布流程请使用 bun run publish。')
+	if (retryIndex >= 0) {
+		console.error(
+			'❌ sync 的 retry 协议已冻结，请重新执行 bun run publish -- --scope ...。',
+		)
+		process.exitCode = 1
+		return
+	}
 	if (dryRun)
 		console.warn(
 			'⚠️ 兼容入口 sync 的 dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
