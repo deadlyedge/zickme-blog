@@ -9,14 +9,12 @@
 | 脚本文件 | 推荐调用命令 | 说明 |
 | :--- | :--- | :--- |
 | **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
-| **`sync-content.ts`** | `bun run sync` | 兼容期同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
 | **`prepare-content.ts`** | `bun run content:prepare` | 提交前预览流水线，默认不写入、不提交、不推送 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
-| **`sync-galleries.ts`** | `bun run sync:galleries` | 将外部 Gallery 原始输入处理为 WebP，并通过统一编排器同步 Cloudinary 与数据库 |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
 
@@ -35,26 +33,6 @@ bun run publish -- --scope all --dry-run --json
 bun run publish -- --scope posts
 bun run publish -- --scope galleries
 ```
-
-### 2. `sync-content.ts` - 兼容期同步入口
-该入口仍读取本地 Post 与 Gallery 内容并复用相同的单向发布 service，但仅用于兼容旧流程；它不再执行数据库 poster 回写。新文档和新脚本应使用 `bun run publish`。
-
-```bash
-# 1. 兼容期默认执行全站同步（等价于 --scope all）
-bun run sync
-
-# 2. 预览全站同步并输出机器可读摘要
-bun run sync -- --scope all --dry-run --json
-
-# 3. 只同步 Post 或 Gallery
-bun run sync -- --scope posts --dry-run
-bun run sync -- --scope galleries --dry-run
-
-# 4. 同步 Post 时跳过软删除
-bun run sync -- --scope posts --no-delete
-```
-
----
 
 ### 2. `check-content.ts` - 内容格式检查与自动修复
 自动扫描所有 Markdown 文章，验证必要字段（`title`, `slug`, `date`, `tags`, `status`）及本地图片路径的有效性。
@@ -87,7 +65,7 @@ bun run content:init -- --force
 
 脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
 
-### 5. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
+### 4. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
 
 ```bash
 # 默认只预览格式变化
@@ -117,30 +95,7 @@ bun run scripts/upload-to-cloudinary.ts
 
 ---
 
-### 6. `sync-galleries.ts` - Gallery 图片同步
-
-Gallery 原始输入默认读取 `content/.gallery-input/`，也可以通过 `GALLERY_INPUT_DIR` 覆盖。该目录已被 Git 忽略。同步会读取尺寸和公开 EXIF 白名单，使用最高 `6000×4000`、WebP `quality: 95`、`effort: 6` 的 Gallery 专用参数生成 WebP，然后将同一份内容写入 `content/photo-gallery/` 并上传至独立的 `photo-gallery/{albumSlug}/` Cloudinary folder。
-
-不要同时从 CLI 和 Dashboard 启动同一 scope 的同步。统一入口会写入运行摘要并使用带 TTL 的运行保护；重复触发会直接提示已有同步正在运行，不会排队或覆盖。
-
-```bash
-bun run sync:galleries -- --dry-run
-bun run sync:galleries -- --input-dir ./private-gallery-input
-bun run sync:galleries
-```
-
-同步不会把 JPEG、PNG、RAW 等原始输入写入 Git 管理的 Gallery 目录；本地缺失的相册会被标记为数据库中的 `ARCHIVED`，不会自动删除 Cloudinary 资源。
-
-Dashboard 产生的 patch 仅可只读检查，不能应用回写：
-
-```bash
-bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
-bun run gallery:index
-```
-
-`gallery:pull` 非 dry-run 会直接拒绝，避免覆盖本地人工修改；请直接编辑并提交 `album.yaml`。Gallery 删除仅通过 Git 内容变更进入 publish 流程。
-
-当前版本不直接解码 ORF、RAW、CR2、CR3、NEF、ARW 等 RAW 格式。发现这些文件时会报告为 `unsupported`，不会写入 WebP 或上传。请先将 RAW 转换为 JPEG、PNG 或 TIFF，再重新执行 publish。
+Gallery 媒体处理、索引和数据库发布统一由 `bun run publish -- --scope galleries` 完成。原始输入默认读取 `content/.gallery-input/`，只允许通过 Git 内容变更进入 publish 流程。当前版本不直接解码 RAW 格式；请先转换为 JPEG、PNG 或 TIFF。
 
 ---
 

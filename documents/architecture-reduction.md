@@ -242,6 +242,19 @@ bun run publish -- --scope galleries
 
 本阶段不删除生产字段、历史 migration、旧 merge helper 或数据库数据。删除前仍需完成生产读取审计、迁移说明和回滚方案。
 
+### 阶段 E：删除与验证
+
+实施记录：已删除 `sync`、`sync:galleries`、`sync:pull`、`gallery:pull` 的 package/脚本入口，删除 Dashboard scope retry Action，新增 Bun 发布边界测试。数据库 schema 字段、历史 migration、运行记录和快照表继续保留，等待独立的数据迁移窗口。
+
+正式内容流程只保留：
+
+```bash
+bun run content:check -- --no-examples
+bun run publish -- --scope all --dry-run --json
+bun run test
+bun run publish -- --scope all
+```
+
 验收：核心发布链路不再依赖 merge base、实体冲突、反向拉取和双向 revision。
 
 ### 阶段 E：删除与验证

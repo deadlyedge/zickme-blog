@@ -75,16 +75,13 @@ bun run content:verify
 bun run content:prepare
 bun run gallery:index
 bun run content:check -- --no-examples
-bun run sync -- --scope all --dry-run --json
-bun run sync
-bun run sync -- --scope posts --dry-run --json
-bun run sync -- --scope galleries --dry-run --json
-bun run sync:pull
+bun run publish -- --scope all --dry-run --json
+bun run publish -- --scope all
+bun run publish -- --scope posts --dry-run --json
+bun run publish -- --scope galleries --dry-run --json
 \`\`\`
 
-sync:pull 默认不会覆盖已有文件。确认无冲突后才使用 bun run sync:pull -- --force。
-
-不带 \`--scope\` 的 \`bun run sync\` 默认同步 Post 和 Gallery。不要提交 .env、密钥、数据库导出文件和 Gallery 原始图片。
+不带 \`--scope\` 的 \`bun run publish\` 默认发布 Post 和 Gallery。不要提交 .env、密钥、数据库导出文件和 Gallery 原始图片。
 `,
 	},
 	{

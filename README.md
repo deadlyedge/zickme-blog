@@ -18,7 +18,7 @@ PostgreSQL / Drizzle 运行时数据
 Cloudinary 媒体 CDN
 ```
 
-同时提供带有 ADMIN 权限控制的 Dashboard、运行时发布兼容入口、媒体管理和同步诊断工具。
+同时提供带有 ADMIN 权限控制的 Dashboard、单向发布、媒体管理和运行时诊断工具。
 
 > **架构减法（阶段 A）**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源。数据库是运行时副本，Cloudinary 只负责媒体 CDN。当前 `sync`、`sync:pull`、`gallery:pull` 等命令处于兼容期冻结状态，不再新增双向同步、merge 或 write-back 能力；详见 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
 
@@ -87,9 +87,8 @@ Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gall
 
 ```bash
 bun run gallery:index
-bun run sync:galleries -- --dry-run
 bun run publish -- --scope galleries
-bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run # 仅兼容期只读检查
+bun run publish -- --scope galleries --dry-run --json
 ```
 
 RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。真实同步仍使用运行保护；`dry-run` 完全只读，不获取数据库锁、不创建或更新 `SyncRun`，也不写文件或上传媒体。
@@ -197,13 +196,6 @@ http://localhost:3000
 | `bun run publish -- --scope posts --dry-run --json` | 只读预览 Post 发布并输出 JSON 摘要 |
 | `bun run publish -- --scope galleries --dry-run --json` | 只读预览 Gallery 发布并输出 JSON 摘要 |
 | `bun run publish -- --scope all --dry-run --json` | 只读预览全站发布并输出双域摘要 |
-| `bun run sync` | 兼容期同步所有内容域（等价于 `--scope all`）；不会发展为新的双向入口 |
-| `bun run sync -- --scope posts --dry-run --json` | 兼容入口：预览 Post 同步并输出 JSON 摘要 |
-| `bun run sync -- --scope galleries --dry-run --json` | 兼容入口：预览 Gallery 同步并输出 JSON 摘要 |
-| `bun run sync -- --scope all --dry-run --json` | 兼容入口：预览全站同步并输出双域摘要 |
-| `bun run sync -- --retry <run-id> --scope galleries` | 兼容入口：按 scope 重跑；正式 publish 不支持 retry |
-| `bun run sync:pull` | **已禁用**：数据库→Markdown 被拒绝；内容恢复请使用 Git 历史 |
-| `bun run sync:pull -- --force` | **已禁用**：不会覆盖本地 Markdown |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
 | `bun run content:fix` | 自动修复可安全修复的问题 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
@@ -217,11 +209,9 @@ http://localhost:3000
 | `bun run db:reset` | 重置数据库，危险操作 |
 | `bun run reset-admin-password` | CLI 重置管理员密码 |
 | `bun run gallery:index` | 重新生成 Gallery 索引 |
-| `bun run sync:galleries -- --dry-run` | 预览 Gallery 同步 |
-| `bun run sync:galleries` | 执行 Gallery 媒体同步 |
-| `bun run gallery:pull` | **已禁用写入**：仅 `--dry-run` 可执行只读 patch 检查 |
+| `bun run test` | 运行发布边界测试 |
 
-推荐提交流程（阶段 B）：
+推荐提交流程（阶段 E）：
 
 ```bash
 bun run content:check -- --no-examples
@@ -310,7 +300,7 @@ zickme-blog/
 - WebP 图片处理；
 - 品牌与基础 UI 优化；
 - Frontmatter 外链和扩展元数据；
-- 文章封面在线管理（本地回写与 `sync:pull` 已进入废弃兼容期）；
+- 文章封面和状态由 Git 内容源管理，Dashboard 不回写 Markdown；
 - 中文 slug 冲突保护；
 - Drizzle migration baseline 精简。
 
@@ -361,7 +351,7 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 
 1. 部署环境的文件系统不应被当作开发机工作区；
 2. Dashboard 导出内容使用 ZIP 下载；
-3. 本地 Markdown 回写和 `sync:pull` 属于废弃兼容能力，不是内容恢复方式；内容恢复优先使用 Git revert/分支/tag；
+- 内容恢复优先使用 Git revert/分支/tag；数据库快照不替代 Git 内容源；
 4. 数据库迁移在受控环境执行 `bun run db:migrate`；质量门禁不执行生产数据库写入；
 5. 不要在生产环境执行 `bun run db:reset`；受控发布使用 `bun run db:migrate`。
 6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。

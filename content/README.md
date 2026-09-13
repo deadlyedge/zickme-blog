@@ -56,20 +56,13 @@ bun run publish -- --scope all --dry-run --json
 bun run publish -- --scope all
 bun run publish -- --scope posts --dry-run --json
 bun run publish -- --scope galleries --dry-run --json
-bun run sync:pull # 已禁用，仅输出迁移提示
-bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
 不带 `--scope` 的 `bun run publish` 默认发布 Post 和 Gallery，等价于 `bun run publish -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域预览或受控发布；`sync` 与 `sync:galleries` 仍作为兼容入口保留。
 
 `content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，`content:prepare` 是提交前预览流程，默认不写文件、不执行真实同步、不 commit、不 push。
 
-`sync:pull` 已禁用，不会创建目录、查询数据库或写入 Markdown。内容恢复请使用 Git 历史：
-
-```bash
-git log -- content/posts
-git revert <commit>
-```
+数据库不再回写 Markdown/YAML。内容恢复请使用 Git 历史：`git log -- content/posts`、`git revert <commit>` 或恢复分支/tag。
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。
 

@@ -2,7 +2,7 @@
 
 本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的内容质量门禁和受控发布流水线。
 
-Post 与 Gallery 保持独立领域。阶段 A 将现有 `bun run sync` 及相关入口冻结为兼容能力：Git 是唯一人工内容源，质量门禁只执行本地内容检查和真正只读的 dry-run；受控发布工作流才执行数据库迁移和真实同步。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。`gallery:pull` 仅保留兼容期提示，不是正常内容流程。
+Post 与 Gallery 保持独立领域。阶段 E 已删除旧双向 CLI；Git 是唯一人工内容源，质量门禁只执行本地内容检查和真正只读的 publish dry-run；受控发布工作流才执行数据库迁移和真实 publish。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。
 
 ---
 
@@ -11,7 +11,7 @@ Post 与 Gallery 保持独立领域。阶段 A 将现有 `bun run sync` 及相�
 ```mermaid
 graph TD
     A[Push / Pull Request] --> Q[quality.yml]
-    Q -->|本地检查、格式预览、双域只读 dry-run| R[只读质量门禁]
+    Q -->|本地检查、格式预览、双域 publish dry-run| R[只读质量门禁]
     P[受控发布 / workflow_dispatch] --> M[media.yml]
     M -->|媒体处理| C[Cloudinary CDN]
     C --> S[sync-db.yml]
