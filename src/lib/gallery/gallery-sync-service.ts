@@ -335,6 +335,8 @@ export async function syncGalleries(
 								publishedAt: galleryValues.publishedAt,
 								sourcePath: `${inputAlbum.name}/album.yaml`,
 								metadata: galleryValues.metadata,
+								contentHash: prepared.hash,
+								mergeBase: galleryValues.metadata,
 							},
 						})
 						.returning({ id: galleries.id })
@@ -361,6 +363,12 @@ export async function syncGalleries(
 							syncVersion: 1,
 							revision: 0,
 							syncStatus: 'IN_SYNC',
+							contentHash: prepared.hash,
+							mergeBase: {
+								title: existing?.title || null,
+								description: existing?.description || null,
+								alt: existing?.alt || config.data.title,
+							},
 						})
 						.onConflictDoUpdate({
 							target: [galleryImages.galleryId, galleryImages.sourcePath],
@@ -381,6 +389,7 @@ export async function syncGalleries(
 								sourceModifiedAt: prepared.mtime,
 								lastSyncedAt: new Date(),
 								syncStatus: 'IN_SYNC',
+								contentHash: prepared.hash,
 							},
 						})
 				}

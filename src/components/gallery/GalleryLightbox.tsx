@@ -1,11 +1,6 @@
 'use client'
 
-import {
-	ChevronLeft,
-	ChevronRight,
-	ChevronUp,
-	X,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'

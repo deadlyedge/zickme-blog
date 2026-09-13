@@ -25,6 +25,15 @@ export const galleryImageSyncStatusEnum = pgEnum('GalleryImageSyncStatus', [
 	'PENDING_DELETE',
 ])
 
+export const gallerySyncStatusEnum = pgEnum('GallerySyncStatus', [
+	'LOCAL_ONLY',
+	'REMOTE_ONLY',
+	'CONFLICT',
+	'IN_SYNC',
+	'PENDING_DELETE',
+	'ARCHIVED',
+])
+
 export const galleries = pgTable(
 	'Gallery',
 	{
@@ -39,6 +48,12 @@ export const galleries = pgTable(
 		publishedAt: timestamp('publishedAt', { mode: 'date' }),
 		sourcePath: text('sourcePath').notNull(),
 		metadata: jsonb('metadata'),
+		contentHash: text('contentHash'),
+		mergeBase: jsonb('mergeBase'),
+		revision: integer('revision').notNull().default(0),
+		syncStatus: gallerySyncStatusEnum('syncStatus')
+			.notNull()
+			.default('LOCAL_ONLY'),
 		createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
 		updatedAt: timestamp('updatedAt', { mode: 'date' })
 			.defaultNow()
@@ -75,6 +90,8 @@ export const galleryImages = pgTable(
 		lastSyncedAt: timestamp('lastSyncedAt', { mode: 'date' }),
 		syncVersion: integer('syncVersion').notNull().default(0),
 		revision: integer('revision').notNull().default(0),
+		contentHash: text('contentHash'),
+		mergeBase: jsonb('mergeBase'),
 		syncStatus: galleryImageSyncStatusEnum('syncStatus')
 			.notNull()
 			.default('LOCAL_ONLY'),

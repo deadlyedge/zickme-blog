@@ -227,6 +227,8 @@ drizzle/*
 - [ ] 图片加载失败、空相册、未知 slug、同步未完成均有可读兜底。
 - [ ] 大相册不会一次加载全部高清图，缩略图和主图加载策略可观察。
 
+Stage 7 管理边界：`album.yaml` 是人工源，`gallery.yaml` 只由 `gallery:index` 生成；Dashboard 仅 ADMIN 可写并使用 revision 乐观锁。Gallery 图片删除先标记 `PENDING_DELETE`，不会因本地删除直接调用 Cloudinary 删除。双向回写使用 `gallery:pull -- --patch ... --dry-run`，hash 不匹配时停止，完整 Post/Gallery 编排留给 Stage 8。
+
 ## 10. 验证命令
 
 实现阶段至少运行：

@@ -8,6 +8,8 @@ export type GalleryImageSyncStatus =
 	| 'CONFLICT'
 	| 'IN_SYNC'
 	| 'PENDING_DELETE'
+	| 'ARCHIVED'
+export type GallerySyncStatus = GalleryImageSyncStatus
 export type GalleryLayout = 'masonry' | 'grid' | 'justified'
 export type GallerySort = 'filename' | 'mtime' | 'manual'
 

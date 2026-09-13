@@ -2,6 +2,8 @@
 
 本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的自动化双阶段内容同步流水线。
 
+Post 与 Gallery 使用独立流水线。Gallery PR 只执行内容检查、索引和 `bun run sync:galleries -- --dry-run`，不执行真实 Cloudinary 删除；原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。Dashboard 生成的 patch 必须通过 `gallery:pull` 的 dry-run 和 hash 检查后再应用。
+
 ---
 
 ## 🔄 工作流架构与流程

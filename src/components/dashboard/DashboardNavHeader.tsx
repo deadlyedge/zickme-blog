@@ -5,6 +5,7 @@ import {
 	BarChart3,
 	FileText,
 	HardDriveUpload,
+	Images,
 	LogOut,
 	Palette,
 	Users,
@@ -38,6 +39,12 @@ const NAV_ITEMS = [
 		title: '导入与同步',
 		href: '/dashboard/sync',
 		icon: HardDriveUpload,
+		exact: false,
+	},
+	{
+		title: 'Gallery 管理',
+		href: '/dashboard/gallery',
+		icon: Images,
 		exact: false,
 	},
 	{

@@ -85,6 +85,17 @@ links:
 - 导出数据库文章 ZIP；
 - 检查本地与数据库文章差异。
 
+Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gallery.yaml` 只能由索引命令生成，原始图片只能放在 Git 忽略的 `content/.gallery-input/`。管理员可通过 `/dashboard/gallery` 编辑并使用 revision 乐观锁：
+
+```bash
+bun run gallery:index
+bun run sync:galleries -- --dry-run
+bun run sync:galleries
+bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
+```
+
+RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post-only 部署可以不配置 Cloudinary，Post/Gallery 同步保持独立，统一编排属于 Stage 8。
+
 所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
 
 ### 内容同步与 slug 保护
@@ -198,6 +209,10 @@ http://localhost:3000
 | `bun run db:studio` | 启动 Drizzle Studio |
 | `bun run db:reset` | 重置数据库，危险操作 |
 | `bun run reset-admin-password` | CLI 重置管理员密码 |
+| `bun run gallery:index` | 重新生成 Gallery 索引 |
+| `bun run sync:galleries -- --dry-run` | 预览 Gallery 同步 |
+| `bun run sync:galleries` | 执行 Gallery 媒体同步 |
+| `bun run gallery:pull` | 校验并应用 Gallery patch |
 
 推荐提交流程：
 

@@ -93,8 +93,8 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 								id="comment-shortcut-hint"
 								className="text-muted-foreground text-xs"
 							>
-								<kbd className=" border p-1 rounded-md">Ctrl/⌘ + Enter</kbd>{' '}
-								to submit
+								<kbd className=" border p-1 rounded-md">Ctrl/⌘ + Enter</kbd> to
+								submit
 							</p>
 						)}
 						<InputGroupButton

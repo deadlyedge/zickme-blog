@@ -22,6 +22,13 @@
 			"when": 1789111372327,
 			"tag": "0002_damp_black_bolt",
 			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1789190000000,
+			"tag": "0003_gallery_stage7",
+			"breakpoints": true
 		}
 	]
 }

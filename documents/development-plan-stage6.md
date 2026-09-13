@@ -510,6 +510,8 @@ src/components/gallery/ExifPanel.tsx
 
 Stage 6 到此只负责 Gallery 的内容基础、同步媒体基础、查询路由、响应式前台、Lightbox、EXIF 白名单与隐私策略。Dashboard、ADMIN 写操作、patch/ZIP 回写、merge base、revision、冲突处理、删除确认、CI 和 Forker 初始化流程不再在 Stage 6 中继续扩展。
 
+Stage 7 已开始实现上述管理闭环：请以 `documents/development-plan-stage7.md`、`/dashboard/gallery`、`gallery:pull` 和当前迁移为准；Stage 6 文档中的旧“规划中/未实现”描述不再代表当前代码状态。
+
 Stage 7 的目标文件包括：
 
 ```text

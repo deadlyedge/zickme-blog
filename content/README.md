@@ -28,7 +28,7 @@ image: ./images/cover.webp
 
 建议手动填写唯一 `slug`。中文标题会自动转换为拼音，但重名时同步会失败，不会覆盖其他文章。
 
-## 图片相册（Stage 6 规划中）
+## 图片相册（Stage 7）
 
 相册未来放在 `content/photo-gallery/{album-name}/`，每个相册使用 `album.yaml`，图片只保存处理后的 WebP：
 
@@ -40,7 +40,7 @@ content/photo-gallery/japan-autumn/
     └── 002.webp
 ```
 
-Gallery 目前尚未实现。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录。计划见 `documents/development-plan-stage6.md`。
+Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gallery.yaml` 是自动生成索引，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 `content/.gallery-input/{album}/`，先执行 `bun run sync:galleries -- --dry-run`。
 
 ## 常用命令
 
@@ -50,6 +50,9 @@ bun run content:fix
 bun run sync -- --dry-run
 bun run sync
 bun run sync:pull
+bun run gallery:index
+bun run sync:galleries -- --dry-run
+bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
 `sync:pull` 默认不会覆盖已有本地文件。确认无冲突后才使用：
@@ -59,3 +62,5 @@ bun run sync:pull -- --force
 ```
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。
+
+Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。生产环境禁止使用 `bun run db:reset`。

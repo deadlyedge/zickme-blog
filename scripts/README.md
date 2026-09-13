@@ -65,7 +65,7 @@ bun run content:init -- --dir ./my-content
 bun run content:init -- --force
 ```
 
-脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过，普通 Post 目前可以直接同步；Gallery 模板对应 Stage 6 规划，功能完成前不会被 `sync` 自动处理。
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过，Post 和 Gallery 使用独立同步入口，Gallery 不会被 `sync` 自动处理。
 
 ---
 
@@ -90,6 +90,16 @@ bun run sync:galleries
 ```
 
 同步不会把 JPEG、PNG、RAW 等原始输入写入 Git 管理的 Gallery 目录；本地缺失的相册会被标记为数据库中的 `ARCHIVED`，不会自动删除 Cloudinary 资源。
+
+Dashboard 产生的 patch 应先检查再应用：
+
+```bash
+bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
+bun run gallery:pull -- --patch ./gallery-patch.yaml
+bun run gallery:index
+```
+
+`expectedHash` 不匹配时会停止，避免覆盖本地人工修改；Gallery 删除仅标记 `PENDING_DELETE`，不会自动调用 Cloudinary 删除。
 
 当前版本不直接解码 ORF、RAW、CR2、CR3、NEF、ARW 等 RAW 格式。发现这些文件时会报告为 `unsupported`，不会写入 WebP 或上传。请先将 RAW 转换为 JPEG、PNG 或 TIFF，再重新执行同步。
 
