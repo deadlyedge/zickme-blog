@@ -3,6 +3,7 @@
 import {
 	ArrowLeft,
 	BarChart3,
+	DatabaseBackup,
 	FileText,
 	HardDriveUpload,
 	Images,
@@ -57,6 +58,12 @@ const NAV_ITEMS = [
 		title: '用户权限',
 		href: '/dashboard/users',
 		icon: Users,
+		exact: false,
+	},
+	{
+		title: '数据库快照',
+		href: '/dashboard/snapshots',
+		icon: DatabaseBackup,
 		exact: false,
 	},
 ]
