@@ -36,6 +36,13 @@
 			"when": 1789266363734,
 			"tag": "0004_mighty_hiroim",
 			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1789286340444,
+			"tag": "0005_nervous_thunderbird",
+			"breakpoints": true
 		}
 	]
 }
