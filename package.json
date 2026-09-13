@@ -25,6 +25,7 @@
 		"db:studio": "drizzle-kit studio",
 		"db:reset": "bun run scripts/reset-db.ts",
 		"publish": "bun run scripts/publish.ts",
+		"publish:tui": "bun run scripts/publish-tui.ts",
 		"reset-admin-password": "bun run scripts/reset-admin-password.ts"
 	},
 	"dependencies": {

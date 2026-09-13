@@ -1,10 +1,5 @@
-import { runSync } from '../src/lib/sync/sync-orchestrator'
-import {
-	parseSyncScope,
-	type SyncRunSummary,
-	type SyncScope,
-} from '../src/lib/sync/sync-types'
-import { checkContent } from './check-content'
+import { runPublishWorkflow } from '../src/lib/publish/publish-workflow'
+import { parseSyncScope, type SyncScope } from '../src/lib/sync/sync-types'
 
 const args = process.argv.slice(2)
 const scopeIndex = args.indexOf('--scope')
@@ -21,7 +16,13 @@ function usage(): never {
 	process.exit(2)
 }
 
-function printSummary(summary: SyncRunSummary) {
+function printSummary(
+	summary: Awaited<ReturnType<typeof runPublishWorkflow>> extends infer Result
+		? Result extends { kind: 'published'; summary: infer Summary }
+			? Summary
+			: never
+		: never,
+) {
 	if (json) {
 		console.log(JSON.stringify(summary))
 		return
@@ -55,30 +56,31 @@ async function main() {
 
 	const scopeName =
 		scope === 'POSTS' ? 'posts' : scope === 'GALLERIES' ? 'galleries' : 'all'
-	console.log(`▶ 发布前只读检查（scope=${scopeName}）`)
-	const valid = await checkContent({
-		...(await import('./check-content')).DEFAULT_CONFIG,
+	const workflow = await runPublishWorkflow({
 		scope: scopeName,
-		autoFix: false,
-		dryRun: true,
-		showExamples: false,
+		dryRun,
+		deleteOld,
 	})
-	if (!valid) {
-		console.error(
-			`发布已停止：${scopeName} 内容检查失败。请按检查结果执行显式修复命令，然后重新运行 bun run publish -- --scope ${scopeName}`,
-		)
+	if (workflow.kind === 'validation') {
+		if (json) console.log(JSON.stringify(workflow))
+		else {
+			console.error(`发布已停止：${scopeName} 内容检查失败。`)
+			for (const issue of workflow.report.issues)
+				console.error(
+					`[${issue.scope}] ${issue.filePath} ${issue.code}: ${issue.message}`,
+				)
+			console.error(
+				`请按检查结果执行显式修复命令，然后重新运行 bun run publish -- --scope ${scopeName}`,
+			)
+		}
 		process.exitCode = 1
 		return
 	}
-
-	const summary = await runSync({
-		scope,
-		dryRun,
-		deleteOld,
-		triggeredBy: 'CLI',
-	})
-	printSummary(summary)
-	if (summary.status === 'FAILED' || summary.status === 'PARTIAL_SUCCESS')
+	printSummary(workflow.summary)
+	if (
+		workflow.summary.status === 'FAILED' ||
+		workflow.summary.status === 'PARTIAL_SUCCESS'
+	)
 		process.exitCode = 1
 }
 

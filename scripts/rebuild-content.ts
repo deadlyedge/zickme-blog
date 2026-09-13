@@ -9,10 +9,14 @@ import {
 } from '../src/lib/gallery/gallery-parser'
 
 const dryRun = process.argv.includes('--dry-run')
+const albumArg = process.argv.includes('--album')
+	? process.argv[process.argv.indexOf('--album') + 1]
+	: undefined
 
 async function main() {
 	const scan = await scanGalleryDirectory(GALLERY_ROOT)
 	for (const album of scan.albums) {
+		if (albumArg && path.basename(album.directory) !== albumArg) continue
 		if (!album.issues.includes('缺少 album.yaml')) continue
 		const value = createAlbumSkeleton(
 			path.basename(album.directory),

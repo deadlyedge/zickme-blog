@@ -1,4 +1,4 @@
-generatedAt: 2026-09-11T08:48:42.343Z
+generatedAt: 2026-09-13T16:18:42.721Z
 albums:
   - slug: gameart
     title: gameArt
@@ -7,7 +7,7 @@ albums:
     cover: gameArt/images/elden_ring_20240708182520_1.webp
     imageCount: 1
     status: published
-    updatedAt: 2026-09-11T08:45:02.915Z
+    updatedAt: 2026-09-13T11:42:36.739Z
   - slug: testalbum
     title: testAlbum
     description: this is a test album
@@ -15,12 +15,12 @@ albums:
     cover: testAlbum/images/_The_School_of_Athens__by_Raffaello_Sanzio_da_Urbino.webp
     imageCount: 3
     status: published
-    updatedAt: 2026-09-11T08:45:09.957Z
+    updatedAt: 2026-09-13T11:42:43.963Z
   - slug: travel
     title: travel
     description: ""
     path: travel/album.yaml
     cover: travel/images/EM5X1647.webp
-    imageCount: 1
+    imageCount: 2
     status: published
-    updatedAt: 2026-09-11T08:45:11.846Z
+    updatedAt: 2026-09-13T11:42:48.159Z
