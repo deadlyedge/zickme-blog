@@ -94,7 +94,7 @@ bun run sync:galleries
 bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
-RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post-only 部署可以不配置 Cloudinary，Post/Gallery 同步保持独立，统一编排属于 Stage 8。
+RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。统一入口支持按 scope 执行；不要同时从 CLI 和 Dashboard 启动同一 scope，重复触发会提示已有同步正在运行，请稍后重试。异常退出后的运行保护会在 TTL 到期后自动释放。
 
 所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
 
@@ -198,6 +198,10 @@ http://localhost:3000
 | `bun run lint` | 运行 Biome 检查 |
 | `bun run format` | 使用 Biome 格式化代码 |
 | `bun run sync` | 扫描 `content/posts` 并同步到数据库 |
+| `bun run sync -- --scope posts --dry-run --json` | 预览 Post scope 同步并输出 JSON 摘要 |
+| `bun run sync -- --scope galleries --dry-run --json` | 预览 Gallery scope 同步并输出 JSON 摘要 |
+| `bun run sync -- --scope all --dry-run --json` | 预览全站同步并输出双域摘要 |
+| `bun run sync -- --retry <run-id> --scope galleries` | 按 scope 重新执行同步；不支持实体级重试 |
 | `bun run sync:pull` | 拉取数据库中本地不存在的文章 |
 | `bun run sync:pull -- --force` | 强制覆盖同名本地 Markdown |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |

@@ -13,6 +13,9 @@ export type SyncRunStatus = (typeof SYNC_RUN_STATUSES)[number]
 
 export type SyncTrigger = 'CLI' | 'DASHBOARD' | 'CI'
 
+export const SYNC_PROTOCOL_VERSION = 1
+export const SYNC_LOCK_TTL_MS = 30 * 60 * 1000
+
 export type PostSyncSummary = {
 	total: number
 	processed: number
@@ -49,6 +52,36 @@ export type SyncRunSummary = {
 	errors: number
 	errorCode?: string
 	retryOf?: string
+}
+
+export type SyncRunRecord = {
+	id: string
+	protocolVersion: number
+	scope: string
+	status: string
+	dryRun: boolean
+	triggeredBy: string
+	actorId: string | null
+	startedAt: Date
+	finishedAt: Date | null
+	exitCode: number | null
+	summary: unknown
+	errorCount: number
+	conflictCount: number
+	retryOf: string | null
+	lockKey: string | null
+	lockExpiresAt: Date | null
+	createdAt: Date
+	updatedAt: Date
+}
+
+export type PersistedSyncRun = SyncRunSummary & {
+	protocolVersion: number
+	triggeredBy: SyncTrigger
+	actorId: string | null
+	exitCode: number | null
+	lockKey: string | null
+	lockExpiresAt: string | null
 }
 
 export type SyncConflict = {

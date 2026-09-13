@@ -42,8 +42,9 @@ import {
 	getRemotePostDiffAction,
 	getSyncHistoryLogs,
 	importUploadedContent,
-	triggerManualSync,
 } from '@/lib/actions/posts-admin'
+import { triggerSyncAction } from '@/lib/actions/sync-admin'
+import type { SyncScope } from '@/lib/sync/sync-types'
 import type { SyncLog, SyncLogItem, SyncResult } from '@/types'
 
 const STAGE_ICON_MAP = {
@@ -85,6 +86,7 @@ export default function DashboardSyncPage() {
 	// 扫描同步选项
 	const [dryRun, setDryRun] = useState(false)
 	const [deleteOld, setDeleteOld] = useState(true)
+	const [syncScope, setSyncScope] = useState<SyncScope>('POSTS')
 
 	// 当前执行结果与实时日志
 	const [currentResult, setCurrentResult] = useState<SyncResult | null>(null)
@@ -125,8 +127,42 @@ export default function DashboardSyncPage() {
 	// 触发本地手动同步
 	const handleManualSync = () => {
 		startTransition(async () => {
-			toast.info(dryRun ? '开始模拟预览同步...' : '正在执行内容扫描同步...')
-			const result = await triggerManualSync({ dryRun, deleteOld })
+			toast.info(
+				dryRun
+					? `开始 ${syncScope.toLowerCase()} 模拟预览...`
+					: `正在执行 ${syncScope.toLowerCase()} 同步...`,
+			)
+			const response = await triggerSyncAction({
+				scope: syncScope,
+				dryRun,
+				deleteOld,
+			})
+			if (!response.success) {
+				toast.error(response.error)
+				return
+			}
+			const summary = response.summary
+			const result: SyncResult = {
+				success: summary.status === 'SUCCEEDED',
+				status:
+					summary.status === 'SUCCEEDED'
+						? 'SUCCESS'
+						: summary.status === 'PARTIAL_SUCCESS'
+							? 'PARTIAL'
+							: 'FAILED',
+				totalPosts: summary.posts.total,
+				successCount: summary.posts.succeeded,
+				errorCount: summary.errors,
+				logs: [
+					{
+						stage: 'general',
+						level: summary.status === 'SUCCEEDED' ? 'success' : 'error',
+						message: `运行 ${summary.runId}：${summary.status}`,
+						detail: `Posts ${summary.posts.succeeded}/${summary.posts.total}；Gallery ${summary.galleries.processed} 项`,
+						timestamp: summary.finishedAt ?? new Date().toISOString(),
+					},
+				],
+			}
 			setCurrentResult(result)
 			if (result.success) {
 				toast.success(
@@ -350,6 +386,26 @@ export default function DashboardSyncPage() {
 						</CardHeader>
 						<CardContent className="space-y-6">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20 md:col-span-2">
+									<div className="space-y-0.5">
+										<Label className="text-sm font-semibold">同步范围</Label>
+										<p className="text-xs text-muted-foreground">
+											不要同时从 CLI 和 Dashboard 启动同一范围的同步
+										</p>
+									</div>
+									<select
+										value={syncScope}
+										onChange={(event) =>
+											setSyncScope(event.target.value as SyncScope)
+										}
+										disabled={isPending}
+										className="h-9 rounded-md border bg-background px-3 text-sm"
+									>
+										<option value="POSTS">Posts</option>
+										<option value="GALLERIES">Gallery</option>
+										<option value="ALL">全部</option>
+									</select>
+								</div>
 								<div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
 									<div className="space-y-0.5">
 										<Label className="text-sm font-semibold">

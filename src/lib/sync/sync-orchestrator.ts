@@ -3,6 +3,7 @@ import { syncGalleries } from '@/lib/gallery/gallery-sync-service'
 import { ContentSyncService } from '@/lib/sync-service'
 import { safeSyncError } from './sync-errors'
 import { acquireSyncLock } from './sync-lock'
+import { finishSyncRun } from './sync-repository'
 import {
 	emptyGallerySummary,
 	type SyncRunSummary,
@@ -16,6 +17,8 @@ export type SyncOrchestratorOptions = {
 	triggeredBy?: SyncTrigger
 	deleteOld?: boolean
 	retryOf?: string
+	actorId?: string | null
+	galleryInputDir?: string
 }
 
 function postSummary(
@@ -51,7 +54,16 @@ export async function runSync(
 ): Promise<SyncRunSummary> {
 	const runId = randomUUID()
 	const startedAt = new Date().toISOString()
-	const release = acquireSyncLock(options.scope, runId)
+	const started = new Date(startedAt)
+	await acquireSyncLock({
+		runId,
+		scope: options.scope,
+		dryRun: options.dryRun === true,
+		triggeredBy: options.triggeredBy ?? 'CLI',
+		retryOf: options.retryOf,
+		actorId: options.actorId,
+		startedAt: started,
+	})
 	const summary: SyncRunSummary = {
 		runId,
 		scope: options.scope,
@@ -97,6 +109,7 @@ export async function runSync(
 				summary.galleries = gallerySummary(
 					await syncGalleries({
 						dryRun: options.dryRun,
+						inputDir: options.galleryInputDir,
 						deleteOld: options.deleteOld,
 					}),
 				)
@@ -126,7 +139,7 @@ export async function runSync(
 		summary.errors++
 	} finally {
 		summary.finishedAt = new Date().toISOString()
-		release()
+		await finishSyncRun(summary, summary.status === 'SUCCEEDED' ? 0 : 1)
 	}
 	return summary
 }

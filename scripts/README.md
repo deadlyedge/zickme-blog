@@ -12,7 +12,7 @@
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
-| **`sync-galleries.ts`** | `bun run sync:galleries` | 将外部 Gallery 原始输入处理为 WebP，并同步 Cloudinary 与数据库 |
+| **`sync-galleries.ts`** | `bun run sync:galleries` | 将外部 Gallery 原始输入处理为 WebP，并通过统一编排器同步 Cloudinary 与数据库 |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
 
@@ -82,6 +82,8 @@ bun run scripts/upload-to-cloudinary.ts
 ### 5. `sync-galleries.ts` - Gallery 图片同步
 
 Gallery 原始输入默认读取 `content/.gallery-input/`，也可以通过 `GALLERY_INPUT_DIR` 覆盖。该目录已被 Git 忽略。同步会读取尺寸和公开 EXIF 白名单，使用最高 `6000×4000`、WebP `quality: 95`、`effort: 6` 的 Gallery 专用参数生成 WebP，然后将同一份内容写入 `content/photo-gallery/` 并上传至独立的 `photo-gallery/{albumSlug}/` Cloudinary folder。
+
+不要同时从 CLI 和 Dashboard 启动同一 scope 的同步。统一入口会写入运行摘要并使用带 TTL 的运行保护；重复触发会直接提示已有同步正在运行，不会排队或覆盖。
 
 ```bash
 bun run sync:galleries -- --dry-run

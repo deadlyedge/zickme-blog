@@ -1,4 +1,4 @@
-import { syncGalleries } from '../src/lib/gallery/gallery-sync-service'
+import { runSync } from '../src/lib/sync/sync-orchestrator'
 
 const args = process.argv.slice(2)
 const inputIndex = args.indexOf('--input-dir')
@@ -9,14 +9,16 @@ if (inputIndex >= 0 && (!inputDir || inputDir.startsWith('--'))) {
 	process.exit(1)
 }
 
-syncGalleries({
+runSync({
+	scope: 'GALLERIES',
 	dryRun: args.includes('--dry-run'),
-	inputDir,
+	galleryInputDir: inputDir,
 	deleteOld: args.includes('--delete-old'),
+	triggeredBy: 'CLI',
 })
 	.then((summary) => {
 		console.log(JSON.stringify(summary, null, 2))
-		if (summary.errors > 0 || summary.unsupported > 0) process.exitCode = 1
+		if (summary.status !== 'SUCCEEDED') process.exitCode = 1
 	})
 	.catch((error) => {
 		console.error(

@@ -29,6 +29,13 @@
 			"when": 1789190000000,
 			"tag": "0003_gallery_stage7",
 			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1789266363734,
+			"tag": "0004_mighty_hiroim",
+			"breakpoints": true
 		}
 	]
 }

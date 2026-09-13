@@ -12,6 +12,7 @@ import { auth } from '@/lib/auth'
 import { diffContent, scanLocalContent } from '@/lib/content-diff'
 import { createLogger } from '@/lib/logger'
 import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
+import { runSync } from '@/lib/sync/sync-orchestrator'
 import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
 
@@ -398,17 +399,38 @@ export async function triggerManualSync(options?: {
 	deleteOld?: boolean
 }): Promise<SyncResult> {
 	try {
-		await requireAdminSession()
-
 		const parsed = manualSyncOptionsSchema.safeParse(options)
 		const opts = parsed.success ? parsed.data : options
 
-		const service = new ContentSyncService()
-		const result = await service.runSync({
-			triggerType: 'MANUAL',
+		const session = await requireAdminSession()
+		const summary = await runSync({
+			scope: 'POSTS',
+			triggeredBy: 'DASHBOARD',
+			actorId: session.user.id,
 			dryRun: opts?.dryRun ?? false,
 			deleteOld: opts?.deleteOld ?? true,
 		})
+		const result: SyncResult = {
+			success: summary.status === 'SUCCEEDED',
+			status:
+				summary.status === 'SUCCEEDED'
+					? 'SUCCESS'
+					: summary.status === 'PARTIAL_SUCCESS'
+						? 'PARTIAL'
+						: 'FAILED',
+			totalPosts: summary.posts.total,
+			successCount: summary.posts.succeeded,
+			errorCount: summary.errors,
+			logs: [
+				{
+					stage: 'general',
+					level: summary.status === 'SUCCEEDED' ? 'success' : 'error',
+					message: `同步运行 ${summary.runId}：${summary.status}`,
+					detail: summary.errorCode,
+					timestamp: summary.finishedAt ?? new Date().toISOString(),
+				},
+			],
+		}
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/dashboard/sync')
