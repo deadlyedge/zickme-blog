@@ -70,6 +70,9 @@ Gallery 前台和管理后台已实现。\`album.yaml\` 是人工编辑源，\`g
 \`\`\`bash
 bun run content:check
 bun run content:fix
+bun run content:format
+bun run content:verify
+bun run content:prepare
 bun run gallery:index
 bun run content:check -- --no-examples
 bun run sync -- --scope all --dry-run --json

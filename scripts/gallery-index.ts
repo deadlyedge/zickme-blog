@@ -13,6 +13,12 @@ async function main(): Promise<void> {
 		return
 	}
 
+	if (process.argv.includes('--dry-run')) {
+		console.log(
+			`🔎 Gallery 索引预览通过（${scan.albums.length} 个相册），未写入 gallery.yaml。`,
+		)
+		return
+	}
 	await writeGalleryIndex(scan.albums, GALLERY_ROOT)
 	console.log(
 		`✅ 已生成 content/photo-gallery/gallery.yaml（${scan.albums.length} 个相册）`,

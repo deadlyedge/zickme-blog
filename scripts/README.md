@@ -10,6 +10,9 @@
 | :--- | :--- | :--- |
 | **`sync-content.ts`** | `bun run sync` | 统一同步 Post 与 Gallery；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
+| **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
+| **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
+| **`prepare-content.ts`** | `bun run content:prepare` | 提交前预览流水线，默认不写入、不提交、不推送 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
 | **`sync-galleries.ts`** | `bun run sync:galleries` | 将外部 Gallery 原始输入处理为 WebP，并通过统一编排器同步 Cloudinary 与数据库 |
@@ -71,9 +74,27 @@ bun run content:init -- --force
 
 脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `sync` 编排器按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
 
+### 4. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
+
+```bash
+# 默认只预览格式变化
+bun run content:format
+
+# 明确确认后才写入 Frontmatter/YAML 结构
+bun run content:format -- --write
+
+# 运行完整验证：检查、索引预览、Post/Gallery/ALL dry-run、git diff --check
+bun run content:verify
+
+# 面向日常提交前操作；不真实同步、不 commit、不 push
+bun run content:prepare
+```
+
+格式化器只处理 Markdown Frontmatter 和 `album.yaml` 的 YAML 结构，不修改正文语义，也不手工编辑或生成 `gallery.yaml`。验证流程会拒绝被 Git 跟踪的 `content/.gallery-input/` 原始图片，以及放入 Gallery 目录的 JPEG、PNG、TIFF、BMP 或 RAW 文件。
+
 ---
 
-### 4. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
+### 5. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
 扫描 `content/posts/**/images/` 目录下的所有媒体资源，通过 `sharp` 在内存中自动压缩并转换为高质量 `.webp` 格式（降低上传体积并提升前端加载速度），随后推送至 Cloudinary。
 
 ```bash
@@ -83,7 +104,7 @@ bun run scripts/upload-to-cloudinary.ts
 
 ---
 
-### 5. `sync-galleries.ts` - Gallery 图片同步
+### 6. `sync-galleries.ts` - Gallery 图片同步
 
 Gallery 原始输入默认读取 `content/.gallery-input/`，也可以通过 `GALLERY_INPUT_DIR` 覆盖。该目录已被 Git 忽略。同步会读取尺寸和公开 EXIF 白名单，使用最高 `6000×4000`、WebP `quality: 95`、`effort: 6` 的 Gallery 专用参数生成 WebP，然后将同一份内容写入 `content/photo-gallery/` 并上传至独立的 `photo-gallery/{albumSlug}/` Cloudinary folder。
 

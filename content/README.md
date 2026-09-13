@@ -47,6 +47,9 @@ Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gall
 ```bash
 bun run content:check
 bun run content:fix
+bun run content:format
+bun run content:verify
+bun run content:prepare
 bun run gallery:index
 bun run content:check -- --no-examples
 bun run sync -- --scope all --dry-run --json
@@ -58,6 +61,8 @@ bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
 不带 `--scope` 的 `bun run sync` 默认同步 Post 和 Gallery，等价于 `bun run sync -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域检查或失败后的单域重跑；`sync:galleries` 仍作为支持 `--input-dir` 的 Gallery 专用兼容入口保留。
+
+`content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，`content:prepare` 是提交前预览流程，默认不写文件、不执行真实同步、不 commit、不 push。
 
 `sync:pull` 默认不会覆盖已有本地文件。确认无冲突后才使用：
 

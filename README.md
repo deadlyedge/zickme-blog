@@ -206,6 +206,9 @@ http://localhost:3000
 | `bun run sync:pull -- --force` | 强制覆盖同名本地 Markdown |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
 | `bun run content:fix` | 自动修复可安全修复的问题 |
+| `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
+| `bun run content:verify` | 检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
+| `bun run content:prepare` | 提交前预览流水线，不写入、不 commit、不 push、不真实同步 |
 | `bun run content:init` | 生成内容目录模板和使用说明 |
 | `bun run db:generate` | 根据 Schema 生成迁移 |
 | `bun run db:migrate` | 执行未应用的迁移 |
@@ -230,6 +233,16 @@ git add content/posts content/photo-gallery
 git commit -m "content: update blog"
 bun run sync
 ```
+
+提交前也可以直接运行：
+
+```bash
+bun run content:prepare
+git diff --check
+git status --short
+```
+
+`content:format` 和 `content:prepare` 默认不会覆盖用户文件。确认格式预览后，单独执行 `bun run content:format -- --write` 才会重写白名单 Frontmatter/YAML 结构；正文语义不会被格式化器处理。
 
 `bun run sync` 未指定 scope 时会依次尝试同步 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只同步单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。
 
