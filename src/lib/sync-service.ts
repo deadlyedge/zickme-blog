@@ -6,108 +6,37 @@ import matter from 'gray-matter'
 import sharp from 'sharp'
 import { db } from '@/db'
 import { posts, postsToTags, syncLogs, tags } from '@/db/schema'
+import {
+	generateTitleFromFileName,
+	normalizeTags,
+	parseStatusType,
+} from '@/lib/content/post-frontmatter'
+import type {
+	MarkdownFrontmatter,
+	ProcessedPost,
+	SyncRunnerOptions,
+} from '@/lib/content/post-types'
 import { createLogger } from '@/lib/logger'
 import { normalizePostMetadata } from '@/lib/post-metadata'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
-import type {
-	PostMetadata,
-	StatusType,
-	SyncLogItem,
-	SyncResult,
-	SyncStatus,
-} from '@/types'
+import type { SyncLogItem, SyncResult, SyncStatus } from '@/types'
+
+export type {
+	MarkdownFrontmatter,
+	ProcessedPost,
+	SyncRunnerOptions,
+} from '@/lib/content/post-types'
 
 const logger = createLogger('lib/sync-service')
 
 const MAX_IMAGE_WIDTH = 3840
 const MAX_IMAGE_HEIGHT = 2160
 
-export interface MarkdownFrontmatter {
-	title?: string
-	excerpt?: string
-	image?: string
-	tags?: string[] | string
-	date?: string
-	slug?: string
-	status?: string
-	draft?: boolean
-	sourceUrl?: string
-	links?: unknown[]
-	github?: string
-	demo?: string
-	figma?: string
-	paper?: string
-	category?: string
-	series?: string
-	canonicalUrl?: string
-	outdatedWarning?: string
-	layout?: 'article' | 'gallery' | 'photo'
-}
-
-export interface ProcessedPost {
-	slug: string
-	sourcePath: string
-	title: string
-	excerpt?: string
-	poster?: string
-	content: string
-	publishedAt: Date
-	tags: string[]
-	status: StatusType
-	sourceUrl?: string
-	metadata: PostMetadata
-}
-
-export interface SyncRunnerOptions {
-	triggerType?: 'MANUAL' | 'UPLOAD' | 'CLI'
-	dryRun?: boolean
-	deleteOld?: boolean
-	customPostsDir?: string
-	virtualFiles?: Array<{
-		relativePath: string
-		content: string
-	}>
-	virtualImages?: Array<{
-		relativePath: string
-		buffer: Buffer
-	}>
-}
-
-export function parseStatusType(
-	statusStr: string | undefined,
-	draft: boolean | undefined,
-): StatusType {
-	if (draft === true) return 'DRAFT'
-	if (statusStr) {
-		const upperStatus = statusStr.toUpperCase()
-		if (
-			['PUBLISHED', 'DRAFT', 'ARCHIVED', 'PENDING', 'SPAM'].includes(
-				upperStatus,
-			)
-		) {
-			return upperStatus as StatusType
-		}
-	}
-	return 'PUBLISHED'
-}
-
-export function normalizeTags(
-	tagsInput: string[] | string | undefined,
-): string[] {
-	if (!tagsInput) return []
-	if (Array.isArray(tagsInput)) return tagsInput
-	if (typeof tagsInput === 'string') {
-		return tagsInput
-			.split(',')
-			.map((tag) => tag.trim())
-			.filter((tag) => tag.length > 0)
-	}
-	return []
-}
-
-export function generateTitleFromFileName(fileName: string): string {
-	return fileName.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-}
+export {
+	generateTitleFromFileName,
+	normalizeTags,
+	parseStatusType,
+} from '@/lib/content/post-frontmatter'
 
 export class ContentSyncService {
 	private logs: SyncLogItem[] = []

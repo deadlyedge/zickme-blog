@@ -13,6 +13,7 @@ import { diffContent, scanLocalContent } from '@/lib/content-diff'
 import { createLogger } from '@/lib/logger'
 import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
 import { runSync } from '@/lib/sync/sync-orchestrator'
+import { failedSyncResult, syncResultFromSummary } from '@/lib/sync/sync-result'
 import { ContentSyncService } from '@/lib/sync-service'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
 
@@ -410,27 +411,7 @@ export async function triggerManualSync(options?: {
 			dryRun: opts?.dryRun ?? false,
 			deleteOld: opts?.deleteOld ?? true,
 		})
-		const result: SyncResult = {
-			success: summary.status === 'SUCCEEDED',
-			status:
-				summary.status === 'SUCCEEDED'
-					? 'SUCCESS'
-					: summary.status === 'PARTIAL_SUCCESS'
-						? 'PARTIAL'
-						: 'FAILED',
-			totalPosts: summary.posts.total,
-			successCount: summary.posts.succeeded,
-			errorCount: summary.errors,
-			logs: [
-				{
-					stage: 'general',
-					level: summary.status === 'SUCCEEDED' ? 'success' : 'error',
-					message: `同步运行 ${summary.runId}：${summary.status}`,
-					detail: summary.errorCode,
-					timestamp: summary.finishedAt ?? new Date().toISOString(),
-				},
-			],
-		}
+		const result = syncResultFromSummary(summary)
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/dashboard/sync')
@@ -440,22 +421,7 @@ export async function triggerManualSync(options?: {
 		return result
 	} catch (error) {
 		logger.error('Manual sync failed', error)
-		return {
-			success: false,
-			status: 'FAILED',
-			totalPosts: 0,
-			successCount: 0,
-			errorCount: 1,
-			logs: [
-				{
-					stage: 'general',
-					level: 'error',
-					message: '手动同步异常中断',
-					detail: error instanceof Error ? error.message : String(error),
-					timestamp: new Date().toISOString(),
-				},
-			],
-		}
+		return failedSyncResult('手动同步异常中断', error)
 	}
 }
 

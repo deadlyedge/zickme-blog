@@ -44,6 +44,7 @@ import {
 	importUploadedContent,
 } from '@/lib/actions/posts-admin'
 import { triggerSyncAction } from '@/lib/actions/sync-admin'
+import { syncResultFromSummary } from '@/lib/sync/sync-result'
 import type { SyncScope } from '@/lib/sync/sync-types'
 import type { SyncLog, SyncLogItem, SyncResult } from '@/types'
 
@@ -142,27 +143,7 @@ export default function DashboardSyncPage() {
 				return
 			}
 			const summary = response.summary
-			const result: SyncResult = {
-				success: summary.status === 'SUCCEEDED',
-				status:
-					summary.status === 'SUCCEEDED'
-						? 'SUCCESS'
-						: summary.status === 'PARTIAL_SUCCESS'
-							? 'PARTIAL'
-							: 'FAILED',
-				totalPosts: summary.posts.total,
-				successCount: summary.posts.succeeded,
-				errorCount: summary.errors,
-				logs: [
-					{
-						stage: 'general',
-						level: summary.status === 'SUCCEEDED' ? 'success' : 'error',
-						message: `运行 ${summary.runId}：${summary.status}`,
-						detail: `Posts ${summary.posts.succeeded}/${summary.posts.total}；Gallery ${summary.galleries.processed} 项`,
-						timestamp: summary.finishedAt ?? new Date().toISOString(),
-					},
-				],
-			}
+			const result: SyncResult = syncResultFromSummary(summary)
 			setCurrentResult(result)
 			if (result.success) {
 				toast.success(

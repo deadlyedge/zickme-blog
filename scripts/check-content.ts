@@ -3,6 +3,11 @@ import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
 import matter from 'gray-matter'
 import {
+	generateTitleFromFileName,
+	normalizeTags,
+} from '../src/lib/content/post-frontmatter'
+import type { MarkdownFrontmatter } from '../src/lib/content/post-types'
+import {
 	createAlbumSkeleton,
 	GALLERY_ROOT,
 	scanGalleryDirectory,
@@ -11,28 +16,6 @@ import {
 } from '../src/lib/gallery/gallery-parser'
 import { normalizePostMetadata } from '../src/lib/post-metadata'
 import { generateSlugFromPath } from '../src/lib/slug'
-
-interface MarkdownFrontmatter {
-	title?: string
-	excerpt?: string
-	image?: string
-	tags?: string[] | string
-	date?: string
-	slug?: string
-	status?: string
-	draft?: boolean
-	sourceUrl?: string
-	links?: unknown[]
-	github?: string
-	demo?: string
-	figma?: string
-	paper?: string
-	category?: string
-	series?: string
-	canonicalUrl?: string
-	outdatedWarning?: string
-	layout?: 'article' | 'gallery' | 'photo'
-}
 
 interface StandardFrontmatter {
 	title: string
@@ -67,28 +50,6 @@ const DEFAULT_CONFIG: CheckConfig = {
 	autoFix: process.argv.includes('--fix'),
 	showExamples: !process.argv.includes('--no-examples'),
 	postsDir: path.join(process.cwd(), 'content/posts'),
-}
-
-/**
- * 从文件名生成标题
- */
-function generateTitleFromFileName(fileName: string): string {
-	return fileName.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-}
-
-/**
- * 规范化标签数组
- */
-function normalizeTags(tagsInput: string[] | string | undefined): string[] {
-	if (!tagsInput) return []
-	if (Array.isArray(tagsInput)) return tagsInput
-	if (typeof tagsInput === 'string') {
-		return tagsInput
-			.split(',')
-			.map((tag) => tag.trim())
-			.filter((tag) => tag.length > 0)
-	}
-	return []
 }
 
 /**
