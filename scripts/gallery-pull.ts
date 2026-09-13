@@ -24,8 +24,13 @@ interface GalleryPatch {
 
 async function main() {
 	console.warn(
-		'⚠️ gallery:pull 已废弃：请直接编辑并提交 album.yaml。此兼容入口仅在兼容期保留，禁止作为正常内容流程。',
+		'❌ gallery:pull 已禁用：请直接编辑并提交 album.yaml。dry-run 仅用于只读检查。',
 	)
+	if (!dryRun) {
+		console.error('拒绝应用 patch：Dashboard/数据库不得回写 Git 内容源。')
+		process.exitCode = 1
+		return
+	}
 	const parsed = parse(
 		await fs.readFile(path.resolve(resolvedPatchPath), 'utf8'),
 	) as unknown

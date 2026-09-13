@@ -58,6 +58,12 @@ export async function getDashboardGalleries() {
 }
 
 export async function updateGallery(input: unknown) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'相册内容源由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 		const parsed = galleryUpdateSchema.safeParse(input)
@@ -102,6 +108,12 @@ export async function updateGallery(input: unknown) {
 }
 
 export async function updateGalleryImage(input: unknown) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'图片元数据由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 		const parsed = imageUpdateSchema.safeParse(input)
@@ -141,6 +153,12 @@ export async function markGalleryImageForDeletion(
 	id: string,
 	revision: number,
 ) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'不能从 Dashboard 回写或删除 Git 内容源，请编辑 album.yaml 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 		const parsed = z

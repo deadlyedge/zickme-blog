@@ -78,22 +78,18 @@ links:
 - 发布、转为草稿、归档和恢复文章；
 - 批量更新文章状态；
 - 预览文章；
-- 输入外部封面 URL；
-- 上传、替换和移除文章封面；
-- 通过 Cloudinary WebP 流程处理上传图片；
-- 手动触发内容同步；
-- 上传 Markdown 或 ZIP 内容；
-- 查看分阶段同步日志；
-- 导出数据库文章 ZIP；
-- 检查本地与数据库文章差异。
+- 查看文章状态和运行时数据；
+- 手动触发单向 publish；
+- 查看发布日志和本地/数据库差异；
+- 旧的封面编辑、Markdown/ZIP 导入、数据库导出和状态修改入口仅保留废弃提示，不再回写 Git 内容源。
 
 Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gallery.yaml` 只能由索引命令生成，原始图片只能放在 Git 忽略的 `content/.gallery-input/`。Dashboard 的旧内容编辑/patch 能力仅为兼容期能力，不应作为新的内容源：
 
 ```bash
 bun run gallery:index
 bun run sync:galleries -- --dry-run
-bun run sync:galleries
-bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run # 兼容期检查，非正常内容流程
+bun run publish -- --scope galleries
+bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run # 仅兼容期只读检查
 ```
 
 RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。真实同步仍使用运行保护；`dry-run` 完全只读，不获取数据库锁、不创建或更新 `SyncRun`，也不写文件或上传媒体。
@@ -104,7 +100,7 @@ RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF
 
 - 使用 Sharp 进行图片尺寸限制和 WebP 优化；
 - 支持本地 Markdown 图片路径解析和 CDN URL 替换；
-- 数据库封面回写、文章导出和 `sync:pull` 仅作为废弃兼容能力保留，不得作为内容恢复流程；
+- 数据库封面回写、文章导出和 `sync:pull` 已禁用；内容恢复请使用 Git 历史；
 - 默认不覆盖已有本地文件；
 - 支持本地新增、远端新增和冲突诊断；
 - 中文 slug 冲突时拒绝同步，不静默覆盖其他文章；
@@ -206,8 +202,8 @@ http://localhost:3000
 | `bun run sync -- --scope galleries --dry-run --json` | 兼容入口：预览 Gallery 同步并输出 JSON 摘要 |
 | `bun run sync -- --scope all --dry-run --json` | 兼容入口：预览全站同步并输出双域摘要 |
 | `bun run sync -- --retry <run-id> --scope galleries` | 兼容入口：按 scope 重跑；正式 publish 不支持 retry |
-| `bun run sync:pull` | **已废弃**：数据库→Markdown 兼容入口；内容恢复请使用 Git 历史 |
-| `bun run sync:pull -- --force` | **已废弃**：强制覆盖本地 Markdown，禁止作为正常流程 |
+| `bun run sync:pull` | **已禁用**：数据库→Markdown 被拒绝；内容恢复请使用 Git 历史 |
+| `bun run sync:pull -- --force` | **已禁用**：不会覆盖本地 Markdown |
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
 | `bun run content:fix` | 自动修复可安全修复的问题 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
@@ -223,7 +219,7 @@ http://localhost:3000
 | `bun run gallery:index` | 重新生成 Gallery 索引 |
 | `bun run sync:galleries -- --dry-run` | 预览 Gallery 同步 |
 | `bun run sync:galleries` | 执行 Gallery 媒体同步 |
-| `bun run gallery:pull` | **已废弃**：兼容期校验/应用 Gallery patch |
+| `bun run gallery:pull` | **已禁用写入**：仅 `--dry-run` 可执行只读 patch 检查 |
 
 推荐提交流程（阶段 B）：
 

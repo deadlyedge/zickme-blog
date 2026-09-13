@@ -55,8 +55,8 @@ bun run content:check -- --no-examples
 bun run publish -- --scope all --dry-run --json
 bun run publish -- --scope all
 bun run publish -- --scope posts --dry-run --json
-bun run sync -- --scope galleries --dry-run --json
-bun run sync:pull
+bun run publish -- --scope galleries --dry-run --json
+bun run sync:pull # 已禁用，仅输出迁移提示
 bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 ```
 
@@ -64,10 +64,11 @@ bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
 
 `content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，`content:prepare` 是提交前预览流程，默认不写文件、不执行真实同步、不 commit、不 push。
 
-`sync:pull` 默认不会覆盖已有本地文件。确认无冲突后才使用：
+`sync:pull` 已禁用，不会创建目录、查询数据库或写入 Markdown。内容恢复请使用 Git 历史：
 
 ```bash
-bun run sync:pull -- --force
+git log -- content/posts
+git revert <commit>
 ```
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。

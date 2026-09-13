@@ -25,7 +25,7 @@
 ## 📖 详细使用说明
 
 ### 1. `publish.ts` - 单向内容发布
-正式发布入口只读取 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，并将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
+正式发布入口会先检查并补齐 Post Frontmatter，再读取 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，并将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。正式 publish 可以写入缺失的 Frontmatter，但不会修改正文；dry-run 只预览缺失字段并停止，不写入任何内容。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
 
 ```bash
 # 预览全站发布，不写入文件、数据库、Cloudinary 或 SyncRun
@@ -37,7 +37,7 @@ bun run publish -- --scope galleries
 ```
 
 ### 2. `sync-content.ts` - 兼容期同步入口
-该入口仍读取本地 Post 与 Gallery 内容并复用相同的单向发布 service，但仅用于兼容旧流程。新文档和新脚本应使用 `bun run publish`。
+该入口仍读取本地 Post 与 Gallery 内容并复用相同的单向发布 service，但仅用于兼容旧流程；它不再执行数据库 poster 回写。新文档和新脚本应使用 `bun run publish`。
 
 ```bash
 # 1. 兼容期默认执行全站同步（等价于 --scope all）
@@ -131,15 +131,14 @@ bun run sync:galleries
 
 同步不会把 JPEG、PNG、RAW 等原始输入写入 Git 管理的 Gallery 目录；本地缺失的相册会被标记为数据库中的 `ARCHIVED`，不会自动删除 Cloudinary 资源。
 
-Dashboard 产生的 patch 应先检查再应用：
+Dashboard 产生的 patch 仅可只读检查，不能应用回写：
 
 ```bash
 bun run gallery:pull -- --patch ./gallery-patch.yaml --dry-run
-bun run gallery:pull -- --patch ./gallery-patch.yaml
 bun run gallery:index
 ```
 
-`expectedHash` 不匹配时会停止，避免覆盖本地人工修改；Gallery 删除仅标记 `PENDING_DELETE`，不会自动调用 Cloudinary 删除。
+`gallery:pull` 非 dry-run 会直接拒绝，避免覆盖本地人工修改；请直接编辑并提交 `album.yaml`。Gallery 删除仅通过 Git 内容变更进入 publish 流程。
 
 当前版本不直接解码 ORF、RAW、CR2、CR3、NEF、ARW 等 RAW 格式。发现这些文件时会报告为 `unsupported`，不会写入 WebP 或上传。请先将 RAW 转换为 JPEG、PNG 或 TIFF，再重新执行 publish。
 

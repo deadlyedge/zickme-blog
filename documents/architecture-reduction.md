@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：阶段 A、阶段 B 已实施，作为 Stage 9.6 之后的架构治理基线
+> 状态：阶段 A、阶段 B、阶段 C 已实施，作为 Stage 9.6 之后的架构治理基线
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -214,6 +214,8 @@ bun run publish -- --scope galleries
 - 禁止 Gallery patch/ZIP 自动回写 `album.yaml`；
 - Dashboard 内容编辑入口改为只读或显示废弃提示；
 - 为旧入口保留明确错误信息和迁移说明一段兼容期。
+
+实施记录：`sync:pull` 已改为拒绝数据库到 Markdown 的写入；`gallery:pull` 仅允许 dry-run 检查，非 dry-run 直接拒绝；兼容 `sync` 不再执行数据库 poster 回写；Dashboard 的 Post/Gallery 内容编辑、状态修改、导入和删除入口改为只读/废弃提示。运行时查询、发布触发、评论、用户和站点设置管理继续保留。内容恢复统一使用 Git revert、分支或 tag。
 
 验收：所有内容变化都能在 Git diff 中被发现，数据库操作不会静默修改工作区文件。
 

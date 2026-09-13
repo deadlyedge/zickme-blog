@@ -1,3 +1,15 @@
+---
+title: stage9 之后的架构与内容发布治理总结
+slug: summary-after-9-stages
+date: 2026-09-13
+tags:
+  - architecture
+  - content-publishing
+  - sync
+  - Next.js
+status: published
+excerpt: 总结 Stage 9 之后博客与 Gallery 的架构现状、同步边界、发布流程、恢复策略和后续治理建议。
+---
 # 总体判断
 
 Stage 9 之后，项目已经具备了较完整的“内容源 → 校验 → 同步 → 数据库运行时副本 → Dashboard → 快照恢复”架构，工程治理明显比早期成熟。

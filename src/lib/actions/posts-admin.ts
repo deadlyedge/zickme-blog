@@ -141,6 +141,11 @@ export async function updatePostPosterAction(
 	postId: string,
 	poster: string | null,
 ) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error: '文章内容源由 Git 管理，请直接编辑 Markdown 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 		const parsedId = postIdSchema.safeParse(postId)
@@ -169,6 +174,12 @@ export async function uploadPostPosterAction(
 	postId: string,
 	formData: FormData,
 ) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'文章封面不能通过 Dashboard 回写内容源，请编辑 Markdown 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 		const file = formData.get('file')
@@ -248,6 +259,12 @@ export async function getRemotePostDiffAction() {
  * 2. 更新文章状态 (PUBLISHED / DRAFT / ARCHIVED 等)
  */
 export async function updatePostStatus(postId: string, status: StatusType) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 
@@ -295,6 +312,12 @@ export async function batchUpdatePostStatus(
 	postIds: string[],
 	status: StatusType,
 ) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 
@@ -353,6 +376,12 @@ export async function restorePost(postId: string) {
  * 6. 彻底物理删除文章（永久删除）
  */
 export async function deletePostPermanently(postId: string) {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return {
+			success: false as const,
+			error:
+				'不能从 Dashboard 删除 Git 内容源。请删除或恢复 Markdown 后通过 publish 发布。',
+		}
 	try {
 		await requireAdminSession()
 
@@ -431,6 +460,11 @@ export async function triggerManualSync(options?: {
 export async function importUploadedContent(
 	formData: FormData,
 ): Promise<SyncResult> {
+	if (process.env.ENABLE_LEGACY_CONTENT_WRITEBACK !== '1')
+		return failedSyncResult(
+			'内容导入已禁用：请将 Markdown 和媒体提交到 Git，再通过 publish 发布。',
+			new Error('LEGACY_CONTENT_IMPORT_DISABLED'),
+		)
 	try {
 		await requireAdminSession()
 

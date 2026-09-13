@@ -1,13 +1,3 @@
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
-import matter from 'gray-matter'
-import { db } from '../src/db'
-import { posts } from '../src/db/schema'
-import { scanLocalContent } from '../src/lib/content-diff'
-import {
-	shouldWriteBackPoster,
-	writeBackPostPoster,
-} from '../src/lib/frontmatter-writeback'
 import { runSync } from '../src/lib/sync/sync-orchestrator'
 import {
 	parseSyncScope,
@@ -65,8 +55,6 @@ async function main() {
 		usage()
 	}
 
-	if (!dryRun && (scope === 'POSTS' || scope === 'ALL'))
-		await writeBackDatabasePosters()
 	const summary = await runSync({
 		scope,
 		dryRun,
@@ -77,34 +65,6 @@ async function main() {
 	printSummary(summary)
 	if (summary.status === 'FAILED' || summary.status === 'PARTIAL_SUCCESS')
 		process.exitCode = 1
-}
-
-async function writeBackDatabasePosters() {
-	const postsDir = path.join(process.cwd(), 'content/posts')
-	const localPosts = await scanLocalContent(postsDir)
-	const databasePosts = await db
-		.select({
-			slug: posts.slug,
-			poster: posts.poster,
-			updatedAt: posts.updatedAt,
-		})
-		.from(posts)
-	for (const databasePost of databasePosts) {
-		if (!databasePost.poster) continue
-		const localPost = localPosts.get(databasePost.slug)
-		if (!localPost) continue
-		try {
-			if (
-				!(await shouldWriteBackPoster(localPost.path, databasePost.updatedAt))
-			)
-				continue
-			const parsed = matter(await fs.readFile(localPost.path, 'utf8'))
-			if (parsed.data.image === databasePost.poster) continue
-			await writeBackPostPoster(localPost.path, databasePost.poster)
-		} catch {
-			// The normal domain sync reports unreadable or missing local files.
-		}
-	}
 }
 
 main().catch((error) => {
