@@ -65,7 +65,7 @@
 
 阶段 E 边界：正式内容流程只使用 `content:check`、`publish`、Git 和受控 CI；旧双向 CLI 已删除。`dry-run` 不得获取数据库锁、创建或更新 `SyncRun`、写入工作区、写入数据库或上传 Cloudinary。质量门禁必须不依赖生产数据库和 Cloudinary secrets。
 
-阶段 B 边界：`publish` 是正式单向发布入口，支持 `posts|galleries|all` scope；Dashboard 和受控 CI 必须复用同一个 publish service。publish 不执行数据库到 Markdown/YAML 的回写、不执行 merge、实体级重试、自动 commit 或 push。
+阶段 B/E 边界：`publish` 是唯一正式单向发布入口，支持 `posts|galleries|all` scope；Dashboard 和受控 CI 必须复用同一个 publish service。publish 不执行数据库到 Markdown/YAML 的回写、不执行 merge、实体级重试、自动 commit 或 push。
 
 ---
 

@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：阶段 A、阶段 B、阶段 C 已实施，作为 Stage 9.6 之后的架构治理基线
+> 状态：阶段 A、阶段 B、阶段 C、阶段 D、阶段 E 已实施，作为 Stage 9.6 之后的架构治理基线
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -126,19 +126,20 @@ Cloudinary 只负责图片存储、CDN、展示尺寸和缩略图，以及由单
 - 现有 Dashboard 同步页面；
 - `SiteSnapshot`；
 - Gallery revision 和待删除状态；
-- 旧的 Post/Gallery 兼容入口。
+- 历史 `SyncRun`、运行摘要和 Dashboard 运行记录查询。
 
 冻结意味着只修复安全、数据一致性和阻断性缺陷，不新增实体级任务、冲突 UI、自动回写或新的同步方向。
 
-### 4.3 逐步废弃
+### 4.3 已废弃或已删除
 
-- `sync:pull`；
-- `gallery:pull` 和 patch/ZIP 回写；
+- `sync:pull`、`gallery:pull`、旧 `sync`、`sync:galleries` CLI 入口；
 - Dashboard 修改内容后回写 Markdown/YAML；
 - 数据库文章导出作为内容恢复手段；
 - frontmatter poster 自动 write-back；
-- `mergeBase`、字段级 merge 和实体级冲突协议；
-- 仅为双向同步存在的 `revision`、`syncVersion` 和复杂状态枚举。
+- Dashboard scope retry Action；
+- publish 对 `mergeBase`、字段级 merge、实体级冲突、`revision` 和 `syncVersion` 的新增依赖。
+
+历史数据库字段和 migration 仍保留，仅等待独立的数据迁移窗口和生产读取确认后再删除。
 
 ### 4.4 原则上删除
 
@@ -166,7 +167,6 @@ bun run publish -- --scope posts
 
 ```bash
 # 原始图片放入 content/.gallery-input/{album}/，并自行备份
-bun run gallery:prepare
 bun run content:verify
 bun run publish -- --scope galleries --dry-run
 git diff -- content/photo-gallery
@@ -176,7 +176,7 @@ git push
 bun run publish -- --scope galleries
 ```
 
-在命令合并完成前，可暂时使用现有 `bun run sync -- --scope ...` 作为兼容入口，但 README 和新文档不应继续扩展旧入口语义。
+旧同步入口已经删除；新流程只使用 `publish`。
 
 ## 6. 分阶段实施计划
 
@@ -203,7 +203,7 @@ bun run publish -- --scope galleries
 - 发布流程默认不回写内容源；
 - Dashboard 仅触发同一个 publish service。
 
-实施记录：已新增 `bun run publish` 统一 CLI，支持 `posts|galleries|all`、`--dry-run`、`--json` 和 `--no-delete`；Post 与 Gallery 继续复用同一个单向编排 service；质量检查和受控 CI 已迁移到 publish dry-run/real publish；旧 `sync` 入口保留为兼容入口并输出迁移提示。发布流程不支持实体级重试，不自动 commit/push，也不回写内容源。
+实施记录：已新增 `bun run publish` 统一 CLI，支持 `posts|galleries|all`、`--dry-run`、`--json` 和 `--no-delete`；Post 与 Gallery 继续复用同一个单向编排 service；质量检查和受控 CI 已迁移到 publish dry-run/real publish；旧同步 CLI 已在阶段 E 删除。发布流程不支持实体级重试，不自动 commit/push，也不回写内容源。
 
 验收：本地 CLI、Dashboard 和受控 CI 发布使用同一个单向 Service。
 
@@ -215,7 +215,7 @@ bun run publish -- --scope galleries
 - Dashboard 内容编辑入口改为只读或显示废弃提示；
 - 为旧入口保留明确错误信息和迁移说明一段兼容期。
 
-实施记录：`sync:pull` 已改为拒绝数据库到 Markdown 的写入；`gallery:pull` 仅允许 dry-run 检查，非 dry-run 直接拒绝；兼容 `sync` 不再执行数据库 poster 回写；Dashboard 的 Post/Gallery 内容编辑、状态修改、导入和删除入口改为只读/废弃提示。运行时查询、发布触发、评论、用户和站点设置管理继续保留。内容恢复统一使用 Git revert、分支或 tag。
+实施记录：旧反向 CLI 曾在兼容期改为拒绝写入，随后已在阶段 E 删除；Dashboard 的 Post/Gallery 内容编辑、状态修改、导入和删除入口改为只读/废弃提示。运行时查询、发布触发、评论、用户和站点设置管理继续保留。内容恢复统一使用 Git revert、分支或 tag。
 
 验收：所有内容变化都能在 Git diff 中被发现，数据库操作不会静默修改工作区文件。
 
@@ -242,9 +242,7 @@ bun run publish -- --scope galleries
 
 本阶段不删除生产字段、历史 migration、旧 merge helper 或数据库数据。删除前仍需完成生产读取审计、迁移说明和回滚方案。
 
-### 阶段 E：删除与验证
-
-实施记录：已删除 `sync`、`sync:galleries`、`sync:pull`、`gallery:pull` 的 package/脚本入口，删除 Dashboard scope retry Action，新增 Bun 发布边界测试。数据库 schema 字段、历史 migration、运行记录和快照表继续保留，等待独立的数据迁移窗口。
+实施记录：已删除 `sync`、`sync:galleries`、`sync:pull`、`gallery:pull` 的 package/脚本入口，删除 Dashboard scope retry Action，新增 Bun 发布边界测试；更新 README、AGENTS、content 初始化模板和 CI 文档。数据库 schema 字段、历史 migration、运行记录和快照表继续保留，等待独立的数据迁移窗口。
 
 正式内容流程只保留：
 
@@ -254,17 +252,6 @@ bun run publish -- --scope all --dry-run --json
 bun run test
 bun run publish -- --scope all
 ```
-
-验收：核心发布链路不再依赖 merge base、实体冲突、反向拉取和双向 revision。
-
-### 阶段 E：删除与验证
-
-- 删除兼容入口和废弃代码；
-- 更新 README、CI、环境变量说明和目录说明；
-- 增加纯函数和 publish service 测试；
-- 验证全新环境可以从 Git 内容源完成初始化；
-- 验证内容检查不依赖数据库和 Cloudinary；
-- 验证失败发布不会破坏既有运行时数据。
 
 验收：用户可以只依赖 README 完成“编辑、检查、提交、发布、回滚”。
 
@@ -284,16 +271,32 @@ bun run publish -- --scope all
 
 如果一个新功能需要同时修改 Git 内容源、数据库副本和 Cloudinary，必须先说明它为何不能通过单向发布完成，并评估是否违反本方案。
 
-## 9. 最终验收标准
+## 9. 当前进展与最终验收标准
 
-- [ ] Git 是唯一人工内容源；
-- [ ] Post 和 Gallery 都能通过单向 publish 发布；
-- [ ] `dry-run` 完全不写文件、不写数据库、不上传媒体；
-- [ ] Dashboard 不会静默回写 Markdown 或 YAML；
-- [ ] CI 质量检查不依赖生产数据库写入；
-- [ ] 旧双向入口有废弃提示或已删除；
-- [ ] 运行时数据库和 Cloudinary 的职责被明确记录；
-- [ ] 原始照片备份责任已记录；
-- [ ] Git 内容回滚和数据库恢复路径分别可执行；
-- [ ] 核心 publish、parser 和恢复边界有自动化测试；
-- [ ] README、AGENTS.md 和本方案没有互相矛盾的现行流程。
+截至阶段 E，当前进展如下：
+
+| 项目 | 状态 | 证据 |
+| --- | --- | --- |
+| Git 是唯一人工内容源 | 已完成 | `AGENTS.md`、README、Dashboard 写入入口禁用 |
+| Post/Gallery 单向 publish | 已完成 | `scripts/publish.ts`、CI `publish --scope all` |
+| dry-run 完全只读 | 已完成 | orchestrator、Post/Gallery service、发布边界测试 |
+| Dashboard 不回写内容源 | 已完成 | 旧写入 Action 返回废弃提示 |
+| CI 不依赖生产数据库写入 | 已完成 | `quality.yml` 不注入生产 secrets |
+| 旧双向入口 | 已删除 | 旧 CLI 脚本和 package scripts 已删除 |
+| merge/revision/syncVersion 协议 | 已降级 | schema 保留，publish 不再写入，字段已标记 deprecated |
+| 快照职责 | 已明确 | 仅保护 PostgreSQL 业务副本 |
+| 自动化测试 | 已补齐基础边界 | `tests/publish-boundaries.test.ts` |
+| 生产字段最终删除 | 待独立迁移 | 需生产读取审计、迁移说明和回滚方案 |
+
+- [x] Git 是唯一人工内容源；
+- [x] Post 和 Gallery 都能通过单向 publish 发布；
+- [x] `dry-run` 完全不写文件、不写数据库、不上传媒体；
+- [x] Dashboard 不会静默回写 Markdown 或 YAML；
+- [x] CI 质量检查不依赖生产数据库写入；
+- [x] 旧双向入口已删除；
+- [x] 运行时数据库和 Cloudinary 的职责被明确记录；
+- [x] 原始照片备份责任已记录；
+- [x] Git 内容回滚和数据库恢复路径分别可执行；
+- [x] 核心 publish 边界有自动化测试；
+- [x] README、AGENTS.md 和本方案没有互相矛盾的现行流程；
+- [ ] 生产 schema 中的废弃字段已删除（需独立迁移窗口，不属于本次阶段 E）。
