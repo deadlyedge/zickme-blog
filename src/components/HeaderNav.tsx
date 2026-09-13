@@ -1,6 +1,6 @@
 'use client'
 
-import { Aperture, BookOpen, SearchIcon, User, UserIcon } from 'lucide-react'
+import { ImagesIcon, BookOpen, SearchIcon, BadgeInfoIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -101,7 +101,7 @@ export const HeaderNav = () => {
 							className={`font-bold transition-all duration-200 ${isGallery ? 'bg-white/12 text-white' : ''}`}
 						>
 							<Link href="/gallery" aria-label="gallery" className="gap-1.5">
-								<Aperture className="size-4 opacity-70" />
+								<ImagesIcon className="size-4 opacity-70" />
 								<span className="hidden sm:inline">gallery</span>
 							</Link>
 						</Button>
@@ -112,7 +112,7 @@ export const HeaderNav = () => {
 							className="font-bold transition-all duration-200"
 						>
 							<Link href="/about" aria-label="about" className="gap-1.5">
-								<User className="size-4 opacity-70" />
+								<BadgeInfoIcon className="size-4 opacity-70" />
 								<span className="hidden sm:inline">about</span>
 							</Link>
 						</Button>
