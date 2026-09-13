@@ -1,8 +1,8 @@
 # GitHub Actions 自动化工作流
 
-本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的自动化双阶段内容同步流水线。
+本项目配置了基于 **GitHub Actions + Bun + Cloudinary + Drizzle ORM (Neon PostgreSQL)** 的内容质量门禁和受控发布流水线。
 
-Post 与 Gallery 使用独立流水线。Gallery PR 只执行内容检查、索引和 `bun run sync:galleries -- --dry-run`，不执行真实 Cloudinary 删除；原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。Dashboard 生成的 patch 必须通过 `gallery:pull` 的 dry-run 和 hash 检查后再应用。
+Post 与 Gallery 保持独立领域，但通过统一 `bun run sync` 编排器按 scope 管理。PR/Push 质量门禁只执行内容检查、索引预览和 Post/Gallery/ALL dry-run；受控发布工作流才执行数据库迁移和真实全站同步。原始图片只能放在 `content/.gallery-input/`，不能提交到 Git。Dashboard 生成的 patch 必须通过 `gallery:pull` 的 dry-run 和 hash 检查后再应用。
 
 ---
 
@@ -10,11 +10,12 @@ Post 与 Gallery 使用独立流水线。Gallery PR 只执行内容检查、索�
 
 ```mermaid
 graph TD
-    A[推送提交到 content/posts] --> B[.github/workflows/media.yml]
-    B -->|1. 扫描图片并 WebP 预转换| C[上传图片至 Cloudinary CDN]
-    C -->|2. 执行完成且成功| D[.github/workflows/sync-db.yml]
-    D -->|3. 解析 Markdown Frontmatter| E[写入/更新 Neon PostgreSQL]
-    D -->|4. 自动关联 CDN 图片与标签| F[完成数据库入库与发布]
+    A[Push / Pull Request] --> Q[quality.yml]
+    Q -->|检查、格式预览、双域 dry-run| R[只读质量门禁]
+    P[受控发布 / workflow_dispatch] --> M[media.yml]
+    M -->|媒体处理| C[Cloudinary CDN]
+    C --> S[sync-db.yml]
+    S -->|迁移、统一 ALL 同步| E[Neon PostgreSQL 运行时副本]
 ```
 
 ---
@@ -35,8 +36,14 @@ graph TD
   - 在 `Upload Media to Cloudinary` 工作流运行完成且状态为 `success` 时自动级联触发。
   - 支持手动触发（`workflow_dispatch`）。
 - **执行任务**：
-  - 安装依赖后执行 `bun run scripts/sync-content.ts`。
-  - 调用基于 Drizzle ORM 的 `ContentSyncService`，解析所有文章的 Frontmatter、替换本地图片引用为 Cloudinary CDN URL，将文章、标签、状态增量同步/软删除至 PostgreSQL (Neon)。
+   - 受控环境先执行 `bun run db:migrate`，再执行 `bun run sync -- --scope all`。
+   - 统一编排器按顺序处理 Post 和 Gallery，并写入 SyncRun 运行摘要；失败时保留 scope 结果，不执行队列或自动 Cloudinary 删除。
+
+### 3. `quality.yml` - PR/Push 质量门禁
+
+- 只读执行 `bun run lint`、TypeScript、`bun run content:verify` 和生产构建；
+- `content:verify` 包含 Gallery 原始输入保护、索引预览、Post/Gallery/ALL dry-run 和 `git diff --check`；
+- 不执行 `db:reset`、真实数据库同步、真实 Cloudinary 删除或自动 Git commit/push。
 
 ---
 
@@ -58,7 +65,7 @@ graph TD
 1. **本地推送前验证**：
    在向 GitHub 提交文章前，推荐先在本地执行：
    ```bash
-   bun run content:check
+    bun run content:prepare
    ```
 2. **免 CI 紧急同步**：
    管理员可以直接在网站后台控制台（`/dashboard/sync`）点击“扫描本地文章”或直接上传 ZIP 压缩包手动完成入库，无需等待 Actions 队列。

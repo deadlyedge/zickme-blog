@@ -121,7 +121,7 @@ RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF
 - **ORM**：Drizzle ORM；
 - **认证**：Better Auth；
 - **媒体**：Sharp、Cloudinary；
-- **内容解析**：gray-matter、marked；
+- **内容解析**：gray-matter、react-markdown、remark-gfm；
 - **校验**：Zod；
 - **质量工具**：Biome；
 - **客户端缓存**：TanStack Query。
@@ -343,7 +343,7 @@ Stage 6 计划包括：
 - 基于 merge base、revision 和字段级合并的双向同步；
 - 不保存原始 JPEG/PNG/TIFF/BMP/RAW 文件。
 
-Stage 6 目前仅为开发计划，尚未在应用中实现。详见：[Stage 6 开发计划](documents/development-plan-stage6.md)。
+Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模型、前台页面、Dashboard 管理和统一 scope 同步。历史设计细节见：[Gallery 设计文档](documents/photo-gallery-design.md)。
 
 ---
 
@@ -364,7 +364,8 @@ Stage 6 目前仅为开发计划，尚未在应用中实现。详见：[Stage 6 
 2. Dashboard 导出内容使用 ZIP 下载；
 3. 本地 Markdown 回写和 `sync:pull` 应在本地或 CI 工作区执行；
 4. 数据库迁移在受控环境执行 `bun run db:migrate`；
-5. 不要在生产环境执行 `bun run db:reset`。
+5. 不要在生产环境执行 `bun run db:reset`；受控发布使用 `bun run db:migrate`。
+6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary。
 
 ---
 
@@ -375,9 +376,11 @@ Stage 6 目前仅为开发计划，尚未在应用中实现。详见：[Stage 6 
 ```bash
 bun run lint
 bunx tsc --noEmit --pretty false
-bun run content:check -- --no-examples
+bun run content:verify
 bun run build
 ```
+
+Stage 9 已完成内容生产闭环、Post/Gallery/Sync 架构治理、数据库字段审计、SiteSnapshot Schema、管理员快照恢复和 CI 文档收敛。完整交付矩阵见 [`documents/stage9-summary.md`](documents/stage9-summary.md)。
 
 项目统一使用 Biome，不使用 ESLint/Prettier 作为主格式化工具。
 
