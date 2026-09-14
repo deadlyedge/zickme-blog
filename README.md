@@ -159,7 +159,7 @@ CLOUDINARY_API_SECRET="your-api-secret"
 
 ### 初始化数据库和运行项目
 
-当前仓库正式 migration 链为 `0000`–`0006`，文件和 journal 可使用只读命令校验：
+当前仓库正式 migration 链只有一个 baseline，文件和 journal 可使用只读命令校验：
 
 ```text
 drizzle/0000_stage12_baseline.sql
@@ -181,7 +181,7 @@ bun run dev
 http://localhost:3000
 ```
 
-已有数据库如需根据当前 Schema 同步，可以使用 `bun run db:push`。生产环境不要执行 `bun run db:reset`。
+已有可重建数据库按需执行 `bun run db:migrate`；`bun run db:reset` 只清空运行时数据，不修改 schema，之后可从本地 `content/` 重新 publish。
 
 ---
 

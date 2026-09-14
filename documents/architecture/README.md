@@ -21,4 +21,4 @@
 bun run db:audit-migrations
 ```
 
-该命令不能证明生产环境已应用哪些 migration。生产状态必须分别读取目标环境的 journal、schema、备份和回滚窗口后再决定是否压缩或删除。
+该命令只验证仓库 baseline 与 journal 的一致性。当前项目按单库、可重置的个人 Blog 维护；数据库需要初始化或升级时使用 `bun run db:migrate`，网站内容清空使用 `bun run db:reset`，两者职责不同。未来若出现不可重建数据库，再按实际需要增加备份和回滚文档。

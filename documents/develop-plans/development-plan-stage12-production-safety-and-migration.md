@@ -24,8 +24,6 @@
 
 ### 未完成
 
-- [ ] 直接删除当前代码不再需要的 schema 字段：`mergeBase`、Gallery/GalleryImage 的 `revision`、GalleryImage 的 `syncVersion`。
-- [ ] 移除 `retryOf` 的当前 Sync 代码依赖后，再删除 `SyncRun.retryOf`。
 - [ ] 评估是否继续保留低频运行记录 `SyncRun`/`SyncLog`；当前暂不删除，因为 Publish 兼容路径仍使用它们。
 - [ ] 将 Gallery 动态 filesystem tracing warning 降低或消除。
 - [ ] 删除 Preview/Confirm 的数据库集成测试和真实 Dashboard UI 接入。
@@ -88,7 +86,6 @@ drizzle/0000_stage12_baseline.sql
 | `GalleryImage.revision` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
 | `GalleryImage.syncVersion` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
 | `SyncRun.retryOf` | 已从当前 Sync 协议、schema 和 baseline 移除 | 已完成 |
-| `SyncRun.retryOf` | 当前 Sync 兼容代码仍引用 | 先移除代码依赖，再删除 |
 | Gallery/GalleryImage `syncStatus` | 当前发布和删除状态仍使用 | 保留 |
 | `SyncRun`/`SyncLog` | 当前兼容 Publish 仍使用 | 暂不删除，后续低频简化时再评估 |
 
@@ -191,13 +188,13 @@ confirmDeletion
 ## 七、阶段结论
 
 ```text
-Stage 12 当前状态：部分完成
+Stage 12 当前状态：仓库级核心已完成，保留少量可选后续工作
 
 已完成：
   Git-first 发布边界、reset-db 职责分离、baseline 收敛、删除 Preview/Confirm 核心、仓库质量检查
 
 未完成：
-  无用字段直接删除、retry 协议移除、删除集成测试、单库 baseline/publish 验证、tracing warning 处理
+  删除集成测试、单库 baseline/publish 验证、SyncRun/SyncLog 进一步简化
 
 明确不做：
   四类环境治理、多环境审批、复杂灾难恢复平台、事件溯源和新的双向同步体系

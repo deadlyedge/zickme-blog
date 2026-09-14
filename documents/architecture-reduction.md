@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：阶段 A、阶段 B、阶段 C、阶段 D、阶段 E 已实施；Stage 11 正在进行架构治理，本文仍作为 Git-first 单向发布基线
+> 状态：阶段 A–E 和 Stage 11 仓库治理已完成；本文是当前 Git-first 单向发布基线。项目是个人 Blog，后续以简单、可重建、低运维成本为优先。
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -139,7 +139,7 @@ Cloudinary 只负责图片存储、CDN、展示尺寸和缩略图，以及由单
 - Dashboard scope retry Action；
 - publish 对 `mergeBase`、字段级 merge、实体级冲突、`revision` 和 `syncVersion` 的新增依赖。
 
-历史数据库字段和 migration 仍保留，仅等待独立的数据迁移窗口和生产读取确认后再删除。
+当前应用不再需要的数据库字段直接删除并同步更新 schema、baseline、代码和测试；不为不存在的多环境体系永久保留旧字段。
 
 ### 4.4 原则上删除
 
@@ -232,15 +232,15 @@ bun run publish -- --scope galleries
 
 | 协议/字段 | 当前使用 | 阶段 D 处理 |
 | --- | --- | --- |
-| `mergeBase` | 旧 Gallery/Post 合并协议字段 | 标记 deprecated；publish 不再写入；暂不删除 schema |
-| `revision` | Dashboard 旧乐观锁兼容字段 | 标记 deprecated；publish 不再递增；暂不删除 schema |
-| `syncVersion` | GalleryImage 旧双向同步版本 | 标记 deprecated；publish 不再更新；暂不删除 schema |
+| `mergeBase` | 旧 Gallery/Post 合并协议字段 | 已从 schema、baseline 和运行时代码删除 |
+| `revision` | Dashboard 旧乐观锁兼容字段 | 已从 schema、baseline 和运行时代码删除 |
+| `syncVersion` | GalleryImage 旧双向同步版本 | 已从 schema、baseline 和运行时代码删除 |
 | `syncStatus` | 运行时状态/兼容查询字段 | 保留；publish 仍写入必要的 `IN_SYNC`，不新增冲突流程 |
-| `retryOf` | 旧 scope retry 运行记录关联 | 标记 deprecated；Dashboard retry 已禁用；仅保留历史读取 |
+| `retryOf` | 旧 scope retry 运行记录关联 | 已从当前 Sync 协议、schema 和 baseline 删除 |
 | `SyncRun` | 发布运行摘要、锁和历史记录 | 冻结为兼容期发布记录；dry-run 不持久化 |
 | `SiteSnapshot` | 数据库业务副本保护 | 保留；不包含 Git 内容源、Cloudinary 二进制或 SyncRun |
 
-本阶段不删除生产字段、历史 migration、旧 merge helper 或数据库数据。删除前仍需完成生产读取审计、迁移说明和回滚方案。
+本阶段已完成仓库级协议收敛；无用字段按当前代码直接删除。数据库可重置时，schema 由唯一 baseline 初始化，日常内容清空使用 `reset-db`。
 
 实施记录：已删除 `sync`、`sync:galleries`、`sync:pull`、`gallery:pull` 的 package/脚本入口，删除 Dashboard scope retry Action，新增 Bun 发布边界测试；更新 README、AGENTS、content 初始化模板和 CI 文档。数据库 schema 字段、历史 migration、运行记录和快照表继续保留，等待独立的数据迁移窗口。
 
@@ -255,15 +255,15 @@ bun run publish -- --scope all
 
 验收：用户可以只依赖 README 完成“编辑、检查、提交、发布、回滚”。
 
-## 7. 兼容期规则
+## 7. 当前维护规则
 
-1. 先停止新增依赖，再迁移调用方，最后删除实现；
+1. 先停止新增旧协议依赖，再迁移调用方，最后删除无用实现和字段；
 2. 废弃入口不能悄悄改变含义，必须输出迁移提示；
-3. 不因为删除双向同步而自动删除数据库现有内容；
-4. Schema 字段删除前必须确认生产数据不再读取；
+3. `reset-db` 只清空运行时数据，不执行 migration；
+4. 当前代码不再需要的 schema 字段直接删除并更新 baseline；
 5. 任何影响 Cloudinary 的删除操作仍需显式确认；
 6. 内容恢复优先使用 Git 历史，不把数据库快照当作 Git 替代品；
-7. 每个阶段只解决一类边界问题，避免在减法过程中重新引入新的编排层。
+7. 不为个人 Blog 引入多环境审批、任务队列或复杂灾难恢复平台。
 
 ## 8. 后续开发禁止事项
 
@@ -283,7 +283,7 @@ bun run publish -- --scope all
 | Dashboard 不回写内容源 | 已完成 | 旧写入 Action 返回废弃提示 |
 | CI 不依赖生产数据库写入 | 已完成 | `quality.yml` 不注入生产 secrets |
 | 旧双向入口 | 已删除 | 旧 CLI 脚本和 package scripts 已删除 |
-| merge/revision/syncVersion 协议 | 已降级 | schema 保留，publish 不再写入，字段已标记 deprecated |
+| merge/revision/syncVersion 协议 | 已删除 | 已从 schema、baseline 和运行时代码移除 |
 | 快照职责 | 已明确 | 仅保护 PostgreSQL 业务副本 |
 | 自动化测试 | 已补齐基础边界 | `tests/publish-boundaries.test.ts` |
 | 生产字段最终删除 | 待独立迁移 | 需生产读取审计、迁移说明和回滚方案 |
@@ -303,5 +303,5 @@ bun run publish -- --scope all
 - [x] Git 内容回滚和数据库恢复路径分别可执行；
 - [x] 核心 publish 边界有自动化测试；
 - [x] README、AGENTS.md 和本方案没有互相矛盾的现行流程；
-- [ ] 生产 schema 中的废弃字段已删除（需独立迁移窗口，不属于本次阶段 E）。
-- [ ] 生产环境 migration journal/schema 已读取并完成人工确认。
+- [x] 当前 schema/baseline 中无用字段已删除。
+- [ ] 当前唯一数据库已完成 baseline 初始化和内容发布验证。

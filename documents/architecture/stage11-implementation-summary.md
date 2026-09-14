@@ -2,14 +2,14 @@
 
 > 总结日期：2026-09-14
 >
-> 当前状态：仓库级治理和 baseline 收敛已完成；项目按单库、可重置的个人 Blog 维护，不建立多环境治理平台。当前字段删除和 Publish/Sync 简化仍待后续开发。
+> 当前状态：仓库级治理、baseline 收敛和无用字段删除已完成；项目按单库、可重置的个人 Blog 维护，不建立多环境治理平台。Publish/Sync 进一步简化仍是可选后续工作。
 
 ## 1. 已完成范围
 
 ### Publish/Sync 边界
 
 - Publish 已拥有独立的 `PublishScope`、`PublishStatus`、`PublishSummary`、`PublishResult` 和 `PublishTrigger` 类型；
-- 新调用方不再直接暴露 `SyncRunSummary`、`retryOf`、`mergeBase`、`revision` 或 `syncVersion`；
+- 新调用方不再直接暴露 `SyncRunSummary`、`retryOf` 或已删除的旧字段；
 - Dashboard 已通过统一 Publish Workflow 调用，旧 `SyncResult` 仅保留为兼容 DTO；
 - `runSync` 仅作为兼容期内部 adapter 和历史实现保留；
 - CLI、TUI、Dashboard 复用同一 Publish Workflow；
@@ -38,7 +38,7 @@ src/lib/constants/
 
 ### Migration 与废弃字段审计
 
-- 已完成 `mergeBase`、`revision`、`syncVersion`、`syncStatus`、`retryOf`、SyncRun、SyncLog 的仓库级读取审计；
+- 已完成旧字段、`syncStatus`、SyncRun、SyncLog 的仓库级读取审计；无用字段已从 schema、baseline 和运行时代码删除；
 - 当前正式 migration 已收敛为唯一 `0000_stage12_baseline.sql`；
 - 新增只读命令：
 
@@ -80,11 +80,9 @@ Build 仍有 Gallery 动态文件系统 tracing warning，属于旧 Gallery 发�
 
 以下事项仍未完成：
 
-1. 删除当前不再需要的 `mergeBase`、`revision`、`syncVersion`；
-2. 移除 `retryOf` 当前代码依赖并删除该字段；
-3. 删除 Action 集成测试和 Dashboard UI；
-4. 当前唯一数据库的 baseline 初始化和 content publish 验证；
-5. Gallery tracing warning 处理。
+1. 删除 Action 集成测试和 Dashboard UI；
+2. 当前唯一数据库的 baseline 初始化和 content publish 验证；
+3. 评估是否进一步简化 SyncRun/SyncLog。
 
 灾难恢复、Cloudinary 原始媒体备份和更复杂审计仅在实际需要时增加，不是当前个人 Blog 的默认前置条件。
 
