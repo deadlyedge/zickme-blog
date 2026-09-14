@@ -1,35 +1,14 @@
-// Unified type exports
-
-export type { Comment, CommentWithReplies } from './comments/comment'
-export type { PublicCommentAuthor } from './comments/public-comment'
+// Unified type exports. Prefer importing from the domain module in new code.
 export type {
-	AboutPageConfig,
-	ContentResponse,
-	FeaturedProject,
-	LandingPageConfig,
-	Post,
-	PostLink,
-	PostLinkType,
-	PostMetadata,
-	PostWithTags,
-	Role,
-	SiteProfile,
-	Skill,
-	Slogan,
-	SocialLink,
-	StatusType,
-	SyncLog,
-	SyncLogItem,
-	SyncResult,
-	SyncStatus,
-	Tag,
-	Technology,
-	ThemeConfig,
-	ThemeVariables,
-	TimelineItem,
-	User,
-} from './content'
-export { isPostWithTags, isSiteProfile, isSocialLink } from './content'
+	Comment,
+	CommentWithReplies,
+	PublicCommentAuthor,
+} from './comment'
+export type { HomePageData } from './content/home'
+export type { PostLink, PostLinkType, PostMetadata } from './content/metadata'
+export type { Post, PostWithTags, StatusType } from './content/post'
+export { isPostWithTags } from './content/post'
+export type { Tag } from './content/tag'
 export type {
 	Gallery,
 	GalleryAlbumFrontmatter,
@@ -43,7 +22,7 @@ export type {
 	GalleryPublicImage,
 	GallerySort,
 	GalleryStatus,
-} from './gallery'
+} from './gallery/index'
 export type {
 	PublishResult,
 	PublishScope,
@@ -51,6 +30,21 @@ export type {
 	PublishSummary,
 	PublishTrigger,
 } from './publish/publish'
+export type {
+	AboutPageConfig,
+	FeaturedProject,
+	LandingPageConfig,
+	SiteProfile,
+	Skill,
+	Slogan,
+	SocialLink,
+	Technology,
+	ThemeConfig,
+	ThemeVariables,
+	TimelineItem,
+} from './site'
+export { isSiteProfile, isSocialLink } from './site'
+export type { Role, SyncLog, SyncLogItem, SyncResult, SyncStatus } from './sync'
 
 // UI types
 export type {

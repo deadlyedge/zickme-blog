@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { fetchPosts, fetchProfile } from '@/lib/content-providers'
+import { fetchPosts, fetchProfile } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'
 import { SettingsClient } from './SettingsClient'
 

@@ -9,7 +9,7 @@ import { galleryImageComments, galleryImages } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
-import type { PublicCommentAuthor } from '@/types/public-user'
+import type { PublicCommentAuthor } from '@/types/comment'
 import { formatZodError } from './types'
 
 const logger = createLogger('actions/gallery-image-comments')

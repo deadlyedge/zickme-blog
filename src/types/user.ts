@@ -1,4 +1,9 @@
-import type { Comment, Role, User } from './content'
+import type { InferSelectModel } from 'drizzle-orm'
+import type { users } from '@/db/schema'
+import type { Comment } from './comment'
+import type { Role } from './sync'
+
+export type User = InferSelectModel<typeof users>
 
 // Extended user types
 export interface UserWithRelations extends User {

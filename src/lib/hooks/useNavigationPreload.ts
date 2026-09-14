@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { fetchPostBySlugAction } from '@/lib/actions/content'
-import { contentKeys } from '@/lib/content-queries'
+import { fetchPostBySlugAction } from '@/lib/actions/posts'
+import { contentQueryKeys } from '@/lib/content-queries'
 import { getQueryClient } from '@/lib/query-client'
 
 export function useNavigationPreload() {
@@ -13,10 +13,12 @@ export function useNavigationPreload() {
 		if (postMatch) {
 			const slug = postMatch[1]
 			const queryClient = getQueryClient()
-			const currentQueryData = queryClient.getQueryData(contentKeys.post(slug))
+			const currentQueryData = queryClient.getQueryData(
+				contentQueryKeys.post(slug),
+			)
 			if (!currentQueryData) {
 				void queryClient.query({
-					queryKey: contentKeys.post(slug),
+					queryKey: contentQueryKeys.post(slug),
 					queryFn: () => fetchPostBySlugAction(slug),
 					staleTime: 5 * 60 * 1000,
 				})
@@ -36,7 +38,7 @@ export function useNavigationPreload() {
 				const slug = postMatch[1]
 				const queryClient = getQueryClient()
 				const currentQueryData = queryClient.getQueryData(
-					contentKeys.post(slug),
+					contentQueryKeys.post(slug),
 				)
 
 				if (!currentQueryData) {
@@ -44,7 +46,7 @@ export function useNavigationPreload() {
 						setIsPreloading(true)
 						// 预取数据并放入 React Query 缓存
 						await queryClient.query({
-							queryKey: contentKeys.post(slug),
+							queryKey: contentQueryKeys.post(slug),
 							queryFn: () => fetchPostBySlugAction(slug),
 							staleTime: 5 * 60 * 1000,
 						})

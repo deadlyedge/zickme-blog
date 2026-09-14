@@ -13,7 +13,7 @@ import AuthModal from '@/components/auth/AuthModal'
 import { HeaderNav } from '@/components/HeaderNav'
 import { QueryProvider } from '@/components/QueryProvider'
 import { Toaster } from '@/components/ui/sonner'
-import { fetchProfile } from '@/lib/content-providers'
+import { fetchProfile } from '@/lib/post-providers'
 import { generateDynamicThemeCss } from '@/lib/theme'
 
 const notoSerif = Noto_Serif({

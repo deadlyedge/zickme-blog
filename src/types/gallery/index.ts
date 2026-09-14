@@ -1,4 +1,3 @@
-// Compatibility entrypoint for existing `@/types/gallery` imports.
 export type {
 	Gallery,
 	GalleryAlbumFrontmatter,
@@ -6,12 +5,12 @@ export type {
 	GalleryLayout,
 	GallerySort,
 	GalleryStatus,
-} from './gallery/album'
+} from './album'
 export type {
 	GalleryExif,
 	GalleryImage,
 	GalleryImageFrontmatter,
 	GalleryImageSyncStatus,
 	GallerySyncStatus,
-} from './gallery/image'
-export type { GalleryPublic, GalleryPublicImage } from './gallery/public'
+} from './image'
+export type { GalleryPublic, GalleryPublicImage } from './public'

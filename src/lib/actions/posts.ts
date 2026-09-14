@@ -1,21 +1,23 @@
 'use server'
 
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
 import {
 	fetchAllPostsForSearch,
 	fetchAllTagsForSearch,
-	fetchHomeContent as fetchHomeContentProvider,
+	fetchHomePageData as fetchHomePageDataProvider,
 	fetchPinnedPosts,
 	fetchPostBySlug,
 	fetchPosts,
 	fetchTags,
 	fetchTopHottestPosts,
-} from '@/lib/content-providers'
-import { createLogger } from '@/lib/logger'
-import type { PostWithTags, Tag } from '@/types'
+} from '@/lib/post-providers'
+import type { HomePageData } from '@/types/content/home'
+import type { PostWithTags } from '@/types/content/post'
+import type { Tag } from '@/types/content/tag'
 import { getSiteProfile } from './profile'
 
-const logger = createLogger('actions/content')
+const logger = createLogger('actions/posts')
 
 const limitSchema = z.number().int().min(1).max(200).default(100)
 const slugSchema = z.string().trim().min(1).max(200)
@@ -88,19 +90,19 @@ export async function fetchSiteProfile() {
 	return await getSiteProfile()
 }
 
-export async function fetchHomeContent() {
+export async function fetchHomePageData(): Promise<HomePageData> {
 	try {
 		logger.debug('[Drizzle fetch]: home content')
-		return await fetchHomeContentProvider()
+		return await fetchHomePageDataProvider()
 	} catch (error) {
 		logger.error('Error fetching home content', error)
 		throw new Error('Failed to fetch home content')
 	}
 }
 
-export async function fetchAllContentForSearchAction() {
+export async function fetchPostsForSearchAction() {
 	try {
-		logger.debug('[Drizzle fetch]: all content for search')
+		logger.debug('[Drizzle fetch]: posts for search')
 		const [allPosts, allTags] = await Promise.all([
 			fetchAllPostsForSearch(),
 			fetchAllTagsForSearch(),
@@ -111,7 +113,7 @@ export async function fetchAllContentForSearchAction() {
 			tags: allTags,
 		}
 	} catch (error) {
-		logger.error('Error fetching content for search', error)
-		throw new Error('Failed to fetch content for search')
+		logger.error('Error fetching posts for search', error)
+		throw new Error('Failed to fetch posts for search')
 	}
 }

@@ -1,64 +1,3 @@
-import type { InferSelectModel } from 'drizzle-orm'
-import type { posts, syncLogs, tags, users } from '@/db/schema'
-
-export type { Comment } from './comments/comment'
-
-// Enums / Status
-export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
-export type Role = 'ADMIN' | 'EDITOR' | 'USER'
-export type SyncStatus = 'SUCCESS' | 'FAILED' | 'PARTIAL'
-
-export type PostLinkType =
-	| 'github'
-	| 'twitter'
-	| 'demo'
-	| 'documentation'
-	| 'figma'
-	| 'paper'
-	| 'website'
-	| 'other'
-
-export interface PostLink {
-	url: string
-	label?: string
-	type: PostLinkType
-}
-
-export interface PostMetadata {
-	links: PostLink[]
-	category?: string
-	series?: string
-	canonicalUrl?: string
-	outdatedWarning?: string
-	layout?: 'article' | 'gallery' | 'photo'
-}
-
-// Base Models
-export type Post = InferSelectModel<typeof posts>
-export type Tag = InferSelectModel<typeof tags>
-export type User = InferSelectModel<typeof users>
-export type SyncLog = InferSelectModel<typeof syncLogs>
-
-// Sync Log detail types
-export interface SyncLogItem {
-	stage: 'frontmatter' | 'media' | 'db' | 'general'
-	level: 'info' | 'warn' | 'error' | 'success'
-	message: string
-	detail?: string
-	timestamp: string
-}
-
-export interface SyncResult {
-	success: boolean
-	status: SyncStatus
-	totalPosts: number
-	successCount: number
-	errorCount: number
-	logs: SyncLogItem[]
-	sourceMissing?: string[]
-}
-
-// Social links and profile types
 export type SocialLink = {
 	platform:
 		| 'GitHub'
@@ -93,7 +32,6 @@ export type Slogan = {
 	color?: string
 }
 
-// Theme configuration types (compatible with shadcn / CSS variables)
 export interface ThemeVariables {
 	background?: string
 	foreground?: string
@@ -128,7 +66,6 @@ export interface ThemeConfig {
 	dark?: ThemeVariables
 }
 
-// Landing Page configuration types
 export interface LandingPageConfig {
 	enabled?: boolean
 	showTopHottest?: boolean
@@ -138,7 +75,6 @@ export interface LandingPageConfig {
 	pinnedPostIds?: string[]
 }
 
-// About Page extended configuration types (referencing mafifi.dev style)
 export interface TimelineItem {
 	id: string
 	period: string
@@ -189,27 +125,6 @@ export interface SiteProfile {
 	updatedAt?: Date
 }
 
-// Content response types
-export interface ContentResponse {
-	profile: SiteProfile | null
-	posts: PostWithTags[]
-	hottestPosts?: PostWithTags[]
-	pinnedPosts?: PostWithTags[]
-}
-
-// Post with tags type
-export type PostWithTags = Post & {
-	tags?:
-		| {
-				id: string
-				name: string
-				slug: string
-				color: string | null
-		  }[]
-		| null
-}
-
-// Type guards
 export function isSiteProfile(data: unknown): data is SiteProfile {
 	return (
 		data !== null &&
@@ -218,17 +133,6 @@ export function isSiteProfile(data: unknown): data is SiteProfile {
 		typeof (data as Record<string, unknown>).name === 'string' &&
 		'bio' in data &&
 		typeof (data as Record<string, unknown>).bio === 'string'
-	)
-}
-
-export function isPostWithTags(post: unknown): post is PostWithTags {
-	return (
-		post !== null &&
-		typeof post === 'object' &&
-		'id' in post &&
-		typeof (post as Record<string, unknown>).id === 'string' &&
-		'title' in post &&
-		typeof (post as Record<string, unknown>).title === 'string'
 	)
 }
 

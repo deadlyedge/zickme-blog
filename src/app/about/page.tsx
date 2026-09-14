@@ -6,7 +6,7 @@ import {
 	SkillsSection,
 	TimelineSection,
 } from '@/components/about'
-import { fetchProfile } from '@/lib/content-providers'
+import { fetchProfile } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'
 import type { TimelineItem } from '@/types'
 

@@ -12,8 +12,9 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command'
-import { searchContentOptions } from '@/lib/content-queries'
-import type { PostWithTags, Tag } from '@/types'
+import { searchPostsOptions } from '@/lib/content-queries'
+import type { PostWithTags } from '@/types/content/post'
+import type { Tag } from '@/types/content/tag'
 
 interface GlobalSearchProps {
 	open: boolean
@@ -24,7 +25,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 	const router = useRouter()
 
 	const { data, isLoading } = useQuery({
-		...searchContentOptions(),
+		...searchPostsOptions(),
 		enabled: open, // 只在对话框打开时获取数据
 	})
 

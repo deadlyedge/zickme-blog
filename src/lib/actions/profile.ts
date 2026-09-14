@@ -7,9 +7,9 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
-import { fetchProfile } from '@/lib/content-providers'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { createLogger } from '@/lib/logger'
+import { fetchProfile } from '@/lib/post-providers'
 import type {
 	AboutPageConfig,
 	LandingPageConfig,

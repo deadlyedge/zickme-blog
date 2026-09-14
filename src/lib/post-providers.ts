@@ -2,13 +2,16 @@ import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { comments, posts, tags } from '@/db/schema'
 import { createLogger } from '@/lib/logger'
-import type { ContentResponse, PostWithTags, SiteProfile, Tag } from '@/types'
+import type { HomePageData } from '@/types/content/home'
+import type { PostWithTags } from '@/types/content/post'
+import type { Tag } from '@/types/content/tag'
+import type { SiteProfile } from '@/types/site'
 
-const logger = createLogger('lib/content-providers')
+const logger = createLogger('lib/post-providers')
 
 // Ensure this module only runs on the server
 if (typeof window !== 'undefined') {
-	throw new Error('content-providers can only be used on the server side')
+	throw new Error('post-providers can only be used on the server side')
 }
 
 export const fetchProfile = async (): Promise<SiteProfile | null> => {
@@ -211,7 +214,7 @@ export const fetchPinnedPosts = async (
 		.filter((p): p is PostWithTags => Boolean(p))
 }
 
-export const fetchHomeContent = async (): Promise<ContentResponse> => {
+export const fetchHomePageData = async (): Promise<HomePageData> => {
 	const profile = await fetchProfile()
 	const landingConfig = profile?.landingPageConfig
 
@@ -225,7 +228,7 @@ export const fetchHomeContent = async (): Promise<ContentResponse> => {
 
 	return {
 		profile,
-		posts: latestPosts,
+		latestPosts,
 		hottestPosts,
 		pinnedPosts,
 	}

@@ -9,11 +9,11 @@ import {
 import { type CreateCommentData, createComment } from '@/lib/actions/comments'
 import {
 	commentsOptions,
-	contentKeys,
-	homeContentOptions,
+	contentQueryKeys,
+	homePageOptions,
 	postOptions,
 	postsOptions,
-	searchContentOptions,
+	searchPostsOptions,
 	tagsOptions,
 } from '@/lib/content-queries'
 import type { PostWithTags } from '@/types'
@@ -41,12 +41,12 @@ export function useTags() {
 
 // Hook to fetch home page content
 export function useHomeContent() {
-	return useQuery(homeContentOptions())
+	return useQuery(homePageOptions())
 }
 
 // Hook for search functionality
 export function useSearchContent() {
-	return useQuery(searchContentOptions())
+	return useQuery(searchPostsOptions())
 }
 
 // Hook for post invalidation utilities
@@ -55,19 +55,19 @@ export function useInvalidateContent() {
 
 	const invalidatePosts = () => {
 		return queryClient.invalidateQueries({
-			queryKey: contentKeys.posts(),
+			queryKey: contentQueryKeys.posts(),
 		})
 	}
 
 	const invalidatePost = (slug: string) => {
 		return queryClient.invalidateQueries({
-			queryKey: contentKeys.post(slug),
+			queryKey: contentQueryKeys.post(slug),
 		})
 	}
 
 	const invalidateAll = () => {
 		return queryClient.invalidateQueries({
-			queryKey: contentKeys.all,
+			queryKey: contentQueryKeys.all,
 		})
 	}
 
@@ -92,7 +92,7 @@ export function useCreateComment() {
 		onSuccess: (_, variables) => {
 			// Invalidate comments query for this specific post
 			void queryClient.invalidateQueries({
-				queryKey: contentKeys.comments(variables.docId),
+				queryKey: contentQueryKeys.comments(variables.docId),
 			})
 		},
 	})

@@ -7,11 +7,11 @@ import {
 	PinnedPostsSection,
 	TopHottestSection,
 } from '@/components/home'
-import type { ContentResponse } from '@/types'
+import type { HomePageData } from '@/types/content/home'
 import { FooterAbout } from './Footer'
 import { Hero } from './Hero'
 
-type HomeScrollAreaProps = { data: ContentResponse }
+type HomeScrollAreaProps = { data: HomePageData }
 
 // 沉浸式全局环境背景色谱（与 TOP5 热门文章轮播联动）
 const PALETTE_COLORS = [
@@ -25,7 +25,12 @@ const PALETTE_COLORS = [
 export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const [activeHottestIndex, setActiveHottestIndex] = useState(0)
-	const { profile, posts, hottestPosts = [], pinnedPosts = [] } = data
+	const {
+		profile,
+		latestPosts: posts,
+		hottestPosts = [],
+		pinnedPosts = [],
+	} = data
 
 	const landingConfig = profile?.landingPageConfig
 
