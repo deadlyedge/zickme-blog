@@ -66,6 +66,7 @@ describe('publish boundaries', () => {
 				errors: 0,
 				mediaErrors: 0,
 				archived: 0,
+				sourceMissing: ['old-post'],
 			},
 			galleries: {
 				albums: 0,
@@ -78,6 +79,7 @@ describe('publish boundaries', () => {
 				pendingDelete: 0,
 				conflicts: 0,
 				errors: 0,
+				sourceMissing: ['travel/missing.webp'],
 			},
 			conflicts: 0,
 			errors: 0,
@@ -90,6 +92,10 @@ describe('publish boundaries', () => {
 		expect(serialized).not.toContain('retryOf')
 		expect(serialized).not.toContain('mergeBase')
 		expect(serialized).not.toContain('revision')
+		expect(publishSummary.posts.sourceMissing).toEqual(['old-post'])
+		expect(publishSummary.galleries.sourceMissing).toEqual([
+			'travel/missing.webp',
+		])
 	})
 
 	test('legacy Dashboard result is adapted from Publish summary', () => {
@@ -108,6 +114,7 @@ describe('publish boundaries', () => {
 				errors: 1,
 				mediaErrors: 0,
 				archived: 0,
+				sourceMissing: ['old-post'],
 			},
 			galleries: {
 				albums: 0,
@@ -120,6 +127,7 @@ describe('publish boundaries', () => {
 				pendingDelete: 0,
 				conflicts: 0,
 				errors: 0,
+				sourceMissing: ['travel/missing.webp'],
 			},
 			conflicts: 0,
 			errors: 1,
@@ -131,6 +139,7 @@ describe('publish boundaries', () => {
 		expect(result.successCount).toBe(1)
 		expect(result.errorCount).toBe(1)
 		expect(result.logs[0]?.message).toContain('发布运行 run-2')
+		expect(result.sourceMissing).toEqual(['old-post', 'travel/missing.webp'])
 	})
 
 	test('publish never enables destructive source-missing cleanup', () => {

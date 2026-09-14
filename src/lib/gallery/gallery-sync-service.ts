@@ -48,6 +48,7 @@ export interface GallerySyncSummary {
 	unsupported: number
 	archived: number
 	errors: number
+	sourceMissing: string[]
 }
 
 interface PreparedImage {
@@ -202,6 +203,7 @@ export async function syncGalleries(
 		unsupported: 0,
 		archived: 0,
 		errors: 0,
+		sourceMissing: [],
 	}
 	let inputAlbums: import('node:fs').Dirent[] = []
 	try {
@@ -420,6 +422,22 @@ export async function syncGalleries(
 		dryRun,
 	)
 	seenSlugs.push(...metadataSlugs)
+
+	if (!dryRun) {
+		const persistedGalleries = await db.query.galleries.findMany({
+			columns: { slug: true },
+		})
+		const persistedImages = await db.query.galleryImages.findMany({
+			columns: { sourcePath: true },
+		})
+		const missingGalleries = persistedGalleries
+			.map((gallery) => gallery.slug)
+			.filter((slug) => !seenSlugs.includes(slug))
+		const missingImages = persistedImages
+			.map((image) => image.sourcePath)
+			.filter((sourcePath) => !seenSourcePaths.has(sourcePath))
+		summary.sourceMissing.push(...missingGalleries, ...missingImages)
+	}
 
 	if (!dryRun && options.deleteOld === true) {
 		const persistedImages = await db.query.galleryImages.findMany({

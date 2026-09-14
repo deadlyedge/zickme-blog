@@ -28,5 +28,9 @@ export function legacySyncResultFromPublish(
 				timestamp: summary.finishedAt ?? new Date().toISOString(),
 			},
 		],
+		sourceMissing: [
+			...summary.posts.sourceMissing,
+			...summary.galleries.sourceMissing,
+		],
 	}
 }

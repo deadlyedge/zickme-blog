@@ -54,6 +54,7 @@ export interface SyncResult {
 	successCount: number
 	errorCount: number
 	logs: SyncLogItem[]
+	sourceMissing?: string[]
 }
 
 // Social links and profile types

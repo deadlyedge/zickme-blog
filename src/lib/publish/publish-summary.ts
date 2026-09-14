@@ -61,8 +61,14 @@ export function publishSummaryFromSync(
 		triggeredBy: summary.triggeredBy,
 		startedAt: summary.startedAt,
 		finishedAt: summary.finishedAt,
-		posts: summary.posts,
-		galleries: summary.galleries,
+		posts: {
+			...summary.posts,
+			sourceMissing: summary.posts.sourceMissing ?? [],
+		},
+		galleries: {
+			...summary.galleries,
+			sourceMissing: summary.galleries.sourceMissing ?? [],
+		},
 		conflicts: summary.conflicts,
 		errors: summary.errors,
 		errorCode: summary.errorCode,

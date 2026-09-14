@@ -23,6 +23,7 @@ export type PostSyncSummary = {
 	errors: number
 	mediaErrors: number
 	archived: number
+	sourceMissing: string[]
 }
 
 export type GallerySyncSummary = {
@@ -36,6 +37,7 @@ export type GallerySyncSummary = {
 	pendingDelete: number
 	conflicts: number
 	errors: number
+	sourceMissing: string[]
 }
 
 export type SyncRunSummary = {
@@ -115,6 +117,7 @@ export function emptyPostSummary(): PostSyncSummary {
 		errors: 0,
 		mediaErrors: 0,
 		archived: 0,
+		sourceMissing: [],
 	}
 }
 
@@ -130,5 +133,6 @@ export function emptyGallerySummary(): GallerySyncSummary {
 		pendingDelete: 0,
 		conflicts: 0,
 		errors: 0,
+		sourceMissing: [],
 	}
 }

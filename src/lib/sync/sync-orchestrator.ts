@@ -33,6 +33,7 @@ function postSummary(
 			(log) => log.stage === 'media' && log.level === 'error',
 		).length,
 		archived: 0,
+		sourceMissing: result.sourceMissing ?? [],
 	}
 }
 
@@ -45,6 +46,7 @@ function gallerySummary(result: {
 	unsupported: number
 	archived: number
 	errors: number
+	sourceMissing: string[]
 }) {
 	return { ...emptyGallerySummary(), ...result }
 }
@@ -81,6 +83,7 @@ export async function runSync(
 			errors: 0,
 			mediaErrors: 0,
 			archived: 0,
+			sourceMissing: [],
 		},
 		galleries: emptyGallerySummary(),
 		conflicts: 0,

@@ -38,6 +38,16 @@ function printSummary(
 			`Gallery：${summary.galleries.processed} 处理，${summary.galleries.uploaded} 上传，` +
 			`${summary.galleries.unsupported} unsupported，${summary.galleries.errors} 错误`,
 	)
+	const sourceMissing = [
+		...summary.posts.sourceMissing,
+		...summary.galleries.sourceMissing,
+	]
+	if (sourceMissing.length > 0) {
+		console.log(
+			`source missing：${sourceMissing.length} 项（仅报告，未修改数据库或媒体）`,
+		)
+		for (const item of sourceMissing) console.log(`  - ${item}`)
+	}
 	if (summary.finishedAt) console.log(`完成时间：${summary.finishedAt}`)
 }
 

@@ -657,6 +657,17 @@ export class ContentSyncService {
 
 		const successCount = await this.savePostsToDb(safePosts, dryRun)
 		const errorCount = processedPosts.length - successCount
+		let sourceMissing: string[] = []
+		if (!dryRun && !options.virtualFiles) {
+			const dbPosts = await db
+				.select({ slug: posts.slug })
+				.from(posts)
+				.where(isNull(posts.archivedAt))
+			const currentSlugs = new Set(safePosts.map((post) => post.slug))
+			sourceMissing = dbPosts
+				.map((post) => post.slug)
+				.filter((slug) => !currentSlugs.has(slug))
+		}
 
 		if (
 			options.deleteOld &&
@@ -726,6 +737,7 @@ export class ContentSyncService {
 			successCount,
 			errorCount,
 			logs: this.logs,
+			sourceMissing,
 		}
 	}
 }
