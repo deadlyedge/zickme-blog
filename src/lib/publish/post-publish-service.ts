@@ -435,7 +435,9 @@ export class PostPublishService {
 		return successCount
 	}
 
-	public async runPublish(options: SyncRunnerOptions = {}): Promise<SyncResult> {
+	public async runPublish(
+		options: SyncRunnerOptions = {},
+	): Promise<SyncResult> {
 		this.logs = []
 		const triggerType = options.triggerType || 'MANUAL'
 		const dryRun = options.dryRun || false

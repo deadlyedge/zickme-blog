@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { publishGallery } from '@/lib/publish/gallery-publish-service'
 import { PostPublishService } from '@/lib/publish/post-publish-service'
+import type { PublishSummary } from '@/types/publish/publish'
 import { safeSyncError } from './sync-errors'
 import { acquireSyncLock } from './sync-lock'
 import { finishSyncRun } from './sync-repository'
@@ -145,4 +146,45 @@ export async function runSync(
 			await finishSyncRun(summary, summary.status === 'SUCCEEDED' ? 0 : 1)
 	}
 	return summary
+}
+
+/** Publish-facing adapter; SyncRun and lock persistence remain internal here. */
+export async function runPublish(options: {
+	scope: 'posts' | 'galleries' | 'all'
+	dryRun?: boolean
+	deleteOld?: boolean
+	triggeredBy?: 'CLI' | 'DASHBOARD' | 'CI'
+	actorId?: string | null
+}): Promise<PublishSummary> {
+	const scope =
+		options.scope === 'posts'
+			? 'POSTS'
+			: options.scope === 'galleries'
+				? 'GALLERIES'
+				: 'ALL'
+	const summary = await runSync({
+		scope,
+		dryRun: options.dryRun,
+		deleteOld: options.deleteOld,
+		triggeredBy: options.triggeredBy,
+		actorId: options.actorId,
+	})
+	return {
+		runId: summary.runId,
+		scope: options.scope,
+		status: summary.status,
+		dryRun: summary.dryRun,
+		triggeredBy: summary.triggeredBy,
+		startedAt: summary.startedAt,
+		finishedAt: summary.finishedAt,
+		posts: summary.posts,
+		galleries: {
+			...summary.galleries,
+			pendingDelete: summary.galleries.pendingDelete ?? 0,
+			conflicts: summary.galleries.conflicts ?? 0,
+		},
+		conflicts: summary.conflicts,
+		errors: summary.errors,
+		errorCode: summary.errorCode,
+	}
 }

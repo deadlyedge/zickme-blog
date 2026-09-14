@@ -16,10 +16,14 @@ bunx tsc --noEmit --pretty false
 bun run build
 ```
 
-Dashboard 不是内容编辑器，也不提供 ZIP 导入、数据库导出恢复或旧同步触发。请修改 Markdown、`album.yaml` 和处理后的 WebP，审查 Git diff 后再进行受控的本地 publish。
-1. **本地推送前验证**：
-   在向 GitHub 提交文章前，推荐先在本地执行：
-   ```bash
-     bun run content:verify
-   ```
-2. 暂停期间不提供 CI 紧急发布或 Dashboard 导入；请按本地验证命令执行人工流程。
+Dashboard 不是内容编辑器，也不提供内容导入、数据库导出恢复或旧同步触发。请修改 Markdown、`album.yaml` 和处理后的 WebP，审查 Git diff 后再进行受控的本地 publish。
+
+本地推送前推荐执行：
+
+```bash
+bun run content:verify
+git diff --check
+git status --short
+```
+
+暂停期间不提供 CI 紧急发布或 Dashboard 内容导入；请按本地验证命令执行人工流程。

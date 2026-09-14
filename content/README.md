@@ -26,7 +26,7 @@ image: ./images/cover.webp
 ---
 ```
 
-建议手动填写唯一 `slug`。中文标题会自动转换为拼音，但重名时同步会失败，不会覆盖其他文章。
+建议手动填写唯一 `slug`。中文标题会自动转换为拼音，但重名时 Publish 会停止，不会覆盖其他文章。
 
 ## 图片相册（Gallery）
 
@@ -40,7 +40,7 @@ content/photo-gallery/japan-autumn/
     └── 002.webp
 ```
 
-Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gallery.yaml` 是自动生成索引，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 `content/.gallery-input/{album}/`。处理图片后执行 `bun run gallery:index`，再进行检查和同步。
+Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gallery.yaml` 是自动生成索引，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 `content/.gallery-input/{album}/`。处理图片后执行 `bun run content:prepare-media` 和 `bun run gallery:index`，再执行 Publish。
 
 ## 常用命令
 
@@ -48,6 +48,7 @@ Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gall
 bun run content:check
 bun run content:fix
 bun run content:format
+bun run content:prepare-media
 bun run content:verify
 bun run gallery:index
 bun run content:check -- --no-examples
@@ -59,10 +60,10 @@ bun run publish -- --scope galleries --dry-run --json
 
 不带 `--scope` 的 `bun run publish` 默认发布 Post 和 Gallery，等价于 `bun run publish -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域预览或受控发布。旧同步 CLI 已删除。
 
-`content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，默认不写文件、不执行真实同步、不 commit、不 push。
+`content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，默认不写文件、不执行真实 Publish、不 commit、不 push。
 
 数据库不再回写 Markdown/YAML。内容恢复请使用 Git 历史：`git log -- content/posts`、`git revert <commit>` 或恢复分支/tag。
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。
 
-Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。若全站同步中 Gallery 配置不可用，先使用 `--scope posts` 完成 Post 同步，再修复 Gallery 配置并按 scope 重跑。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。`bun run db:reset` 只清空当前 schema 的网站运行时数据，不执行 migration；重置后可运行 `bun run publish -- --scope all --no-delete` 从本地 `content/` 重建清爽站点。当前正式 schema baseline 是 `drizzle/0000_stage12_baseline.sql`。
+Cloudinary 缺失时 Post dry-run 仍可运行；非 dry-run Gallery 发布需要三项 Cloudinary 环境变量。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。`bun run db:reset` 只清空当前 schema 的网站运行时数据，不执行 migration；重置后可运行 `bun run publish -- --scope all --no-delete` 从本地 `content/` 重建运行时副本。当前正式 schema baseline 是 `drizzle/0000_stage12_baseline.sql`。

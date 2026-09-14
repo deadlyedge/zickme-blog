@@ -80,8 +80,9 @@ links:
 - 预览文章；
 - 查看文章状态和运行时数据；
 - 手动触发单向 publish；
-- 查看发布日志和本地/数据库差异；
-- 旧的封面编辑、Markdown/ZIP 导入、数据库导出和状态修改入口仅保留废弃提示，不再回写 Git 内容源。
+- 查看发布摘要和运行时状态；
+- 手动触发统一的单向 Publish Workflow；
+- 旧的封面编辑、内容导入、数据库导出和内容状态修改入口已移除或仅保留 Git-first 提示，不回写 Git 内容源。
 
 Gallery 的人工编辑源是 `content/photo-gallery/{album}/album.yaml`；`gallery.yaml` 只能由索引命令生成，原始图片只能放在 Git 忽略的 `content/.gallery-input/`。Dashboard 的旧内容编辑/patch 能力仅为兼容期能力，不应作为新的内容源：
 
@@ -99,10 +100,9 @@ RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF
 
 - 使用 Sharp 进行图片尺寸限制和 WebP 优化；
 - 支持本地 Markdown 图片路径解析和 CDN URL 替换；
-- 数据库封面回写、文章导出和反向 pull 已禁用；内容恢复请使用 Git 历史；
+- 数据库封面回写、文章导出和反向 pull 已删除；内容恢复请使用 Git 历史；
 - 默认不覆盖已有本地文件；
-- 支持本地新增、远端新增和冲突诊断；
-- 中文 slug 冲突时拒绝同步，不静默覆盖其他文章；
+- slug 冲突时拒绝发布，不静默覆盖其他文章；
 - `Post.sourcePath` 保存本地来源路径。
 
 ---
@@ -200,6 +200,8 @@ http://localhost:3000
 | `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
 | `bun run content:fix` | 自动修复可安全修复的问题 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
+| `bun run content:prepare-media` | 将 `.gallery-input` 原始图片转换为 Git 管理的 WebP |
+| `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
 | `bun run content:verify` | 检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
 | `bun run content:init` | 生成内容目录模板和使用说明 |
 | `bun run db:generate` | 根据 Schema 生成迁移 |
@@ -274,10 +276,13 @@ zickme-blog/
 │   └── archive/                    # 历史迁移归档
 ├── scripts/
 │   ├── check-content.ts
+│   ├── format-content.ts
+│   ├── prepare-media.ts
+│   ├── gallery-index.ts
+│   ├── publish.ts                  # 正式单向发布入口
+│   ├── publish-tui.ts              # 交互式维护引导
+│   ├── verify-content.ts
 │   ├── init-content.ts             # 生成 content 目录模板
-│   ├── sync-content.ts
-│   ├── sync-galleries.ts
-│   ├── sync-pull.ts
 │   ├── reset-db.ts
 │   └── reset-admin-password.ts
 ├── src/
@@ -309,9 +314,9 @@ zickme-blog/
 
 详细总结：[Stage 5 交付总结](documents/stage5-summary.md)。
 
-### 规划中：Stage 6 独立 Gallery
+### 已完成：独立 Gallery 与当前 Publish 治理
 
-纯图片相册不会作为 Post 的 `layout: gallery` 分支，而是规划为独立内容系统：
+纯图片相册作为独立内容系统维护：
 
 ```text
 content/photo-gallery/
@@ -321,21 +326,21 @@ content/photo-gallery/
 │   └── images/*.webp         # 只保存处理后的 WebP，不保存原图
 ```
 
-Stage 6 计划包括：
+当前 Gallery 结构包括：
 
 - `Gallery` / `GalleryImage` 数据模型；
-- `GallerySyncService`；
+- `Gallery Publish Service`；
 - Cloudinary `photo-gallery/{albumSlug}/...` folder；
 - `check-content --fix` 自动生成 `album.yaml` 骨架；
 - 自动生成 `gallery.yaml`；
 - 每张图片的 `title`、`description`、`alt`、`order` 和 `hidden`；
 - `/gallery` 和 `/gallery/[albumSlug]`；
 - Masonry/Grid、Lightbox 和受控 EXIF 展示；
-- Dashboard 添加、编辑、减少图片；
-- 基于 merge base、revision 和字段级合并的双向同步；
+- Dashboard 运行时查看和状态管理；
+- Git-first 的单向 Publish，不执行 merge、pull 或 write-back；
 - 不保存原始 JPEG/PNG/TIFF/BMP/RAW 文件。
 
-Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模型、前台页面、Dashboard 管理和统一 scope 同步。历史设计细节见：[Gallery 设计文档](documents/photo-gallery-design.md)。
+Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模型、前台页面、Dashboard 管理和统一 scope Publish。当前代码结构和后续优化方向见 [`documents/architecture/current-code-structure-summary.md`](documents/architecture/current-code-structure-summary.md)。
 
 ---
 
@@ -353,8 +358,7 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 部署注意：
 
 1. 部署环境的文件系统不应被当作开发机工作区；
-2. Dashboard 导出内容使用 ZIP 下载；
-- 内容恢复优先使用 Git revert/分支/tag；数据库快照不替代 Git 内容源；
+2. 内容恢复优先使用 Git revert/分支/tag；数据库快照不替代 Git 内容源；
 4. 数据库迁移在受控环境执行 `bun run db:migrate`；质量门禁不执行生产数据库写入；
 5. `bun run db:reset` 是清空网站运行时数据的显式工具；确认后可用于从本地 `content/` 重建清爽站点。schema 变更使用 `bun run db:migrate`。
 6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。
@@ -372,7 +376,7 @@ bun run content:verify
 bun run build
 ```
 
-Stage 9 已完成内容生产闭环、Post/Gallery/Sync 架构治理、数据库字段审计、SiteSnapshot Schema、管理员快照恢复和 CI 文档收敛。完整交付矩阵见 [`documents/stage9-summary.md`](documents/stage9-summary.md)。
+当前代码结构、已完成清理和后续优化方向见 [`documents/architecture/current-code-structure-summary.md`](documents/architecture/current-code-structure-summary.md)。历史阶段总结仍位于 `documents/`，不作为当前实现规范。
 
 项目统一使用 Biome，不使用 ESLint/Prettier 作为主格式化工具。
 

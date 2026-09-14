@@ -11,6 +11,8 @@
 | **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
+| **`prepare-media.ts`** | `bun run content:prepare-media` | 将 Gallery 原始输入转换为 Git 管理的 WebP |
+| **`gallery-index.ts`** | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
 | **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
@@ -21,10 +23,10 @@
 ## 📖 详细使用说明
 
 ### 1. `publish.ts` - 单向内容发布
-正式发布入口会先检查并补齐 Post Frontmatter，再读取 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，并将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。正式 publish 可以写入缺失的 Frontmatter，但不会修改正文；dry-run 只预览缺失字段并停止，不写入任何内容。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
+正式发布入口会先检查 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，再将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。缺失 Frontmatter、album 配置或 WebP 时会停止并给出显式修复命令；dry-run 不写入工作区、数据库或 Cloudinary。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
 
 ```bash
-# 预览全站发布，不写入文件、数据库、Cloudinary 或 SyncRun
+# 预览全站发布，不写入文件、数据库、Cloudinary 或运行记录
 bun run publish -- --scope all --dry-run --json
 
 # 发布单个内容域
@@ -83,7 +85,7 @@ bun run content:verify
 
 ### 5. Gallery 媒体处理与发布
 
-Gallery 原始输入默认读取 `content/.gallery-input/`，通过 `content:prepare-media` 生成 Git 管理的 WebP；索引通过 `gallery:index` 生成，数据库和 Cloudinary 发布统一由 `bun run publish -- --scope galleries` 完成。当前版本不直接解码 RAW 格式；请先转换为 JPEG、PNG 或 TIFF。
+Gallery 原始输入默认读取 `content/.gallery-input/`，通过 `content:prepare-media` 生成 Git 管理的 WebP；索引通过 `gallery:index` 生成，数据库和 Cloudinary 发布统一由 `bun run publish -- --scope galleries` 完成。当前版本不直接解码 RAW 格式；请先转换为 JPEG、PNG 或 TIFF。媒体准备、Gallery 发布和 Post 发布分别位于 `src/lib/gallery` 与 `src/lib/publish`，不再由旧 Sync Service 承担。
 
 ---
 

@@ -4,10 +4,6 @@ import path from 'node:path'
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
 import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/lib/constants/publish'
 import {
-	type PublishSummary,
-	publishSummaryFromSync,
-} from '../src/lib/publish/publish-summary'
-import {
 	type PublishScope,
 	parsePublishScope,
 } from '../src/lib/publish/publish-types'
@@ -106,13 +102,13 @@ describe('publish boundaries', () => {
 		expect(PUBLISH_STATUSES).toContain('SUCCEEDED')
 	})
 
-	test('publish summary does not expose Sync-only protocol fields', () => {
-		const syncSummary = {
+	test('PublishSummary does not expose Sync-only protocol fields', () => {
+		const publishSummary: RootPublishSummary = {
 			runId: 'run-1',
-			scope: 'POSTS' as const,
-			status: 'SUCCEEDED' as const,
+			scope: 'posts',
+			status: 'SUCCEEDED',
 			dryRun: true,
-			triggeredBy: 'CLI' as const,
+			triggeredBy: 'CLI',
 			startedAt: '2026-09-14T00:00:00.000Z',
 			finishedAt: '2026-09-14T00:00:01.000Z',
 			posts: {
@@ -139,9 +135,7 @@ describe('publish boundaries', () => {
 			},
 			conflicts: 0,
 			errors: 0,
-			retryOf: 'legacy-run',
 		}
-		const publishSummary: PublishSummary = publishSummaryFromSync(syncSummary)
 		const serialized = JSON.stringify(publishSummary)
 
 		expect(publishSummary.scope satisfies PublishScope).toBe('posts')

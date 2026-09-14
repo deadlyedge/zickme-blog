@@ -1,6 +1,5 @@
-import { runSync } from '@/lib/sync/sync-orchestrator'
-import type { PublishTrigger } from '@/types/publish/publish'
-import { type PublishSummary, publishSummaryFromSync } from './publish-summary'
+import { runPublish } from '@/lib/sync/sync-orchestrator'
+import type { PublishSummary, PublishTrigger } from '@/types/publish/publish'
 import type { PublishScope, ValidationReport } from './publish-types'
 import { validatePublishContent } from './publish-validation'
 
@@ -32,18 +31,12 @@ export async function runPublishWorkflow(options: {
 }): Promise<PublishWorkflowResult> {
 	const report = await validateForPublish(options.scope)
 	if (!report.valid) return { kind: 'validation', report }
-	const scope =
-		options.scope === 'posts'
-			? 'POSTS'
-			: options.scope === 'galleries'
-				? 'GALLERIES'
-				: 'ALL'
-	const summary = await runSync({
-		scope,
+	const summary = await runPublish({
+		scope: options.scope,
 		dryRun: options.dryRun,
 		deleteOld: resolvePublishDeleteOld(options.deleteOld),
 		triggeredBy: options.triggeredBy ?? 'CLI',
 		actorId: options.actorId,
 	})
-	return { kind: 'published', report, summary: publishSummaryFromSync(summary) }
+	return { kind: 'published', report, summary }
 }
