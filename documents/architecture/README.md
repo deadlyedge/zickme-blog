@@ -6,10 +6,12 @@
 
 - [`../architecture-reduction.md`](../architecture-reduction.md)：Git-first 单向发布和恢复边界的正式架构规范。
 - [`stage11-deprecated-fields-and-migration-audit.md`](stage11-deprecated-fields-and-migration-audit.md)：Stage 11 废弃字段、Migration 文件链和生产状态限制的只读审计。
+- [`stage11-implementation-summary.md`](stage11-implementation-summary.md)：Stage 11 当前已完成范围、验证证据和未完成的生产准入事项。
 
 ## 当前实施计划
 
 - [`../develop-plans/development-plan-stage11-architecture-governance.md`](../develop-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
+- [`../develop-plans/development-plan-stage12-production-safety-and-migration.md`](../develop-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
 
 ## 可复现审计
 

@@ -290,6 +290,7 @@ bun run publish -- --scope all
 | Stage 11 类型/常量分层 | 已完成首批 | `src/types/{publish,gallery,comments}`、`src/lib/constants/` |
 | 废弃字段与 migration 静态审计 | 已完成 | `documents/architecture/stage11-deprecated-fields-and-migration-audit.md` |
 | 当前入口文档治理 | 已完成首批 | `documents/architecture/README.md`、`bun run docs:audit` |
+| Stage 11 实施总结 | 已完成仓库级总结 | `documents/architecture/stage11-implementation-summary.md` |
 
 - [x] Git 是唯一人工内容源；
 - [x] Post 和 Gallery 都能通过单向 publish 发布；
