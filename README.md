@@ -91,7 +91,7 @@ bun run publish -- --scope galleries
 bun run publish -- --scope galleries --dry-run --json
 ```
 
-RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。删除只会进入 `PENDING_DELETE`，不会直接删除 Cloudinary 资源；Post/Gallery 同步保持独立。真实同步仍使用运行保护；`dry-run` 完全只读，不获取数据库锁、不创建或更新 `SyncRun`，也不写文件或上传媒体。
+RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF。Publish 发现 source missing 时只报告，不会自动删除数据库记录、评论或 Cloudinary 资源；删除必须通过独立的 ADMIN 确认流程。Post/Gallery 领域仍保持独立。真实 publish 使用运行保护；`dry-run` 完全只读，不获取数据库锁、不创建或更新 `SyncRun`，也不写文件或上传媒体。
 
 所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
 
@@ -170,7 +170,7 @@ drizzle/meta/
 
 ```bash
 bun run db:migrate
-bun run sync
+bun run publish -- --scope all
 bun run dev
 ```
 

@@ -1,11 +1,11 @@
 import { runSync } from '@/lib/sync/sync-orchestrator'
-import type { SyncRunSummary } from '@/lib/sync/sync-types'
+import { type PublishSummary, publishSummaryFromSync } from './publish-summary'
 import type { PublishScope, ValidationReport } from './publish-types'
 import { validatePublishContent } from './publish-validation'
 
 export type PublishWorkflowResult =
 	| { kind: 'validation'; report: ValidationReport }
-	| { kind: 'published'; report: ValidationReport; summary: SyncRunSummary }
+	| { kind: 'published'; report: ValidationReport; summary: PublishSummary }
 
 export async function validateForPublish(
 	scope: PublishScope,
@@ -32,5 +32,5 @@ export async function runPublishWorkflow(options: {
 		deleteOld: options.deleteOld ?? true,
 		triggeredBy: 'CLI',
 	})
-	return { kind: 'published', report, summary }
+	return { kind: 'published', report, summary: publishSummaryFromSync(summary) }
 }

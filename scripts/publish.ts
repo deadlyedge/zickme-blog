@@ -1,5 +1,8 @@
+import {
+	type PublishScope,
+	parsePublishScope,
+} from '../src/lib/publish/publish-types'
 import { runPublishWorkflow } from '../src/lib/publish/publish-workflow'
-import { parseSyncScope, type SyncScope } from '../src/lib/sync/sync-types'
 
 const args = process.argv.slice(2)
 const scopeIndex = args.indexOf('--scope')
@@ -39,11 +42,11 @@ function printSummary(
 }
 
 async function main() {
-	let scope: SyncScope
+	let scope: PublishScope
 	try {
 		if (scopeIndex >= 0 && (!requestedScope || requestedScope.startsWith('--')))
 			usage()
-		scope = requestedScope ? parseSyncScope(requestedScope) : 'ALL'
+		scope = parsePublishScope(requestedScope)
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : String(error))
 		usage()
@@ -54,23 +57,21 @@ async function main() {
 			'ℹ️ publish dry-run 仅执行只读预览，不写入工作区、数据库、Cloudinary 或 SyncRun。',
 		)
 
-	const scopeName =
-		scope === 'POSTS' ? 'posts' : scope === 'GALLERIES' ? 'galleries' : 'all'
 	const workflow = await runPublishWorkflow({
-		scope: scopeName,
+		scope,
 		dryRun,
 		deleteOld,
 	})
 	if (workflow.kind === 'validation') {
 		if (json) console.log(JSON.stringify(workflow))
 		else {
-			console.error(`发布已停止：${scopeName} 内容检查失败。`)
+			console.error(`发布已停止：${scope} 内容检查失败。`)
 			for (const issue of workflow.report.issues)
 				console.error(
 					`[${issue.scope}] ${issue.filePath} ${issue.code}: ${issue.message}`,
 				)
 			console.error(
-				`请按检查结果执行显式修复命令，然后重新运行 bun run publish -- --scope ${scopeName}`,
+				`请按检查结果执行显式修复命令，然后重新运行 bun run publish -- --scope ${scope}`,
 			)
 		}
 		process.exitCode = 1
