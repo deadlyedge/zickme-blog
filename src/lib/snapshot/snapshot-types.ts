@@ -1,6 +1,7 @@
 import type {
 	comments,
 	galleries,
+	galleryImageComments,
 	galleryImages,
 	posts,
 	postsToTags,
@@ -20,6 +21,7 @@ export type SnapshotPayload = {
 	galleryImages: SnapshotTableRow[]
 	siteProfile: SnapshotTableRow[]
 	comments?: SnapshotTableRow[]
+	galleryImageComments?: SnapshotTableRow[]
 }
 
 export type SnapshotSummary = {
@@ -30,6 +32,7 @@ export type SnapshotSummary = {
 	galleryImages: number
 	siteProfile: number
 	comments: number
+	galleryImageComments: number
 	includesComments: boolean
 	totalRows: number
 }
@@ -51,4 +54,5 @@ export type SnapshotSourceTables = {
 	galleryImages: typeof galleryImages
 	siteProfile: typeof siteProfile
 	comments: typeof comments
+	galleryImageComments: typeof galleryImageComments
 }

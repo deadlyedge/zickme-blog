@@ -108,12 +108,8 @@ export function GalleryLightbox({
 					>
 						<ChevronRight />
 					</button>
-					<GalleryBottomPanel
-						key={image.id}
-						image={image}
-						location={location}
-					/>
 				</div>
+				<GalleryBottomPanel key={image.id} image={image} location={location} />
 			</DialogContent>
 		</Dialog>
 	)

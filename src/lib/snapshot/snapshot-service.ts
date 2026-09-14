@@ -3,6 +3,7 @@ import { db } from '@/db'
 import {
 	comments,
 	galleries,
+	galleryImageComments,
 	galleryImages,
 	posts,
 	postsToTags,
@@ -38,6 +39,8 @@ async function readPayload(
 		siteProfile: await tx.select().from(siteProfile),
 	}
 	if (includeComments) payload.comments = await tx.select().from(comments)
+	if (includeComments)
+		payload.galleryImageComments = await tx.select().from(galleryImageComments)
 	return normalizeSnapshotValue(payload) as SnapshotPayload
 }
 
@@ -90,6 +93,9 @@ export async function restoreSnapshot(input: {
 
 		const currentPayload = await readPayload(tx, input.includeComments === true)
 		const currentComments = await tx.select().from(comments)
+		const currentGalleryImageComments = await tx
+			.select()
+			.from(galleryImageComments)
 		const protectionPayload = currentPayload
 		const [protection] = await tx
 			.insert(siteSnapshots)
@@ -116,6 +122,7 @@ export async function restoreSnapshot(input: {
 		// runtime interaction copy before deleting posts to avoid stale comments
 		// and foreign-key surprises; restore them only when explicitly included.
 		await tx.delete(comments)
+		await tx.delete(galleryImageComments)
 		await tx.delete(postsToTags)
 		await tx.delete(galleryImages)
 		await tx.delete(galleries)
@@ -147,6 +154,14 @@ export async function restoreSnapshot(input: {
 				: currentComments
 		if (commentsToRestore.length)
 			await tx.insert(comments).values(commentsToRestore.map(toCommentRow))
+		const galleryCommentsToRestore =
+			input.includeComments === true && restored.galleryImageComments
+				? restored.galleryImageComments
+				: currentGalleryImageComments
+		if (galleryCommentsToRestore.length)
+			await tx
+				.insert(galleryImageComments)
+				.values(galleryCommentsToRestore.map(toGalleryImageCommentRow))
 
 		await tx
 			.update(siteSnapshots)
@@ -205,4 +220,10 @@ function toCommentRow(row: Record<string, unknown>) {
 		createdAt: date(row.createdAt) ?? new Date(),
 		editedAt: date(row.editedAt),
 	} as typeof comments.$inferInsert
+}
+function toGalleryImageCommentRow(row: Record<string, unknown>) {
+	return {
+		...row,
+		createdAt: date(row.createdAt) ?? new Date(),
+	} as typeof galleryImageComments.$inferInsert
 }

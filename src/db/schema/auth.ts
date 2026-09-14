@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import { comments } from './comments'
+import { galleryImageComments } from './gallery-image-comments'
 
 export const roleEnum = pgEnum('Role', ['ADMIN', 'EDITOR', 'USER'])
 
@@ -76,6 +77,9 @@ export const usersRelations = relations(users, ({ many }) => ({
 	comments: many(comments, { relationName: 'CommentAuthor' }),
 	editedComments: many(comments, { relationName: 'CommentEditedBy' }),
 	deletedComments: many(comments, { relationName: 'CommentDeletedBy' }),
+	galleryImageComments: many(galleryImageComments, {
+		relationName: 'GalleryImageCommentAuthor',
+	}),
 }))
 
 export const accountsRelations = relations(accounts, ({ one }) => ({

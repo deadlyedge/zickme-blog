@@ -10,6 +10,7 @@ import {
 	timestamp,
 	unique,
 } from 'drizzle-orm/pg-core'
+import { galleryImageComments } from './gallery-image-comments'
 
 export const galleryStatusEnum = pgEnum('GalleryStatus', [
 	'PUBLISHED',
@@ -123,9 +124,13 @@ export const galleriesRelations = relations(galleries, ({ many }) => ({
 	images: many(galleryImages),
 }))
 
-export const galleryImagesRelations = relations(galleryImages, ({ one }) => ({
-	gallery: one(galleries, {
-		fields: [galleryImages.galleryId],
-		references: [galleries.id],
+export const galleryImagesRelations = relations(
+	galleryImages,
+	({ one, many }) => ({
+		gallery: one(galleries, {
+			fields: [galleryImages.galleryId],
+			references: [galleries.id],
+		}),
+		comments: many(galleryImageComments),
 	}),
-}))
+)

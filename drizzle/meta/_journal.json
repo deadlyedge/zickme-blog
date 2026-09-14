@@ -43,6 +43,13 @@
 			"when": 1789286340444,
 			"tag": "0005_nervous_thunderbird",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1789352288975,
+			"tag": "0006_amusing_sleepwalker",
+			"breakpoints": true
 		}
 	]
 }

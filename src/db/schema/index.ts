@@ -1,6 +1,7 @@
 export * from './auth'
 export * from './comments'
 export * from './gallery'
+export * from './gallery-image-comments'
 export * from './posts'
 export * from './site-profile'
 export * from './site-snapshots'

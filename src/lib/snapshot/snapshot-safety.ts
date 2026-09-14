@@ -35,6 +35,7 @@ export function summarizeSnapshotPayload(
 		galleryImages: payload.galleryImages.length,
 		siteProfile: payload.siteProfile.length,
 		comments: payload.comments?.length ?? 0,
+		galleryImageComments: payload.galleryImageComments?.length ?? 0,
 		includesComments: Boolean(payload.comments),
 		totalRows: 0,
 	}
@@ -45,7 +46,8 @@ export function summarizeSnapshotPayload(
 		summary.galleries +
 		summary.galleryImages +
 		summary.siteProfile +
-		summary.comments
+		summary.comments +
+		summary.galleryImageComments
 	return summary
 }
 
@@ -72,6 +74,11 @@ export function assertSnapshotPayload(
 	}
 	if (payload.comments !== undefined && !Array.isArray(payload.comments))
 		throw new Error('快照 comments 数据无效')
+	if (
+		payload.galleryImageComments !== undefined &&
+		!Array.isArray(payload.galleryImageComments)
+	)
+		throw new Error('快照 galleryImageComments 数据无效')
 }
 
 const siteProfileKey = 'siteProfile' as const

@@ -2,6 +2,7 @@
 
 import { ChevronDown, Info } from 'lucide-react'
 import { useState } from 'react'
+import { GalleryImageComments } from '@/components/gallery/GalleryImageComments'
 import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
 import type { GalleryPublicImage } from '@/types/gallery'
 
@@ -25,6 +26,7 @@ export function GalleryBottomPanel({
 					<div className="flex items-start justify-between gap-4">
 						<div className="min-w-0 flex-1">
 							<GalleryImageInfo image={image} location={location} compact />
+							<GalleryImageComments imageId={image.id} />
 						</div>
 						<button
 							type="button"
