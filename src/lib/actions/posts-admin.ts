@@ -1,21 +1,15 @@
 'use server'
 
-import * as path from 'node:path'
 import { and, desc, eq, isNull, sql } from 'drizzle-orm'
-import JSZip from 'jszip'
-import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/db'
-import { posts, syncLogs, tags } from '@/db/schema'
+import { posts, tags } from '@/db/schema'
 import { auth } from '@/lib/auth'
-import { diffContent, scanLocalContent } from '@/lib/content-diff'
 import { createLogger } from '@/lib/logger'
-import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
-import { legacySyncResultFromPublish } from '@/lib/publish/publish-legacy'
+import type { PublishWorkflowResult } from '@/lib/publish/publish-workflow'
 import { runPublishWorkflow } from '@/lib/publish/publish-workflow'
-import { failedSyncResult } from '@/lib/sync/sync-result'
-import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
+import type { PostWithTags, StatusType } from '@/types'
 
 const logger = createLogger('actions/posts-admin')
 
@@ -42,15 +36,6 @@ const _batchUpdatePostStatusSchema = z.object({
 	postIds: z.array(postIdSchema).min(1, '未选中任何文章'),
 	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
 })
-
-const manualSyncOptionsSchema = z
-	.object({
-		dryRun: z.boolean().optional(),
-		deleteOld: z.boolean().optional(),
-	})
-	.optional()
-
-const syncHistoryLimitSchema = z.number().int().min(1).max(100).default(20)
 
 /**
  * 校验当前请求是否为 ADMIN
@@ -164,57 +149,6 @@ export async function uploadPostPosterAction(
 	}
 }
 
-export async function exportPostsZipAction() {
-	try {
-		await requireAdminSession()
-		const rows = await db.query.posts.findMany({
-			where: isNull(posts.archivedAt),
-			with: { postsToTags: { with: { tag: true } } },
-		})
-		const zip = new JSZip()
-		for (const row of rows) {
-			const post = {
-				...row,
-				tags: row.postsToTags.map((item) => item.tag),
-			} as PostWithTags
-			zip.file(safeMarkdownFileName(post.slug), postToMarkdown(post))
-		}
-		return {
-			success: true,
-			fileName: `posts-backup-${new Date().toISOString().slice(0, 10)}.zip`,
-			base64: await zip.generateAsync({ type: 'base64' }),
-		}
-	} catch (error) {
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '导出文章失败',
-		}
-	}
-}
-
-export async function getRemotePostDiffAction() {
-	try {
-		await requireAdminSession()
-		const local = await scanLocalContent(
-			path.join(process.cwd(), 'content/posts'),
-		)
-		const rows = await db
-			.select({ slug: posts.slug, updatedAt: posts.updatedAt })
-			.from(posts)
-			.where(isNull(posts.archivedAt))
-		return {
-			success: true,
-			posts: diffContent(local, rows).map((item) => item),
-		}
-	} catch (error) {
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : '获取远端文章失败',
-			posts: [],
-		}
-	}
-}
-
 /**
  * 2. 更新文章状态 (PUBLISHED / DRAFT / ARCHIVED 等)
  */
@@ -286,77 +220,23 @@ export async function getDashboardTags() {
 }
 
 /**
- * 8. 触发本地全量扫描同步
+ * 8. 由 Dashboard 触发统一的 Git-first Publish Workflow。
+ * 内容仍只能来自 Git；Dashboard 不提供内容编辑或导入能力。
  */
-export async function triggerManualSync(options?: {
+export async function triggerPublish(options?: {
 	dryRun?: boolean
-	deleteOld?: boolean
-}): Promise<SyncResult> {
+}): Promise<PublishWorkflowResult> {
 	try {
-		const parsed = manualSyncOptionsSchema.safeParse(options)
-		const opts = parsed.success ? parsed.data : options
-
 		const session = await requireAdminSession()
-		const workflow = await runPublishWorkflow({
-			scope: 'posts',
+		return await runPublishWorkflow({
+			scope: 'all',
 			triggeredBy: 'DASHBOARD',
 			actorId: session.user.id,
-			dryRun: opts?.dryRun ?? false,
+			dryRun: options?.dryRun ?? false,
 			deleteOld: false,
 		})
-		if (workflow.kind !== 'published') {
-			return failedSyncResult(
-				'发布前内容检查失败',
-				new Error(
-					workflow.report.issues.map((issue) => issue.message).join('; '),
-				),
-			)
-		}
-		const result = legacySyncResultFromPublish(workflow.summary)
-
-		revalidatePath('/dashboard/posts')
-		revalidatePath('/dashboard/sync')
-		revalidatePath('/posts')
-		revalidatePath('/')
-
-		return result
 	} catch (error) {
-		logger.error('Manual sync failed', error)
-		return failedSyncResult('手动同步异常中断', error)
-	}
-}
-
-/**
- * 9. 上传并导入单个或多个文件 / 压缩包 (Zip / Md)
- */
-export async function importUploadedContent(
-	formData: FormData,
-): Promise<SyncResult> {
-	void formData
-	return failedSyncResult(
-		'内容导入已禁用：请将 Markdown 和媒体提交到 Git，再通过 publish 发布。',
-		new Error('CONTENT_IMPORT_DISABLED'),
-	)
-}
-
-/**
- * 10. 获取历史同步日志列表
- */
-export async function getSyncHistoryLogs(limit = 20): Promise<SyncLog[]> {
-	try {
-		await requireAdminSession()
-
-		const parsedLimit = syncHistoryLimitSchema.safeParse(limit)
-		const safeLimit = parsedLimit.success ? parsedLimit.data : 20
-
-		const logs = await db.query.syncLogs.findMany({
-			orderBy: [desc(syncLogs.createdAt)],
-			limit: safeLimit,
-		})
-
-		return logs
-	} catch (error) {
-		logger.error('Failed to get sync history logs', error)
-		return []
+		logger.error('Dashboard publish failed', error)
+		throw new Error(error instanceof Error ? error.message : '发布失败')
 	}
 }

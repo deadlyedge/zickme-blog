@@ -10,7 +10,7 @@
 
 - Publish 已拥有独立的 `PublishScope`、`PublishStatus`、`PublishSummary`、`PublishResult` 和 `PublishTrigger` 类型；
 - 新调用方不再直接暴露 `SyncRunSummary`、`retryOf` 或已删除的旧字段；
-- Dashboard 已通过统一 Publish Workflow 调用，旧 `SyncResult` 仅保留为兼容 DTO；
+- Dashboard 的发布触发能力直接返回统一 Publish Workflow 结果，不再保留旧 `SyncResult` 兼容 DTO；
 - `runSync` 仅作为兼容期内部 adapter 和历史实现保留；
 - CLI、TUI、Dashboard 复用同一 Publish Workflow；
 - dry-run 不获取锁、不写 SyncRun/SyncLog、不上传 Cloudinary、不写工作区。

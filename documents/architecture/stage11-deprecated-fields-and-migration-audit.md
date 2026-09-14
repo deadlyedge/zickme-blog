@@ -11,7 +11,7 @@
 - 当前正式 migration 已收敛为唯一 baseline：`drizzle/0000_stage12_baseline.sql`。
 - `reset-db` 只清空运行时数据，不执行 migration、不修改 schema。
 - `Gallery`/`GalleryImage` 的 `syncStatus` 仍是当前运行状态，保留。
-- `SyncRun`/`SyncLog` 仍被 Publish 兼容路径使用，暂不删除。
+- `SyncRun`/`SyncLog` 仍被 Publish 内部运行记录路径使用，暂不删除；旧 Dashboard `SyncResult` 兼容层已移除。
 
 ## 二、字段处理决定
 
