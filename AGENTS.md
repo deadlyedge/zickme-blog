@@ -8,14 +8,14 @@
 
 `zickme-blog` 是基于 **Next.js 16 (App Router) + React 19 + TypeScript + Bun + Tailwind CSS v4** 构建的个人博客与 Gallery 系统。
 
-当前项目已完成 Stage 2 ~ Stage 9.6。Stage 9 建立了内容校验、Post/Gallery 同步、数据库运行时副本、Dashboard 和业务快照能力；但当前治理方向不是继续扩展同步平台，而是执行“架构减法”，回归 Git-first 的单向发布模型：
+当前项目已完成 Stage 2 ~ Stage 10，正在实施 Stage 11 架构治理。Stage 9/10 建立了内容校验、Gallery 浏览体验、数据库运行时副本、Dashboard 和业务快照能力；当前治理方向不是继续扩展同步平台，而是执行“架构减法”，回归 Git-first 的单向发布模型：
 - **简化运维**：免去繁琐的邮件系统维护，管理员密码通过 CLI 脚本重置，普通用户重置请求走管理员后台手动重设。
 - **内容架构统一**：彻底移除 `blogs` 与 `projects` 的双轨结构，全站统一为 `Post` 体系（由 tags/category 标识特征）。
 - **ORM 现代化**：全面采用轻量、适合 Serverless 的 **Drizzle ORM** 与 PostgreSQL (Neon)。
 - **单向内容发布**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源；数据库是运行时副本，Cloudinary 是媒体 CDN，内容只从 Git 流向运行时。
 - **隐私与体验**：公开评论与内部用户模型隔离，内置稳定 Dicebear / Gravatar 头像体系。
 
-当前架构减法的正式指导文档为 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)，历史阶段计划统一存放在 [`documents/develop-plans/`](documents/develop-plans/) 中。
+当前架构减法的正式指导文档为 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)，Stage 11 计划为 [`documents/develop-plans/development-plan-stage11-architecture-governance.md`](documents/develop-plans/development-plan-stage11-architecture-governance.md)，当前治理记录入口为 [`documents/architecture/`](documents/architecture/)。历史阶段计划统一存放在 [`documents/develop-plans/`](documents/develop-plans/) 中。
 
 ---
 
@@ -50,13 +50,19 @@
 
 ## 🗺️ 3. 当前开发与阶段任务指引
 
-### Stage 9.6（当前基线）：内容闭环与数据快照
+### Stage 11（当前阶段）：架构治理、数据安全与代码质量
+- Publish 是唯一正式内容发布入口；Sync 仅作为兼容期内部实现，不得新增依赖；
+- source missing 默认只报告，不自动归档、标记删除或删除 Cloudinary；
+- 废弃字段和 migration 只能在生产读取审计、备份和回滚方案完成后处理；
+- 当前只读 migration 链审计命令为 `bun run db:audit-migrations`。
+
+### Stage 9.6/10（已完成基线）
 - 内容源为 Markdown、`album.yaml` 和处理后的 WebP；
 - Post 与 Gallery 已有独立领域模型和同步流程；
 - Dashboard 支持运行状态、内容管理和数据库快照；
 - 快照只保护数据库业务副本，不回滚 Git 内容源、Cloudinary 或原始图片。
 
-当前实施方向：架构减法（阶段 A、B、C、D、E 已实施）
+当前实施方向：架构治理（Stage 11 Phase 0–3 已逐步实施，Phase 4 migration 仅完成只读审计）
 - 将现有同步体系收敛为 Git-first、单向 publish；
 - 先冻结双向同步能力，再逐步禁用 pull、patch、write-back 和 merge；
 - 修复 `dry-run` 的所有副作用；

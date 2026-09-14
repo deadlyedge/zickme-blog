@@ -20,7 +20,7 @@ Cloudinary 媒体 CDN
 
 同时提供带有 ADMIN 权限控制的 Dashboard、单向发布、媒体管理和运行时诊断工具。
 
-> **架构减法（阶段 A）**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源。数据库是运行时副本，Cloudinary 只负责媒体 CDN。当前 `sync`、`sync:pull`、`gallery:pull` 等命令处于兼容期冻结状态，不再新增双向同步、merge 或 write-back 能力；详见 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
+> **当前架构治理（Stage 11）**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源。数据库是运行时副本，Cloudinary 只负责媒体 CDN。正式内容流程只使用 `content:check`、`publish`、Git 和受控 CI；旧 `sync`/pull/write-back 能力不再是正式入口。详见 [`documents/architecture/`](documents/architecture/) 和 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
 
 ---
 
@@ -95,11 +95,11 @@ RAW/ORF/CR2 等格式不会被静默处理，请先转换为 JPEG、PNG 或 TIFF
 
 所有 Dashboard 写操作都要求 ADMIN Session。项目不依赖邮件服务处理密码重置。
 
-### 内容同步与 slug 保护
+### 内容检查、发布与 slug 保护
 
 - 使用 Sharp 进行图片尺寸限制和 WebP 优化；
 - 支持本地 Markdown 图片路径解析和 CDN URL 替换；
-- 数据库封面回写、文章导出和 `sync:pull` 已禁用；内容恢复请使用 Git 历史；
+- 数据库封面回写、文章导出和反向 pull 已禁用；内容恢复请使用 Git 历史；
 - 默认不覆盖已有本地文件；
 - 支持本地新增、远端新增和冲突诊断；
 - 中文 slug 冲突时拒绝同步，不静默覆盖其他文章；
@@ -159,17 +159,18 @@ CLOUDINARY_API_SECRET="your-api-secret"
 
 ### 初始化数据库和运行项目
 
-当前正式迁移目录使用单一 baseline：
+当前仓库正式 migration 链为 `0000`–`0006`，文件和 journal 可使用只读命令校验：
 
 ```text
-drizzle/0000_baseline.sql
-drizzle/meta/
+drizzle/0000_baseline.sql ... drizzle/0006_amusing_sleepwalker.sql
+drizzle/meta/_journal.json
 ```
 
 新环境执行：
 
 ```bash
 bun run db:migrate
+bun run db:audit-migrations
 bun run publish -- --scope all
 bun run dev
 ```
@@ -206,6 +207,7 @@ http://localhost:3000
 | `bun run db:migrate` | 执行未应用的迁移 |
 | `bun run db:push` | 将当前 Schema 推送到数据库 |
 | `bun run db:studio` | 启动 Drizzle Studio |
+| `bun run db:audit-migrations` | 只读校验 migration 文件链与 Drizzle journal，不连接数据库 |
 | `bun run db:reset` | 重置数据库，危险操作 |
 | `bun run reset-admin-password` | CLI 重置管理员密码 |
 | `bun run gallery:index` | 重新生成 Gallery 索引 |
@@ -257,7 +259,8 @@ zickme-blog/
 │   ├── photo-gallery/             # album.yaml 与自动生成的 Gallery 文件
 │   └── .gallery-input/            # Git 忽略的原始图片输入
 ├── documents/
-│   ├── development-plan-stage2.md
+│   ├── architecture/              # 当前架构规范与治理审计
+│   ├── develop-plans/              # 历史计划与当前 Stage 11 计划
 │   ├── development-plan-stage3.md
 │   ├── development-plan-stage4.md
 │   ├── development-plan-stage5.md

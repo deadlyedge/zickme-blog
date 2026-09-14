@@ -63,7 +63,7 @@ bun run content:init -- --dir ./my-content
 bun run content:init -- --force
 ```
 
-脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行，`sync:galleries` 仅作为支持额外输入目录的兼容专用入口保留。
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行；旧 sync 入口不属于正式内容流程。
 
 ### 4. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
 

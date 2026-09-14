@@ -93,6 +93,14 @@ drizzle/0006_amusing_sleepwalker.sql
 
 `drizzle/meta/_journal.json` 包含 `idx=0..6`、相同 tag 的 7 条记录，仓库内文件链与 journal 顺序一致。
 
+可重复执行只读审计：
+
+```bash
+bun run db:audit-migrations
+```
+
+该命令只比较仓库内正式 `drizzle/*.sql` 文件与 `drizzle/meta/_journal.json`，不连接数据库、不读取任何环境 journal，也不执行 migration。当前仓库预期输出为 7 条 SQL、7 条 journal entry 且链一致。
+
 ### 4.2 已确认的 schema 事实
 
 - `0000_baseline.sql` 创建基础 `SyncLog`、Post、Comment、User 等结构；
