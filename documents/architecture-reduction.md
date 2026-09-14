@@ -1,6 +1,6 @@
 # 架构减法实施方案：回归 Git-first 单向发布
 
-> 状态：阶段 A、阶段 B、阶段 C、阶段 D、阶段 E 已实施，作为 Stage 9.6 之后的架构治理基线
+> 状态：阶段 A、阶段 B、阶段 C、阶段 D、阶段 E 已实施；Stage 11 正在进行架构治理，本文仍作为 Git-first 单向发布基线
 >
 > 目标：降低个人使用、发布和维护成本，不再继续扩展三方双向同步体系。
 
@@ -273,7 +273,7 @@ bun run publish -- --scope all
 
 ## 9. 当前进展与最终验收标准
 
-截至阶段 E，当前进展如下：
+截至 Stage 11 Phase 5，当前进展如下：
 
 | 项目 | 状态 | 证据 |
 | --- | --- | --- |
@@ -287,6 +287,9 @@ bun run publish -- --scope all
 | 快照职责 | 已明确 | 仅保护 PostgreSQL 业务副本 |
 | 自动化测试 | 已补齐基础边界 | `tests/publish-boundaries.test.ts` |
 | 生产字段最终删除 | 待独立迁移 | 需生产读取审计、迁移说明和回滚方案 |
+| Stage 11 类型/常量分层 | 已完成首批 | `src/types/{publish,gallery,comments}`、`src/lib/constants/` |
+| 废弃字段与 migration 静态审计 | 已完成 | `documents/architecture/stage11-deprecated-fields-and-migration-audit.md` |
+| 当前入口文档治理 | 已完成首批 | `documents/architecture/README.md`、`bun run docs:audit` |
 
 - [x] Git 是唯一人工内容源；
 - [x] Post 和 Gallery 都能通过单向 publish 发布；
@@ -300,3 +303,4 @@ bun run publish -- --scope all
 - [x] 核心 publish 边界有自动化测试；
 - [x] README、AGENTS.md 和本方案没有互相矛盾的现行流程；
 - [ ] 生产 schema 中的废弃字段已删除（需独立迁移窗口，不属于本次阶段 E）。
+- [ ] 生产环境 migration journal/schema 已读取并完成人工确认。

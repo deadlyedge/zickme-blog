@@ -208,6 +208,7 @@ http://localhost:3000
 | `bun run db:push` | 将当前 Schema 推送到数据库 |
 | `bun run db:studio` | 启动 Drizzle Studio |
 | `bun run db:audit-migrations` | 只读校验 migration 文件链与 Drizzle journal，不连接数据库 |
+| `bun run docs:audit` | 审计当前入口文档的 Publish/Git-first/migration 治理语义 |
 | `bun run db:reset` | 重置数据库，危险操作 |
 | `bun run reset-admin-password` | CLI 重置管理员密码 |
 | `bun run gallery:index` | 重新生成 Gallery 索引 |

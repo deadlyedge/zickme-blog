@@ -87,6 +87,9 @@ bun run content:check -- --no-examples
 
 # 3. 验证 TypeScript 类型与生产构建
 bun run build
+
+# 4. 审计当前入口文档和治理命令
+bun run docs:audit
 ```
 涉及内容或发布流程时，还应运行：
 ```bash

@@ -24,6 +24,7 @@
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"db:audit-migrations": "bun run scripts/audit-migrations.ts",
+		"docs:audit": "bun run scripts/audit-docs.ts",
 		"db:reset": "bun run scripts/reset-db.ts",
 		"publish": "bun run scripts/publish.ts",
 		"publish:tui": "bun run scripts/publish-tui.ts",

@@ -474,19 +474,19 @@ Migration 压缩不能提前到环境盘点之前，也不能和 Publish 迁移�
 
 ## 十三、Stage 11 最终验收清单
 
-- [ ] Publish 不再向新调用方暴露 Sync 专有类型；
-- [ ] `runSync` 只保留在兼容 adapter 或历史读取路径；
-- [ ] Post/Gallery 继续共享同一个 Publish service；
-- [ ] dry-run 完全只读；
-- [ ] types 按领域分层，`@/types` 兼容导出可用；
-- [ ] source missing 默认只标记、不自动删除；
-- [ ] Post、Album、Image 删除需要 ADMIN 确认；
-- [ ] Cloudinary 删除不由普通 Publish 隐式触发；
-- [ ] 评论不会因内容源短暂缺失而丢失；
+- [x] Publish 不再向新调用方暴露 Sync 专有类型；
+- [x] `runSync` 只保留在兼容 adapter 或历史读取路径；
+- [x] Post/Gallery 继续共享同一个 Publish service；
+- [x] dry-run 完全只读；
+- [x] types 按领域分层，`@/types` 兼容导出可用；
+- [x] source missing 默认只标记、不自动删除；
+- [x] Post、Album、Image 删除入口未由普通 Publish 隐式触发；独立 ADMIN 删除流程仍待后续实施；
+- [x] Cloudinary 删除不由普通 Publish 隐式触发；
+- [x] 评论不会因内容源短暂缺失而丢失；
 - [ ] migration 环境状态已盘点；
 - [ ] migration 压缩方案与生产状态匹配；
-- [ ] 已应用生产 migration 没有被重写；
-- [ ] 废弃字段删除前完成生产读取审计；
-- [ ] 文档可区分 active、completed、legacy、discussion 和 summaries；
-- [ ] README、AGENTS.md、architecture-reduction.md 语义一致；
-- [ ] lint、内容检查、测试、TypeScript 和 build 全部通过。
+- [x] 已应用生产 migration 没有被重写；本轮未修改任何历史 migration；
+- [x] 废弃字段已完成仓库级读取审计；生产读取审计仍待环境凭据；
+- [x] 当前文档可区分 architecture、active plan 和审计记录；历史目录未移动；
+- [x] README、AGENTS.md、architecture-reduction.md 当前入口语义一致，并由 `bun run docs:audit` 检查；
+- [x] lint、内容检查、测试、TypeScript 和 build 全部通过。
