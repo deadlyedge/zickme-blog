@@ -125,7 +125,9 @@ bun run db:reset -- --confirm-production-reset
 bun run db:reset -- --confirm-production-reset --force
 ```
 
-重置会先执行当前 `drizzle/` migration 链（包括 Stage 12 的 `0007_cleanup_legacy_sync_data`），再清理运行时数据；不会恢复用户、评论或 Cloudinary 原始媒体。重置后运行 `bun run publish -- --scope all --no-delete` 从 Git 内容源重建运行时内容。
+`reset-db` 只清空数据，不执行 migration、不修改 schema、不删除 migration journal，也不读取开发 baseline。重置不会恢复用户、评论或 Cloudinary 原始媒体。重置后运行 `bun run publish -- --scope all --no-delete` 从 Git 内容源重建运行时内容。
+
+Migration 压缩已经作为独立的 Stage 12 baseline 提交完成。后续 schema 变更应从 `0000_stage12_baseline.sql` 继续生成新的 migration；不要把 migration 压缩逻辑放入 `reset-db`。
 
 ---
 

@@ -53,7 +53,7 @@
 ### Stage 11（当前阶段）：架构治理、数据安全与代码质量
 - Publish 是唯一正式内容发布入口；Sync 仅作为兼容期内部实现，不得新增依赖；
 - source missing 默认只报告，不自动归档、标记删除或删除 Cloudinary；
-- 废弃字段和 migration 只能在生产读取审计、备份和回滚方案完成后处理；
+- 当前应用不再需要的字段可以直接删除；schema 变更必须同步更新 baseline、代码和测试。灾难恢复属于按需能力，不作为个人 Blog 日常开发的默认阻塞项；
 - 当前只读 migration 链审计命令为 `bun run db:audit-migrations`。
 
 ### Stage 9.6/10（已完成基线）

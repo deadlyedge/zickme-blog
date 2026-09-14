@@ -1,2 +1,0 @@
-CREATE TYPE "public"."GalleryImageSyncStatus" AS ENUM('LOCAL_ONLY', 'REMOTE_ONLY', 'CONFLICT', 'IN_SYNC', 'PENDING_DELETE');--> statement-breakpoint
-ALTER TABLE "GalleryImage" ADD COLUMN "syncStatus" "GalleryImageSyncStatus" DEFAULT 'LOCAL_ONLY' NOT NULL;

@@ -5,57 +5,8 @@
 		{
 			"idx": 0,
 			"version": "7",
-			"when": 1788926797799,
-			"tag": "0000_baseline",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1789110722397,
-			"tag": "0001_mean_chimera",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1789111372327,
-			"tag": "0002_damp_black_bolt",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1789190000000,
-			"tag": "0003_gallery_stage7",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1789266363734,
-			"tag": "0004_mighty_hiroim",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1789286340444,
-			"tag": "0005_nervous_thunderbird",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "7",
-			"when": 1789352288975,
-			"tag": "0006_amusing_sleepwalker",
-			"breakpoints": true
-		},
-		{
-			"idx": 7,
-			"version": "7",
 			"when": 1789380000000,
-			"tag": "0007_cleanup_legacy_sync_data",
+			"tag": "0000_stage12_baseline",
 			"breakpoints": true
 		}
 	]

@@ -1,11 +1,9 @@
-import * as path from 'node:path'
 import { stdin as input, stdout as output } from 'node:process'
 import * as readline from 'node:readline/promises'
 import { sql } from 'drizzle-orm'
-import { migrate } from 'drizzle-orm/neon-serverless/migrator'
 import { db } from '../src/db'
 
-/** Runtime tables owned by the application; the migration journal is preserved. */
+/** Runtime tables owned by the application. Reset never changes schema or migrations. */
 export const RESETTABLE_TABLES = [
 	'_PostToTag',
 	'Comment',
@@ -70,10 +68,8 @@ export async function resetRuntimeDatabase(): Promise<{
 	before: Record<ResetTable, number>
 	after: Record<ResetTable, number>
 }> {
-	await migrate(db, { migrationsFolder: path.join(process.cwd(), 'drizzle') })
 	const before = await readRowCounts()
 	const tableList = RESETTABLE_TABLES.map(quoteIdentifier).join(', ')
-
 	await db.execute(
 		sql.raw(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE`),
 	)
@@ -95,8 +91,9 @@ async function main(): Promise<void> {
 	console.log(`目标：${getTargetDescription()}`)
 	console.log(`将清空 ${RESETTABLE_TABLES.length} 张运行时表中的全部数据。`)
 	console.log(
-		'不会删除表结构、Drizzle migration journal、content/ 文件或 Cloudinary 资源。',
+		'只清空运行时数据；不会执行 migration、修改 schema 或删除 migration journal。',
 	)
+	console.log('不会修改 content/ 文件或删除 Cloudinary 资源。')
 	console.log(
 		'将永久删除用户、Session、评论、快照、SyncRun/SyncLog 及数据库内容副本。',
 	)
@@ -121,9 +118,7 @@ async function main(): Promise<void> {
 		const result = await resetRuntimeDatabase()
 		console.log(`✅ 数据库重置成功，清理前总行数：${totalRows(result.before)}`)
 		console.log(`✅ 清理后总行数：${totalRows(result.after)}`)
-		console.log(
-			'下一步：确认 schema 后运行 bun run publish -- --scope all --no-delete',
-		)
+		console.log('下一步：运行 bun run publish -- --scope all --no-delete')
 	} catch (error) {
 		console.error(
 			'❌ 数据库重置失败：',

@@ -1,51 +1,48 @@
-# Stage 12 环境与生产状态盘点
+# Stage 12 单库状态记录
 
 > 记录日期：2026-09-14
 >
-> 状态：**未通过 Phase 0**。本文是脱敏盘点模板和当前证据登记，不代表任何环境已经应用某条 migration。
+> 适用范围：个人 Blog 的本地开发工作区 + 一个可重置的实际数据库。
+>
+> 状态：不建立测试/预发布/多生产环境矩阵。当前记录仓库状态和实际数据库操作边界，不伪造数据库已执行结果。
 
-## 1. 证据边界
+## 1. 当前事实
 
-本仓库的 `db:audit-migrations` 只检查 Git 中的 SQL 文件与 Drizzle journal，不能替代目标环境的只读 journal、schema dump、备份和恢复演练。当前没有提交任何数据库导出、连接串、密码、用户内容或 Cloudinary 凭据。
+- [x] Git `content/` 是唯一人工内容源。
+- [x] `reset-db` 只清空运行时数据，不执行 migration、不修改 schema。
+- [x] 当前正式 schema baseline 为 `drizzle/0000_stage12_baseline.sql`。
+- [x] `db:audit-migrations` 已确认 baseline 与 journal 一致。
+- [ ] 当前实际数据库已应用 baseline。
+- [ ] 当前实际数据库已完成一次 reset 后的 Post/Gallery publish。
 
-在获得下表所需证据前，禁止执行 `0007`/`0008`、压缩 migration、生成最终 baseline、删除字段或执行破坏性数据清理。
+## 2. 当前数据库操作约定
 
-## 2. 环境状态
+### 清空网站内容
 
-| 环境 | Migration journal | 关键 schema dump | 关键表行数 | 备份/恢复证据 | 是否可 reset | 责任人 | 状态 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 本地开发库 | 未提供 | 未提供 | 未提供 | 未提供 | 未确认 | 未指定 | 未知 |
-| 测试库 | 未提供 | 未提供 | 未提供 | 未提供 | 未确认 | 未指定 | 未知 |
-| 预发布库 | 未提供 | 未提供 | 未提供 | 未提供 | 未确认 | 未指定 | 未知 |
-| 生产库 | 未提供 | 未提供 | 未提供 | 未提供 | 未确认 | 未指定 | 未知 |
+```bash
+bun run db:reset -- --confirm-production-reset
+bun run publish -- --scope all --no-delete
+```
 
-## 3. 必须收集的脱敏证据
+### 初始化或升级 schema
 
-每个环境应由受控运维流程提供以下内容：
+```bash
+bun run db:migrate
+```
 
-- 数据库标识的脱敏值和采集时间；
-- `_drizzle_migrations` 的 tag、hash/时间戳和顺序；
-- `Post`、`Gallery`、`GalleryImage`、`Comment`、`GalleryImageComment`、`SyncRun`、`SyncLog`、`SiteSnapshot` 的行数；
-- 目标字段的非空数、非默认值数和关联记录数：`mergeBase`、`revision`、`syncVersion`、`retryOf`；
-- Gallery 状态 enum、索引、外键和默认值摘要；
-- 备份时间、恢复方式、最近一次恢复演练和可接受回滚窗口；
-- 是否已应用 `0006_amusing_sleepwalker`；
-- 与仓库 schema 的 drift 说明。
+数据库可重置，因此不为不存在的环境设计兼容 migration 链。若未来数据库不可重建，再单独补充备份和回滚方案。
 
-只读盘点不得调用 `db:migrate`、`db:push`、`db:reset`，不得写业务表、`SyncRun`、Snapshot 或 Cloudinary。
+## 3. 可选灾难恢复记录
 
-## 4. 当前仓库证据
+灾难恢复不是当前 Stage 12 的完成阻塞项。未来确有需要时再记录：
 
-- [x] 仓库 `0000`–`0006` SQL 与 journal 可由 `bun run db:audit-migrations` 检查；
-- [x] `0006_amusing_sleepwalker` 在仓库中创建 `GalleryImageComment`；
-- [x] 已知废弃字段仍保留在 Drizzle schema；
-- [ ] 本地数据库 journal/schema 读取；
-- [ ] 测试数据库 journal/schema 读取；
-- [ ] 预发布数据库 journal/schema 读取；
-- [ ] 生产数据库 journal/schema 读取；
-- [ ] 生产读取方、Dashboard、运维 SQL、日志查询和 Snapshot 审计；
-- [ ] 备份恢复演练和回滚窗口确认。
+- 数据库备份时间和恢复方式；
+- Git commit/tag；
+- Cloudinary 原始媒体备份或保留策略；
+- 恢复失败时数据库、Git、Cloudinary 的边界。
 
-## 5. 当前结论
+Snapshot 只能保护数据库运行时副本，不能恢复 Git 内容或 Cloudinary 原始媒体。
 
-Phase 0 **不通过**。因此本阶段仓库只实现不依赖生产状态的删除预览安全核心；不新增清理/字段删除 migration，不修改历史 migration，不执行 Cloudinary destroy。任何环境盘点结果必须由运维补充到本文后，才能进入 Stage 12 Phase 1 及后续 migration 准入评审。
+## 4. 结论
+
+当前不执行“四类环境”盘点，也不把环境矩阵作为个人 Blog 的架构要求。后续重点是：删除不再使用的字段、保持 reset/publish 简单可重复，并在需要时再增加灾难恢复能力。

@@ -162,7 +162,7 @@ CLOUDINARY_API_SECRET="your-api-secret"
 当前仓库正式 migration 链为 `0000`–`0006`，文件和 journal 可使用只读命令校验：
 
 ```text
-drizzle/0000_baseline.sql ... drizzle/0006_amusing_sleepwalker.sql
+drizzle/0000_stage12_baseline.sql
 drizzle/meta/_journal.json
 ```
 
@@ -270,7 +270,7 @@ zickme-blog/
 │   └── stage9.1-architecture-and-content-flow.md
 │   └── stage5-summary.md
 ├── drizzle/
-│   ├── 0000_baseline.sql           # 当前正式 baseline
+│   ├── 0000_stage12_baseline.sql   # 当前正式 baseline
 │   ├── meta/                       # 当前迁移元数据
 │   └── archive/                    # 历史迁移归档
 ├── scripts/
@@ -357,7 +357,7 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 2. Dashboard 导出内容使用 ZIP 下载；
 - 内容恢复优先使用 Git revert/分支/tag；数据库快照不替代 Git 内容源；
 4. 数据库迁移在受控环境执行 `bun run db:migrate`；质量门禁不执行生产数据库写入；
-5. 不要在生产环境执行 `bun run db:reset`；受控发布使用 `bun run db:migrate`。
+5. `bun run db:reset` 是清空网站运行时数据的显式工具；确认后可用于从本地 `content/` 重建清爽站点。schema 变更使用 `bun run db:migrate`。
 6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。
 
 ---

@@ -2,7 +2,7 @@
 
 > 总结日期：2026-09-14
 >
-> 当前状态：Phase 0–6 的仓库级治理工作已完成；生产数据库状态、生产字段删除和 migration 压缩仍需要独立的受控运维窗口。
+> 当前状态：仓库级治理和 baseline 收敛已完成；项目按单库、可重置的个人 Blog 维护，不建立多环境治理平台。当前字段删除和 Publish/Sync 简化仍待后续开发。
 
 ## 1. 已完成范围
 
@@ -39,7 +39,7 @@ src/lib/constants/
 ### Migration 与废弃字段审计
 
 - 已完成 `mergeBase`、`revision`、`syncVersion`、`syncStatus`、`retryOf`、SyncRun、SyncLog 的仓库级读取审计；
-- 已确认历史 migration 文件与仓库 journal 的 `0000`–`0006` 链一致；
+- 当前正式 migration 已收敛为唯一 `0000_stage12_baseline.sql`；
 - 新增只读命令：
 
 ```bash
@@ -67,7 +67,7 @@ bun run docs:audit
 当前回归基线：
 
 - `bun run docs:audit`：通过；
-- `bun run db:audit-migrations`：7 条 SQL 与 7 条 journal entry 一致；
+- `bun run db:audit-migrations`：1 条 SQL 与 1 条 journal entry 一致；
 - `bun run lint`：通过；
 - `bun test`：23 tests passed；
 - `bunx tsc --noEmit --pretty false`：通过；
@@ -78,25 +78,16 @@ Build 仍有 Gallery 动态文件系统 tracing warning，属于旧 Gallery 发�
 
 ## 3. 明确未完成事项
 
-以下事项不能仅通过仓库静态分析宣称完成：
+以下事项仍未完成：
 
-1. 本地、测试、预发布和生产环境的实际 migration journal 盘点；
-2. 生产 schema、enum、索引、外键和关键表数据量对照；
-3. `mergeBase`、`revision`、`syncVersion`、`retryOf` 的生产读取审计；
-4. migration 压缩或新 baseline 建立；
-5. 生产废弃字段删除；
-6. 独立 ADMIN 删除流程、评论/媒体影响范围预览和 Cloudinary 二次确认流程。
+1. 删除当前不再需要的 `mergeBase`、`revision`、`syncVersion`；
+2. 移除 `retryOf` 当前代码依赖并删除该字段；
+3. 删除 Action 集成测试和 Dashboard UI；
+4. 当前唯一数据库的 baseline 初始化和 content publish 验证；
+5. Gallery tracing warning 处理。
 
-这些事项必须在独立、可回滚的运维工作流中处理，不能与普通重构或 Publish 类型迁移混合提交。
+灾难恢复、Cloudinary 原始媒体备份和更复杂审计仅在实际需要时增加，不是当前个人 Blog 的默认前置条件。
 
 ## 4. 后续准入条件
 
-进入 migration 压缩或字段删除前，必须获得：
-
-- 每个环境的 journal 和 schema dump；
-- 生产备份与恢复演练记录；
-- 生产读取方、Dashboard、运维脚本、日志查询和 Snapshot 使用情况确认；
-- 明确区分数据库、Git 内容源和 Cloudinary 的回滚路径；
-- 单独 migration/删除提交及回滚方案。
-
-在这些证据完成前，继续保留历史 migration、废弃字段、SyncRun 和兼容读取路径。
+字段删除前只需要确认当前仓库代码不再读取字段，并同步更新 schema、baseline、测试和文档。仍被当前代码使用的字段（如 `retryOf`）先移除代码依赖再删除。
