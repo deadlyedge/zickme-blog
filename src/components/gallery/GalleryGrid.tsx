@@ -4,6 +4,7 @@ import { Info } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
+import { getGalleryImageUrl } from '@/lib/gallery/gallery-public'
 import { cn } from '@/lib/utils'
 import type { GalleryPublicImage } from '@/types/gallery'
 
@@ -11,10 +12,12 @@ function GalleryImage({
 	image,
 	sizes,
 	priority = false,
+	variant = 'full',
 }: {
 	image: GalleryPublicImage
 	sizes: string
 	priority?: boolean
+	variant?: 'full' | 'thumbnail'
 }) {
 	const [failed, setFailed] = useState(false)
 	if (failed)
@@ -25,7 +28,7 @@ function GalleryImage({
 		)
 	return (
 		<Image
-			src={image.url}
+			src={getGalleryImageUrl(image, variant)}
 			alt={image.alt}
 			fill
 			priority={priority}
@@ -91,7 +94,7 @@ export function GalleryGrid({
 								aspectRatio: `${image.width || 1} / ${image.height || 1}`,
 							}}
 						>
-							<GalleryImage image={image} sizes="160px" />
+							<GalleryImage image={image} sizes="160px" variant="thumbnail" />
 							<span className="absolute bottom-2 left-2 text-[10px] text-white/80">
 								{String(index + 1).padStart(2, '0')}
 							</span>
@@ -116,7 +119,11 @@ export function GalleryGrid({
 											aspectRatio: `${image.width || 1} / ${image.height || 1}`,
 										}}
 									>
-										<GalleryImage image={image} sizes="50vw" />
+										<GalleryImage
+											image={image}
+											sizes="(max-width: 767px) 50vw, 160px"
+											variant="thumbnail"
+										/>
 									</div>
 									<div className="px-1 pb-1 pt-2">
 										<p className="text-sm font-medium">

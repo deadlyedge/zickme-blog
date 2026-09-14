@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { getGalleryImageUrl } from '@/lib/gallery/gallery-public'
 import type { GalleryPublic } from '@/types/gallery'
 
 export function GalleryCard({ gallery }: { gallery: GalleryPublic }) {
@@ -12,7 +13,7 @@ export function GalleryCard({ gallery }: { gallery: GalleryPublic }) {
 			<div className="relative aspect-4/3 overflow-hidden">
 				{image ? (
 					<Image
-						src={gallery.cover || image.url}
+						src={gallery.cover || getGalleryImageUrl(image, 'thumbnail')}
 						alt={image.alt}
 						fill
 						sizes="(min-width: 1024px) 33vw, 100vw"

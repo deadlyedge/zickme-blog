@@ -1,4 +1,14 @@
-import type { GalleryPublic } from '@/types/gallery'
+import type { GalleryPublic, GalleryPublicImage } from '@/types/gallery'
+
+export type GalleryImageVariant = 'full' | 'thumbnail'
+
+export function getGalleryImageUrl(
+	image: GalleryPublicImage,
+	variant: GalleryImageVariant = 'full',
+): string {
+	if (variant === 'thumbnail') return image.thumbnailUrl ?? image.url
+	return image.url
+}
 
 export function parseGalleryTags(metadata: unknown): string[] {
 	if (typeof metadata !== 'object' || metadata === null) return []
