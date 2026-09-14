@@ -1,9 +1,6 @@
 import { runSync } from '@/lib/sync/sync-orchestrator'
-import {
-	type PublishSummary,
-	type PublishTrigger,
-	publishSummaryFromSync,
-} from './publish-summary'
+import type { PublishTrigger } from '@/types/publish/publish'
+import { type PublishSummary, publishSummaryFromSync } from './publish-summary'
 import type { PublishScope, ValidationReport } from './publish-types'
 import { validatePublishContent } from './publish-validation'
 

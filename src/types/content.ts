@@ -1,5 +1,7 @@
 import type { InferSelectModel } from 'drizzle-orm'
-import type { comments, posts, syncLogs, tags, users } from '@/db/schema'
+import type { posts, syncLogs, tags, users } from '@/db/schema'
+
+export type { Comment } from './comments/comment'
 
 // Enums / Status
 export type StatusType = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED' | 'PENDING' | 'SPAM'
@@ -34,7 +36,6 @@ export interface PostMetadata {
 // Base Models
 export type Post = InferSelectModel<typeof posts>
 export type Tag = InferSelectModel<typeof tags>
-export type Comment = InferSelectModel<typeof comments>
 export type User = InferSelectModel<typeof users>
 export type SyncLog = InferSelectModel<typeof syncLogs>
 

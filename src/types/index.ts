@@ -1,6 +1,7 @@
 // Unified type exports
-import type { Comment } from './content'
 
+export type { Comment, CommentWithReplies } from './comments/comment'
+export type { PublicCommentAuthor } from './comments/public-comment'
 export type {
 	AboutPageConfig,
 	ContentResponse,
@@ -43,7 +44,13 @@ export type {
 	GallerySort,
 	GalleryStatus,
 } from './gallery'
-export type { PublicCommentAuthor } from './public-user'
+export type {
+	PublishResult,
+	PublishScope,
+	PublishStatus,
+	PublishSummary,
+	PublishTrigger,
+} from './publish/publish'
 
 // UI types
 export type {
@@ -66,15 +73,3 @@ export { isValidButtonSize, isValidButtonVariant } from './ui'
 // User types
 export type { AuthUser, SignInContext, UserWithRelations } from './user'
 export { canEditContent, isAdmin, isAuthUser, isEditor } from './user'
-
-// Comment type
-export interface CommentWithReplies extends Comment {
-	replies?: CommentWithReplies[]
-	depth?: number
-	author: {
-		id: string
-		displayName: string
-		image: string | null
-		banned: boolean
-	}
-}

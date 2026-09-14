@@ -6,6 +6,7 @@ import {
 	parseGalleryTags,
 } from '../src/lib/gallery/gallery-public'
 import type { GalleryPublic } from '../src/types/gallery'
+import type { GalleryPublic as DomainGalleryPublic } from '../src/types/gallery/public'
 
 const image = {
 	id: 'image-1',
@@ -63,5 +64,10 @@ describe('gallery public helpers', () => {
 			filterGalleriesByTag(albums, 'travel').map(({ slug }) => slug),
 		).toEqual(['travel'])
 		expect(filterGalleriesByTag(albums, null)).toEqual(albums)
+	})
+
+	test('gallery public DTO is available from the domain module', () => {
+		const gallery: DomainGalleryPublic = albums[0] as DomainGalleryPublic
+		expect(gallery.slug).toBe('travel')
 	})
 })

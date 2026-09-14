@@ -12,6 +12,7 @@ import {
 	parsePublishScope,
 } from '../src/lib/publish/publish-types'
 import { resolvePublishDeleteOld } from '../src/lib/publish/publish-workflow'
+import type { PublishSummary as RootPublishSummary } from '../src/types'
 
 const fixtureRoot = path.join(process.cwd(), '.tmp-publish-boundaries')
 const fixture = path.join(fixtureRoot, 'draft.md')
@@ -48,6 +49,44 @@ describe('publish boundaries', () => {
 		expect(parsePublishScope('galleries')).toBe('galleries')
 		expect(parsePublishScope('all')).toBe('all')
 		expect(() => parsePublishScope('remote')).toThrow()
+	})
+
+	test('root types keep PublishSummary as a compatibility export', () => {
+		const summary: RootPublishSummary = {
+			runId: 'root-export',
+			scope: 'posts',
+			status: 'SUCCEEDED',
+			dryRun: true,
+			triggeredBy: 'CLI',
+			startedAt: '2026-09-14T00:00:00.000Z',
+			finishedAt: null,
+			posts: {
+				total: 0,
+				processed: 0,
+				succeeded: 0,
+				errors: 0,
+				mediaErrors: 0,
+				archived: 0,
+				sourceMissing: [],
+			},
+			galleries: {
+				albums: 0,
+				images: 0,
+				processed: 0,
+				uploaded: 0,
+				skipped: 0,
+				unsupported: 0,
+				archived: 0,
+				pendingDelete: 0,
+				conflicts: 0,
+				errors: 0,
+				sourceMissing: [],
+			},
+			conflicts: 0,
+			errors: 0,
+		}
+
+		expect(summary.scope).toBe('posts')
 	})
 
 	test('publish summary does not expose Sync-only protocol fields', () => {

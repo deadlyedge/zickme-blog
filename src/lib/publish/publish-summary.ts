@@ -1,40 +1,14 @@
-import type {
-	GallerySyncSummary,
-	PostSyncSummary,
-	SyncRunSummary,
-} from '@/lib/sync/sync-types'
-import type { PublishScope } from './publish-types'
+import type { SyncRunSummary } from '@/lib/sync/sync-types'
+import type { PublishScope, PublishSummary } from '@/types/publish/publish'
 
-export const PUBLISH_STATUSES = [
-	'QUEUED',
-	'RUNNING',
-	'SUCCEEDED',
-	'PARTIAL_SUCCESS',
-	'FAILED',
-	'CANCELLED',
-] as const
-export type PublishStatus = (typeof PUBLISH_STATUSES)[number]
-
-export type PublishTrigger = 'CLI' | 'DASHBOARD' | 'CI'
-
-export type PublishSummary = {
-	runId: string
-	scope: PublishScope
-	status: PublishStatus
-	dryRun: boolean
-	triggeredBy: PublishTrigger
-	startedAt: string
-	finishedAt: string | null
-	posts: PostSyncSummary
-	galleries: GallerySyncSummary
-	conflicts: number
-	errors: number
-	errorCode?: string
-}
-
-export type PublishResult = {
-	summary: PublishSummary
-}
+export type {
+	PublishResult,
+	PublishScope,
+	PublishStatus,
+	PublishSummary,
+	PublishTrigger,
+} from '@/types/publish/publish'
+export { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/types/publish/publish'
 
 function publishScopeFromSyncScope(
 	scope: SyncRunSummary['scope'],

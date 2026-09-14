@@ -1,5 +1,9 @@
-export const PUBLISH_SCOPES = ['posts', 'galleries', 'all'] as const
-export type PublishScope = (typeof PUBLISH_SCOPES)[number]
+export {
+	PUBLISH_SCOPES,
+	type PublishScope,
+} from '@/types/publish/publish'
+
+import type { PublishScope } from '@/types/publish/publish'
 
 export type ContentIssueCode =
 	| 'CONTENT_INVALID'
