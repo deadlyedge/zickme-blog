@@ -28,7 +28,6 @@ function toSafeRun(run: Awaited<ReturnType<typeof getSyncRun>>) {
 		exitCode: run.exitCode,
 		errorCount: run.errorCount,
 		conflictCount: run.conflictCount,
-		retryOf: run.retryOf,
 		lockExpiresAt: run.lockExpiresAt?.toISOString() ?? null,
 		summary: run.summary,
 	}

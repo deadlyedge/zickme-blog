@@ -82,12 +82,12 @@ drizzle/0000_stage12_baseline.sql
 ### 3.1 当前字段决定
 
 | 字段/协议 | 当前决定 | 后续动作 |
-| --- | --- | --- |
-| `Gallery.mergeBase` | 当前运行时代码不再需要 | 直接从 schema 和 baseline 删除 |
-| `Gallery.revision` | 当前删除流程使用 `updatedAt`，不再需要该字段 | 直接删除 |
-| `GalleryImage.mergeBase` | 当前运行时代码不再需要 | 直接删除 |
-| `GalleryImage.revision` | 当前删除流程使用 `updatedAt`，不再需要该字段 | 直接删除 |
-| `GalleryImage.syncVersion` | Publish 不再更新，当前代码不依赖 | 直接删除 |
+| `Gallery.mergeBase` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
+| `Gallery.revision` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
+| `GalleryImage.mergeBase` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
+| `GalleryImage.revision` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
+| `GalleryImage.syncVersion` | 已从当前 schema、baseline 和运行时代码移除 | 已完成 |
+| `SyncRun.retryOf` | 已从当前 Sync 协议、schema 和 baseline 移除 | 已完成 |
 | `SyncRun.retryOf` | 当前 Sync 兼容代码仍引用 | 先移除代码依赖，再删除 |
 | Gallery/GalleryImage `syncStatus` | 当前发布和删除状态仍使用 | 保留 |
 | `SyncRun`/`SyncLog` | 当前兼容 Publish 仍使用 | 暂不删除，后续低频简化时再评估 |
@@ -140,15 +140,15 @@ confirmDeletion
 
 ### P0：直接清理无用 schema 字段
 
-1. 删除 `mergeBase`、`revision`、`syncVersion` 的 schema 属性。
-2. 更新 `0000_stage12_baseline.sql`。
-3. 运行 TypeScript、测试、migration audit、content check 和 build。
-4. 确认 Gallery 发布、删除 Preview/Confirm 不再引用这些字段。
+1. ~~删除 `mergeBase`、`revision`、`syncVersion` 的 schema 属性。~~ 已完成。
+2. ~~更新 `0000_stage12_baseline.sql`。~~ 已完成。
+3. ~~运行 TypeScript、测试、migration audit、content check 和 build。~~ 已完成。
+4. ~~确认 Gallery 发布、删除 Preview/Confirm 不再引用这些字段。~~ 已完成。
 
 ### P1：移除 retry 协议
 
-1. 从 `sync-orchestrator`、`sync-lock`、Sync 类型和兼容 DTO 中移除 `retryOf`。
-2. 删除 `SyncRun.retryOf`。
+1. ~~从 `sync-orchestrator`、`sync-lock`、Sync 类型和兼容 DTO 中移除 `retryOf`。~~ 已完成。
+2. ~~删除 `SyncRun.retryOf`。~~ 已完成。
 3. 保持失败后按 scope 手动重跑，不实现实体级 retry。
 
 ### P1：Publish/Sync 简化
@@ -181,12 +181,12 @@ confirmDeletion
 
 ### 尚未通过的后续验收
 
-- [ ] 无用字段从 schema、baseline 和运行时代码移除。
-- [ ] `retryOf` 依赖移除并删除字段。
+- [x] 无用字段从 schema、baseline 和运行时代码移除。
+- [x] `retryOf` 依赖移除并删除字段。
 - [ ] 删除 Action 数据库集成测试。
 - [ ] 当前唯一数据库完成 baseline 初始化/升级验证。
 - [ ] 当前 content 完成一次 Post/Gallery 正常 publish。
-- [ ] tracing warning 已处理或记录为明确的低风险遗留项。
+- [x] tracing warning 已通过受控路径标记处理；若部署平台仍提示，仅为低风险构建遗留项。
 
 ## 七、阶段结论
 

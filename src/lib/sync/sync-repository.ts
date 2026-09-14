@@ -10,7 +10,6 @@ export async function createSyncRun(input: {
 	dryRun: boolean
 	triggeredBy: SyncTrigger
 	actorId?: string | null
-	retryOf?: string
 	lockKey: string
 	lockExpiresAt: Date
 	startedAt: Date
@@ -26,7 +25,6 @@ export async function createSyncRun(input: {
 		startedAt: input.startedAt,
 		lockKey: input.lockKey,
 		lockExpiresAt: input.lockExpiresAt,
-		retryOf: input.retryOf ?? null,
 	})
 }
 

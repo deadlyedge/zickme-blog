@@ -40,7 +40,6 @@ export default function DashboardGalleryPage() {
 		startTransition(async () => {
 			const result = await updateGallery({
 				id: gallery.id,
-				revision: gallery.revision,
 				title: String(data.get('title') ?? ''),
 				description: String(data.get('description') ?? '') || null,
 				cover: gallery.cover,
@@ -141,7 +140,7 @@ export default function DashboardGalleryPage() {
 							</select>
 							<div className="flex items-center justify-between gap-3">
 								<span className="text-xs text-muted-foreground">
-									revision {gallery.revision} · {gallery.images.length} 张图片
+									{gallery.images.length} 张图片
 								</span>
 								<Button type="submit" disabled={pending}>
 									<Save />
@@ -170,7 +169,6 @@ export default function DashboardGalleryPage() {
 											startTransition(async () => {
 												const result = await markGalleryImageForDeletion(
 													image.id,
-													image.revision,
 												)
 												if (result.success) {
 													toast.success('已标记待删除')

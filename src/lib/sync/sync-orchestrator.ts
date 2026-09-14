@@ -16,7 +16,6 @@ export type SyncOrchestratorOptions = {
 	dryRun?: boolean
 	triggeredBy?: SyncTrigger
 	deleteOld?: boolean
-	retryOf?: string
 	actorId?: string | null
 	galleryInputDir?: string
 }
@@ -64,7 +63,6 @@ export async function runSync(
 			scope: options.scope,
 			dryRun,
 			triggeredBy: options.triggeredBy ?? 'CLI',
-			retryOf: options.retryOf,
 			actorId: options.actorId,
 			startedAt: started,
 		})
@@ -88,7 +86,6 @@ export async function runSync(
 		galleries: emptyGallerySummary(),
 		conflicts: 0,
 		errors: 0,
-		retryOf: options.retryOf,
 	}
 	const failures: string[] = []
 

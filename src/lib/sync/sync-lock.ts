@@ -17,7 +17,6 @@ export async function acquireSyncLock(input: {
 	dryRun: boolean
 	triggeredBy: SyncTrigger
 	actorId?: string | null
-	retryOf?: string
 	startedAt: Date
 }): Promise<() => Promise<void>> {
 	await expireStaleSyncRuns()

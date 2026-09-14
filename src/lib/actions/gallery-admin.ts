@@ -74,12 +74,8 @@ export async function updateGalleryImage(input: unknown) {
 	}
 }
 
-export async function markGalleryImageForDeletion(
-	id: string,
-	revision: number,
-) {
+export async function markGalleryImageForDeletion(id: string) {
 	void id
-	void revision
 	return {
 		success: false as const,
 		error:

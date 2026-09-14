@@ -195,9 +195,12 @@ export async function syncGalleries(
 ): Promise<GallerySyncSummary> {
 	const dryRun = options.dryRun === true
 	const inputRoot = path.resolve(
+		/* turbopackIgnore: true */
 		options.inputDir ?? process.env.GALLERY_INPUT_DIR ?? DEFAULT_INPUT_DIR,
 	)
-	const galleryRoot = path.resolve(options.galleryRoot ?? GALLERY_ROOT)
+	const galleryRoot = path.resolve(
+		/* turbopackIgnore: true */ options.galleryRoot ?? GALLERY_ROOT,
+	)
 	const summary: GallerySyncSummary = {
 		dryRun,
 		albums: 0,

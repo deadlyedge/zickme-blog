@@ -53,8 +53,6 @@ export type SyncRunSummary = {
 	conflicts: number
 	errors: number
 	errorCode?: string
-	/** @deprecated Scope retry belongs to the frozen compatibility protocol. */
-	retryOf?: string
 }
 
 export type SyncRunRecord = {
@@ -71,8 +69,6 @@ export type SyncRunRecord = {
 	summary: unknown
 	errorCount: number
 	conflictCount: number
-	/** @deprecated Retained only to read historical SyncRun records. */
-	retryOf: string | null
 	lockKey: string | null
 	lockExpiresAt: Date | null
 	createdAt: Date

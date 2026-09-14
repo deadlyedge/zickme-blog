@@ -25,8 +25,6 @@ export const syncRuns = pgTable(
 		summary: jsonb('summary'),
 		errorCount: integer('errorCount').notNull().default(0),
 		conflictCount: integer('conflictCount').notNull().default(0),
-		/** @deprecated Retained only for historical compatibility records. */
-		retryOf: text('retryOf'),
 		lockKey: text('lockKey'),
 		lockExpiresAt: timestamp('lockExpiresAt', { mode: 'date' }),
 		createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
