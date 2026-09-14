@@ -1,9 +1,9 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
+import { GalleryBottomPanel } from '@/components/gallery/GalleryBottomPanel'
 import {
 	Dialog,
 	DialogContent,
@@ -29,7 +29,6 @@ export function GalleryLightbox({
 }) {
 	const image = images[index]
 	const touchStart = useRef<number | null>(null)
-	const [minimized, setMinimized] = useState(false)
 	const [failedImageId, setFailedImageId] = useState<string | null>(null)
 	const move = useCallback(
 		(direction: number) =>
@@ -109,39 +108,11 @@ export function GalleryLightbox({
 					>
 						<ChevronRight />
 					</button>
-					<div
-						className={`absolute inset-x-0 bottom-0 z-20 mx-auto max-w-2xl bg-black/65 p-4 backdrop-blur-md transition-opacity motion-reduce:transition-none ${minimized ? 'py-3' : ''}`}
-					>
-						<div className="flex items-start justify-between gap-4">
-							<div className="min-w-0">
-								{minimized ? (
-									<h2 className="truncate text-lg font-semibold">
-										{image.title || 'Untitled'}
-									</h2>
-								) : (
-									<GalleryImageInfo image={image} location={location} compact />
-								)}
-							</div>
-							<button
-								type="button"
-								onClick={() => setMinimized((value) => !value)}
-								aria-label={minimized ? '展开图片信息' : '最小化图片信息'}
-								className="rounded-full p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-							>
-								<ChevronUp
-									className={`size-4 transition-transform motion-reduce:transition-none ${minimized ? 'rotate-180' : ''}`}
-								/>
-							</button>
-						</div>
-						{/* <a
-							href={image.url}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="mt-3 inline-flex items-center gap-1 text-xs text-white/60 underline-offset-4 hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-						>
-							在新标签页打开 <ExternalLink className="size-3" />
-						</a> */}
-					</div>
+					<GalleryBottomPanel
+						key={image.id}
+						image={image}
+						location={location}
+					/>
 				</div>
 			</DialogContent>
 		</Dialog>

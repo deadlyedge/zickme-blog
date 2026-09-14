@@ -1,9 +1,8 @@
 'use client'
 
-import { Info } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
-import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
+import { GalleryBottomPanel } from '@/components/gallery/GalleryBottomPanel'
 import { getGalleryImageUrl } from '@/lib/gallery/gallery-public'
 import { cn } from '@/lib/utils'
 import type { GalleryPublicImage } from '@/types/gallery'
@@ -61,22 +60,11 @@ export function GalleryGrid({
 						priority
 						sizes="(min-width: 768px) 75vw, 100vw"
 					/>
-					<div className="group/info absolute inset-x-0 bottom-0 z-10 flex justify-end">
-						<div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-black/55 p-5 text-white opacity-0 shadow-2xl backdrop-blur-md transition duration-300 motion-reduce:transition-none group-hover/info:pointer-events-auto group-hover/info:translate-y-0 group-hover/info:opacity-100 group-focus-within/info:pointer-events-auto group-focus-within/info:translate-y-0 group-focus-within/info:opacity-100">
-							<GalleryImageInfo
-								image={images[selectedIndex]}
-								location={location}
-								compact
-							/>
-						</div>
-						<button
-							type="button"
-							aria-label="显示图片信息"
-							className="relative z-10 m-4 flex size-9 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white/85 backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white hover:bg-black/70"
-						>
-							<Info className="size-4" />
-						</button>
-					</div>
+					<GalleryBottomPanel
+						key={images[selectedIndex].id}
+						image={images[selectedIndex]}
+						location={location}
+					/>
 				</div>
 				<div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
 					{images.map((image, index) => (
