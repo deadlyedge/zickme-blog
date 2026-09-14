@@ -66,4 +66,4 @@ bun run publish -- --scope galleries --dry-run --json
 
 不要提交 `.env`、密钥、数据库导出文件和 Gallery 原始图片。
 
-Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。若全站同步中 Gallery 配置不可用，先使用 `--scope posts` 完成 Post 同步，再修复 Gallery 配置并按 scope 重跑。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。生产环境禁止使用 `bun run db:reset`。
+Cloudinary 缺失时 Post-only 流程仍可运行；非 dry-run Gallery 媒体同步需要三项 Cloudinary 环境变量。若全站同步中 Gallery 配置不可用，先使用 `--scope posts` 完成 Post 同步，再修复 Gallery 配置并按 scope 重跑。新环境先执行 `bun run db:migrate`，再使用 `bun run reset-admin-password` 初始化或重置管理员。生产数据库重置会先应用当前 migration 链（包括 Stage 12 的 `0007_cleanup_legacy_sync_data`），必须明确使用 `bun run db:reset -- --confirm-production-reset`，并完成交互确认或额外使用 `--force`；该操作会清除用户、评论、快照和运行历史。

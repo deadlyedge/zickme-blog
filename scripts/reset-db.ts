@@ -1,70 +1,136 @@
-import * as readline from 'node:readline'
+import * as path from 'node:path'
+import { stdin as input, stdout as output } from 'node:process'
+import * as readline from 'node:readline/promises'
 import { sql } from 'drizzle-orm'
+import { migrate } from 'drizzle-orm/neon-serverless/migrator'
 import { db } from '../src/db'
 
-async function prompt(question: string): Promise<string> {
-	const rl = readline.createInterface({
-		input: process.stdin,
-		output: process.stdout,
-	})
+/** Runtime tables owned by the application; the migration journal is preserved. */
+export const RESETTABLE_TABLES = [
+	'_PostToTag',
+	'Comment',
+	'GalleryImageComment',
+	'GalleryImage',
+	'Gallery',
+	'Post',
+	'tag',
+	'siteProfile',
+	'SiteSnapshot',
+	'SyncLog',
+	'SyncRun',
+	'session',
+	'account',
+	'verification',
+	'user',
+] as const
 
-	return new Promise((resolve) => {
-		rl.question(question, (answer) => {
-			rl.close()
-			resolve(answer.trim())
-		})
-	})
+type ResetTable = (typeof RESETTABLE_TABLES)[number]
+
+function quoteIdentifier(identifier: string): string {
+	return `"${identifier.replaceAll('"', '""')}"`
 }
 
-async function main() {
-	const isForce =
-		process.argv.includes('--force') || process.argv.includes('-f')
+function getTargetDescription(): string {
+	const rawUrl = process.env.DATABASE_URL
+	if (!rawUrl) return 'DATABASE_URL 未配置'
+	try {
+		const url = new URL(rawUrl)
+		return `${url.hostname}${url.port ? `:${url.port}` : ''}/${url.pathname.replace(/^\//, '')}`
+	} catch {
+		return 'DATABASE_URL 已配置（目标无法解析）'
+	}
+}
 
-	console.log('⚠️  警告: 即将重置数据库！')
-	console.log(
-		'此操作将清空所有数据表（文章、标签、评论、用户、会话、个人资料等）。\n',
+async function prompt(question: string): Promise<string> {
+	const rl = readline.createInterface({ input, output })
+	try {
+		return (await rl.question(question)).trim()
+	} finally {
+		rl.close()
+	}
+}
+
+async function readRowCounts(): Promise<Record<ResetTable, number>> {
+	const counts = {} as Record<ResetTable, number>
+	for (const table of RESETTABLE_TABLES) {
+		const result = await db.execute(
+			sql.raw(`SELECT count(*)::int AS count FROM ${quoteIdentifier(table)}`),
+		)
+		const rows = result as unknown as Array<{ count?: number | string }>
+		counts[table] = Number(rows[0]?.count ?? 0)
+	}
+	return counts
+}
+
+function totalRows(counts: Record<ResetTable, number>): number {
+	return RESETTABLE_TABLES.reduce((total, table) => total + counts[table], 0)
+}
+
+export async function resetRuntimeDatabase(): Promise<{
+	before: Record<ResetTable, number>
+	after: Record<ResetTable, number>
+}> {
+	await migrate(db, { migrationsFolder: path.join(process.cwd(), 'drizzle') })
+	const before = await readRowCounts()
+	const tableList = RESETTABLE_TABLES.map(quoteIdentifier).join(', ')
+
+	await db.execute(
+		sql.raw(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE`),
 	)
 
-	if (!isForce) {
-		const confirmation = await prompt(
-			'确认要清空并重置数据库吗？请输入 "yes" 继续: ',
-		)
-		if (confirmation.toLowerCase() !== 'yes') {
+	const after = await readRowCounts()
+	const remaining = RESETTABLE_TABLES.filter((table) => after[table] !== 0)
+	if (remaining.length > 0)
+		throw new Error(`重置后仍有数据的表：${remaining.join(', ')}`)
+
+	return { before, after }
+}
+
+async function main(): Promise<void> {
+	const args = new Set(process.argv.slice(2))
+	const force = args.has('--force') || args.has('-f')
+	const productionConfirmation = args.has('--confirm-production-reset')
+
+	console.log('⚠️  生产数据库完全重置工具')
+	console.log(`目标：${getTargetDescription()}`)
+	console.log(`将清空 ${RESETTABLE_TABLES.length} 张运行时表中的全部数据。`)
+	console.log(
+		'不会删除表结构、Drizzle migration journal、content/ 文件或 Cloudinary 资源。',
+	)
+	console.log(
+		'将永久删除用户、Session、评论、快照、SyncRun/SyncLog 及数据库内容副本。',
+	)
+
+	if (!productionConfirmation) {
+		console.error('❌ 未提供 --confirm-production-reset，已拒绝执行。')
+		console.error('请明确确认这是目标生产数据库，并重新运行：')
+		console.error('bun run db:reset -- --confirm-production-reset')
+		process.exitCode = 2
+		return
+	}
+
+	if (!force) {
+		const confirmation = await prompt('请输入 RESET PRODUCTION DATABASE 继续：')
+		if (confirmation !== 'RESET PRODUCTION DATABASE') {
 			console.log('❌ 操作已取消。')
-			process.exit(0)
+			return
 		}
 	}
 
-	console.log('⏳ 正在重置数据库表数据...')
-
 	try {
-		// 清空所有业务与认证表，并重置外键级联
-		await db.execute(sql`
-			TRUNCATE TABLE 
-				"_PostToTag",
-				"Comment",
-				"Post",
-				"tag",
-				"siteProfile",
-				"session",
-				"account",
-				"verification",
-				"user"
-			CASCADE;
-		`)
-
-		console.log('✅ 数据库重置成功！所有表数据已清空。')
-		console.log('💡 提示: 您可以运行以下命令重新同步文章:')
-		console.log('   bun run sync')
+		const result = await resetRuntimeDatabase()
+		console.log(`✅ 数据库重置成功，清理前总行数：${totalRows(result.before)}`)
+		console.log(`✅ 清理后总行数：${totalRows(result.after)}`)
+		console.log(
+			'下一步：确认 schema 后运行 bun run publish -- --scope all --no-delete',
+		)
 	} catch (error) {
-		console.error('❌ 重置数据库失败:', error)
-		process.exit(1)
-	} finally {
-		process.exit(0)
+		console.error(
+			'❌ 数据库重置失败：',
+			error instanceof Error ? error.message : String(error),
+		)
+		process.exitCode = 1
 	}
 }
 
-main().catch((err) => {
-	console.error('❌ 脚本异常退出:', err)
-	process.exit(1)
-})
+if (import.meta.main) await main()

@@ -113,15 +113,19 @@ bun run reset-admin-password --email admin@example.com --password myNewSecurePas
 ---
 
 ### 6. `reset-db.ts` - 数据库数据重置
-使用 `TRUNCATE TABLE ... CASCADE` 一键清空全站数据表（文章、标签、评论、站点设置、用户、会话等）。
+使用 `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` 清空当前 schema 的全部运行时表，包括 Post、Gallery、GalleryImage、评论、站点设置、Snapshot、SyncRun/SyncLog 和认证数据。不会删除表结构、Drizzle migration journal、`content/` 或 Cloudinary 资源。
+
+该命令是破坏性操作，生产环境必须同时提供目标确认参数和交互确认：
 
 ```bash
-# 交互式提示确认清空
-bun run db:reset
+# 交互式生产重置
+bun run db:reset -- --confirm-production-reset
 
-# 强制执行清空（跳过确认提示）
-bun run scripts/reset-db.ts --force
+# 自动化环境：跳过交互，但仍必须显式声明生产重置
+bun run db:reset -- --confirm-production-reset --force
 ```
+
+重置会先执行当前 `drizzle/` migration 链（包括 Stage 12 的 `0007_cleanup_legacy_sync_data`），再清理运行时数据；不会恢复用户、评论或 Cloudinary 原始媒体。重置后运行 `bun run publish -- --scope all --no-delete` 从 Git 内容源重建运行时内容。
 
 ---
 
