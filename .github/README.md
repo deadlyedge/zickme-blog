@@ -20,6 +20,6 @@ Dashboard 不是内容编辑器，也不提供 ZIP 导入、数据库导出恢�
 1. **本地推送前验证**：
    在向 GitHub 提交文章前，推荐先在本地执行：
    ```bash
-    bun run content:prepare
+     bun run content:verify
    ```
 2. 暂停期间不提供 CI 紧急发布或 Dashboard 导入；请按本地验证命令执行人工流程。

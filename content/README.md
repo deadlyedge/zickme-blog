@@ -49,7 +49,6 @@ bun run content:check
 bun run content:fix
 bun run content:format
 bun run content:verify
-bun run content:prepare
 bun run gallery:index
 bun run content:check -- --no-examples
 bun run publish -- --scope all --dry-run --json
@@ -60,7 +59,7 @@ bun run publish -- --scope galleries --dry-run --json
 
 不带 `--scope` 的 `bun run publish` 默认发布 Post 和 Gallery，等价于 `bun run publish -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域预览或受控发布。旧同步 CLI 已删除。
 
-`content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，`content:prepare` 是提交前预览流程，默认不写文件、不执行真实同步、不 commit、不 push。
+`content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，默认不写文件、不执行真实同步、不 commit、不 push。
 
 数据库不再回写 Markdown/YAML。内容恢复请使用 Git 历史：`git log -- content/posts`、`git revert <commit>` 或恢复分支/tag。
 

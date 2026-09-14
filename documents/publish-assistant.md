@@ -12,7 +12,7 @@
 content:check
 content:format
 content:prepare-media
-content:rebuild
+content:check -- --scope galleries --fix
 gallery:index
 publish
 git diff / git diff --check
@@ -208,9 +208,8 @@ TUI 可以引导或经用户确认执行以下命令：
 | --- | --- | --- |
 | Frontmatter 缺失或格式异常 | `bun run content:format -- --scope posts --write` | 执行前警告会写 Markdown Frontmatter；执行后要求用户审查 |
 | 原始图片未处理 | `bun run content:prepare-media -- --album <album>` | 执行前显示输入/输出目录；不修改原图输入目录 |
-| 缺失 `album.yaml` | `bun run content:rebuild -- --scope galleries --album <album>` | 优先提供 dry-run；生成后要求用户编辑确认 |
+| 缺失 `album.yaml` | `bun run content:check -- --scope galleries --fix --no-examples` | 生成后要求用户编辑确认 |
 | 缺失或过期 `gallery.yaml` | `bun run gallery:index` | 显示这是自动生成文件，不应手动编辑 |
-| 结构重建预览 | `bun run content:rebuild -- --scope <scope> --dry-run` | 默认只读，可直接执行 |
 
 TUI 不应把“跳过”解释为“问题已解决”。只要检查未通过，就不能进入真实 publish。
 
@@ -283,7 +282,7 @@ Markdown 正文未被修改。
 
 #### `album.yaml`
 
-执行 `content:rebuild` 生成相册骨架后，必须明确说明 `album.yaml` 是人工内容源，并建议打开文件或相册目录：
+执行 `content:check -- --scope galleries --fix --no-examples` 生成相册骨架后，必须明确说明 `album.yaml` 是人工内容源，并建议打开文件或相册目录：
 
 ```text
 ✓ 已生成 Gallery 配置骨架

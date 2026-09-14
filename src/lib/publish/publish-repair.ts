@@ -21,8 +21,14 @@ export function repairCommand(issue: ContentIssue): string[] | null {
 			'--no-examples',
 		]
 	if (issue.code === 'ALBUM_REBUILD_REQUIRED') {
-		const album = path.basename(path.dirname(issue.filePath))
-		return ['run', 'scripts/rebuild-content.ts', '--album', safeAlbum(album)]
+		return [
+			'run',
+			'scripts/check-content.ts',
+			'--scope',
+			'galleries',
+			'--fix',
+			'--no-examples',
+		]
 	}
 	if (issue.code === 'MEDIA_PREPARATION_REQUIRED' && issue.mediaPath) {
 		const album = path.basename(path.dirname(issue.mediaPath))

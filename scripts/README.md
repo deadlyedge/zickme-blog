@@ -12,9 +12,7 @@
 | **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
-| **`prepare-content.ts`** | `bun run content:prepare` | 提交前预览流水线，默认不写入、不提交、不推送 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
-| **`upload-to-cloudinary.ts`** | `bun run scripts/upload-to-cloudinary.ts` | 批量扫描图片、预转高质量 WebP 并上传至 Cloudinary CDN |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
 
@@ -65,7 +63,7 @@ bun run content:init -- --force
 
 脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行；旧 sync 入口不属于正式内容流程。
 
-### 4. `format-content.ts` / `verify-content.ts` / `prepare-content.ts` - 提交前流水线
+### 4. `format-content.ts` / `verify-content.ts` - 提交前流水线
 
 ```bash
 # 默认只预览格式变化
@@ -77,25 +75,15 @@ bun run content:format -- --write
 # 运行完整验证：检查、索引预览、Post/Gallery/ALL dry-run、git diff --check
 bun run content:verify
 
-# 面向日常提交前操作；不真实同步、不 commit、不 push
-bun run content:prepare
 ```
 
 格式化器只处理 Markdown Frontmatter 和 `album.yaml` 的 YAML 结构，不修改正文语义，也不手工编辑或生成 `gallery.yaml`。验证流程会拒绝被 Git 跟踪的 `content/.gallery-input/` 原始图片，以及放入 Gallery 目录的 JPEG、PNG、TIFF、BMP 或 RAW 文件。
 
 ---
 
-### 5. `upload-to-cloudinary.ts` - 图片优化与 CDN 上传
-扫描 `content/posts/**/images/` 目录下的所有媒体资源，通过 `sharp` 在内存中自动压缩并转换为高质量 `.webp` 格式（降低上传体积并提升前端加载速度），随后推送至 Cloudinary。
+### 5. Gallery 媒体处理与发布
 
-```bash
-# 执行图片预转换与上传（需配置 CLOUDINARY 相关环境变量）
-bun run scripts/upload-to-cloudinary.ts
-```
-
----
-
-Gallery 媒体处理、索引和数据库发布统一由 `bun run publish -- --scope galleries` 完成。原始输入默认读取 `content/.gallery-input/`，只允许通过 Git 内容变更进入 publish 流程。当前版本不直接解码 RAW 格式；请先转换为 JPEG、PNG 或 TIFF。
+Gallery 原始输入默认读取 `content/.gallery-input/`，通过 `content:prepare-media` 生成 Git 管理的 WebP；索引通过 `gallery:index` 生成，数据库和 Cloudinary 发布统一由 `bun run publish -- --scope galleries` 完成。当前版本不直接解码 RAW 格式；请先转换为 JPEG、PNG 或 TIFF。
 
 ---
 

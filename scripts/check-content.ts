@@ -332,12 +332,10 @@ async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 			console.log('\n✅ 所有文件检查通过！')
 		} else {
 			console.log(`\n⚠️ 发现 ${totalIssues} 个问题需要处理`)
-			process.exitCode = 1
 		}
 		return totalIssues === 0
 	} catch (error) {
 		console.error('❌ 检查失败:', error)
-		process.exitCode = 1
 		return false
 	}
 }

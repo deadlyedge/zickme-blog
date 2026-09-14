@@ -156,7 +156,7 @@ async function validateGalleries(
 					filePath: albumPath,
 					message: `${albumName}: ${message}`,
 					suggestedCommand: missingAlbum
-						? `bun run content:rebuild -- --scope galleries --album ${albumName}`
+						? 'bun run content:check -- --scope galleries --fix --no-examples'
 						: undefined,
 					canExecuteFromTui: missingAlbum,
 					requiresManualReview: missingAlbum || !rawMedia,

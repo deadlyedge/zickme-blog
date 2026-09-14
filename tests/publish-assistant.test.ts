@@ -40,6 +40,24 @@ describe('publish assistant', () => {
 			'--fix',
 			'--no-examples',
 		])
+		expect(
+			repairCommand({
+				scope: 'galleries',
+				code: 'ALBUM_REBUILD_REQUIRED',
+				filePath: 'content/photo-gallery/example/album.yaml',
+				message: 'missing',
+				canExecuteFromTui: true,
+				requiresManualReview: true,
+				repairReviewMode: 'inspect-generated-file',
+			}),
+		).toEqual([
+			'run',
+			'scripts/check-content.ts',
+			'--scope',
+			'galleries',
+			'--fix',
+			'--no-examples',
+		])
 	})
 
 	test('does not report an input image when its WebP is current', async () => {

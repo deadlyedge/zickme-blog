@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { preparePostFrontmatter } from '../scripts/prepare-post-frontmatter'
+import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
 import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/lib/constants/publish'
 import { legacySyncResultFromPublish } from '../src/lib/publish/publish-legacy'
 import {
@@ -30,14 +30,26 @@ describe('publish boundaries', () => {
 
 	test('dry-run frontmatter preparation does not write the workspace', async () => {
 		const before = await readFile(fixture, 'utf8')
-		const result = await preparePostFrontmatter(fixtureRoot, true)
-		expect(result.checked).toBe(1)
-		expect(result.missingFrontmatter).toHaveLength(1)
+		await checkContent({
+			...DEFAULT_CONFIG,
+			postsDir: fixtureRoot,
+			scope: 'posts',
+			dryRun: true,
+			autoFix: false,
+			showExamples: false,
+		})
 		expect(await readFile(fixture, 'utf8')).toBe(before)
 	})
 
 	test('publish preparation adds metadata without changing the body', async () => {
-		await preparePostFrontmatter(fixtureRoot, false)
+		await checkContent({
+			...DEFAULT_CONFIG,
+			postsDir: fixtureRoot,
+			scope: 'posts',
+			dryRun: false,
+			autoFix: true,
+			showExamples: false,
+		})
 		const content = await readFile(fixture, 'utf8')
 		expect(content).toContain('title: Draft')
 		expect(content).toContain('slug: draft')
