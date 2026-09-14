@@ -1,18 +1,9 @@
-import { createHash } from 'node:crypto'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { eq } from 'drizzle-orm'
-import * as exifr from 'exifr'
-import sharp from 'sharp'
 import { stringify } from 'yaml'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
-import {
-	GALLERY_MAX_HEIGHT,
-	GALLERY_MAX_WIDTH,
-	GALLERY_WEBP_EFFORT,
-	GALLERY_WEBP_QUALITY,
-} from '@/lib/constants/gallery'
 import {
 	GALLERY_INPUT_EXTENSIONS,
 	GALLERY_RAW_EXTENSIONS,
@@ -21,17 +12,17 @@ import {
 	buildGalleryPublicId,
 	uploadGalleryWebp,
 } from '@/lib/gallery/cloudinary'
-import { parseGalleryExif } from '@/lib/gallery/exif'
 import {
 	createAlbumSkeleton,
 	GALLERY_ROOT,
 	parseAlbumData,
 	scanGalleryDirectory,
 } from '@/lib/gallery/gallery-parser'
+import { prepareGalleryImage } from '@/lib/gallery/media-preparation'
 import { createLogger } from '@/lib/logger'
-import type { GalleryExif, GalleryImageFrontmatter } from '@/types/gallery'
+import type { GalleryImageFrontmatter } from '@/types/gallery'
 
-const logger = createLogger('lib/gallery/gallery-sync-service')
+const logger = createLogger('lib/publish/gallery-publish-service')
 const DEFAULT_INPUT_DIR = path.join(process.cwd(), 'content/.gallery-input')
 // Gallery keeps substantially more detail than regular post media.
 
@@ -53,51 +44,6 @@ export interface GallerySyncSummary {
 	archived: number
 	errors: number
 	sourceMissing: string[]
-}
-
-interface PreparedImage {
-	file: string
-	buffer: Buffer
-	width: number
-	height: number
-	hash: string
-	size: number
-	mtime: Date
-	exif: GalleryExif | null
-}
-
-export async function prepareGalleryImage(
-	sourcePath: string,
-): Promise<PreparedImage> {
-	const [sourceBuffer, stat] = await Promise.all([
-		fs.readFile(sourcePath),
-		fs.stat(sourcePath),
-	])
-	const sourceMetadata = await sharp(sourceBuffer).metadata()
-	const rawExif = await exifr
-		.parse(sourceBuffer, { translateValues: false, tiff: true, ifd0: {} })
-		.catch(() => null)
-	const image = sharp(sourceBuffer).rotate()
-	const processed = await image
-		.resize({
-			width: GALLERY_MAX_WIDTH,
-			height: GALLERY_MAX_HEIGHT,
-			fit: 'inside',
-			withoutEnlargement: true,
-		})
-		.webp({ quality: GALLERY_WEBP_QUALITY, effort: GALLERY_WEBP_EFFORT })
-		.toBuffer()
-	const processedMetadata = await sharp(processed).metadata()
-	return {
-		file: `${path.basename(sourcePath, path.extname(sourcePath))}.webp`,
-		buffer: processed,
-		width: processedMetadata.width ?? sourceMetadata.width ?? 0,
-		height: processedMetadata.height ?? sourceMetadata.height ?? 0,
-		hash: createHash('sha256').update(processed).digest('hex'),
-		size: processed.byteLength,
-		mtime: stat.mtime,
-		exif: parseGalleryExif(rawExif),
-	}
 }
 
 async function listInputFiles(albumDirectory: string): Promise<string[]> {
@@ -190,7 +136,7 @@ async function syncAlbumOnlyMetadata(
 	return syncedSlugs
 }
 
-export async function syncGalleries(
+export async function publishGallery(
 	options: GallerySyncOptions = {},
 ): Promise<GallerySyncSummary> {
 	const dryRun = options.dryRun === true
@@ -476,3 +422,6 @@ export async function syncGalleries(
 	}
 	return summary
 }
+
+/** Temporary compatibility alias while the Sync orchestrator is migrated. */
+export const syncGalleries = publishGallery

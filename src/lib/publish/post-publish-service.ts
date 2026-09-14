@@ -1,9 +1,7 @@
 import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
-import { v2 as cloudinary } from 'cloudinary'
 import { eq, isNull } from 'drizzle-orm'
 import matter from 'gray-matter'
-import sharp from 'sharp'
 import { db } from '@/db'
 import { posts, postsToTags, syncLogs, tags } from '@/db/schema'
 import {
@@ -18,6 +16,10 @@ import type {
 } from '@/lib/content/post-types'
 import { createLogger } from '@/lib/logger'
 import { normalizePostMetadata } from '@/lib/post-metadata'
+import {
+	getPostMediaBaseUrl,
+	uploadPostImage,
+} from '@/lib/publish/media-upload'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
 import type { SyncLogItem, SyncResult, SyncStatus } from '@/types'
 
@@ -27,10 +29,7 @@ export type {
 	SyncRunnerOptions,
 } from '@/lib/content/post-types'
 
-const logger = createLogger('lib/sync-service')
-
-const MAX_IMAGE_WIDTH = 3840
-const MAX_IMAGE_HEIGHT = 2160
+const logger = createLogger('lib/publish/post-publish-service')
 
 export {
 	generateTitleFromFileName,
@@ -38,29 +37,9 @@ export {
 	parseStatusType,
 } from '@/lib/content/post-frontmatter'
 
-export class ContentSyncService {
+export class PostPublishService {
 	private logs: SyncLogItem[] = []
-	private cloudinaryConfigured = false
 	private dryRun = false
-	private cloudinaryBaseUrl =
-		'https://res.cloudinary.com/zickme-blog/image/upload/myblog/'
-
-	constructor() {
-		if (
-			process.env.CLOUDINARY_CLOUD_NAME &&
-			process.env.CLOUDINARY_API_KEY &&
-			process.env.CLOUDINARY_API_SECRET
-		) {
-			cloudinary.config({
-				cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-				api_key: process.env.CLOUDINARY_API_KEY,
-				api_secret: process.env.CLOUDINARY_API_SECRET,
-				secure: true,
-			})
-			this.cloudinaryBaseUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/myblog/`
-			this.cloudinaryConfigured = true
-		}
-	}
 
 	private addLog(
 		stage: SyncLogItem['stage'],
@@ -103,130 +82,27 @@ export class ContentSyncService {
 		return files
 	}
 
-	private async optimizeImageBuffer(
-		inputBuffer: Buffer,
-	): Promise<{ buffer: Buffer; format: string; resized: boolean }> {
-		try {
-			const image = sharp(inputBuffer)
-			const metadata = await image.metadata()
-
-			let resized = false
-			let pipeline = image
-
-			if (
-				(metadata.width && metadata.width > MAX_IMAGE_WIDTH) ||
-				(metadata.height && metadata.height > MAX_IMAGE_HEIGHT)
-			) {
-				pipeline = pipeline.resize({
-					width: MAX_IMAGE_WIDTH,
-					height: MAX_IMAGE_HEIGHT,
-					fit: 'inside',
-					withoutEnlargement: true,
-				})
-				resized = true
-			}
-
-			const outputBuffer = await pipeline.webp({ quality: 85 }).toBuffer()
-			return { buffer: outputBuffer, format: 'webp', resized }
-		} catch {
-			return { buffer: inputBuffer, format: 'original', resized: false }
-		}
-	}
-
 	private async uploadBufferToCloudinary(
 		buffer: Buffer,
 		publicId: string,
 	): Promise<string | null> {
-		if (this.dryRun) {
-			this.addLog(
-				'media',
-				'info',
-				`[DRY RUN] 跳过 Cloudinary 上传: ${publicId}`,
-			)
-			return null
-		}
-		if (!this.cloudinaryConfigured) {
-			this.addLog(
-				'media',
-				'warn',
-				`Cloudinary 未配置环境变量，跳过远程上传: ${publicId}`,
-			)
-			return `${this.cloudinaryBaseUrl}${publicId}`
-		}
-
-		try {
-			const { buffer: optimizedBuffer, resized } =
-				await this.optimizeImageBuffer(buffer)
-
-			if (resized) {
+		return uploadPostImage(buffer, publicId, {
+			dryRun: this.dryRun,
+			onLog: (level, message, detail) =>
 				this.addLog(
 					'media',
-					'info',
-					`图片超过 4K 规范已自动等比缩小优化: ${publicId}`,
-				)
-			}
-
-			return new Promise((resolve) => {
-				const uploadStream = cloudinary.uploader.upload_stream(
-					{
-						public_id: publicId,
-						resource_type: 'image',
-						overwrite: true,
-					},
-					(error, result) => {
-						if (error || !result) {
-							this.addLog(
-								'media',
-								'error',
-								`Cloudinary 上传失败: ${publicId}`,
-								error?.message,
-							)
-							resolve(null)
-						} else {
-							this.addLog(
-								'media',
-								'success',
-								`图片成功上传至 Cloudinary: ${publicId}`,
-								result.secure_url,
-							)
-							resolve(result.secure_url)
-						}
-					},
-				)
-				uploadStream.end(optimizedBuffer)
-			})
-		} catch (err) {
-			this.addLog(
-				'media',
-				'error',
-				`处理图片异常: ${publicId}`,
-				err instanceof Error ? err.message : String(err),
-			)
-			return null
-		}
+					level === 'info' ? 'info' : level,
+					message,
+					detail,
+				),
+		})
 	}
 
 	public async uploadImageBuffer(
 		buffer: Buffer,
 		publicId: string,
 	): Promise<string | null> {
-		if (!this.cloudinaryConfigured) {
-			this.addLog('media', 'error', '封面上传失败：Cloudinary 未配置')
-			return null
-		}
-		const optimized = await sharp(buffer)
-			.resize({
-				width: MAX_IMAGE_WIDTH,
-				height: MAX_IMAGE_HEIGHT,
-				fit: 'inside',
-				withoutEnlargement: true,
-			})
-			.webp({ quality: 85, effort: 4 })
-			.toBuffer()
-		return this.uploadBufferToCloudinary(
-			optimized,
-			publicId.replace(/[^a-zA-Z0-9_-]/g, '-'),
-		)
+		return this.uploadBufferToCloudinary(buffer, publicId)
 	}
 
 	private async parseMarkdown(
@@ -356,7 +232,7 @@ export class ContentSyncService {
 					normVPath.endsWith(normalizedImgPath)
 				) {
 					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					return url || `${this.cloudinaryBaseUrl}${publicId}`
+					return url || `${getPostMediaBaseUrl()}${publicId}`
 				}
 			}
 		}
@@ -374,14 +250,14 @@ export class ContentSyncService {
 				if (imgStat.isFile()) {
 					const buf = await fsPromises.readFile(absoluteImgPath)
 					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					return url || `${this.cloudinaryBaseUrl}${publicId}`
+					return url || `${getPostMediaBaseUrl()}${publicId}`
 				}
 			} catch {
 				// fallback
 			}
 		}
 
-		return `${this.cloudinaryBaseUrl}${publicId}`
+		return `${getPostMediaBaseUrl()}${publicId}`
 	}
 
 	private async resolveMarkdownImages(
@@ -559,7 +435,7 @@ export class ContentSyncService {
 		return successCount
 	}
 
-	public async runSync(options: SyncRunnerOptions = {}): Promise<SyncResult> {
+	public async runPublish(options: SyncRunnerOptions = {}): Promise<SyncResult> {
 		this.logs = []
 		const triggerType = options.triggerType || 'MANUAL'
 		const dryRun = options.dryRun || false
@@ -739,5 +615,10 @@ export class ContentSyncService {
 			logs: this.logs,
 			sourceMissing,
 		}
+	}
+
+	/** Temporary compatibility alias while the Sync orchestrator is migrated. */
+	public async runSync(options: SyncRunnerOptions = {}): Promise<SyncResult> {
+		return this.runPublish(options)
 	}
 }

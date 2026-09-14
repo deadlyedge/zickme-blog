@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { syncGalleries } from '@/lib/gallery/gallery-sync-service'
-import { ContentSyncService } from '@/lib/sync-service'
+import { publishGallery } from '@/lib/publish/gallery-publish-service'
+import { PostPublishService } from '@/lib/publish/post-publish-service'
 import { safeSyncError } from './sync-errors'
 import { acquireSyncLock } from './sync-lock'
 import { finishSyncRun } from './sync-repository'
@@ -21,7 +21,7 @@ export type SyncOrchestratorOptions = {
 }
 
 function postSummary(
-	result: Awaited<ReturnType<ContentSyncService['runSync']>>,
+	result: Awaited<ReturnType<PostPublishService['runPublish']>>,
 ) {
 	return {
 		total: result.totalPosts,
@@ -92,7 +92,7 @@ export async function runSync(
 	try {
 		if (options.scope === 'POSTS' || options.scope === 'ALL') {
 			try {
-				const result = await new ContentSyncService().runSync({
+				const result = await new PostPublishService().runPublish({
 					triggerType: options.triggeredBy === 'CLI' ? 'CLI' : 'MANUAL',
 					dryRun: options.dryRun,
 					deleteOld: options.deleteOld ?? false,
@@ -109,7 +109,7 @@ export async function runSync(
 		if (options.scope === 'GALLERIES' || options.scope === 'ALL') {
 			try {
 				summary.galleries = gallerySummary(
-					await syncGalleries({
+					await publishGallery({
 						dryRun: options.dryRun,
 						inputDir: options.galleryInputDir,
 						deleteOld: options.deleteOld ?? false,

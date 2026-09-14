@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { prepareGalleryImage } from '../src/lib/gallery/gallery-sync-service'
+import { prepareGalleryImage } from '../src/lib/gallery/media-preparation'
 
 const inputRoot = path.join(process.cwd(), 'content/.gallery-input')
 const galleryRoot = path.join(process.cwd(), 'content/photo-gallery')
