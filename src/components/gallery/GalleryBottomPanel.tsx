@@ -19,25 +19,23 @@ export function GalleryBottomPanel({
 
 	return (
 		<div
-			className={`absolute inset-x-0 bottom-0 z-20 max-h-1/2 overflow-hidden text-white shadow-2xl ${expanded ? 'bg-black/75 backdrop-blur-md' : 'bg-black/30'} ${className}`}
+			className={`absolute inset-x-0 bottom-0 z-20 max-h-[50%] text-white shadow-2xl ${expanded ? 'gallery-info-scroll overflow-y-auto overscroll-contain bg-black/75 backdrop-blur-md' : 'overflow-hidden bg-black/30'} ${className}`}
 		>
 			{expanded ? (
-				<div className="max-h-[50vh] overflow-y-auto overscroll-contain p-4 sm:p-5">
-					<div className="flex items-start justify-between gap-4">
-						<div className="min-w-0 flex-1">
-							<GalleryImageInfo image={image} location={location} compact />
-							<GalleryImageComments imageId={image.id} />
-						</div>
+				<div className="p-4 sm:p-5">
+					<div className="sticky top-0 z-10 h-0">
 						<button
 							type="button"
 							onClick={() => setExpanded(false)}
 							aria-expanded="true"
 							aria-label="收起图片信息"
-							className="shrink-0 rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+							className="absolute right-0 top-2 shrink-0 rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-0 sm:top-2"
 						>
 							<ChevronDown className="size-4" aria-hidden="true" />
 						</button>
 					</div>
+					<GalleryImageInfo image={image} location={location} compact />
+					<GalleryImageComments imageId={image.id} />
 				</div>
 			) : (
 				<div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">

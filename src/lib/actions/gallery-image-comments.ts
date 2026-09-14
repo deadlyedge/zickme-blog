@@ -142,3 +142,32 @@ export async function getGalleryImageComments(
 		return []
 	}
 }
+
+export async function toggleGalleryImageCommentSpam(
+	commentId: string,
+	isSpam: boolean,
+) {
+	const parsed = z
+		.object({
+			commentId: z.string().min(1).max(128),
+			isSpam: z.boolean(),
+		})
+		.safeParse({ commentId, isSpam })
+	if (!parsed.success)
+		return { success: false, error: formatZodError(parsed.error) }
+
+	try {
+		const session = await auth.api.getSession({ headers: await headers() })
+		if (!session?.user?.id || session.user.role !== 'ADMIN') {
+			return { success: false, error: '权限不足：需要管理员权限' }
+		}
+		await db
+			.update(galleryImageComments)
+			.set({ status: parsed.data.isSpam ? 'SPAM' : 'PUBLISHED' })
+			.where(eq(galleryImageComments.id, parsed.data.commentId))
+		return { success: true }
+	} catch (error) {
+		logger.error('Error toggling GalleryImage comment spam', error)
+		return { success: false, error: '评论状态更新失败' }
+	}
+}

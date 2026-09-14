@@ -158,6 +158,28 @@
 	transition: background-color 0.3s ease;
 }
 
+.gallery-info-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+}
+
+.gallery-info-scroll::-webkit-scrollbar {
+	width: 5px;
+}
+
+.gallery-info-scroll::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.gallery-info-scroll::-webkit-scrollbar-thumb {
+	background: rgb(255 255 255 / 0.16);
+	border-radius: 999px;
+}
+
+.gallery-info-scroll::-webkit-scrollbar-thumb:hover {
+	background: rgb(255 255 255 / 0.24);
+}
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
 	background: var(--muted);
