@@ -533,6 +533,7 @@ Gallery 前台的新功能只读取运行时副本和 Cloudinary 展示 URL。�
 #### Iteration 9：documents 整理
 
 - 整理开发文档文件夹结构，明确文档都会被归类：已完成/旧文档，开发中，讨论过程，阶段总结...
+- 整理agents.md和readme
 
 
 
