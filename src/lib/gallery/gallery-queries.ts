@@ -2,6 +2,7 @@ import { and, asc, desc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
 import { parseGalleryExif } from '@/lib/gallery/exif'
+import { parseGalleryTags } from '@/lib/gallery/gallery-public'
 import type { GalleryPublic, GalleryPublicImage } from '@/types/gallery'
 
 function toPublicImage(
@@ -33,6 +34,7 @@ function toPublicGallery(
 			: {}
 	const showExif = metadata.showExif === true
 	const showLocation = metadata.showLocation === true
+	const tags = parseGalleryTags(metadata)
 	const images = gallery.images
 		.map((image) => toPublicImage(image, showExif))
 		.filter((image): image is GalleryPublicImage => image !== null)
@@ -54,6 +56,7 @@ function toPublicGallery(
 		slug: gallery.slug,
 		title: gallery.title,
 		description: gallery.description,
+		tags,
 		cover,
 		status: gallery.status,
 		images,

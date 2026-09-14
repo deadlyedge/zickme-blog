@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { GalleryPostView } from '@/components/gallery/GalleryPostView'
 import {
 	fetchAllGallerySlugs,
+	fetchGalleries,
 	fetchGalleryBySlug,
 } from '@/lib/gallery/gallery-queries'
 import { buildMetadata } from '@/lib/seo'
@@ -17,7 +18,8 @@ export default async function GalleryDetailPage({ params }: PageProps) {
 	const { slug } = await params
 	const gallery = await fetchGalleryBySlug(slug)
 	if (!gallery) notFound()
-	return <GalleryPostView albums={[gallery]} />
+	const galleries = await fetchGalleries()
+	return <GalleryPostView albums={galleries} initialAlbumSlug={gallery.slug} />
 }
 
 export async function generateMetadata({

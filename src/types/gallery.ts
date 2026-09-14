@@ -79,6 +79,7 @@ export interface GalleryPublic {
 	slug: string
 	title: string
 	description: string | null
+	tags: string[]
 	cover: string | null
 	status: GalleryStatus
 	location?: string
