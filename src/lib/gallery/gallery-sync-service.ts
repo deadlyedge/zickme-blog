@@ -8,6 +8,16 @@ import { stringify } from 'yaml'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
 import {
+	GALLERY_MAX_HEIGHT,
+	GALLERY_MAX_WIDTH,
+	GALLERY_WEBP_EFFORT,
+	GALLERY_WEBP_QUALITY,
+} from '@/lib/constants/gallery'
+import {
+	GALLERY_INPUT_EXTENSIONS,
+	GALLERY_RAW_EXTENSIONS,
+} from '@/lib/constants/media'
+import {
 	buildGalleryPublicId,
 	uploadGalleryWebp,
 } from '@/lib/gallery/cloudinary'
@@ -24,12 +34,6 @@ import type { GalleryExif, GalleryImageFrontmatter } from '@/types/gallery'
 const logger = createLogger('lib/gallery/gallery-sync-service')
 const DEFAULT_INPUT_DIR = path.join(process.cwd(), 'content/.gallery-input')
 // Gallery keeps substantially more detail than regular post media.
-const MAX_WIDTH = 4000
-const MAX_HEIGHT = 3000
-const QUALITY = 95
-const EFFORT = 6
-const INPUT_EXTENSIONS = /\.(jpe?g|png|tiff?|bmp|gif|webp|avif|heic|heif)$/i
-const RAW_EXTENSIONS = /\.(orf|raw|cr2|cr3|nef|arw|dng|rw2|raf|srw)$/i
 
 export interface GallerySyncOptions {
 	dryRun?: boolean
@@ -76,12 +80,12 @@ export async function prepareGalleryImage(
 	const image = sharp(sourceBuffer).rotate()
 	const processed = await image
 		.resize({
-			width: MAX_WIDTH,
-			height: MAX_HEIGHT,
+			width: GALLERY_MAX_WIDTH,
+			height: GALLERY_MAX_HEIGHT,
 			fit: 'inside',
 			withoutEnlargement: true,
 		})
-		.webp({ quality: QUALITY, effort: EFFORT })
+		.webp({ quality: GALLERY_WEBP_QUALITY, effort: GALLERY_WEBP_EFFORT })
 		.toBuffer()
 	const processedMetadata = await sharp(processed).metadata()
 	return {
@@ -102,7 +106,8 @@ async function listInputFiles(albumDirectory: string): Promise<string[]> {
 		.filter(
 			(entry) =>
 				entry.isFile() &&
-				(INPUT_EXTENSIONS.test(entry.name) || RAW_EXTENSIONS.test(entry.name)),
+				(GALLERY_INPUT_EXTENSIONS.test(entry.name) ||
+					GALLERY_RAW_EXTENSIONS.test(entry.name)),
 		)
 		.sort((a, b) =>
 			a.name.localeCompare(b.name, undefined, {
@@ -262,7 +267,7 @@ export async function syncGalleries(
 
 		for (const sourcePath of sourceFiles) {
 			try {
-				if (RAW_EXTENSIONS.test(sourcePath)) {
+				if (GALLERY_RAW_EXTENSIONS.test(sourcePath)) {
 					summary.unsupported++
 					logger.warn(
 						'RAW image requires manual conversion before Gallery sync',

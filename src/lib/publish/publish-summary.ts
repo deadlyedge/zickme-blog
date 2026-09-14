@@ -1,6 +1,7 @@
 import type { SyncRunSummary } from '@/lib/sync/sync-types'
 import type { PublishScope, PublishSummary } from '@/types/publish/publish'
 
+export { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/lib/constants/publish'
 export type {
 	PublishResult,
 	PublishScope,
@@ -8,7 +9,6 @@ export type {
 	PublishSummary,
 	PublishTrigger,
 } from '@/types/publish/publish'
-export { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/types/publish/publish'
 
 function publishScopeFromSyncScope(
 	scope: SyncRunSummary['scope'],

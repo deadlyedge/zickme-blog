@@ -1,9 +1,7 @@
-export {
-	PUBLISH_SCOPES,
-	type PublishScope,
-} from '@/types/publish/publish'
-
 import type { PublishScope } from '@/types/publish/publish'
+
+export { PUBLISH_SCOPES } from '@/lib/constants/publish'
+export type { PublishScope } from '@/types/publish/publish'
 
 export type ContentIssueCode =
 	| 'CONTENT_INVALID'

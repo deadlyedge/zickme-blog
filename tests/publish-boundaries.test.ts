@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { preparePostFrontmatter } from '../scripts/prepare-post-frontmatter'
+import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/lib/constants/publish'
 import { legacySyncResultFromPublish } from '../src/lib/publish/publish-legacy'
 import {
 	type PublishSummary,
@@ -87,6 +88,11 @@ describe('publish boundaries', () => {
 		}
 
 		expect(summary.scope).toBe('posts')
+	})
+
+	test('publish constants remain centralized and stable', () => {
+		expect(PUBLISH_SCOPES).toEqual(['posts', 'galleries', 'all'])
+		expect(PUBLISH_STATUSES).toContain('SUCCEEDED')
 	})
 
 	test('publish summary does not expose Sync-only protocol fields', () => {

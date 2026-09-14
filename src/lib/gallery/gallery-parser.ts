@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { parse, stringify } from 'yaml'
+import { GALLERY_WEBP_PATTERN } from '@/lib/constants/media'
 import { generateSlug } from '@/lib/slug'
 import type {
 	GalleryAlbumFrontmatter,
@@ -11,7 +12,6 @@ import type {
 } from '@/types/gallery'
 
 export const GALLERY_ROOT = path.join(process.cwd(), 'content/photo-gallery')
-const WEBP_PATTERN = /^.+\.webp$/i
 const ALBUM_STATUSES = new Set(['published', 'draft', 'archived'])
 const LAYOUTS = new Set<GalleryLayout>(['masonry', 'grid', 'justified'])
 const SORTS = new Set<GallerySort>(['filename', 'mtime', 'manual'])
@@ -254,12 +254,12 @@ export async function scanGalleryDirectory(
 				})),
 		)
 		const rawFiles = imageEntries
-			.filter((item) => item.isFile() && !WEBP_PATTERN.test(item.name))
+			.filter((item) => item.isFile() && !GALLERY_WEBP_PATTERN.test(item.name))
 			.map((item) => item.name)
 		for (const file of rawFiles)
 			albumIssues.push(`不允许的非 WebP 图片: images/${file}`)
 		const files = sortGalleryFiles(
-			imageStats.filter((file) => WEBP_PATTERN.test(file.name)),
+			imageStats.filter((file) => GALLERY_WEBP_PATTERN.test(file.name)),
 			data.sort,
 		)
 		const registered = new Set(
@@ -274,7 +274,7 @@ export async function scanGalleryDirectory(
 				`图片路径 ${image.file}`,
 			)
 			if (pathIssue) albumIssues.push(pathIssue)
-			if (!WEBP_PATTERN.test(image.file))
+			if (!GALLERY_WEBP_PATTERN.test(image.file))
 				albumIssues.push(`图片必须为 WebP: ${image.file}`)
 			if (
 				!files.includes(path.posix.basename(image.file.replaceAll('\\', '/')))
