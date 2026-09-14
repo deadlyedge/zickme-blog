@@ -24,6 +24,22 @@ const EXIF_ALIASES: Record<(typeof GALLERY_EXIF_KEYS)[number], string[]> = {
 
 const MAX_EXIF_TEXT_LENGTH = 160
 
+export function formatGalleryExposureTime(value: string): string {
+	const normalized = value.trim()
+	if (!normalized) return normalized
+	if (/s$/i.test(normalized)) return normalized
+	if (/^\d+(?:\.\d+)?\s*\/\s*\d+$/.test(normalized)) {
+		return `${normalized.replace(/\s+/g, '')}s`
+	}
+
+	const seconds = Number(normalized)
+	if (!Number.isFinite(seconds) || seconds <= 0) return normalized
+	if (seconds >= 1) return `${Number(seconds.toFixed(3))}s`
+
+	const denominator = Math.max(1, Math.round(1 / seconds))
+	return `1/${denominator}s`
+}
+
 function normalizeText(value: unknown): string | undefined {
 	if (value === undefined || value === null) return undefined
 	const text = String(value).trim().slice(0, MAX_EXIF_TEXT_LENGTH)

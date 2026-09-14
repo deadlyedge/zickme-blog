@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { formatGalleryExposureTime } from '../src/lib/gallery/exif'
 import {
 	filterGalleriesByTag,
 	getGalleryImageUrl,
@@ -34,6 +35,13 @@ const albums = [
 )
 
 describe('gallery public helpers', () => {
+	test('formats exposure time as a readable shutter speed', () => {
+		expect(formatGalleryExposureTime('0.01666666666')).toBe('1/60s')
+		expect(formatGalleryExposureTime('0.01')).toBe('1/100s')
+		expect(formatGalleryExposureTime('1/100')).toBe('1/100s')
+		expect(formatGalleryExposureTime('1/100s')).toBe('1/100s')
+	})
+
 	test('uses thumbnails for previews and full images for the main view', () => {
 		expect(getGalleryImageUrl(image, 'thumbnail')).toBe(image.thumbnailUrl)
 		expect(getGalleryImageUrl(image, 'full')).toBe(image.url)
