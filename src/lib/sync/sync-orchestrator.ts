@@ -95,7 +95,7 @@ export async function runSync(
 				const result = await new ContentSyncService().runSync({
 					triggerType: options.triggeredBy === 'CLI' ? 'CLI' : 'MANUAL',
 					dryRun: options.dryRun,
-					deleteOld: options.deleteOld ?? true,
+					deleteOld: options.deleteOld ?? false,
 				})
 				summary.posts = postSummary(result)
 				if (!result.success) failures.push('posts')
@@ -112,7 +112,7 @@ export async function runSync(
 					await syncGalleries({
 						dryRun: options.dryRun,
 						inputDir: options.galleryInputDir,
-						deleteOld: options.deleteOld,
+						deleteOld: options.deleteOld ?? false,
 					}),
 				)
 				if (summary.galleries.errors > 0 || summary.galleries.unsupported > 0)

@@ -12,8 +12,9 @@ import { auth } from '@/lib/auth'
 import { diffContent, scanLocalContent } from '@/lib/content-diff'
 import { createLogger } from '@/lib/logger'
 import { postToMarkdown, safeMarkdownFileName } from '@/lib/post-exporter'
-import { runSync } from '@/lib/sync/sync-orchestrator'
-import { failedSyncResult, syncResultFromSummary } from '@/lib/sync/sync-result'
+import { legacySyncResultFromPublish } from '@/lib/publish/publish-legacy'
+import { runPublishWorkflow } from '@/lib/publish/publish-workflow'
+import { failedSyncResult } from '@/lib/sync/sync-result'
 import type { PostWithTags, StatusType, SyncLog, SyncResult } from '@/types'
 
 const logger = createLogger('actions/posts-admin')
@@ -296,14 +297,22 @@ export async function triggerManualSync(options?: {
 		const opts = parsed.success ? parsed.data : options
 
 		const session = await requireAdminSession()
-		const summary = await runSync({
-			scope: 'POSTS',
+		const workflow = await runPublishWorkflow({
+			scope: 'posts',
 			triggeredBy: 'DASHBOARD',
 			actorId: session.user.id,
 			dryRun: opts?.dryRun ?? false,
-			deleteOld: opts?.deleteOld ?? true,
+			deleteOld: false,
 		})
-		const result = syncResultFromSummary(summary)
+		if (workflow.kind !== 'published') {
+			return failedSyncResult(
+				'发布前内容检查失败',
+				new Error(
+					workflow.report.issues.map((issue) => issue.message).join('; '),
+				),
+			)
+		}
+		const result = legacySyncResultFromPublish(workflow.summary)
 
 		revalidatePath('/dashboard/posts')
 		revalidatePath('/dashboard/sync')

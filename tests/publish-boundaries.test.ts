@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { preparePostFrontmatter } from '../scripts/prepare-post-frontmatter'
+import { legacySyncResultFromPublish } from '../src/lib/publish/publish-legacy'
 import {
 	type PublishSummary,
 	publishSummaryFromSync,
@@ -10,6 +11,7 @@ import {
 	type PublishScope,
 	parsePublishScope,
 } from '../src/lib/publish/publish-types'
+import { resolvePublishDeleteOld } from '../src/lib/publish/publish-workflow'
 
 const fixtureRoot = path.join(process.cwd(), '.tmp-publish-boundaries')
 const fixture = path.join(fixtureRoot, 'draft.md')
@@ -88,5 +90,52 @@ describe('publish boundaries', () => {
 		expect(serialized).not.toContain('retryOf')
 		expect(serialized).not.toContain('mergeBase')
 		expect(serialized).not.toContain('revision')
+	})
+
+	test('legacy Dashboard result is adapted from Publish summary', () => {
+		const summary = publishSummaryFromSync({
+			runId: 'run-2',
+			scope: 'POSTS',
+			status: 'PARTIAL_SUCCESS',
+			dryRun: true,
+			triggeredBy: 'DASHBOARD',
+			startedAt: '2026-09-14T00:00:00.000Z',
+			finishedAt: '2026-09-14T00:00:01.000Z',
+			posts: {
+				total: 2,
+				processed: 2,
+				succeeded: 1,
+				errors: 1,
+				mediaErrors: 0,
+				archived: 0,
+			},
+			galleries: {
+				albums: 0,
+				images: 0,
+				processed: 0,
+				uploaded: 0,
+				skipped: 0,
+				unsupported: 0,
+				archived: 0,
+				pendingDelete: 0,
+				conflicts: 0,
+				errors: 0,
+			},
+			conflicts: 0,
+			errors: 1,
+		})
+		const result = legacySyncResultFromPublish(summary)
+
+		expect(result.status).toBe('PARTIAL')
+		expect(result.totalPosts).toBe(2)
+		expect(result.successCount).toBe(1)
+		expect(result.errorCount).toBe(1)
+		expect(result.logs[0]?.message).toContain('发布运行 run-2')
+	})
+
+	test('publish never enables destructive source-missing cleanup', () => {
+		expect(resolvePublishDeleteOld()).toBe(false)
+		expect(resolvePublishDeleteOld(false)).toBe(false)
+		expect(resolvePublishDeleteOld(true)).toBe(false)
 	})
 })

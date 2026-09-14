@@ -421,7 +421,7 @@ export async function syncGalleries(
 	)
 	seenSlugs.push(...metadataSlugs)
 
-	if (!dryRun) {
+	if (!dryRun && options.deleteOld === true) {
 		const persistedImages = await db.query.galleryImages.findMany({
 			columns: { id: true, sourcePath: true },
 		})
