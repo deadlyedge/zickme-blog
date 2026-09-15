@@ -3,9 +3,13 @@
 import { Check, Search, SlidersHorizontal, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 export type TagItem = {
 	id: string

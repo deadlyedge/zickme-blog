@@ -11,12 +11,12 @@ import rehypeSanitize from 'rehype-sanitize'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { CommentsSection } from '@/components/comments'
-import { PostLinks } from '@/components/PostLinks'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePost } from '@/lib/hooks/useContent'
 import { calculateReadingTime, cn, formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types/content/post'
+import { PostLinks } from './PostLinks'
 
 interface TocItem {
 	id: string

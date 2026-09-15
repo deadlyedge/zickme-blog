@@ -2,7 +2,7 @@
 
 import { Pin, Sparkles } from 'lucide-react'
 import type React from 'react'
-import { PostCard } from '@/components/PostCard'
+import { PostCard } from '@/components/post/PostCard'
 import type { PostWithTags } from '@/types/content/post'
 
 interface PinnedPostsSectionProps {

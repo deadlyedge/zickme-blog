@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { PostClient } from '@/components/PostClient'
+import { PostClient } from '@/components/post/PostClient'
 import { createLogger } from '@/lib/logger'
 import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'

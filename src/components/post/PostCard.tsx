@@ -1,12 +1,12 @@
 import { BookOpenIcon, ClockIcon } from 'lucide-react'
 import Image from 'next/image'
 import React, { useMemo } from 'react'
+import { NavigationLink } from '@/components/NavigationLink'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
 import { calculateReadingTime, formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types/content/post'
-import { NavigationLink } from './NavigationLink'
-import { Badge } from './ui/badge'
-import { Button } from './ui/button'
-import { CardTilt, CardTiltContent } from './ui/effects/CardTilt'
 
 type PostCardProps = { post: PostWithTags }
 

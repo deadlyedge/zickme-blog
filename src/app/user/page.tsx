@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { UserPortalClient } from '@/components/UserPortalClient'
 import { getUserPortalData } from '@/lib/actions/user-portal'
 import { auth } from '@/lib/auth'
 import { buildMetadata } from '@/lib/seo'
-import { UserPortalClient } from './UserPortalClient'
 
 export const metadata: Metadata = buildMetadata({
 	title: 'User Center - Profile & Comments',

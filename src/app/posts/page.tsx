@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { PostGridClient } from '@/components/PostGridClient'
+import { PostGridClient } from '@/components/post/PostGridClient'
 import { postsOptions, tagsOptions } from '@/lib/content-queries'
 import { getQueryClient } from '@/lib/query-client'
 import { buildMetadata } from '@/lib/seo'

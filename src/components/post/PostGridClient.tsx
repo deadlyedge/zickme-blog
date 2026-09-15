@@ -3,10 +3,10 @@
 import { Tag as TagIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
+import { Spinner } from '@/components/ui/spinner'
 import { usePosts } from '@/lib/hooks/useContent'
 import { PostCard } from './PostCard'
 import { PostTagFilter, type TagItem } from './PostTagFilter'
-import { Spinner } from './ui/spinner'
 
 export function PostGridClient() {
 	const searchParams = useSearchParams()

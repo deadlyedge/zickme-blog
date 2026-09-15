@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { SettingsClient } from '@/components/dashboard/settings/SettingsClient'
 import { auth } from '@/lib/auth'
 import { fetchPosts, fetchProfile } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'
-import { SettingsClient } from './SettingsClient'
 
 export const metadata: Metadata = buildMetadata({
 	title: 'Site Settings & Customizer - Dashboard',

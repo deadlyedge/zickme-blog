@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { HomeScrollArea } from '@/components/HomeScrollArea'
+import { HomeScrollArea } from '@/components/home/HomeScrollArea'
 import { fetchHomePageData } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'
 
