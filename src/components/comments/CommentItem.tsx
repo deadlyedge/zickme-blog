@@ -31,7 +31,8 @@ export const CommentItem = React.memo(
 		const [spamActionLoading, setSpamActionLoading] = useState(false)
 		const hasReplies = comment.replies && comment.replies.length > 0
 
-		const { activeReplyId, setActiveReplyId } = useAppStore()
+		const activeReplyId = useAppStore((state) => state.activeReplyId)
+		const setActiveReplyId = useAppStore((state) => state.setActiveReplyId)
 		const isReplying = activeReplyId === comment.id
 
 		const authorName = comment.author?.banned

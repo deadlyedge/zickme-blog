@@ -27,7 +27,7 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 	const pathname = usePathname()
 
 	const { mutateAsync, isPending } = useCreateComment()
-	const { clearActiveReplyId } = useAppStore()
+	const clearActiveReplyId = useAppStore((state) => state.clearActiveReplyId)
 
 	useEffect(() => {
 		if (autoFocus && textareaRef.current) {

@@ -542,7 +542,9 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 }
 
 export default function AuthModal() {
-	const { isAuthModalOpen, authModalView, closeAuthModal } = useAppStore()
+	const isAuthModalOpen = useAppStore((state) => state.isAuthModalOpen)
+	const authModalView = useAppStore((state) => state.authModalView)
+	const closeAuthModal = useAppStore((state) => state.closeAuthModal)
 	const session = useSession()
 	const user = session.data?.user
 	const isLoggedIn = Boolean(user)

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 // Types
 interface AuthState {
 	isAuthModalOpen: boolean
@@ -33,23 +35,33 @@ export const useAppStore = create<AppState>()(
 
 			// Auth actions
 			openAuthModal: (view) =>
-				set({
-					isAuthModalOpen: true,
-					authModalView: view,
-				}),
+				set(
+					{
+						isAuthModalOpen: true,
+						authModalView: view,
+					},
+					false,
+					'auth/openModal',
+				),
 
 			closeAuthModal: () =>
-				set({
-					isAuthModalOpen: false,
-				}),
+				set(
+					{
+						isAuthModalOpen: false,
+					},
+					false,
+					'auth/closeModal',
+				),
 
 			// Comment state
 			activeReplyId: null,
 
 			// Comment actions
-			setActiveReplyId: (id: string | null) => set({ activeReplyId: id }),
-			clearActiveReplyId: () => set({ activeReplyId: null }),
+			setActiveReplyId: (id: string | null) =>
+				set({ activeReplyId: id }, false, 'comments/setActiveReply'),
+			clearActiveReplyId: () =>
+				set({ activeReplyId: null }, false, 'comments/clearActiveReply'),
 		}),
-		{ name: 'app-store' },
+		{ name: 'app-store', enabled: isDevelopment },
 	),
 )
