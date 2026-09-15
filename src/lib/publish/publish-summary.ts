@@ -1,4 +1,4 @@
-export { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/lib/constants/publish'
+export { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/constants/publish'
 export type {
 	PublishResult,
 	PublishScope,

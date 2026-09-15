@@ -2,12 +2,12 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { eq } from 'drizzle-orm'
 import { stringify } from 'yaml'
-import { db } from '@/db'
-import { galleries, galleryImages } from '@/db/schema'
 import {
 	GALLERY_INPUT_EXTENSIONS,
 	GALLERY_RAW_EXTENSIONS,
-} from '@/lib/constants/media'
+} from '@/constants/media'
+import { db } from '@/db'
+import { galleries, galleryImages } from '@/db/schema'
 import {
 	buildGalleryPublicId,
 	uploadGalleryWebp,

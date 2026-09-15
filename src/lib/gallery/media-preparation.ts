@@ -8,7 +8,7 @@ import {
 	GALLERY_MAX_WIDTH,
 	GALLERY_WEBP_EFFORT,
 	GALLERY_WEBP_QUALITY,
-} from '@/lib/constants/gallery'
+} from '@/constants/gallery'
 import { parseGalleryExif } from '@/lib/gallery/exif'
 import type { GalleryExif } from '@/types/gallery'
 

@@ -1,6 +1,6 @@
 import type { PublishScope } from '@/types/publish/publish'
 
-export { PUBLISH_SCOPES } from '@/lib/constants/publish'
+export { PUBLISH_SCOPES } from '@/constants/publish'
 export type { PublishScope } from '@/types/publish/publish'
 
 export type ContentIssueCode =

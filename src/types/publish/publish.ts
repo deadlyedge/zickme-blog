@@ -1,4 +1,4 @@
-import type { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/lib/constants/publish'
+import type { PUBLISH_SCOPES, PUBLISH_STATUSES } from '@/constants/publish'
 
 export type PublishScope = (typeof PUBLISH_SCOPES)[number]
 

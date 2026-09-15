@@ -1,4 +1,3 @@
-// Validation constants for authentication
 export const VALIDATION_RULES = {
 	username: {
 		minLength: 3,
@@ -12,7 +11,6 @@ export const VALIDATION_RULES = {
 	},
 } as const
 
-// Error messages
 export const VALIDATION_MESSAGES = {
 	username: {
 		minLength: `用户名长度至少${VALIDATION_RULES.username.minLength}个字符`,

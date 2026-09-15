@@ -26,7 +26,7 @@ import {
 	InputGroupInput,
 } from '@/components/ui/input-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants'
+import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
 import { updateAvatar, updateProfile } from '@/lib/actions/profile'
 import { signIn, signUp, useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'

@@ -1,7 +1,13 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { parse, stringify } from 'yaml'
-import { GALLERY_WEBP_PATTERN } from '@/lib/constants/media'
+import {
+	GALLERY_ALBUM_STATUSES,
+	GALLERY_CONTENT_ROOT,
+	GALLERY_LAYOUTS,
+	GALLERY_SORTS,
+} from '@/constants/gallery'
+import { GALLERY_WEBP_PATTERN } from '@/constants/media'
 import { generateSlug } from '@/lib/slug'
 import type {
 	GalleryAlbumFrontmatter,
@@ -11,10 +17,10 @@ import type {
 	GallerySort,
 } from '@/types/gallery'
 
-export const GALLERY_ROOT = path.join(process.cwd(), 'content/photo-gallery')
-const ALBUM_STATUSES = new Set(['published', 'draft', 'archived'])
-const LAYOUTS = new Set<GalleryLayout>(['masonry', 'grid', 'justified'])
-const SORTS = new Set<GallerySort>(['filename', 'mtime', 'manual'])
+export const GALLERY_ROOT = GALLERY_CONTENT_ROOT
+const ALBUM_STATUSES = new Set<string>(GALLERY_ALBUM_STATUSES)
+const LAYOUTS = new Set<GalleryLayout>(GALLERY_LAYOUTS)
+const SORTS = new Set<GallerySort>(GALLERY_SORTS)
 
 export interface ParsedGalleryAlbum {
 	directory: string

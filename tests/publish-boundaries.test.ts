@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
-import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/lib/constants/publish'
+import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/constants/publish'
 import {
 	type PublishScope,
 	parsePublishScope,

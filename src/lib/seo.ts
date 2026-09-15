@@ -1,8 +1,5 @@
 import type { Metadata } from 'next'
-
-export const siteName = 'Zick.me'
-export const defaultDescription =
-	'Zick.me · Modern Personal Blog & Portfolio built with Next.js, Bun, and Drizzle'
+import { SITE_DESCRIPTION, SITE_NAME } from '@/constants/site'
 
 export function buildMetadata({
 	title,
@@ -15,8 +12,8 @@ export function buildMetadata({
 	image?: string
 	url?: string
 }): Metadata {
-	const pageTitle = `${title} | ${siteName}`
-	const desc = description || defaultDescription
+	const pageTitle = `${title} | ${SITE_NAME}`
+	const desc = description || SITE_DESCRIPTION
 	return {
 		title: pageTitle,
 		description: desc,
@@ -31,7 +28,7 @@ export function buildMetadata({
 			title: pageTitle,
 			description: desc,
 			url,
-			siteName,
+			siteName: SITE_NAME,
 			images: image ? [{ url: image }] : [],
 			type: 'website',
 		},
