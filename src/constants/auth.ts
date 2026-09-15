@@ -5,6 +5,7 @@ export const VALIDATION_RULES = {
 	},
 	password: {
 		minLength: 6,
+		maxLength: 128,
 	},
 	email: {
 		pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -18,6 +19,7 @@ export const VALIDATION_MESSAGES = {
 	},
 	password: {
 		minLength: `密码长度至少${VALIDATION_RULES.password.minLength}位`,
+		maxLength: `密码长度不能超过${VALIDATION_RULES.password.maxLength}位`,
 	},
 	email: {
 		invalid: '请输入有效的邮箱地址',

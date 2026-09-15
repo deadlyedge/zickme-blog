@@ -5,6 +5,9 @@ import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
+import { COMMENT_MESSAGES } from '@/constants/comments'
+import { CONTENT_RULES } from '@/constants/content'
 import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -30,21 +33,36 @@ async function requireAdminSession() {
 }
 
 const adminResetPasswordSchema = z.object({
-	userId: z.string().min(1, '用户ID不能为空').max(128),
-	newPassword: z.string().min(6, '密码长度至少6位').max(128, '密码过长'),
+	userId: z.string().min(1, '用户ID不能为空').max(CONTENT_RULES.idMaxLength),
+	newPassword: z
+		.string()
+		.min(
+			VALIDATION_RULES.password.minLength,
+			VALIDATION_MESSAGES.password.minLength,
+		)
+		.max(
+			VALIDATION_RULES.password.maxLength,
+			VALIDATION_MESSAGES.password.maxLength,
+		),
 })
 
 const toggleUserBanSchema = z.object({
-	userId: z.string().min(1, '用户ID不能为空').max(128),
+	userId: z.string().min(1, '用户ID不能为空').max(CONTENT_RULES.idMaxLength),
 	banned: z.boolean(),
 })
 
 const toggleCommentSpamSchema = z.object({
-	commentId: z.string().min(1, '评论ID不能为空').max(128),
+	commentId: z
+		.string()
+		.min(1, COMMENT_MESSAGES.idRequired)
+		.max(CONTENT_RULES.idMaxLength),
 	isSpam: z.boolean(),
 })
 
-const deleteCommentSchema = z.string().min(1, '评论ID不能为空').max(128)
+const deleteCommentSchema = z
+	.string()
+	.min(1, COMMENT_MESSAGES.idRequired)
+	.max(CONTENT_RULES.idMaxLength)
 
 export async function resetUserPasswordByAdmin(data: {
 	userId: string

@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { CONTENT_QUERY_LIMITS, CONTENT_RULES } from '@/constants/content'
 import { createLogger } from '@/lib/logger'
 import {
 	fetchAllPostsForSearch,
@@ -19,11 +20,20 @@ import { getSiteProfile } from './profile'
 
 const logger = createLogger('actions/posts')
 
-const limitSchema = z.number().int().min(1).max(200).default(100)
-const slugSchema = z.string().trim().min(1).max(200)
-const pinnedIdsSchema = z.array(z.string().min(1).max(128))
+const limitSchema = z
+	.number()
+	.int()
+	.min(1)
+	.max(CONTENT_QUERY_LIMITS.posts.max)
+	.default(CONTENT_QUERY_LIMITS.posts.default)
+const slugSchema = z.string().trim().min(1).max(CONTENT_RULES.slugMaxLength)
+const pinnedIdsSchema = z.array(
+	z.string().min(1).max(CONTENT_RULES.idMaxLength),
+)
 
-export async function fetchPostsAction(limit = 100): Promise<PostWithTags[]> {
+export async function fetchPostsAction(
+	limit = CONTENT_QUERY_LIMITS.posts.default,
+): Promise<PostWithTags[]> {
 	try {
 		const safeLimit = limitSchema.safeParse(limit).data ?? 100
 		logger.debug('[Drizzle fetch]: posts')
@@ -59,11 +69,17 @@ export async function fetchPostBySlugAction(
 }
 
 export async function fetchTopHottestPostsAction(
-	limit = 5,
+	limit = CONTENT_QUERY_LIMITS.hottestPosts.default,
 ): Promise<PostWithTags[]> {
 	try {
 		const safeLimit =
-			z.number().int().min(1).max(20).default(5).safeParse(limit).data ?? 5
+			z
+				.number()
+				.int()
+				.min(1)
+				.max(CONTENT_QUERY_LIMITS.hottestPosts.max)
+				.default(CONTENT_QUERY_LIMITS.hottestPosts.default)
+				.safeParse(limit).data ?? CONTENT_QUERY_LIMITS.hottestPosts.default
 		logger.debug('[Drizzle fetch]: hottest posts')
 		return await fetchTopHottestPosts(safeLimit)
 	} catch (error) {

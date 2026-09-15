@@ -3,33 +3,50 @@
 import { asc } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import { GALLERY_RULES } from '@/constants/gallery'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('actions/gallery-admin')
-const idSchema = z.string().min(1).max(128)
+const idSchema = z.string().min(1).max(GALLERY_RULES.idMaxLength)
 const revisionSchema = z.number().int().min(0)
 const _galleryUpdateSchema = z.object({
 	id: idSchema,
 	revision: revisionSchema,
-	title: z.string().trim().min(1).max(200),
-	description: z.string().max(5000).nullable(),
-	cover: z.string().max(500).nullable(),
+	title: z
+		.string()
+		.trim()
+		.min(GALLERY_RULES.title.minLength)
+		.max(GALLERY_RULES.title.maxLength),
+	description: z.string().max(GALLERY_RULES.descriptionMaxLength).nullable(),
+	cover: z.string().max(GALLERY_RULES.coverMaxLength).nullable(),
 	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
-	tags: z.array(z.string().trim().min(1).max(80)).max(50),
-	location: z.string().max(200),
+	tags: z
+		.array(
+			z
+				.string()
+				.trim()
+				.min(GALLERY_RULES.tag.minLength)
+				.max(GALLERY_RULES.tag.maxLength),
+		)
+		.max(GALLERY_RULES.maxTags),
+	location: z.string().max(GALLERY_RULES.locationMaxLength),
 	showExif: z.boolean(),
 	showLocation: z.boolean(),
 })
 const _imageUpdateSchema = z.object({
 	id: idSchema,
 	revision: revisionSchema,
-	title: z.string().max(200).nullable(),
-	description: z.string().max(5000).nullable(),
-	alt: z.string().max(300).nullable(),
-	sortOrder: z.number().int().min(0).max(100000),
+	title: z.string().max(GALLERY_RULES.title.maxLength).nullable(),
+	description: z.string().max(GALLERY_RULES.descriptionMaxLength).nullable(),
+	alt: z.string().max(GALLERY_RULES.altMaxLength).nullable(),
+	sortOrder: z
+		.number()
+		.int()
+		.min(GALLERY_RULES.sortOrder.min)
+		.max(GALLERY_RULES.sortOrder.max),
 	hidden: z.boolean(),
 })
 

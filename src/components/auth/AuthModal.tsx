@@ -317,6 +317,7 @@ function RegisterForm({ onSuccess }: AuthFormProps) {
 									placeholder="密码"
 									aria-invalid={fieldState.invalid}
 									autoComplete="new-password"
+									maxLength={VALIDATION_RULES.password.maxLength}
 								/>
 							</InputGroup>
 							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -342,6 +343,7 @@ function RegisterForm({ onSuccess }: AuthFormProps) {
 									placeholder="确认密码"
 									aria-invalid={fieldState.invalid}
 									autoComplete="new-password"
+									maxLength={VALIDATION_RULES.password.maxLength}
 								/>
 							</InputGroup>
 							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -460,6 +462,7 @@ function ProfileForm({ onSuccess }: AuthFormProps) {
 											placeholder="新密码（可选）"
 											aria-invalid={fieldState.invalid}
 											autoComplete="new-password"
+											maxLength={VALIDATION_RULES.password.maxLength}
 										/>
 									</InputGroup>
 									{fieldState.invalid && (

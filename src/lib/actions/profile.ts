@@ -4,6 +4,8 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
+import { PROFILE_RULES } from '@/constants/profile'
 import { db } from '@/db'
 import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -26,18 +28,38 @@ const updateProfileSchema = z.object({
 	username: z
 		.string()
 		.trim()
-		.min(1, '用户名不能为空')
-		.max(50, '用户名长度不能超过50个字符'),
+		.min(
+			VALIDATION_RULES.username.minLength,
+			VALIDATION_MESSAGES.username.minLength,
+		)
+		.max(
+			VALIDATION_RULES.username.maxLength,
+			VALIDATION_MESSAGES.username.maxLength,
+		),
 	currentPassword: z.string().min(1).optional(),
-	newPassword: z.string().min(6, '新密码长度至少6位').optional(),
+	newPassword: z
+		.string()
+		.min(
+			VALIDATION_RULES.password.minLength,
+			VALIDATION_MESSAGES.password.minLength,
+		)
+		.max(
+			VALIDATION_RULES.password.maxLength,
+			VALIDATION_MESSAGES.password.maxLength,
+		)
+		.optional(),
 })
 
 const updateSiteProfileSchema = z.object({
-	name: z.string().trim().min(1, '名称不能为空').max(100),
-	title: z.string().trim().max(150),
-	bio: z.string().max(2000),
+	name: z
+		.string()
+		.trim()
+		.min(PROFILE_RULES.name.minLength, '名称不能为空')
+		.max(PROFILE_RULES.name.maxLength),
+	title: z.string().trim().max(PROFILE_RULES.title.maxLength),
+	bio: z.string().max(PROFILE_RULES.bio.maxLength),
 	avatar: z.url('必须是有效图片URL').optional().or(z.literal('')),
-	location: z.string().max(100).optional(),
+	location: z.string().max(PROFILE_RULES.location.maxLength).optional(),
 	email: z.email('邮箱格式不正确').optional().or(z.literal('')),
 	website: z.url('网址格式不正确').optional().or(z.literal('')),
 	slogans: z.array(z.any()).optional(),

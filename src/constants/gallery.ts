@@ -13,6 +13,18 @@ export const GALLERY_ALBUM_STATUSES = [
 	'archived',
 ] as const
 
+export const GALLERY_RULES = {
+	idMaxLength: 128,
+	title: { minLength: 1, maxLength: 200 },
+	descriptionMaxLength: 5000,
+	coverMaxLength: 500,
+	tag: { minLength: 1, maxLength: 80 },
+	maxTags: 50,
+	locationMaxLength: 200,
+	altMaxLength: 300,
+	sortOrder: { min: 0, max: 100000 },
+} as const
+
 export const GALLERY_CONTENT_ROOT = path.join(
 	process.cwd(),
 	'content/photo-gallery',

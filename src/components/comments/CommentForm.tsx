@@ -10,7 +10,7 @@ import {
 	InputGroupButton,
 	InputGroupTextarea,
 } from '@/components/ui/input-group'
-
+import { COMMENT_RULES } from '@/constants/comments'
 import { useCreateComment } from '@/lib/hooks/useContent'
 import { useAppStore } from '@/lib/store'
 
@@ -81,6 +81,7 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 						}
 					}}
 					placeholder={parentId ? 'Write a reply...' : 'Write a comment...'}
+					maxLength={COMMENT_RULES.content.maxLength}
 					aria-describedby="comment-shortcut-hint"
 					required
 				/>

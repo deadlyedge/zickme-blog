@@ -6,6 +6,7 @@ import { ArrowUp, MessageCircle } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { COMMENT_RULES } from '@/constants/comments'
 import {
 	createGalleryImageComment,
 	getGalleryImageComments,
@@ -62,7 +63,7 @@ function CompactCommentForm({
 					}
 				}}
 				placeholder={parentId ? '回复评论...' : '写下你的评论...'}
-				maxLength={2000}
+				maxLength={COMMENT_RULES.content.maxLength}
 				rows={2}
 				className="min-h-12 flex-1 resize-none rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-xs text-white outline-none placeholder:text-white/35 focus:border-white/35"
 			/>

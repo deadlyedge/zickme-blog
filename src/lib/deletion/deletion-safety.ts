@@ -1,17 +1,21 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
+import {
+	DELETION_PREVIEW_TOKEN_TTL_MS,
+	DELETION_RULES,
+} from '@/constants/deletion'
 
 export const deletionEntityTypes = ['post', 'gallery', 'galleryImage'] as const
 export type DeletionEntityType = (typeof deletionEntityTypes)[number]
 
 export const deletionPreviewInputSchema = z.object({
 	type: z.enum(deletionEntityTypes),
-	id: z.string().trim().min(1).max(128),
+	id: z.string().trim().min(1).max(DELETION_RULES.idMaxLength),
 })
 
 export const deletionConfirmationInputSchema =
 	deletionPreviewInputSchema.extend({
-		previewToken: z.string().min(1).max(4096),
+		previewToken: z.string().min(1).max(DELETION_RULES.previewTokenMaxLength),
 		confirmation: z.literal('DELETE'),
 	})
 
@@ -104,7 +108,7 @@ export function buildDeletionPreview(
 	> &
 		Pick<DeletionPreview, 'version' | 'commentCount' | 'media'>,
 	now = new Date(),
-	ttlMs = 5 * 60 * 1000,
+	ttlMs = DELETION_PREVIEW_TOKEN_TTL_MS,
 ): DeletionPreview & { previewToken: string } {
 	const expiresAt = new Date(now.getTime() + ttlMs).toISOString()
 	const preview: DeletionPreview = {

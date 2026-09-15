@@ -4,6 +4,8 @@ import { and, asc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
+import { CONTENT_RULES } from '@/constants/content'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -18,14 +20,23 @@ const createCommentSchema = z.object({
 	content: z
 		.string()
 		.trim()
-		.min(1, '评论内容不能为空')
-		.max(2000, '评论内容不能超过2000字'),
-	docId: z.string().min(1, '文章ID不能为空').max(128),
-	parentId: z.string().min(1).max(128).optional(),
-	path: z.string().min(1, '页面路径不能为空'),
+		.min(COMMENT_RULES.content.minLength, COMMENT_MESSAGES.contentRequired)
+		.max(COMMENT_RULES.content.maxLength, COMMENT_MESSAGES.contentTooLong),
+	docId: z
+		.string()
+		.min(1, COMMENT_MESSAGES.documentIdRequired)
+		.max(CONTENT_RULES.idMaxLength),
+	parentId: z.string().min(1).max(CONTENT_RULES.idMaxLength).optional(),
+	path: z
+		.string()
+		.min(1, COMMENT_MESSAGES.pathRequired)
+		.max(COMMENT_RULES.pathMaxLength),
 })
 
-const getCommentsSchema = z.string().min(1, '文章ID不能为空').max(128)
+const getCommentsSchema = z
+	.string()
+	.min(1, COMMENT_MESSAGES.documentIdRequired)
+	.max(CONTENT_RULES.idMaxLength)
 
 export type CreateCommentData = z.infer<typeof createCommentSchema>
 
