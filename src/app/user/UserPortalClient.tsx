@@ -28,11 +28,9 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { updateProfile } from '@/lib/actions/profile'
-import {
-	type UserPortalData,
-	updateUserAvatarPreset,
-} from '@/lib/actions/user-portal'
+import { updateUserAvatarPreset } from '@/lib/actions/user-portal'
 import { signOut } from '@/lib/auth-client'
+import type { UserPortalData } from '@/types/user/portal'
 
 interface UserPortalClientProps {
 	initialData: UserPortalData

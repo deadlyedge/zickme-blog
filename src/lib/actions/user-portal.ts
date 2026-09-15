@@ -10,51 +10,21 @@ import { auth } from '@/lib/auth'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarAvatarUrl } from '@/lib/get-avatar'
 import { createLogger } from '@/lib/logger'
+import type {
+	UserCommentItem,
+	UserPortalData,
+	UserReplyItem,
+} from '@/types/user/portal'
 
 const logger = createLogger('actions/user-portal')
 
 const updateAvatarPresetSchema = z.enum(['dicebear', 'gravatar', 'custom'])
 
-export interface UserCommentItem {
-	id: string
-	content: string
-	status: string
-	createdAt: Date
-	postId: string
-	postTitle: string
-	postSlug: string
-	parentCommentId?: string | null
-	parentAuthorName?: string | null
-}
-
-export interface UserReplyItem {
-	id: string
-	content: string
-	createdAt: Date
-	status: string
-	postId: string
-	postTitle: string
-	postSlug: string
-	replyAuthor: {
-		id: string
-		name: string
-		image?: string | null
-	}
-	originalCommentContent: string
-}
-
-export interface UserPortalData {
-	user: {
-		id: string
-		name: string
-		email: string
-		image?: string | null
-		role: string
-		createdAt: Date
-	}
-	comments: UserCommentItem[]
-	repliesToMe: UserReplyItem[]
-}
+export type {
+	UserCommentItem,
+	UserPortalData,
+	UserReplyItem,
+} from '@/types/user/portal'
 
 /**
  * 1. 获取当前登录用户的个人门户数据（个人信息、历史评论、收到的回复）

@@ -2,8 +2,10 @@
 export type {
 	Comment,
 	CommentWithReplies,
+	GalleryImageCommentPublic,
+	GalleryImageCommentStatus,
 	PublicCommentAuthor,
-} from './comment'
+} from './comment/index'
 export type { HomePageData } from './content/home'
 export type { PostLink, PostLinkType, PostMetadata } from './content/metadata'
 export type { Post, PostWithTags, StatusType } from './content/post'
@@ -43,4 +45,16 @@ export type {
 	ThemeVariables,
 	TimelineItem,
 } from './site'
+export type {
+	SnapshotPayload,
+	SnapshotSource,
+	SnapshotStatus,
+	SnapshotSummary,
+	SnapshotTableRow,
+} from './snapshot/snapshot'
 export type { Role, SyncLogItem, SyncResult, SyncStatus } from './sync'
+export type {
+	UserCommentItem,
+	UserPortalData,
+	UserReplyItem,
+} from './user/portal'

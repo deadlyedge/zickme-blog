@@ -6,13 +6,13 @@ import { ArrowUp, MessageCircle } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { GalleryImageCommentPublic } from '@/lib/actions/gallery-image-comments'
 import {
 	createGalleryImageComment,
 	getGalleryImageComments,
 	toggleGalleryImageCommentSpam,
 } from '@/lib/actions/gallery-image-comments'
 import { useSession } from '@/lib/auth-client'
+import type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
 
 function CompactCommentForm({
 	imageId,

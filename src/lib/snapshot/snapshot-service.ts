@@ -12,17 +12,17 @@ import {
 	tags,
 } from '@/db/schema'
 import {
+	SNAPSHOT_SCHEMA_VERSION,
+	type SnapshotPayload,
+	type SnapshotSource,
+} from '@/types/snapshot/snapshot'
+import {
 	assertSnapshotPayload,
 	hashSnapshotPayload,
 	normalizeSnapshotValue,
 	reviveDate,
 	summarizeSnapshotPayload,
 } from './snapshot-safety'
-import {
-	SNAPSHOT_SCHEMA_VERSION,
-	type SnapshotPayload,
-	type SnapshotSource,
-} from './snapshot-types'
 
 type SnapshotTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
