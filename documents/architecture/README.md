@@ -1,6 +1,6 @@
 # 当前架构文档入口
 
-本目录只存放当前架构规范、治理记录和可复现审计说明；历史阶段计划仍位于 [`../develop-plans/`](../develop-plans/)，不应被当作当前实现规范。
+本目录只存放当前架构规范、治理记录和可复现审计说明；历史阶段计划仍位于 [`../old-plans/`](../old-plans/)，不应被当作当前实现规范。
 
 ## 当前规范
 
@@ -12,8 +12,8 @@
 
 ## 当前实施计划
 
-- [`../develop-plans/development-plan-stage11-architecture-governance.md`](../develop-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
-- [`../develop-plans/development-plan-stage12-production-safety-and-migration.md`](../develop-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
+- [`../old-plans/development-plan-stage11-architecture-governance.md`](../old-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
+- [`../old-plans/development-plan-stage12-production-safety-and-migration.md`](../old-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
 
 ## 可复现审计
 
