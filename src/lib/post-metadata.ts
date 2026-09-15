@@ -1,4 +1,8 @@
-import type { PostLink, PostLinkType, PostMetadata } from '@/types'
+import type {
+	PostLink,
+	PostLinkType,
+	PostMetadata,
+} from '@/types/content/metadata'
 
 const linkTypes: PostLinkType[] = [
 	'github',

@@ -124,25 +124,3 @@ export interface SiteProfile {
 	createdAt?: Date
 	updatedAt?: Date
 }
-
-export function isSiteProfile(data: unknown): data is SiteProfile {
-	return (
-		data !== null &&
-		typeof data === 'object' &&
-		'name' in data &&
-		typeof (data as Record<string, unknown>).name === 'string' &&
-		'bio' in data &&
-		typeof (data as Record<string, unknown>).bio === 'string'
-	)
-}
-
-export function isSocialLink(link: unknown): link is SocialLink {
-	return (
-		link !== null &&
-		typeof link === 'object' &&
-		'url' in link &&
-		typeof (link as Record<string, unknown>).url === 'string' &&
-		'platform' in link &&
-		typeof (link as Record<string, unknown>).platform === 'string'
-	)
-}

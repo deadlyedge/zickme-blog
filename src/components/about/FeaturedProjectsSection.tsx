@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { GitHubIcon } from '@/components/ui/icons/social'
-import type { FeaturedProject } from '@/types'
+import type { FeaturedProject } from '@/types/site'
 
 interface FeaturedProjectsSectionProps {
 	projects?: FeaturedProject[] | null

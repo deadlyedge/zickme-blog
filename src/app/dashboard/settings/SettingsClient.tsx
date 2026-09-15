@@ -8,18 +8,18 @@ import { SettingsTabs } from '@/components/dashboard/settings'
 import { Button } from '@/components/ui/button'
 import { updateSiteProfile } from '@/lib/actions/profile'
 import { THEME_PRESETS } from '@/lib/theme'
+import type { PostWithTags } from '@/types/content/post'
 import type {
 	AboutPageConfig,
 	FeaturedProject,
 	LandingPageConfig,
-	PostWithTags,
 	SiteProfile,
 	Skill,
 	Slogan,
 	SocialLink,
 	ThemeConfig,
 	TimelineItem,
-} from '@/types'
+} from '@/types/site'
 
 interface SettingsClientProps {
 	initialProfile: SiteProfile | null

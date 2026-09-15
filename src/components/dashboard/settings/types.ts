@@ -1,12 +1,12 @@
+import type { PostWithTags } from '@/types/content/post'
 import type {
 	FeaturedProject,
-	PostWithTags,
 	Skill,
 	Slogan,
 	SocialLink,
 	ThemeConfig,
 	TimelineItem,
-} from '@/types'
+} from '@/types/site'
 
 export type EditableSocialLink = SocialLink & { id: string }
 

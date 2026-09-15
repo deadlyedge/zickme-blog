@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { getSocialIcon } from '@/components/ui/icons/social'
-import type { SiteProfile, SocialLink } from '@/types'
+import type { SiteProfile, SocialLink } from '@/types/site'
 
 interface ContactCardsSectionProps {
 	profile: SiteProfile

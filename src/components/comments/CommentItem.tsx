@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toggleCommentSpam } from '@/lib/actions/dashboard'
 import { useAppStore } from '@/lib/store'
-import type { CommentWithReplies } from '@/types'
+import type { CommentWithReplies } from '@/types/comment'
 import { CommentForm } from './CommentForm'
 import { CommentList } from './CommentList'
 

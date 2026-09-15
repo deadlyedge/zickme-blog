@@ -16,7 +16,7 @@ import {
 	searchPostsOptions,
 	tagsOptions,
 } from '@/lib/content-queries'
-import type { PostWithTags } from '@/types'
+import type { PostWithTags } from '@/types/content/post'
 
 // Hook to fetch all posts
 export function usePosts() {

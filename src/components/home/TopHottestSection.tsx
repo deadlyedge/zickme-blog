@@ -16,7 +16,7 @@ import { NavigationLink } from '@/components/NavigationLink'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatPublishedDate } from '@/lib/utils'
-import type { PostWithTags } from '@/types'
+import type { PostWithTags } from '@/types/content/post'
 
 interface TopHottestSectionProps {
 	posts: PostWithTags[]

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type React from 'react'
 import { PostCard } from '@/components/PostCard'
 import { Button } from '@/components/ui/button'
-import type { PostWithTags } from '@/types'
+import type { PostWithTags } from '@/types/content/post'
 
 interface LatestPostsSectionProps {
 	posts: PostWithTags[]

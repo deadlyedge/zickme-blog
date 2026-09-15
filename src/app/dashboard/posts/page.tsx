@@ -61,7 +61,8 @@ import {
 	updatePostStatus,
 	uploadPostPosterAction,
 } from '@/lib/actions/posts-admin'
-import type { PostWithTags, StatusType, Tag } from '@/types'
+import type { PostWithTags, StatusType } from '@/types/content/post'
+import type { Tag } from '@/types/content/tag'
 
 const STATUS_BADGE_MAP: Record<
 	StatusType,

@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { getSocialIcon } from '@/components/ui/icons/social'
-import type { AboutPageConfig, SiteProfile, SocialLink } from '@/types'
+import type { AboutPageConfig, SiteProfile, SocialLink } from '@/types/site'
 
 interface AboutHeroProps {
 	profile: SiteProfile

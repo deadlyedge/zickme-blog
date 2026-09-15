@@ -5,7 +5,7 @@ import type { Variants } from 'motion/react'
 import * as motion from 'motion/react-client'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { SiteProfile } from '@/types'
+import type { SiteProfile } from '@/types/site'
 import CurvedLoop from './ui/effects/CurvedLoop'
 
 type HeroProps = {

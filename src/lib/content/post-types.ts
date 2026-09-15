@@ -1,4 +1,5 @@
-import type { PostMetadata, StatusType } from '@/types'
+import type { PostMetadata } from '@/types/content/metadata'
+import type { StatusType } from '@/types/content/post'
 
 export interface MarkdownFrontmatter {
 	title?: string

@@ -9,7 +9,7 @@ import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
-import type { CommentWithReplies } from '@/types'
+import type { CommentWithReplies } from '@/types/comment'
 import { formatZodError } from './types'
 
 const logger = createLogger('actions/comments')

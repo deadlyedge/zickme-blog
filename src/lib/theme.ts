@@ -1,4 +1,4 @@
-import type { ThemeConfig, ThemeVariables } from '@/types'
+import type { ThemeConfig, ThemeVariables } from '@/types/site'
 
 // 将 ThemeVariables 对象转为 CSS 样式字符串
 export function variablesToCss(vars?: ThemeVariables): string {

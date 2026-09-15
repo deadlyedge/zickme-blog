@@ -17,7 +17,7 @@ import type {
 	Slogan,
 	SocialLink,
 	ThemeConfig,
-} from '@/types'
+} from '@/types/site'
 import { formatZodError } from './types'
 
 const logger = createLogger('actions/profile')

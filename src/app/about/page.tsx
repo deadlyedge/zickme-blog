@@ -8,7 +8,7 @@ import {
 } from '@/components/about'
 import { fetchProfile } from '@/lib/post-providers'
 import { buildMetadata } from '@/lib/seo'
-import type { TimelineItem } from '@/types'
+import type { TimelineItem } from '@/types/site'
 
 // About 内容平时变化不频繁，使用长时间 ISR 缓存；
 // Dashboard 保存后由 updateSiteProfile 通过 revalidatePath('/about') 立即失效。

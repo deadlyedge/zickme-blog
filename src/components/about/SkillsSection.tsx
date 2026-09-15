@@ -3,7 +3,7 @@
 import { Code2Icon, SparklesIcon } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
-import type { Skill } from '@/types'
+import type { Skill } from '@/types/site'
 
 interface SkillsSectionProps {
 	skills?: Skill[] | null

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
-import type { TimelineItem } from '@/types'
+import type { TimelineItem } from '@/types/site'
 
 interface TimelineSectionProps {
 	title?: string

@@ -1,4 +1,4 @@
-import type { StatusType } from '@/types'
+import type { StatusType } from '@/types/content/post'
 import type { MarkdownFrontmatter } from './post-types'
 
 const STATUS_TYPES: readonly StatusType[] = [

@@ -6,7 +6,7 @@ import type React from 'react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { getSocialIcon } from '@/components/ui/icons/social'
-import type { SiteProfile, SocialLink } from '@/types'
+import type { SiteProfile, SocialLink } from '@/types/site'
 
 type FooterAboutProps = {
 	profileData: SiteProfile | null

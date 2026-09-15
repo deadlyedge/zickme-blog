@@ -1,4 +1,4 @@
-import type { CommentWithReplies } from '@/types'
+import type { CommentWithReplies } from '@/types/comment'
 import { CommentItem } from './CommentItem'
 
 interface CommentListProps {

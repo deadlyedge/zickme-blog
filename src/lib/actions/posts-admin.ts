@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 import type { PublishWorkflowResult } from '@/lib/publish/publish-workflow'
 import { runPublishWorkflow } from '@/lib/publish/publish-workflow'
-import type { PostWithTags, StatusType } from '@/types'
+import type { PostWithTags, StatusType } from '@/types/content/post'
 
 const logger = createLogger('actions/posts-admin')
 

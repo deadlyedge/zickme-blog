@@ -21,7 +21,7 @@ import {
 	uploadPostImage,
 } from '@/lib/publish/media-upload'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
-import type { SyncLogItem, SyncResult, SyncStatus } from '@/types'
+import type { SyncLogItem, SyncResult, SyncStatus } from '@/types/sync'
 
 export type {
 	MarkdownFrontmatter,

@@ -1,9 +1,5 @@
-import type { InferSelectModel } from 'drizzle-orm'
-import type { syncLogs } from '@/db/schema'
-
 export type Role = 'ADMIN' | 'EDITOR' | 'USER'
 export type SyncStatus = 'SUCCESS' | 'FAILED' | 'PARTIAL'
-export type SyncLog = InferSelectModel<typeof syncLogs>
 
 export interface SyncLogItem {
 	stage: 'frontmatter' | 'media' | 'db' | 'general'

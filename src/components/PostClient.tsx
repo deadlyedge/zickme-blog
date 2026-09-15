@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePost } from '@/lib/hooks/useContent'
 import { calculateReadingTime, cn, formatPublishedDate } from '@/lib/utils'
-import type { PostWithTags } from '@/types'
+import type { PostWithTags } from '@/types/content/post'
 
 interface TocItem {
 	id: string

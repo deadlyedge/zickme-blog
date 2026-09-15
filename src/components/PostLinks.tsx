@@ -13,7 +13,7 @@ import {
 	isOutdatedWarningActive,
 	normalizePostMetadata,
 } from '@/lib/post-metadata'
-import type { PostLinkType } from '@/types'
+import type { PostLinkType } from '@/types/content/metadata'
 
 const linkPresentation: Record<
 	PostLinkType,
