@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
 	LatestPostsSection,
 	PinnedPostsSection,
+	RecentGallerySection,
 	TopHottestSection,
 } from '@/components/home'
 import type { HomePageData } from '@/types/content/home'
@@ -29,6 +30,8 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 		profile,
 		latestPosts: posts,
 		hottestPosts = [],
+		hotGalleryImages = [],
+		recentGalleries = [],
 		pinnedPosts = [],
 	} = data
 
@@ -103,13 +106,15 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 			/>
 
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20 relative z-10">
-				{/* 1. TOP 5 热门文章轮播/翻页区（置顶在最前，带自适应呼吸光晕与全屏色彩联动） */}
-				{showTopHottest && hottestPosts.length > 0 && (
-					<TopHottestSection
-						posts={hottestPosts}
-						onActiveChange={handleHottestChange}
-					/>
-				)}
+				{/* 1. 混合热门内容轮播 */}
+				{showTopHottest &&
+					(hottestPosts.length > 0 || hotGalleryImages.length > 0) && (
+						<TopHottestSection
+							posts={hottestPosts}
+							galleryImages={hotGalleryImages}
+							onActiveChange={handleHottestChange}
+						/>
+					)}
 
 				{/* 2. Slogan 视差 Hero 区 */}
 				{showSlogans && <Hero profile={profile} />}
@@ -124,6 +129,10 @@ export const HomeScrollArea = ({ data }: HomeScrollAreaProps) => {
 					{/* 4. 最新发布文章区 */}
 					{showLatestPosts && posts && posts.length > 0 && (
 						<LatestPostsSection posts={posts} />
+					)}
+
+					{showLatestPosts && (
+						<RecentGallerySection galleries={recentGalleries} />
 					)}
 				</div>
 

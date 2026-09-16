@@ -1,0 +1,116 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
+import { getHomeGalleryCardOrientation } from '@/lib/gallery/home-presentation'
+import type { HomeRecentGallery } from '@/types/content/home'
+
+export function RecentGallerySection({
+	galleries,
+}: {
+	galleries: HomeRecentGallery[]
+}) {
+	if (galleries.length === 0) return null
+	return (
+		<section
+			aria-labelledby="recent-gallery-title"
+			className="border-t border-border/60 px-2 py-12 sm:px-0"
+		>
+			<div className="mb-8 flex items-end justify-between gap-4">
+				<div>
+					<p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+						RECENT GALLERY
+					</p>
+					<h2
+						id="recent-gallery-title"
+						className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"
+					>
+						最近相册
+					</h2>
+				</div>
+				<Link
+					href="/gallery"
+					className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+				>
+					查看全部 →
+				</Link>
+			</div>
+			<div className="grid gap-5 sm:grid-cols-2">
+				{galleries.map((gallery) => (
+					<RecentGalleryCard key={gallery.slug} gallery={gallery} />
+				))}
+			</div>
+		</section>
+	)
+}
+
+function RecentGalleryCard({ gallery }: { gallery: HomeRecentGallery }) {
+	const orientation = getHomeGalleryCardOrientation(
+		gallery.width,
+		gallery.height,
+	)
+	if (orientation === 'portrait') {
+		return (
+			<CardTilt
+				className="w-full"
+				aria-labelledby={`recent-gallery-${gallery.slug}`}
+			>
+				<CardTiltContent className="w-full overflow-hidden rounded-2xl bg-card shadow-2xl">
+					<Link
+						href={gallery.href}
+						className="relative flex aspect-3/4 w-full overflow-hidden bg-muted text-white"
+					>
+						<div className="relative min-w-0 flex-1">
+							<Image
+								src={gallery.coverUrl}
+								alt={gallery.coverTitle || gallery.title}
+								fill
+								sizes="(max-width: 640px) 90vw, 42vw"
+								className="object-cover"
+							/>
+						</div>
+						<div className="flex w-11 shrink-0 items-center justify-center bg-[#242424] px-1 text-white sm:w-13">
+							<h3
+								id={`recent-gallery-${gallery.slug}`}
+								className="max-h-[90%] overflow-hidden text-center text-sm font-bold leading-6 [writing-mode:vertical-rl] rotate-180"
+								aria-label={gallery.title}
+							>
+								{gallery.title}
+							</h3>
+						</div>
+					</Link>
+				</CardTiltContent>
+			</CardTilt>
+		)
+	}
+	return (
+		<CardTilt
+			className="w-full"
+			aria-labelledby={`recent-gallery-${gallery.slug}`}
+		>
+			<CardTiltContent className="w-full overflow-hidden rounded-2xl bg-card shadow-2xl">
+				<Link
+					href={gallery.href}
+					className="relative block aspect-4/3 w-full overflow-hidden bg-muted text-white"
+				>
+					<Image
+						src={gallery.coverUrl}
+						alt={gallery.coverTitle || gallery.title}
+						fill
+						sizes="(max-width: 640px) 90vw, 42vw"
+						className="object-cover"
+					/>
+					<div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 via-black/30 to-transparent p-5 pt-16">
+						<h3
+							id={`recent-gallery-${gallery.slug}`}
+							className="line-clamp-2 text-xl font-bold"
+						>
+							{gallery.title}
+						</h3>
+					</div>
+				</Link>
+			</CardTiltContent>
+		</CardTilt>
+	)
+}

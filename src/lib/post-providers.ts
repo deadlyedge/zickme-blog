@@ -1,6 +1,21 @@
-import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import {
+	and,
+	asc,
+	count,
+	desc,
+	eq,
+	inArray,
+	isNotNull,
+	isNull,
+	ne,
+	sql,
+} from 'drizzle-orm'
 import { db } from '@/db'
 import { comments, posts, tags } from '@/db/schema'
+import {
+	fetchRecentGalleriesForHome,
+	fetchTopDiscussedGalleryImages,
+} from '@/lib/gallery/home-queries'
 import { createLogger } from '@/lib/logger'
 import type { HomePageData } from '@/types/content/home'
 import type { PostWithTags } from '@/types/content/post'
@@ -181,6 +196,85 @@ export const fetchTopHottestPosts = async (
 	}
 }
 
+export const fetchTopHottestPostsWithCover = async (
+	limit = 3,
+): Promise<PostWithTags[]> => {
+	try {
+		const topCommentedPosts = await db
+			.select({
+				id: posts.id,
+				commentsCount: count(comments.id),
+			})
+			.from(posts)
+			.innerJoin(
+				comments,
+				and(eq(comments.postId, posts.id), eq(comments.status, 'PUBLISHED')),
+			)
+			.where(
+				and(
+					eq(posts.status, 'PUBLISHED'),
+					isNull(posts.archivedAt),
+					isNotNull(posts.poster),
+					ne(posts.poster, ''),
+				),
+			)
+			.groupBy(posts.id)
+			.orderBy(desc(count(comments.id)))
+			.limit(limit)
+
+		const topIds = topCommentedPosts.map(({ id }) => id)
+		const topPosts = await db.query.posts.findMany({
+			where: and(
+				inArray(posts.id, topIds.length > 0 ? topIds : ['']),
+				isNotNull(posts.poster),
+			),
+			with: {
+				postsToTags: { with: { tag: true } },
+			},
+		})
+		const mappedTop = topIds
+			.map((id) => topPosts.find((post) => post.id === id))
+			.filter((post): post is (typeof topPosts)[number] => Boolean(post))
+			.map((post) => ({
+				...post,
+				tags: post.postsToTags.map((pt) => pt.tag),
+			})) as PostWithTags[]
+
+		if (mappedTop.length >= limit) return mappedTop.slice(0, limit)
+
+		const excludedIds = mappedTop.map((post) => post.id)
+		const fallback = await db.query.posts.findMany({
+			where: and(
+				eq(posts.status, 'PUBLISHED'),
+				isNull(posts.archivedAt),
+				isNotNull(posts.poster),
+				ne(posts.poster, ''),
+				excludedIds.length > 0
+					? sql`${posts.id} NOT IN (${sql.join(
+							excludedIds.map((id) => sql`${id}`),
+							sql`, `,
+						)})`
+					: undefined,
+			),
+			orderBy: [desc(posts.publishedAt)],
+			limit: limit - mappedTop.length,
+			with: {
+				postsToTags: { with: { tag: true } },
+			},
+		})
+		return [
+			...mappedTop,
+			...(fallback.map((post) => ({
+				...post,
+				tags: post.postsToTags.map((pt) => pt.tag),
+			})) as PostWithTags[]),
+		]
+	} catch (error) {
+		logger.error('Failed to fetch hottest posts with cover', error, { limit })
+		return []
+	}
+}
+
 export const fetchPinnedPosts = async (
 	pinnedPostIds: string[] = [],
 ): Promise<PostWithTags[]> => {
@@ -220,9 +314,17 @@ export const fetchHomePageData = async (): Promise<HomePageData> => {
 
 	const pinnedIds = landingConfig?.pinnedPostIds ?? []
 
-	const [latestPosts, hottestPosts, pinnedPosts] = await Promise.all([
+	const [
+		latestPosts,
+		hottestPosts,
+		hotGalleryImages,
+		recentGalleries,
+		pinnedPosts,
+	] = await Promise.all([
 		fetchPosts(6),
-		fetchTopHottestPosts(5),
+		fetchTopHottestPostsWithCover(3),
+		fetchTopDiscussedGalleryImages(2),
+		fetchRecentGalleriesForHome(2),
 		pinnedIds.length > 0 ? fetchPinnedPosts(pinnedIds) : Promise.resolve([]),
 	])
 
@@ -230,6 +332,8 @@ export const fetchHomePageData = async (): Promise<HomePageData> => {
 		profile,
 		latestPosts,
 		hottestPosts,
+		hotGalleryImages,
+		recentGalleries,
 		pinnedPosts,
 	}
 }

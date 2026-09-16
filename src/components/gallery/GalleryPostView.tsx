@@ -44,6 +44,25 @@ export function GalleryPostView({
 		return () => document.body.classList.remove('gallery-mode')
 	}, [])
 
+	useEffect(() => {
+		const imageId = window.location.hash.startsWith('#image-')
+			? window.location.hash.slice('#image-'.length)
+			: ''
+		if (!imageId || !album) return
+		const targetIndex = images.findIndex((image) => image.id === imageId)
+		if (targetIndex < 0) return
+		setImageIndex(targetIndex)
+		setLightboxOpen(true)
+	}, [album, images])
+
+	const updateImageHash = (imageId: string | undefined) => {
+		if (typeof window === 'undefined') return
+		const nextUrl = imageId
+			? `${window.location.pathname}${window.location.search}#image-${imageId}`
+			: `${window.location.pathname}${window.location.search}`
+		window.history.replaceState(null, '', nextUrl)
+	}
+
 	return (
 		<div className="gallery-page h-svh overflow-hidden bg-[#242424] text-[#f5f5f5]">
 			<div className="mx-auto flex h-full max-w-7xl flex-col px-4 pb-4 pt-20 sm:px-6 lg:px-8">
@@ -126,6 +145,7 @@ export function GalleryPostView({
 						onOpen={(index) => {
 							setImageIndex(index)
 							setLightboxOpen(true)
+							updateImageHash(images[index]?.id)
 						}}
 					/>
 				)}
@@ -135,8 +155,14 @@ export function GalleryPostView({
 					images={images}
 					index={safeImageIndex}
 					open={lightboxOpen}
-					onOpenChange={setLightboxOpen}
-					onChange={setImageIndex}
+					onOpenChange={(open) => {
+						setLightboxOpen(open)
+						if (!open) updateImageHash(undefined)
+					}}
+					onChange={(index) => {
+						setImageIndex(index)
+						updateImageHash(images[index]?.id)
+					}}
 					location={album.location}
 				/>
 			)}
