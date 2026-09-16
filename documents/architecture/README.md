@@ -12,6 +12,7 @@
 
 ## 当前实施计划
 
+- [`../development-plan-stage13-home-gallery-experience.md`](../development-plan-stage13-home-gallery-experience.md)：首页 Gallery 与混合热门内容体验计划。
 - [`../old-plans/development-plan-stage11-architecture-governance.md`](../old-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
 - [`../old-plans/development-plan-stage12-production-safety-and-migration.md`](../old-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
 
