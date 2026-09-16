@@ -16,11 +16,6 @@
 - [`../old-plans/development-plan-stage11-architecture-governance.md`](../old-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
 - [`../old-plans/development-plan-stage12-production-safety-and-migration.md`](../old-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
 
-## 可复现审计
+## 数据库与运行时边界
 
-```bash
-# 只检查仓库 migration 文件与 Drizzle journal，不连接数据库
-bun run db:audit-migrations
-```
-
-该命令只验证仓库 baseline 与 journal 的一致性。当前项目按单库、可重置的个人 Blog 维护；数据库需要初始化或升级时使用 `bun run db:migrate`，网站内容清空使用 `bun run db:reset`，两者职责不同。未来若出现不可重建数据库，再按实际需要增加备份和回滚文档。
+当前项目按单库、可重置的个人 Blog 维护。数据库需要初始化或升级时使用 `bun run db:migrate`，网站内容清空使用 `bun run db:reset`，两者职责不同。Migration 文件和 Drizzle journal 属于数据库迁移机制，不再提供额外的独立 audit 命令。

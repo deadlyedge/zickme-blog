@@ -11,7 +11,6 @@
 - [x] Git `content/` 是唯一人工内容源。
 - [x] `reset-db` 只清空运行时数据，不执行 migration、不修改 schema。
 - [x] 当前正式 schema baseline 为 `drizzle/0000_stage12_baseline.sql`。
-- [x] `db:audit-migrations` 已确认 baseline 与 journal 一致。
 - [ ] 当前实际数据库已应用 baseline。
 - [ ] 当前实际数据库已完成一次 reset 后的 Post/Gallery publish。
 

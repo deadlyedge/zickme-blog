@@ -76,7 +76,7 @@ bun run content:check -- --no-examples
 bun run content:verify
 bunx tsc --noEmit --pretty false
 ```
-涉及 Publish调试时，至少执行：
+涉及 Publish/TUI 调试时，至少执行：
 ```bash
 # 自动化/非交互式验证
 bun run publish -- --scope all --dry-run --json

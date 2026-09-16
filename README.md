@@ -159,7 +159,7 @@ CLOUDINARY_API_SECRET="your-api-secret"
 
 ### 初始化数据库和运行项目
 
-当前仓库正式 migration 链只有一个 baseline，文件和 journal 可使用只读命令校验：
+当前仓库正式 migration 链只有一个 baseline，文件和 journal 由 Drizzle migration 机制管理：
 
 ```text
 drizzle/0000_stage12_baseline.sql
@@ -170,7 +170,6 @@ drizzle/meta/_journal.json
 
 ```bash
 bun run db:migrate
-bun run db:audit-migrations
 bun run publish -- --scope all
 bun run dev
 ```
@@ -208,8 +207,6 @@ http://localhost:3000
 | `bun run db:migrate` | 执行未应用的迁移 |
 | `bun run db:push` | 将当前 Schema 推送到数据库 |
 | `bun run db:studio` | 启动 Drizzle Studio |
-| `bun run db:audit-migrations` | 只读校验 migration 文件链与 Drizzle journal，不连接数据库 |
-| `bun run docs:audit` | 审计当前入口文档的 Publish/Git-first/migration 治理语义 |
 | `bun run db:reset` | 重置数据库，危险操作 |
 | `bun run reset-admin-password` | CLI 重置管理员密码 |
 | `bun run gallery:index` | 重新生成 Gallery 索引 |
@@ -249,7 +246,7 @@ Publish 失败不会把解析失败或媒体上传失败的 Post 静默视为成
 bun run publish:tui
 ```
 
-TUI 会依次执行内容检查、修复确认、Git diff 检查和 publish dry-run，只有用户确认后才执行真实发布。日常不需要手动填写 scope；如果需要调试或只处理单个域，才使用脚本参数，例如 `bun run publish:tui -- --scope galleries`。非交互式环境请使用 `bun run publish` 或项目中已配置的快捷 script。不要使用 `bun publish:tui`，因为 `publish:tui` 是项目脚本，必须通过 `bun run` 调用。
+TUI 会依次执行内容检查、修复确认、Git diff 检查和 publish dry-run，只有用户确认后才执行真实发布。日常不需要手动填写 scope；如果需要调试或只处理单个域，才使用脚本参数，例如 `bun run publish:tui -- --scope galleries`。
 
 首次准备内容目录时，可以运行：
 

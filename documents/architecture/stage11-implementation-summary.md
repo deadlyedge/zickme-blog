@@ -40,13 +40,13 @@ src/lib/constants/
 
 - 已完成旧字段、`syncStatus`、SyncRun、SyncLog 的仓库级读取审计；无用字段已从 schema、baseline 和运行时代码删除；
 - 当前正式 migration 已收敛为唯一 `0000_stage12_baseline.sql`；
-- 新增只读命令：
+当前保留数据库迁移命令：
 
 ```bash
-bun run db:audit-migrations
+bun run db:migrate
 ```
 
-- 该命令只读取 Git 工作区 migration 文件和 `_journal.json`，不连接数据库、不执行 migration；
+- migration 由 Drizzle 的 `bun run db:migrate` 负责执行；
 - 未修改任何历史 migration、schema 字段或数据库数据。
 
 ### 文档治理
@@ -54,20 +54,12 @@ bun run db:audit-migrations
 - 当前架构入口：`documents/architecture/README.md`；
 - Stage 11 计划：`documents/develop-plans/development-plan-stage11-architecture-governance.md`；
 - 废弃字段/Migration 审计：`stage11-deprecated-fields-and-migration-audit.md`；
-- 当前入口文档审计命令：
-
-```bash
-bun run docs:audit
-```
-
-该命令只审计 README、根 AGENTS、当前架构规范和当前架构目录，不扫描历史阶段计划与历史总结。
+- 当前入口文档与架构说明由代码审查、lint、测试和构建验证，不再提供独立的文档 audit 脚本。
 
 ## 2. 验证证据
 
 当前回归基线：
 
-- `bun run docs:audit`：通过；
-- `bun run db:audit-migrations`：1 条 SQL 与 1 条 journal entry 一致；
 - `bun run lint`：通过；
 - `bun test`：23 tests passed；
 - `bunx tsc --noEmit --pretty false`：通过；

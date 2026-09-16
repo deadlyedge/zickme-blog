@@ -229,10 +229,7 @@ bun test
 bunx tsc --noEmit --pretty false
 bun run content:check -- --no-examples
 bun run content:verify
-bun run docs:audit
-bun run db:audit-migrations
 bun run build
-bun run docs:audit
 ```
 
 结构优化的完成标准不是“所有文件都不再出现 sync”，而是：内容源只有 Git；Publish 是唯一正式发布流程；Post、Gallery、媒体和运行记录职责清晰；CLI、TUI、Dashboard 复用同一 Publish Workflow；dry-run 完全只读；旧双向能力没有新的调用方。

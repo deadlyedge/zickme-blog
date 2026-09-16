@@ -66,13 +66,7 @@ drizzle/0000_stage12_baseline.sql
 drizzle/meta/_journal.json
 ```
 
-验证命令：
-
-```bash
-bun run db:audit-migrations
-```
-
-该命令只检查仓库 baseline 与 journal，不连接数据库。数据库可重置时使用 baseline 初始化；日常内容清空使用 `reset-db`，不执行 migration。
+数据库使用 `bun run db:migrate` 执行正式 migration；数据库可重置时使用 baseline 初始化，日常内容清空使用 `reset-db`，不执行 migration。当前不再提供独立的 migration audit 脚本。
 
 ## 五、后续开发
 
