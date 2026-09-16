@@ -15,12 +15,8 @@ import type {
 	SyncRunnerOptions,
 } from '@/lib/content/post-types'
 import { createLogger } from '@/lib/logger'
+import { buildPostMediaPublicId, uploadPostImage } from '@/lib/media/post-media'
 import { normalizePostMetadata } from '@/lib/post-metadata'
-import {
-	buildPostMediaPublicId,
-	getPostMediaBaseUrl,
-	uploadPostImage,
-} from '@/lib/publish/media-upload'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
 import type { SyncLogItem, SyncResult, SyncStatus } from '@/types/sync'
 
@@ -213,6 +209,7 @@ export class PostPublishService {
 		if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
 			return imagePath
 		}
+		if (this.dryRun) return imagePath
 
 		const fileDir = path.dirname(relativeFilePath)
 		let normalizedImgPath = imagePath
@@ -234,7 +231,8 @@ export class PostPublishService {
 					normVPath.endsWith(normalizedImgPath)
 				) {
 					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					return url || `${getPostMediaBaseUrl()}${publicId}`
+					if (!url) throw new Error(`Post 图片上传失败: ${publicId}`)
+					return url
 				}
 			}
 		}
@@ -252,14 +250,15 @@ export class PostPublishService {
 				if (imgStat.isFile()) {
 					const buf = await fsPromises.readFile(absoluteImgPath)
 					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					return url || `${getPostMediaBaseUrl()}${publicId}`
+					if (!url) throw new Error(`Post 图片上传失败: ${publicId}`)
+					return url
 				}
 			} catch {
 				// fallback
 			}
 		}
 
-		return `${getPostMediaBaseUrl()}${publicId}`
+		throw new Error(`Post 图片文件不存在: ${imagePath}`)
 	}
 
 	private async resolveMarkdownImages(

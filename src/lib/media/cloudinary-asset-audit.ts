@@ -1,4 +1,4 @@
-const CLOUDINARY_ROOT_PREFIX = 'myblog/'
+import { CLOUDINARY_ROOT_PATH } from '@/constants/cloudinary'
 
 export interface CloudinaryAssetReference {
 	publicId: string
@@ -18,10 +18,10 @@ export function normalizeCloudinaryPublicId(value: string): string | null {
 	}
 	const normalized = decoded.replace(/^\/+|\/+$/g, '')
 	if (!normalized) return null
-	if (normalized.startsWith(CLOUDINARY_ROOT_PREFIX))
+	if (normalized.startsWith(CLOUDINARY_ROOT_PATH))
 		return stripAssetExtension(normalized)
 	if (/^(posts|gallery)\//.test(normalized))
-		return stripAssetExtension(`${CLOUDINARY_ROOT_PREFIX}${normalized}`)
+		return stripAssetExtension(`${CLOUDINARY_ROOT_PATH}${normalized}`)
 	return null
 }
 
@@ -69,5 +69,3 @@ export function getUnreferencedAssetIds(
 		.filter((publicId): publicId is string => Boolean(publicId))
 		.filter((publicId) => !references.has(publicId))
 }
-
-export { CLOUDINARY_ROOT_PREFIX }

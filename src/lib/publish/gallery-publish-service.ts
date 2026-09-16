@@ -9,10 +9,6 @@ import {
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
 import {
-	buildGalleryPublicId,
-	uploadGalleryWebp,
-} from '@/lib/gallery/cloudinary'
-import {
 	createAlbumSkeleton,
 	GALLERY_ROOT,
 	parseAlbumData,
@@ -20,6 +16,10 @@ import {
 } from '@/lib/gallery/gallery-parser'
 import { prepareGalleryImage } from '@/lib/gallery/media-preparation'
 import { createLogger } from '@/lib/logger'
+import {
+	buildGalleryPublicId,
+	uploadGalleryWebp,
+} from '@/lib/media/gallery-media'
 import type { GalleryImageFrontmatter } from '@/types/gallery'
 
 const logger = createLogger('lib/publish/gallery-publish-service')

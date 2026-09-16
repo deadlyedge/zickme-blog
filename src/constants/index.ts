@@ -1,4 +1,5 @@
 export * from './auth'
+export * from './cloudinary'
 export * from './comments'
 export * from './content'
 export * from './deletion'

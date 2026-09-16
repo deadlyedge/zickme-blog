@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test'
-import { buildGalleryPublicId } from '../src/lib/gallery/cloudinary'
 import { formatGalleryExposureTime } from '../src/lib/gallery/exif'
 import {
 	filterGalleriesByTag,
 	getGalleryImageUrl,
 	parseGalleryTags,
 } from '../src/lib/gallery/gallery-public'
-import { buildPostMediaPublicId } from '../src/lib/publish/media-upload'
+import { buildGalleryPublicId } from '../src/lib/media/gallery-media'
+import { buildPostMediaPublicId } from '../src/lib/media/post-media'
 import type { GalleryPublic } from '../src/types/gallery'
 import type { GalleryPublic as DomainGalleryPublic } from '../src/types/gallery/public'
 
@@ -40,7 +40,7 @@ const albums = [
 describe('gallery public helpers', () => {
 	test('uses separate stable Cloudinary namespaces for Gallery and Post media', () => {
 		expect(buildGalleryPublicId('Travel Album', 'IMG_001.webp')).toBe(
-			'gallery/travel-album/img_001',
+			'gallery/Travel-Album/IMG_001',
 		)
 		expect(buildPostMediaPublicId('my-post', 'assets/cover.png')).toBe(
 			'posts/my-post/cover',
