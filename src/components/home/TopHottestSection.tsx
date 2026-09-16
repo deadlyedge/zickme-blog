@@ -207,22 +207,25 @@ function HighlightTags({
 		</div>
 	)
 }
-
 function HighlightInfo({
 	label,
 	title,
 	href,
 	children,
+	mediaOnLeft = false,
 	accent,
 }: {
 	label: string
 	title: string
 	href: string
 	children: React.ReactNode
+	mediaOnLeft?: boolean
 	accent: string
 }) {
 	return (
-		<div className="order-2 flex flex-col justify-between bg-card/90 p-6 sm:p-10 lg:order-1 lg:p-12">
+		<div
+			className={`flex flex-col justify-between bg-card/90 p-6 sm:p-10 lg:p-12 ${mediaOnLeft ? 'order-2 lg:order-2' : 'order-2 lg:order-1'}`}
+		>
 			<div className="space-y-5">
 				<span
 					className="text-xs font-bold uppercase tracking-[0.2em]"
@@ -262,6 +265,7 @@ function PostHighlight({
 				title={post.title}
 				href={`/posts/${post.slug}`}
 				accent={accent}
+				mediaOnLeft
 			>
 				<HighlightTags tags={post.tags ?? []} />
 				<p className="line-clamp-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -275,7 +279,7 @@ function PostHighlight({
 			</HighlightInfo>
 			<NavigationLink
 				href={`/posts/${post.slug}`}
-				className="group relative order-1 min-h-70 overflow-hidden bg-muted lg:order-2 lg:aspect-4/3 lg:min-h-0"
+				className="group relative order-1 min-h-70 overflow-hidden bg-muted lg:order-1 lg:aspect-4/3 lg:min-h-0"
 			>
 				<Image
 					src={post.poster as string}

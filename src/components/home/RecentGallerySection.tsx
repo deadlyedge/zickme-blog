@@ -50,40 +50,6 @@ function RecentGalleryCard({ gallery }: { gallery: HomeRecentGallery }) {
 		gallery.width,
 		gallery.height,
 	)
-	if (orientation === 'portrait') {
-		return (
-			<CardTilt
-				className="w-full"
-				aria-labelledby={`recent-gallery-${gallery.slug}`}
-			>
-				<CardTiltContent className="w-full overflow-hidden rounded-2xl bg-card shadow-2xl">
-					<Link
-						href={gallery.href}
-						className="relative flex aspect-3/4 w-full overflow-hidden bg-muted text-white"
-					>
-						<div className="relative min-w-0 flex-1">
-							<Image
-								src={gallery.coverUrl}
-								alt={gallery.coverTitle || gallery.title}
-								fill
-								sizes="(max-width: 640px) 90vw, 42vw"
-								className="object-cover"
-							/>
-						</div>
-						<div className="flex w-11 shrink-0 items-center justify-center bg-[#242424] px-1 text-white sm:w-13">
-							<h3
-								id={`recent-gallery-${gallery.slug}`}
-								className="max-h-[90%] overflow-hidden text-center text-sm font-bold leading-6 [writing-mode:vertical-rl] rotate-180"
-								aria-label={gallery.title}
-							>
-								{gallery.title}
-							</h3>
-						</div>
-					</Link>
-				</CardTiltContent>
-			</CardTilt>
-		)
-	}
 	return (
 		<CardTilt
 			className="w-full"
@@ -92,7 +58,7 @@ function RecentGalleryCard({ gallery }: { gallery: HomeRecentGallery }) {
 			<CardTiltContent className="w-full overflow-hidden rounded-2xl bg-card shadow-2xl">
 				<Link
 					href={gallery.href}
-					className="relative block aspect-4/3 w-full overflow-hidden bg-muted text-white"
+					className={`group relative block w-full overflow-hidden bg-muted text-white ${orientation === 'portrait' ? 'aspect-3/4' : 'aspect-4/3'}`}
 				>
 					<Image
 						src={gallery.coverUrl}
