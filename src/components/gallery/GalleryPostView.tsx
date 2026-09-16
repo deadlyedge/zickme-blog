@@ -52,7 +52,7 @@ export function GalleryPostView({
 		const targetIndex = images.findIndex((image) => image.id === imageId)
 		if (targetIndex < 0) return
 		setImageIndex(targetIndex)
-		setLightboxOpen(true)
+		if (window.matchMedia('(max-width: 767px)').matches) setLightboxOpen(true)
 	}, [album, images])
 
 	const updateImageHash = (imageId: string | undefined) => {

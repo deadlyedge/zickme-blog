@@ -243,7 +243,7 @@ Gallery：
 - Gallery tags；
 - 允许公开的 EXIF；
 - 公开评论数；
-- 指向 `/gallery/[slug]#image-[stableImageId]` 的链接。
+- 指向 `/gallery/[slug]#image-[stableImageId]` 的链接；移动端进入后打开 Lightbox，桌面端只定位并显示对应主图，不自动打开 Lightbox。
 
 EXIF 展示要求：
 
@@ -436,6 +436,11 @@ Gallery 图片项必须使用稳定图片 ID 生成地址：
 ```text
 /gallery/{gallerySlug}#image-{stableImageId}
 ```
+
+首页 Gallery 深链接在不同设备上的行为：
+
+- 移动设备：定位到目标图片并打开 Lightbox；
+- 桌面设备：定位并显示目标主图，但不自动打开 Lightbox，避免横向页面中的弹窗图片过小。
 
 不使用图片标题作为唯一定位标识，因为标题可能重复、变更或包含特殊字符。
 
