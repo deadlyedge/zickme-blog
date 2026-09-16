@@ -81,8 +81,8 @@ export async function uploadGalleryWebp(
 			resource_type: 'image',
 			transformation: [
 				{
-					width: 640,
-					height: 640,
+					width: 320,
+					height: 320,
 					crop: 'limit',
 					quality: 'auto',
 					fetch_format: 'auto',

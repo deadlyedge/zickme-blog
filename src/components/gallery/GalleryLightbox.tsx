@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GalleryBottomPanel } from '@/components/gallery/GalleryBottomPanel'
+import { GalleryImagePreloads } from '@/components/gallery/GalleryImagePreloads'
 import {
 	Dialog,
 	DialogContent,
@@ -57,6 +58,11 @@ export function GalleryLightbox({
 				<DialogDescription className="sr-only">
 					使用左右方向键或触摸滑动切换图片，按 Escape 关闭。
 				</DialogDescription>
+				<GalleryImagePreloads
+					images={images}
+					selectedIndex={index}
+					sizes="100vw"
+				/>
 				<div
 					className="relative flex h-full w-full items-center justify-center"
 					onTouchStart={(event) => {
@@ -79,6 +85,7 @@ export function GalleryLightbox({
 							src={image.url}
 							alt={image.alt}
 							fill
+							loading="eager"
 							sizes="100vw"
 							className="object-contain"
 							onError={() => setFailedImageId(image.id)}

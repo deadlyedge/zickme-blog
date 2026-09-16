@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { GalleryBottomPanel } from '@/components/gallery/GalleryBottomPanel'
+import { GalleryImagePreloads } from '@/components/gallery/GalleryImagePreloads'
 import { getGalleryImageUrl } from '@/lib/gallery/gallery-public'
 import { cn } from '@/lib/utils'
 import type { GalleryPublicImage } from '@/types/gallery'
@@ -10,12 +11,12 @@ import type { GalleryPublicImage } from '@/types/gallery'
 function GalleryImage({
 	image,
 	sizes,
-	priority = false,
+	preload = false,
 	variant = 'full',
 }: {
 	image: GalleryPublicImage
 	sizes: string
-	priority?: boolean
+	preload?: boolean
 	variant?: 'full' | 'thumbnail'
 }) {
 	const [failed, setFailed] = useState(false)
@@ -30,7 +31,8 @@ function GalleryImage({
 			src={getGalleryImageUrl(image, variant)}
 			alt={image.alt}
 			fill
-			priority={priority}
+			preload={preload}
+			{...(!preload ? { loading: 'lazy' as const } : {})}
 			sizes={sizes}
 			className="object-contain"
 			onError={() => setFailed(true)}
@@ -53,11 +55,16 @@ export function GalleryGrid({
 }) {
 	return (
 		<>
+			<GalleryImagePreloads
+				images={images}
+				selectedIndex={selectedIndex}
+				sizes="(min-width: 768px) 75vw, 100vw"
+			/>
 			<section className="hidden min-h-0 flex-1 grid-cols-[minmax(0,1fr)_clamp(6rem,13vw,10rem)] gap-5 md:grid">
 				<div className="group/stage relative min-h-0 overflow-hidden rounded-sm bg-[#2f2f2f]">
 					<GalleryImage
 						image={images[selectedIndex]}
-						priority
+						preload
 						sizes="(min-width: 768px) 75vw, 100vw"
 					/>
 					<GalleryBottomPanel
