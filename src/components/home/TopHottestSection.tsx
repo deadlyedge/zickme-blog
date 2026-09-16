@@ -147,7 +147,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 				onMouseEnter={() => setIsPaused(true)}
 				onMouseLeave={() => setIsPaused(false)}
 			>
-				<CarouselContent className="-ml-0">
+				<CarouselContent className="ml-0">
 					{highlights.map((highlight) => (
 						<CarouselItem
 							key={

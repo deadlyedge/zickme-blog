@@ -3,7 +3,7 @@
 > 制定日期：2026-09-16  
 > 前置依据：`documents/project-summary-0915.md`、`documents/thoughts.md`、`documents/architecture/current-code-structure-summary.md`  
 > 阶段性质：前台只读展示增强  
-> 当前状态：规划中
+> 当前状态：已完成（2026-09-16）
 
 ## 1. 阶段目标
 
@@ -191,25 +191,37 @@ galleryImageId ASC
 - 可以只显示实际存在的图片项；
 - 是否使用最近 Gallery 图片补位，必须作为单独产品决策，不能隐式混入“热门讨论”语义。
 
-### 3.4 轮播布局
+Post 和 Gallery 图片使用不同的桌面端左右布局，移动端统一降级为图片在上、信息在下。
 
-posts页卡保持现有布局不变，album每个轮播项采用宽容器的左右结构：
+每个轮播项采用宽容器的左右结构：
 
 ```text
+Post：
 ┌────────────────────────────────────────────┐
-│ 左侧信息区                  │ 右侧图片区  │
-│ 类型标识                     │             │
-│ 标题                         │             │
-│ tags                         │    4:3      │
-│ 日期 / 评论 / EXIF           │             │
+│ 左侧 4:3 图片              │ 右侧信息区  │
+└────────────────────────────────────────────┘
+
+Gallery：
+┌────────────────────────────────────────────┐
+│ 左侧信息区                  │ 右侧 4:3 图片│
 └────────────────────────────────────────────┘
 ```
 
-推荐比例：
+- 图片区和信息区使用宽容器的双列布局；
+- Post 的图片区位于左侧，Gallery 的图片区位于右侧；
+- 图片区使用 `object-fit: cover`；
+- 图片和信息区域在桌面端使用 `items-stretch` / `height: 100%` 撑满当前轮播可见高度；
+- 移动端切换为图片在上、信息在下，保证触摸设备上的可读性；
 
-- 左侧信息区：约 45%～50%；
-- 右侧图片区：约 50%～55%；
-- 右侧图片固定为 `aspect-ratio: 4 / 3`；
+轮播实现：
+
+- 使用项目内定制的 shadcn 风格 `Carousel` 组件；
+- 底层使用 `embla-carousel-react`；
+- 支持移动端触摸左右滑动和桌面端鼠标拖动；
+- 支持循环播放、自动播放和鼠标悬停暂停；
+- 左右箭头位于顶部指示器区域，保持原有首页控制布局，不覆盖图片内容；
+- 指示器点击通过 Carousel API 跳转到对应项目；
+- 轮播项目使用 `aria-roledescription="slide"`，外层使用 `aria-roledescription="carousel"`。
 - 首页轮播图片优先使用 `object-fit: cover`，详情页保留原始比例。
 
 信息区必须明确区分内容类型：
@@ -409,7 +421,7 @@ HomeScrollArea
 
 组件职责：
 
-- `TopMixedHighlights`：轮播索引、自动播放、暂停、方向和统一动画；
+- `TopMixedHighlights`：Carousel API、自动播放、暂停、触摸滑动和当前项目状态；
 - `PostHighlightSlide`：Post 信息区和封面；
 - `GalleryImageHighlightSlide`：图片信息、所属 Album 和 EXIF；
 - `RecentGallerySection`：最多两张 Gallery 卡片及空状态隐藏；
@@ -461,8 +473,13 @@ Gallery 图片项必须使用稳定图片 ID 生成地址：
 - `showExif=false` 时不显示 EXIF；
 - Gallery 图片链接包含稳定 image ID；
 - 空数据时模块隐藏而不是渲染空壳；
-- 移动端标题由竖排降级为横排；
+- 纵向/正方形 Gallery 卡片与横向卡片使用相同的底部标题浮层；
 - `prefers-reduced-motion` 下轮播动画不会造成明显干扰。
+- 移动端可以通过触摸左右滑动切换轮播项目；
+- Post 桌面端为图片左、信息右；
+- Gallery 桌面端为信息左、图片右；
+- 顶部左右箭头位于指示器区域；
+- Post/Gallery 内容区域在轮播可见高度内完整撑满。
 
 ### 8.3 工程验证
 
@@ -501,22 +518,22 @@ bunx tsc --noEmit --pretty false
 4. 实现纵向/正方形 3:4 卡片；
 5. 实现移动端布局降级。
 
-### Phase 3：混合热门轮播
+### Phase 3：混合热门轮播（已完成）
 
 1. 将热门 Post 数量改为 3；
 2. 将当前轮播抽象为混合高亮轮播；
 3. 增加 2 张 Gallery 图片项；
 4. 实现左右信息区与右侧固定 4:3 图片；
 5. 增加类型标识、EXIF 和图片深链接；
-6. 补充键盘、暂停、reduced-motion 和空数据处理。
+6. 使用 Embla Carousel 补充触摸滑动、键盘控制、暂停、reduced-motion 和空数据处理。
 
-### Phase 4：回归验证
+### Phase 4：回归验证（已完成）
 
 1. 使用真实 Post、Gallery、评论和缺失封面数据验证首页；
 2. 检查公开数据没有邮箱、GPS、内部路径或 Cloudinary public ID；
 3. 检查首页查询只读，不触发 Publish、锁、Cloudinary 上传或内容写入；
 4. 运行 lint、TypeScript 检查、build 和测试；
-5. 更新 README 或当前架构文档中的首页模块说明。
+5. 更新本阶段文档中的实际实现和验收状态。
 
 ## 10. 明确不在本阶段范围内
 
@@ -532,6 +549,8 @@ bunx tsc --noEmit --pretty false
 - 为 Gallery hash 定位引入 `nuqs`。
 
 ## 11. 完成标准
+
+本阶段已通过 lint、TypeScript、测试和生产构建验证。
 
 本阶段完成时，应满足：
 
