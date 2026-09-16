@@ -3,6 +3,8 @@ import sharp from 'sharp'
 
 const MAX_IMAGE_WIDTH = 3840
 const MAX_IMAGE_HEIGHT = 2160
+// The Cloudinary account already applies the `myblog` root folder.
+export const POST_CLOUDINARY_PUBLIC_ID_PREFIX = 'posts'
 const DEFAULT_CLOUDINARY_BASE_URL =
 	'https://res.cloudinary.com/zickme-blog/image/upload/myblog/'
 
@@ -43,6 +45,27 @@ export function getPostMediaBaseUrl(): string {
 	return configureCloudinary().baseUrl
 }
 
+function sanitizePublicIdSegment(value: string): string {
+	return value
+		.normalize('NFKC')
+		.replace(/[^a-zA-Z0-9_-]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+}
+
+export function buildPostMediaPublicId(
+	postSlug: string,
+	imagePath: string,
+): string {
+	const safePostSlug = sanitizePublicIdSegment(postSlug)
+	const imageName = imagePath.split(/[\\/]/).pop() ?? imagePath
+	const safeImageName = sanitizePublicIdSegment(
+		imageName.replace(/\.[^/.]+$/, ''),
+	)
+	if (!safePostSlug || !safeImageName)
+		throw new Error(`Invalid Post media public ID: ${postSlug}/${imagePath}`)
+	return `${POST_CLOUDINARY_PUBLIC_ID_PREFIX}/${safePostSlug}/${safeImageName}`
+}
+
 async function optimizePostImage(inputBuffer: Buffer): Promise<Buffer> {
 	return sharp(inputBuffer)
 		.resize({
@@ -61,7 +84,11 @@ export async function uploadPostImage(
 	publicId: string,
 	options: PostMediaUploadOptions = {},
 ): Promise<string | null> {
-	const normalizedId = publicId.replace(/[^a-zA-Z0-9_-]/g, '-')
+	const normalizedId = publicId
+		.split('/')
+		.map(sanitizePublicIdSegment)
+		.filter(Boolean)
+		.join('/')
 	const { configured, baseUrl } = configureCloudinary()
 
 	if (options.dryRun) {

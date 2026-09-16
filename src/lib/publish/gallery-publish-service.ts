@@ -239,9 +239,11 @@ export async function publishGallery(
 								where: eq(galleryImages.sourcePath, sourcePathKey),
 							})
 						: undefined
+				const publicId = buildGalleryPublicId(slug, prepared.file)
 				const unchanged =
 					previous?.fileHash === prepared.hash &&
-					previous.fileSize === prepared.size
+					previous.fileSize === prepared.size &&
+					previous.publicId === publicId
 				if (!dryRun) await fs.writeFile(outputPath, prepared.buffer)
 				let upload =
 					previous?.url && unchanged
@@ -252,10 +254,7 @@ export async function publishGallery(
 							}
 						: undefined
 				if (!dryRun && !unchanged) {
-					upload = await uploadGalleryWebp(
-						prepared.buffer,
-						buildGalleryPublicId(slug, prepared.file),
-					)
+					upload = await uploadGalleryWebp(prepared.buffer, publicId)
 					summary.uploaded++
 				} else if (unchanged) summary.skipped++
 				if (!dryRun) {

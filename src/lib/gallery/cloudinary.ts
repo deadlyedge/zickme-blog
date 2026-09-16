@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary'
 
-const CLOUDINARY_FOLDER = 'photo-gallery'
+/**
+ * Stable Gallery namespace passed to Cloudinary.
+ * The configured Cloudinary account supplies the `myblog` root folder.
+ */
+export const GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX = 'gallery'
 
 export interface GalleryCloudinaryUpload {
 	publicId: string
@@ -26,7 +30,7 @@ export function buildGalleryPublicId(
 ): string {
 	const safeAlbum = sanitizeCloudinarySegment(albumSlug)
 	const safeFile = sanitizeCloudinarySegment(fileName.replace(/\.webp$/i, ''))
-	return `${CLOUDINARY_FOLDER}/${safeAlbum}/${safeFile}`
+	return `${GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX}/${safeAlbum}/${safeFile}`
 }
 
 export function createGalleryCloudinaryClient(): typeof cloudinary {
@@ -91,5 +95,3 @@ export async function uploadGalleryWebp(
 		}),
 	}
 }
-
-export { CLOUDINARY_FOLDER }

@@ -17,6 +17,7 @@ import type {
 import { createLogger } from '@/lib/logger'
 import { normalizePostMetadata } from '@/lib/post-metadata'
 import {
+	buildPostMediaPublicId,
 	getPostMediaBaseUrl,
 	uploadPostImage,
 } from '@/lib/publish/media-upload'
@@ -154,6 +155,7 @@ export class PostPublishService {
 				poster = await this.resolveAndUploadImage(
 					poster,
 					relativeFilePath,
+					slug,
 					virtualImagesMap,
 					basePostsDir,
 				)
@@ -162,6 +164,7 @@ export class PostPublishService {
 			const processedContent = await this.resolveMarkdownImages(
 				rawBody,
 				relativeFilePath,
+				slug,
 				virtualImagesMap,
 				basePostsDir,
 			)
@@ -203,6 +206,7 @@ export class PostPublishService {
 	private async resolveAndUploadImage(
 		imagePath: string,
 		relativeFilePath: string,
+		postSlug: string,
 		virtualImagesMap?: Map<string, Buffer>,
 		basePostsDir?: string,
 	): Promise<string> {
@@ -220,9 +224,7 @@ export class PostPublishService {
 				? path.join(fileDir, normalizedImgPath)
 				: normalizedImgPath
 		const cleanCombinedPath = combinedPath.replace(/\\/g, '/')
-		const publicId = cleanCombinedPath
-			.replace(/\.[^/.]+$/, '')
-			.replace(/[\\/]/g, '-')
+		const publicId = buildPostMediaPublicId(postSlug, cleanCombinedPath)
 
 		if (virtualImagesMap) {
 			for (const [vPath, buf] of virtualImagesMap.entries()) {
@@ -263,6 +265,7 @@ export class PostPublishService {
 	private async resolveMarkdownImages(
 		content: string,
 		relativeFilePath: string,
+		postSlug: string,
 		virtualImagesMap?: Map<string, Buffer>,
 		basePostsDir?: string,
 	): Promise<string> {
@@ -279,6 +282,7 @@ export class PostPublishService {
 				const uploadedUrl = await this.resolveAndUploadImage(
 					src,
 					relativeFilePath,
+					postSlug,
 					virtualImagesMap,
 					basePostsDir,
 				)

@@ -25,6 +25,8 @@
 		"docs:audit": "bun run scripts/audit-docs.ts",
 		"db:reset": "bun run scripts/reset-db.ts",
 		"publish": "bun run scripts/publish.ts",
+		"media:audit": "bun run scripts/media-cleanup.ts audit",
+		"media:cleanup": "bun run scripts/media-cleanup.ts cleanup",
 		"publish:tui": "bun run scripts/publish-tui.ts",
 		"reset-admin-password": "bun run scripts/reset-admin-password.ts"
 	},
