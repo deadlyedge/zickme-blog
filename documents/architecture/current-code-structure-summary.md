@@ -1,6 +1,6 @@
 # 当前代码结构与后续优化方向
 
-> 更新时间：2026-09-14
+> 更新时间：2026-09-16
 >
 > 本文以当前真实代码为准，目标是说明职责边界和后续优化方向，而不是继续追求清除所有历史命名。
 
@@ -51,6 +51,7 @@ publish:tui
 
 - `publish` 是非交互式正式入口；
 - `publish:tui` 是保留的维护引导工具，帮助用户形成“检查、修复、看 diff、dry-run、确认发布”的习惯；
+- `publish:tui -- --help` 提供交互式工具参数说明；
 - CLI、TUI、Dashboard 复用同一个 `runPublishWorkflow()`；
 - TUI 不拥有独立的数据库写入、媒体上传或内容编辑实现。
 
@@ -71,14 +72,21 @@ src/lib/content/content-safety.ts
 
 ```text
 src/lib/gallery/media-preparation.ts
-src/lib/publish/media-upload.ts
-src/lib/gallery/cloudinary.ts
+src/lib/media/cloudinary-client.ts
+src/lib/media/cloudinary-public-id.ts
+src/lib/media/cloudinary-upload.ts
+src/lib/media/post-media.ts
+src/lib/media/gallery-media.ts
+src/lib/media/cloudinary-asset-audit.ts
 src/lib/gallery/exif.ts
 ```
 
 - `media-preparation.ts`：原始图片转换为 Git 管理的 WebP，负责尺寸、hash、mtime 和安全 EXIF；
-- `media-upload.ts`：Post 图片上传 Cloudinary；
-- `gallery/cloudinary.ts`：Gallery 图片上传、publicId 和缩略图 URL；
+- `src/lib/media/*`：统一的 Cloudinary client、public ID、上传基础层和 Post/Gallery 媒体策略；
+- Post 使用 `myblog/posts/{postSlug}/{imageName}` 命名空间；
+- Gallery 使用 `myblog/gallery/{albumSlug}/{imageName}` 命名空间，并生成 320px 缩略图 URL；
+- Cloudinary 三个凭据必须同时存在才会启用真实上传；缺少配置时不生成伪造 URL；
+- `cloudinary-asset-audit.ts`：收集数据库引用并支持只读审计/显式确认清理；
 - `exif.ts`：Gallery EXIF 白名单和隐私过滤。
 
 ### Post 发布
@@ -156,6 +164,8 @@ src/lib/gallery/gallery-sync-service.ts
 - 新业务只依赖 `src/lib/publish`，不新增 `src/lib/sync` 调用方；
 - Publish 只读取 Git 内容源；
 - dry-run 不连接数据库、不获取锁、不上传 Cloudinary；
+- Post/Gallery 解析、媒体上传和数据库错误必须进入 Publish 摘要；
+- Post 解析失败不能从总数中消失，也不能被报告为成功；
 - Post 和 Gallery 保持独立服务；
 - Dashboard 只触发 Publish 或查看运行时状态；
 - 不新增 merge、pull、patch、retry 或自动删除协议。
@@ -222,6 +232,7 @@ bun run content:verify
 bun run docs:audit
 bun run db:audit-migrations
 bun run build
+bun run docs:audit
 ```
 
 结构优化的完成标准不是“所有文件都不再出现 sync”，而是：内容源只有 Git；Publish 是唯一正式发布流程；Post、Gallery、媒体和运行记录职责清晰；CLI、TUI、Dashboard 复用同一 Publish Workflow；dry-run 完全只读；旧双向能力没有新的调用方。

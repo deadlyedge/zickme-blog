@@ -8,7 +8,6 @@ async function main(): Promise<void> {
 	const paths = [
 		path.join(root, 'README.md'),
 		path.join(root, 'AGENTS.md'),
-		path.join(root, 'documents', 'architecture-reduction.md'),
 		path.join(architectureRoot, 'README.md'),
 		path.join(
 			architectureRoot,

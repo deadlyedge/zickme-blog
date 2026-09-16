@@ -36,6 +36,7 @@ Blog / Gallery
    - **包管理器**：优先使用 `bun`（如 `bun run build`、`bun add ...`）。
    - **代码格式与 Lint**：统一使用 **Biome**（`bun run lint` / `bun run format`），遵循项目根目录 `biome.json`。
    - **绝对路径导入**：统一使用 `@/...` 路径别名引用 `src/` 下模块。
+   - **快捷脚本**：如果 `package.json` 已提供 `publish:*` 快捷命令，优先按其名称调用。
 
 4. **安全与健壮性**：
    - 敏感配置必须且仅能来自环境变量（如 `.env`），不得硬编码任何 Key/Secret。
@@ -75,4 +76,11 @@ bun run content:check -- --no-examples
 bun run content:verify
 bunx tsc --noEmit --pretty false
 ```
+涉及 Publish调试时，至少执行：
+```bash
+# 自动化/非交互式验证
+bun run publish -- --scope all --dry-run --json
+```
+并需要确认交互式发布代码（publish:tui）代码和非交互式功能一致。
+
 如果修改了同步、快照、权限或内容边界，必须增加相应测试；在测试基础设施补齐前，至少提供可复现的纯函数或 dry-run 验证。确保无未捕获的 TypeScript 错误、Lint 报错或未说明的工作区副作用后方可完成交付。

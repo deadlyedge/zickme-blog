@@ -240,6 +240,17 @@ git status --short
 
 `bun run publish` 未指定 scope 时会依次发布 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只发布单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。旧同步 CLI 已删除。
 
+Publish 失败不会把解析失败或媒体上传失败的 Post 静默视为成功：摘要会统计实际扫描数量、失败数量和媒体错误。`--dry-run` 不上传 Cloudinary、不写数据库、不创建运行记录；本地图片在 dry-run 中保留原始路径。
+
+交互式维护工具使用：
+
+```bash
+# 推荐：启动交互式 Publish Assistant，由 TUI 引导后续流程
+bun run publish:tui
+```
+
+TUI 会依次执行内容检查、修复确认、Git diff 检查和 publish dry-run，只有用户确认后才执行真实发布。日常不需要手动填写 scope；如果需要调试或只处理单个域，才使用脚本参数，例如 `bun run publish:tui -- --scope galleries`。非交互式环境请使用 `bun run publish` 或项目中已配置的快捷 script。不要使用 `bun publish:tui`，因为 `publish:tui` 是项目脚本，必须通过 `bun run` 调用。
+
 首次准备内容目录时，可以运行：
 
 ```bash
@@ -330,7 +341,7 @@ content/photo-gallery/
 
 - `Gallery` / `GalleryImage` 数据模型；
 - `Gallery Publish Service`；
-- Cloudinary `photo-gallery/{albumSlug}/...` folder；
+- Cloudinary `myblog/gallery/{albumSlug}/{imageName}` 资产命名空间；
 - `check-content --fix` 自动生成 `album.yaml` 骨架；
 - 自动生成 `gallery.yaml`；
 - 每张图片的 `title`、`description`、`alt`、`order` 和 `hidden`；
@@ -362,6 +373,8 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 4. 数据库迁移在受控环境执行 `bun run db:migrate`；质量门禁不执行生产数据库写入；
 5. `bun run db:reset` 是清空网站运行时数据的显式工具；确认后可用于从本地 `content/` 重建清爽站点。schema 变更使用 `bun run db:migrate`。
 6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。
+
+Cloudinary 三个环境变量必须同时配置才会启用上传。项目不会默认使用作者的 Cloudinary 账号；缺少配置时不会生成伪造的 Cloudinary URL，正式发布会报告媒体错误，dry-run 只保留本地图片路径。
 
 ---
 

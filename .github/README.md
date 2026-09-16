@@ -5,6 +5,8 @@
 `.github/workflows/README.md` 是当前唯一的归档说明。恢复自动化前，必须完成离线验收、人工发布演练，并重新评估为单一受控 publish workflow；不得恢复独立 media workflow 或 workflow_run 级联。
 
 Git 是唯一人工内容源。暂停期间请使用本地 Bun 命令完成检查、dry-run 和人工 publish；`.gallery-input` 原始照片必须在仓库外自行备份。Snapshot 只保护数据库业务副本，不能恢复 Git 内容源或 Cloudinary 原始媒体。
+
+交互式人工维护推荐直接运行 `bun run publish:tui`；自动化或非交互式检查使用 `bun run publish -- --scope all --dry-run --json`。不要使用 `bun publish:tui`；如果需要向 TUI 传递 scope 等脚本参数，使用 `bun run publish:tui -- --scope galleries`。
 ## 本地验证
 
 ```bash

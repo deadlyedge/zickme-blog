@@ -4,7 +4,7 @@
 
 ## 当前规范
 
-- [`../architecture-reduction.md`](../architecture-reduction.md)：Git-first 单向发布和恢复边界的正式架构规范。
+- [`../old-plans/architecture-reduction.md`](../old-plans/architecture-reduction.md)：Git-first 单向发布和恢复边界的历史架构规范；当前实现以本目录中的代码结构与治理文档为准。
 - [`stage11-deprecated-fields-and-migration-audit.md`](stage11-deprecated-fields-and-migration-audit.md)：Stage 11 废弃字段、Migration 文件链和生产状态限制的只读审计。
 - [`stage11-implementation-summary.md`](stage11-implementation-summary.md)：Stage 11 当前已完成范围、验证证据和未完成的生产准入事项。
 - [`current-code-structure-summary.md`](current-code-structure-summary.md)：当前代码结构、已完成清理、兼容边界和后续优化方向。

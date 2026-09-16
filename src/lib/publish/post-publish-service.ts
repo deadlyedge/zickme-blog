@@ -453,8 +453,11 @@ export class PostPublishService {
 		)
 
 		const processedPosts: ProcessedPost[] = []
+		let parseErrorCount = 0
+		let scannedPostCount = 0
 
 		if (options.virtualFiles && options.virtualFiles.length > 0) {
+			scannedPostCount = options.virtualFiles.length
 			this.addLog(
 				'frontmatter',
 				'info',
@@ -480,6 +483,7 @@ export class PostPublishService {
 					virtualImagesMap,
 				)
 				if (post) processedPosts.push(post)
+				else parseErrorCount++
 			}
 		} else {
 			const postsDir =
@@ -487,6 +491,7 @@ export class PostPublishService {
 			this.addLog('frontmatter', 'info', `扫描本地文章目录: ${postsDir}`)
 
 			const files = await this.scanMarkdownFiles(postsDir)
+			scannedPostCount = files.length
 			this.addLog(
 				'frontmatter',
 				'info',
@@ -504,7 +509,9 @@ export class PostPublishService {
 						postsDir,
 					)
 					if (post) processedPosts.push(post)
+					else parseErrorCount++
 				} catch (err) {
+					parseErrorCount++
 					this.addLog(
 						'frontmatter',
 						'error',
@@ -537,7 +544,7 @@ export class PostPublishService {
 		)
 
 		const successCount = await this.savePostsToDb(safePosts, dryRun)
-		const errorCount = processedPosts.length - successCount
+		const errorCount = parseErrorCount + processedPosts.length - successCount
 		let sourceMissing: string[] = []
 		if (!dryRun && !options.virtualFiles) {
 			const dbPosts = await db
@@ -595,7 +602,7 @@ export class PostPublishService {
 				await db.insert(syncLogs).values({
 					triggerType,
 					status,
-					totalPosts: String(processedPosts.length),
+					totalPosts: String(scannedPostCount),
 					successCount: String(successCount),
 					errorCount: String(errorCount),
 					logs: this.logs,
@@ -608,13 +615,13 @@ export class PostPublishService {
 		this.addLog(
 			'general',
 			status === 'SUCCESS' ? 'success' : 'warn',
-			`🏁 同步任务结束: 总计 ${processedPosts.length} 篇，成功 ${successCount} 篇，失败 ${errorCount} 篇`,
+			`🏁 同步任务结束: 总计 ${scannedPostCount} 篇，成功 ${successCount} 篇，失败 ${errorCount} 篇`,
 		)
 
 		return {
-			success: status !== 'FAILED',
+			success: status === 'SUCCESS',
 			status,
-			totalPosts: processedPosts.length,
+			totalPosts: scannedPostCount,
 			successCount,
 			errorCount,
 			logs: this.logs,

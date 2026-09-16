@@ -18,6 +18,15 @@ const scopeArg = args.includes('--scope')
 	: undefined
 const forcedDryRun = args.includes('--dry-run')
 
+function printUsage(): void {
+	console.log(
+		'用法：bun run publish:tui -- [--scope posts|galleries|all] [--dry-run]',
+	)
+	console.log(
+		'交互式检查内容、审查 Git diff、执行 dry-run，并可确认真实 publish。',
+	)
+}
+
 function printHeader(): void {
 	console.log('╭────────────────────────────────────────────╮')
 	console.log('│ zick.me Publish Assistant                  │')
@@ -119,6 +128,10 @@ async function printGitReview(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+	if (args.includes('--help') || args.includes('-h')) {
+		printUsage()
+		return
+	}
 	if (!input.isTTY || !output.isTTY) {
 		console.error(
 			'当前环境不是交互式终端。请使用 bun run publish，或在真实终端中运行 bun run publish:tui。',
