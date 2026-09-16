@@ -20,8 +20,6 @@ Cloudinary 媒体 CDN
 
 同时提供带有 ADMIN 权限控制的 Dashboard、单向发布、媒体管理和运行时诊断工具。
 
-> **当前架构治理（Stage 11）**：Git 管理的 Markdown、`album.yaml` 和处理后的 WebP 是唯一人工内容源。数据库是运行时副本，Cloudinary 只负责媒体 CDN。正式内容流程只使用 `content:check`、`publish`、Git 和受控 CI；旧 `sync`/pull/write-back 能力不再是正式入口。详见 [`documents/architecture/`](documents/architecture/) 和 [`documents/architecture-reduction.md`](documents/architecture-reduction.md)。
-
 ---
 
 ## ✨ 当前特性
@@ -46,7 +44,7 @@ Cloudinary 媒体 CDN
 content/posts/**/*.md
 ```
 
-文章通过 Frontmatter 管理：
+文章通过 Frontmatter 管理，可通过脚本自动生成模板，用户应编辑内容如下：
 
 ```yaml
 ---
@@ -170,7 +168,7 @@ drizzle/meta/_journal.json
 
 ```bash
 bun run db:migrate
-bun run publish -- --scope all
+bun run publish:tui
 bun run dev
 ```
 
@@ -269,15 +267,6 @@ zickme-blog/
 │   ├── photo-gallery/             # album.yaml 与自动生成的 Gallery 文件
 │   └── .gallery-input/            # Git 忽略的原始图片输入
 ├── documents/
-│   ├── architecture/              # 当前架构规范与治理审计
-│   ├── develop-plans/              # 历史计划与当前 Stage 11 计划
-│   ├── development-plan-stage3.md
-│   ├── development-plan-stage4.md
-│   ├── development-plan-stage5.md
-│   ├── development-plan-stage6.md # 独立 Gallery 规划
-│   ├── stage5-summary.md
-│   └── stage9.1-architecture-and-content-flow.md
-│   └── stage5-summary.md
 ├── drizzle/
 │   ├── 0000_stage12_baseline.sql   # 当前正式 baseline
 │   ├── meta/                       # 当前迁移元数据
@@ -298,6 +287,7 @@ zickme-blog/
 │   ├── components/                 # 业务组件和 UI 组件
 │   ├── db/                         # Drizzle Schema 与连接
 │   ├── lib/                        # Actions、查询、同步和工具
+│   ├── constants/                  # 项目层共用常量
 │   └── types/                      # TypeScript 类型
 ├── AGENTS.md
 ├── biome.json
@@ -308,51 +298,44 @@ zickme-blog/
 
 ## 🧭 当前阶段与后续规划
 
-### 已完成：Stage 2–5
+### 内容模型统一
 
-- Post 内容架构统一；
-- Drizzle ORM 迁移；
-- Dashboard 文章状态管理与同步诊断；
-- WebP 图片处理；
-- 品牌与基础 UI 优化；
-- Frontmatter 外链和扩展元数据；
-- 文章封面和状态由 Git 内容源管理，Dashboard 不回写 Markdown；
-- 中文 slug 冲突保护；
-- Drizzle migration baseline 精简。
+原本文章和项目分别处理，导致：
 
-详细总结：[Stage 5 交付总结](documents/stage5-summary.md)。
+- 路由不同；
+- 数据字段不同；
+- 前端组件存在分支；
+- 查询逻辑重复；
+- 后续扩展成本较高。
 
-### 已完成：独立 Gallery 与当前 Publish 治理
+最终统一为 `Post`，使用 tags、category 和 metadata 表达不同内容特征。这是一个正确的抽象收敛。
 
-纯图片相册作为独立内容系统维护：
+### ORM 和数据库现代化
 
-```text
-content/photo-gallery/
-├── gallery.yaml              # 自动生成的全局索引
-├── japan-autumn/
-│   ├── album.yaml            # 相册和图片元数据的人工编辑源
-│   └── images/*.webp         # 只保存处理后的 WebP，不保存原图
-```
+从 Prisma 切换到 Drizzle，带来了：
 
-当前 Gallery 结构包括：
+- 更轻量的运行时依赖；
+- 更直接的 SQL/schema 控制；
+- 更适合 Serverless/Neon 的数据访问方式；
+- 更明确的 migration 和 schema 管理。
 
-- `Gallery` / `GalleryImage` 数据模型；
-- `Gallery Publish Service`；
-- Cloudinary `myblog/gallery/{albumSlug}/{imageName}` 资产命名空间；
-- `check-content --fix` 自动生成 `album.yaml` 骨架；
-- 自动生成 `gallery.yaml`；
-- 每张图片的 `title`、`description`、`alt`、`order` 和 `hidden`；
-- `/gallery` 和 `/gallery/[albumSlug]`；
-- Masonry/Grid、Lightbox 和受控 EXIF 展示；
-- Dashboard 运行时查看和状态管理；
-- Git-first 的单向 Publish，不执行 merge、pull 或 write-back；
-- 不保存原始 JPEG/PNG/TIFF/BMP/RAW 文件。
+但后续经验也表明，ORM 迁移本身只是基础设施工作，并不会自动解决业务边界问题。
 
-Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模型、前台页面、Dashboard 管理和统一 scope Publish。当前代码结构和后续优化方向见 [`documents/architecture/current-code-structure-summary.md`](documents/architecture/current-code-structure-summary.md)。
+### 权限和运维基础
+
+项目没有引入邮件服务，而是选择：
+
+- 管理员通过 CLI 重置密码；
+- 普通用户由管理员在后台手动处理；
+- Server Actions 统一进行 Session 和 Role 校验。
+
+这说明对于个人项目，运维流程不必照搬 SaaS 产品的完整机制。低频操作可以使用受控 CLI 解决，不必为了“功能完整”引入邮件、任务队列等新系统。
 
 ---
 
 ## ☁️ 部署说明
+
+完整的 Vercel 部署、Neon 数据库创建、Cloudinary 申请和环境变量配置步骤，请参阅 [`documents/deployment-vercel-neon-cloudinary.md`](documents/deployment-vercel-neon-cloudinary.md)。
 
 | 环境变量 | 必填 | 说明 |
 | :--- | :---: | :--- |
@@ -371,7 +354,7 @@ Gallery 当前已实现独立的内容源、索引、媒体处理、数据库模
 5. `bun run db:reset` 是清空网站运行时数据的显式工具；确认后可用于从本地 `content/` 重建清爽站点。schema 变更使用 `bun run db:migrate`。
 6. 数据库快照只恢复运行时业务副本，不回滚 Markdown、album.yaml、代码或 Cloudinary；原始照片须由作者自行备份。
 
-Cloudinary 三个环境变量必须同时配置才会启用上传。项目不会默认使用作者的 Cloudinary 账号；缺少配置时不会生成伪造的 Cloudinary URL，正式发布会报告媒体错误，dry-run 只保留本地图片路径。
+Cloudinary 三个环境变量必须同时配置才会启用上传。
 
 ---
 
@@ -394,12 +377,6 @@ bun run build
 
 ## 📚 项目文档
 
-- [Stage 2 开发计划](documents/development-plan-stage2.md)
-- [Stage 3 开发计划](documents/development-plan-stage3.md)
-- [Stage 4 开发计划](documents/development-plan-stage4.md)
-- [Stage 5 开发计划](documents/development-plan-stage5.md)
-- [Stage 5 交付总结](documents/stage5-summary.md)
-- [Stage 6 Gallery 开发计划](documents/development-plan-stage6.md)
 - [AI Agent 协作规范](AGENTS.md)
 
 ---
