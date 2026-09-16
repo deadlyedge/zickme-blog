@@ -1,13 +1,18 @@
 'use client'
 
 import { ArrowLeft, ArrowRight, Flame, MessageCircle } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavigationLink } from '@/components/NavigationLink'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+	Carousel,
+	type CarouselApi,
+	CarouselContent,
+	CarouselItem,
+} from '@/components/ui/carousel'
 import { formatPublishedDate } from '@/lib/utils'
 import type { HomeGalleryImage } from '@/types/content/home'
 import type { PostWithTags } from '@/types/content/post'
@@ -40,52 +45,37 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 		[posts, galleryImages],
 	)
 	const [currentIndex, setCurrentIndex] = useState(0)
-	const [direction, setDirection] = useState<1 | -1>(1)
 	const [isPaused, setIsPaused] = useState(false)
+	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 	const total = highlights.length
 
 	useEffect(() => {
 		if (currentIndex >= total && total > 0) setCurrentIndex(0)
 	}, [currentIndex, total])
 
-	const move = useCallback(
-		(step: 1 | -1) => {
-			if (total <= 1) return
-			setDirection(step)
-			setCurrentIndex((index) => (index + step + total) % total)
-		},
-		[total],
-	)
+	useEffect(() => {
+		if (!carouselApi) return
+		const handleSelect = () => setCurrentIndex(carouselApi.selectedScrollSnap())
+		handleSelect()
+		carouselApi.on('select', handleSelect)
+		return () => {
+			carouselApi.off('select', handleSelect)
+		}
+	}, [carouselApi])
 
 	useEffect(() => {
 		onActiveChange?.(currentIndex)
 	}, [currentIndex, onActiveChange])
 
 	useEffect(() => {
-		if (total <= 1 || isPaused) return
-		const timer = setInterval(() => move(1), 6000)
+		if (!carouselApi || total <= 1 || isPaused) return
+		const timer = setInterval(() => carouselApi.scrollNext(), 6000)
 		return () => clearInterval(timer)
-	}, [isPaused, move, total])
+	}, [carouselApi, isPaused, total])
 
 	if (total === 0) return null
 
-	const current = highlights[currentIndex]
 	const accent = ACCENTS[currentIndex % ACCENTS.length]
-	const slideVariants = {
-		enter: (step: number) => ({
-			x: step > 0 ? 120 : -120,
-			opacity: 0,
-			scale: 0.96,
-		}),
-		center: { x: 0, opacity: 1, scale: 1, transition: { duration: 0.55 } },
-		exit: (step: number) => ({
-			x: step > 0 ? -120 : 120,
-			opacity: 0,
-			scale: 0.96,
-			transition: { duration: 0.45 },
-		}),
-	}
-
 	return (
 		<section
 			aria-labelledby="top-hottest-title"
@@ -118,10 +108,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 							<button
 								key={item.type === 'post' ? item.post.id : item.image.id}
 								type="button"
-								onClick={() => {
-									setDirection(index > currentIndex ? 1 : -1)
-									setCurrentIndex(index)
-								}}
+								onClick={() => carouselApi?.scrollTo(index)}
 								className={`h-2 rounded-full transition-all motion-reduce:transition-none ${index === currentIndex ? 'w-8' : 'w-2 bg-muted-foreground/30'}`}
 								style={
 									index === currentIndex
@@ -134,7 +121,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 						<Button
 							variant="outline"
 							size="icon"
-							onClick={() => move(-1)}
+							onClick={() => carouselApi?.scrollPrev()}
 							className="ml-2 size-9 rounded-full bg-background/80 backdrop-blur-md"
 							aria-label="上一个热门内容"
 						>
@@ -143,7 +130,7 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 						<Button
 							variant="outline"
 							size="icon"
-							onClick={() => move(1)}
+							onClick={() => carouselApi?.scrollNext()}
 							className="size-9 rounded-full bg-background/80 backdrop-blur-md"
 							aria-label="下一个热门内容"
 						>
@@ -153,29 +140,34 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 				)}
 			</div>
 
-			<div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/90 shadow-2xl backdrop-blur-md">
-				<AnimatePresence initial={false} custom={direction} mode="wait">
-					<motion.div
-						key={
-							current.type === 'post'
-								? `post-${current.post.id}`
-								: `image-${current.image.id}`
-						}
-						custom={direction}
-						variants={slideVariants}
-						initial="enter"
-						animate="center"
-						exit="exit"
-						className="grid min-h-105 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.05fr)]"
-					>
-						{current.type === 'post' ? (
-							<PostHighlight post={current.post} accent={accent} />
-						) : (
-							<GalleryHighlight image={current.image} accent={accent} />
-						)}
-					</motion.div>
-				</AnimatePresence>
-			</div>
+			<Carousel
+				setApi={setCarouselApi}
+				opts={{ loop: true, align: 'start', duration: 30 }}
+				className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/90 shadow-2xl backdrop-blur-md"
+				onMouseEnter={() => setIsPaused(true)}
+				onMouseLeave={() => setIsPaused(false)}
+			>
+				<CarouselContent className="-ml-0">
+					{highlights.map((highlight) => (
+						<CarouselItem
+							key={
+								highlight.type === 'post'
+									? `post-${highlight.post.id}`
+									: `image-${highlight.image.id}`
+							}
+							className="pl-0"
+						>
+							<div className="grid min-h-105 items-stretch lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.05fr)]">
+								{highlight.type === 'post' ? (
+									<PostHighlight post={highlight.post} accent={accent} />
+								) : (
+									<GalleryHighlight image={highlight.image} accent={accent} />
+								)}
+							</div>
+						</CarouselItem>
+					))}
+				</CarouselContent>
+			</Carousel>
 		</section>
 	)
 }
@@ -224,7 +216,7 @@ function HighlightInfo({
 }) {
 	return (
 		<div
-			className={`flex flex-col justify-between bg-card/90 p-6 sm:p-10 lg:p-12 ${mediaOnLeft ? 'order-2 lg:order-2' : 'order-2 lg:order-1'}`}
+			className={`flex h-full flex-col justify-between bg-card/90 p-6 sm:p-10 lg:p-12 ${mediaOnLeft ? 'order-2 lg:order-2' : 'order-2 lg:order-1'}`}
 		>
 			<div className="space-y-5">
 				<span
@@ -279,7 +271,7 @@ function PostHighlight({
 			</HighlightInfo>
 			<NavigationLink
 				href={`/posts/${post.slug}`}
-				className="group relative order-1 min-h-70 overflow-hidden bg-muted lg:order-1 lg:aspect-4/3 lg:min-h-0"
+				className="group relative order-1 min-h-70 h-full overflow-hidden bg-muted lg:order-1 lg:min-h-0"
 			>
 				<Image
 					src={post.poster as string}
@@ -328,7 +320,7 @@ function GalleryHighlight({
 			</HighlightInfo>
 			<NavigationLink
 				href={image.href}
-				className="group relative order-1 min-h-70 overflow-hidden bg-muted lg:order-2 lg:aspect-4/3 lg:min-h-0"
+				className="group relative order-1 min-h-70 h-full overflow-hidden bg-muted lg:order-2 lg:min-h-0"
 			>
 				<Image
 					src={image.imageUrl}
