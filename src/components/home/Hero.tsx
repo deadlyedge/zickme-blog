@@ -48,7 +48,7 @@ export const Hero = ({ profile }: HeroProps) => {
 			<div
 				className="mx-auto w-full flex flex-col gap-y-16 sm:gap-y-24 justify-evenly max-w-7xl px-3 sm:px-6 min-h-[110vh]"
 				style={{
-					height: `${(3 + Number(profile?.slogans?.length || 3)) * 20}vh`,
+					height: `${(3 + Number(profile?.slogans?.length || 3)) * 30}vh`,
 				}}
 			>
 				{/* 1. 背景标题：主标题 + 柔和文本阴影与微光 */}
@@ -98,7 +98,7 @@ export const Hero = ({ profile }: HeroProps) => {
 						viewport={{ amount: 0.6, once: false }}
 						variants={blockVariantsH}
 					>
-						<div className="inline-block max-w-3xl rounded-2xl border border-border/60 bg-background/70 dark:bg-card/70 backdrop-blur-md px-5 py-4 sm:px-8 sm:py-6 shadow-sm hover:border-primary/30 transition-all">
+						<div className="max-w-3xl sm:px-8 sm:py-6 transition-all">
 							<h2
 								style={slogan.color ? { color: slogan.color } : undefined}
 								className={cn(
@@ -122,8 +122,8 @@ export const Hero = ({ profile }: HeroProps) => {
 					viewport={{ amount: 0.6, once: false }}
 					variants={blockVariantsH}
 				>
-					<div className="max-w-2xl rounded-2xl border border-border/50 bg-background/60 dark:bg-card/60 backdrop-blur-sm p-5 sm:p-6 shadow-xs">
-						<p className="text-foreground/80 text-base sm:text-xl font-medium leading-relaxed drop-shadow-2xs">
+					<div className="max-w-2xl rounded-2xl p-5 sm:p-6">
+						<p className="text-foreground/80 text-xl sm:text-3xl font-medium leading-relaxed drop-shadow-2xs">
 							{profile?.bio ??
 								'We craft impactful digital experiences for ambitious brands.'}
 						</p>

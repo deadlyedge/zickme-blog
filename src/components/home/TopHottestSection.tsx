@@ -84,23 +84,13 @@ export const TopHottestSection: React.FC<TopHottestSectionProps> = ({
 			onMouseEnter={() => setIsPaused(true)}
 			onMouseLeave={() => setIsPaused(false)}
 		>
-			<div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-				<div className="space-y-1.5">
-					<div
-						className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-xs backdrop-blur-md"
-						style={{ color: accent }}
-					>
-						<Flame className="size-3.5 fill-current" /> TOP HIGHLIGHTS
-					</div>
-					<h2
-						id="top-hottest-title"
-						className="flex items-center gap-3 text-2xl font-black tracking-tight text-foreground sm:text-4xl"
-					>
-						<span>热门内容精选</span>
-						<span className="hidden text-sm font-normal text-muted-foreground sm:inline">
-							文章与图片讨论
-						</span>
-					</h2>
+			<div className="mb-8 flex items-center justify-between gap-4 sm:flex-row sm:items-center">
+				<div
+					className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-xs backdrop-blur-md"
+					style={{ color: accent }}
+				>
+					<Flame className="size-3.5 fill-current" />
+					HIGHLIGHTS
 				</div>
 				{total > 1 && (
 					<div className="flex items-center gap-2 self-end sm:self-auto">

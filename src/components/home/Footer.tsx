@@ -49,12 +49,9 @@ export function FooterAbout({ profileData }: FooterAboutProps) {
 	}
 
 	return (
-		<footer
-			className="relative h-140 w-full border-t mt-24 pt-24"
-			style={{ clipPath: 'polygon(0% 0, 100% 0%, 100% 100%, 0 100%)' }}
-		>
-			<div className="fixed bottom-0 left-0 h-140 w-full pointer-events-none isolate">
-				<div className="sticky top-[calc(100vh-560px)] h-full pointer-events-none">
+		<footer className="relative mt-24 h-auto w-full border-t pt-24 sm:h-140 sm:[clip-path:polygon(0%_0,100%_0%,100%_100%,0_100%)]">
+			<div className="relative bottom-0 left-0 isolate h-auto w-full pointer-events-none sm:fixed sm:h-140">
+				<div className="relative h-auto pointer-events-none sm:sticky sm:top-[calc(100vh-560px)] sm:h-full">
 					<div className="grid grid-cols-1 gap-12 pt-12 sm:grid-cols-4 max-w-7xl mx-auto px-4 sm:px-6">
 						<AnimatedContainer className="space-y-4 sm:col-start-2">
 							<div className="mt-8 sm:mt-0">
