@@ -1,5 +1,5 @@
 import type { StatusType } from '@/types/content/post'
-import type { MarkdownFrontmatter } from './post-types'
+import type { MarkdownFrontmatter } from '@/types/post-types'
 
 const STATUS_TYPES: readonly StatusType[] = [
 	'PUBLISHED',

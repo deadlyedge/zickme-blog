@@ -12,7 +12,7 @@ import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
 import type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
-import { formatZodError } from './types'
+import { formatZodError } from './zodError'
 
 const logger = createLogger('actions/gallery-image-comments')
 

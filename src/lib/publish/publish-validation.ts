@@ -9,7 +9,7 @@ import type {
 	ContentIssue,
 	PublishScope,
 	ValidationReport,
-} from './publish-types'
+} from '../../types/publish-types'
 
 const POSTS_ROOT = path.join(process.cwd(), 'content/posts')
 const GALLERY_INPUT_ROOT = path.join(process.cwd(), 'content/.gallery-input')

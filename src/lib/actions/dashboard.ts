@@ -12,7 +12,7 @@ import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
-import { formatZodError } from './types'
+import { formatZodError } from './zodError'
 
 const logger = createLogger('actions/dashboard')
 

@@ -20,7 +20,7 @@ import type {
 	SocialLink,
 	ThemeConfig,
 } from '@/types/site'
-import { formatZodError } from './types'
+import { formatZodError } from './zodError'
 
 const logger = createLogger('actions/profile')
 

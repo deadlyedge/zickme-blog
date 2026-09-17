@@ -1,8 +1,8 @@
+import { runPublishWorkflow } from '../src/lib/publish/publish-workflow'
 import {
 	type PublishScope,
 	parsePublishScope,
-} from '../src/lib/publish/publish-types'
-import { runPublishWorkflow } from '../src/lib/publish/publish-workflow'
+} from '../src/types/publish-types'
 
 const args = process.argv.slice(2)
 const scopeIndex = args.indexOf('--scope')

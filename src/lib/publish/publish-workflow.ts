@@ -1,6 +1,6 @@
 import { runPublish } from '@/lib/sync/sync-orchestrator'
 import type { PublishSummary, PublishTrigger } from '@/types/publish/publish'
-import type { PublishScope, ValidationReport } from './publish-types'
+import type { PublishScope, ValidationReport } from '../../types/publish-types'
 import { validatePublishContent } from './publish-validation'
 
 export type PublishWorkflowResult =

@@ -6,7 +6,6 @@ import {
 	generateTitleFromFileName,
 	normalizeTags,
 } from '../src/lib/content/post-frontmatter'
-import type { MarkdownFrontmatter } from '../src/lib/content/post-types'
 import {
 	createAlbumSkeleton,
 	GALLERY_ROOT,
@@ -16,6 +15,7 @@ import {
 } from '../src/lib/gallery/gallery-parser'
 import { normalizePostMetadata } from '../src/lib/post-metadata'
 import { generateSlugFromPath } from '../src/lib/slug'
+import type { MarkdownFrontmatter } from '../src/types/post-types'
 
 interface StandardFrontmatter {
 	title: string

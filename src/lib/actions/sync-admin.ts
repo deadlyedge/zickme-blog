@@ -49,7 +49,7 @@ export async function listSyncRuns(input?: unknown) {
 export async function getSyncRunAction(runId: string) {
 	try {
 		await requireAdmin()
-		const parsed = z.string().uuid().safeParse(runId)
+		const parsed = z.uuid().safeParse(runId)
 		if (!parsed.success)
 			return { success: false as const, error: '运行 ID 无效' }
 		return {

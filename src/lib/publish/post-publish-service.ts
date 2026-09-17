@@ -9,22 +9,22 @@ import {
 	normalizeTags,
 	parseStatusType,
 } from '@/lib/content/post-frontmatter'
-import type {
-	MarkdownFrontmatter,
-	ProcessedPost,
-	SyncRunnerOptions,
-} from '@/lib/content/post-types'
 import { createLogger } from '@/lib/logger'
 import { buildPostMediaPublicId, uploadPostImage } from '@/lib/media/post-media'
 import { normalizePostMetadata } from '@/lib/post-metadata'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
+import type {
+	MarkdownFrontmatter,
+	ProcessedPost,
+	SyncRunnerOptions,
+} from '@/types/post-types'
 import type { SyncLogItem, SyncResult, SyncStatus } from '@/types/sync'
 
 export type {
 	MarkdownFrontmatter,
 	ProcessedPost,
 	SyncRunnerOptions,
-} from '@/lib/content/post-types'
+} from '@/types/post-types'
 
 const logger = createLogger('lib/publish/post-publish-service')
 

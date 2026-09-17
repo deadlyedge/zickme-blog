@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import * as path from 'node:path'
-import type { ContentIssue } from './publish-types'
+import type { ContentIssue } from '../../types/publish-types'
 
 export type RepairResult = { ok: boolean; command: string; output: string }
 

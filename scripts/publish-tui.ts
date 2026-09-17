@@ -3,14 +3,14 @@ import { stdin as input, stdout as output } from 'node:process'
 import * as readline from 'node:readline/promises'
 import { executeRepair, repairCommand } from '../src/lib/publish/publish-repair'
 import {
-	type ContentIssue,
-	type PublishScope,
-	parsePublishScope,
-} from '../src/lib/publish/publish-types'
-import {
 	runPublishWorkflow,
 	validateForPublish,
 } from '../src/lib/publish/publish-workflow'
+import {
+	type ContentIssue,
+	type PublishScope,
+	parsePublishScope,
+} from '../src/types/publish-types'
 
 const args = process.argv.slice(2)
 const scopeArg = args.includes('--scope')
