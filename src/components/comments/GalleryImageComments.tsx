@@ -13,6 +13,7 @@ import {
 	toggleGalleryImageCommentSpam,
 } from '@/lib/actions/gallery-image-comments'
 import { useSession } from '@/lib/auth-client'
+import { useAppStore } from '@/lib/store'
 import type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
 
 function CompactCommentForm({
@@ -163,6 +164,7 @@ export function GalleryImageComments({ imageId }: { imageId: string }) {
 	const pathname = usePathname() || '/'
 	const queryClient = useQueryClient()
 	const { data: session } = useSession()
+	const openAuthModal = useAppStore((state) => state.openAuthModal)
 	const queryKey = ['gallery-image-comments', imageId]
 	const comments = useQuery({
 		queryKey,
@@ -203,7 +205,20 @@ export function GalleryImageComments({ imageId }: { imageId: string }) {
 					onSubmitted={refresh}
 				/>
 			) : (
-				<p className="mt-3 text-xs text-white/45">登录后可以发表评论。</p>
+				<p className="mt-3 text-xs text-white/45">
+					{/* biome-ignore lint/a11y/useValidAnchor: this link opens the global authentication modal */}
+					<a
+						href="#auth"
+						onClick={(event) => {
+							event.preventDefault()
+							openAuthModal('login')
+						}}
+						className="text-white/70 underline decoration-white/30 underline-offset-2 hover:text-white"
+					>
+						登录/注册
+					</a>{' '}
+					后可以发表评论。
+				</p>
 			)}
 		</section>
 	)

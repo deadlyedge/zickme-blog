@@ -2,7 +2,7 @@
 
 import { ChevronDown, Info } from 'lucide-react'
 import { useState } from 'react'
-import { GalleryImageComments } from '@/components/gallery/GalleryImageComments'
+import { GalleryImageComments } from '@/components/comments/GalleryImageComments'
 import { GalleryImageInfo } from '@/components/gallery/GalleryImageInfo'
 import type { GalleryPublicImage } from '@/types/gallery'
 
