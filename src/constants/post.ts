@@ -1,4 +1,4 @@
-export const CONTENT_QUERY_LIMITS = {
+export const POST_QUERY_LIMITS = {
 	posts: {
 		default: 100,
 		max: 200,
@@ -13,7 +13,7 @@ export const CONTENT_QUERY_LIMITS = {
 	},
 } as const
 
-export const CONTENT_RULES = {
+export const POST_RULES = {
 	idMaxLength: 128,
 	slugMaxLength: 200,
 } as const

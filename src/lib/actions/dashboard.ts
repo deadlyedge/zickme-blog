@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
 import { COMMENT_MESSAGES } from '@/constants/comments'
-import { CONTENT_RULES } from '@/constants/content'
+import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -33,7 +33,7 @@ async function requireAdminSession() {
 }
 
 const adminResetPasswordSchema = z.object({
-	userId: z.string().min(1, '用户ID不能为空').max(CONTENT_RULES.idMaxLength),
+	userId: z.string().min(1, '用户ID不能为空').max(POST_RULES.idMaxLength),
 	newPassword: z
 		.string()
 		.min(
@@ -47,7 +47,7 @@ const adminResetPasswordSchema = z.object({
 })
 
 const toggleUserBanSchema = z.object({
-	userId: z.string().min(1, '用户ID不能为空').max(CONTENT_RULES.idMaxLength),
+	userId: z.string().min(1, '用户ID不能为空').max(POST_RULES.idMaxLength),
 	banned: z.boolean(),
 })
 
@@ -55,14 +55,14 @@ const toggleCommentSpamSchema = z.object({
 	commentId: z
 		.string()
 		.min(1, COMMENT_MESSAGES.idRequired)
-		.max(CONTENT_RULES.idMaxLength),
+		.max(POST_RULES.idMaxLength),
 	isSpam: z.boolean(),
 })
 
 const deleteCommentSchema = z
 	.string()
 	.min(1, COMMENT_MESSAGES.idRequired)
-	.max(CONTENT_RULES.idMaxLength)
+	.max(POST_RULES.idMaxLength)
 
 export async function resetUserPasswordByAdmin(data: {
 	userId: string

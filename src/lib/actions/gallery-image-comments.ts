@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
-import { CONTENT_RULES } from '@/constants/content'
+import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { galleryImageComments, galleryImages } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -22,8 +22,8 @@ const commentInputSchema = z.object({
 		.trim()
 		.min(COMMENT_RULES.content.minLength, COMMENT_MESSAGES.contentRequired)
 		.max(COMMENT_RULES.content.maxLength, COMMENT_MESSAGES.contentTooLong),
-	imageId: z.string().min(1).max(CONTENT_RULES.idMaxLength),
-	parentId: z.string().min(1).max(CONTENT_RULES.idMaxLength).optional(),
+	imageId: z.string().min(1).max(POST_RULES.idMaxLength),
+	parentId: z.string().min(1).max(POST_RULES.idMaxLength).optional(),
 	path: z.string().min(1).max(COMMENT_RULES.pathMaxLength),
 })
 
@@ -83,7 +83,7 @@ export async function getGalleryImageComments(
 	const parsed = z
 		.string()
 		.min(1)
-		.max(CONTENT_RULES.idMaxLength)
+		.max(POST_RULES.idMaxLength)
 		.safeParse(imageId)
 	if (!parsed.success) return []
 	try {
@@ -147,7 +147,7 @@ export async function toggleGalleryImageCommentSpam(
 ) {
 	const parsed = z
 		.object({
-			commentId: z.string().min(1).max(CONTENT_RULES.idMaxLength),
+			commentId: z.string().min(1).max(POST_RULES.idMaxLength),
 			isSpam: z.boolean(),
 		})
 		.safeParse({ commentId, isSpam })

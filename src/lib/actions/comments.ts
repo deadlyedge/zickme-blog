@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
-import { CONTENT_RULES } from '@/constants/content'
+import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
 import { auth } from '@/lib/auth'
@@ -25,8 +25,8 @@ const createCommentSchema = z.object({
 	docId: z
 		.string()
 		.min(1, COMMENT_MESSAGES.documentIdRequired)
-		.max(CONTENT_RULES.idMaxLength),
-	parentId: z.string().min(1).max(CONTENT_RULES.idMaxLength).optional(),
+		.max(POST_RULES.idMaxLength),
+	parentId: z.string().min(1).max(POST_RULES.idMaxLength).optional(),
 	path: z
 		.string()
 		.min(1, COMMENT_MESSAGES.pathRequired)
@@ -36,7 +36,7 @@ const createCommentSchema = z.object({
 const getCommentsSchema = z
 	.string()
 	.min(1, COMMENT_MESSAGES.documentIdRequired)
-	.max(CONTENT_RULES.idMaxLength)
+	.max(POST_RULES.idMaxLength)
 
 export type CreateCommentData = z.infer<typeof createCommentSchema>
 
