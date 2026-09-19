@@ -140,7 +140,10 @@ export function GalleryPostView({
 					<GalleryGrid
 						images={images}
 						selectedIndex={safeImageIndex}
-						onSelect={setImageIndex}
+						onSelect={(index) => {
+							setImageIndex(index)
+							updateImageHash(images[index]?.id)
+						}}
 						location={album.location}
 						onOpen={(index) => {
 							setImageIndex(index)
