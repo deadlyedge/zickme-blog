@@ -10,7 +10,8 @@
 | :--- | :--- | :--- |
 | **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
 | **`publish-tui.ts`** | `bun run publish:tui` | 推荐的交互式入口；执行内容检查、修复确认、Git diff、dry-run 和真实发布确认 |
-| **`check-content.ts`** | `bun run content:check` | 检查并标准化本地 Markdown 文件的 Frontmatter 元数据 |
+| **`check-content.ts`** | `bun run content:check` | 只读检查 Post Frontmatter、图片路径、Slug 冲突和 Gallery 配置 |
+| **`fix-content.ts`** | `bun run content:fix` | 显式修复 Post Frontmatter、Gallery `album.yaml` 和自动生成索引 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`prepare-media.ts`** | `bun run content:prepare-media` | 将 Gallery 原始输入转换为 Git 管理的 WebP |
 | **`gallery-index.ts`** | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
@@ -70,16 +71,36 @@ bun run media:cleanup -- --manifest media-cleanup-manifest.json --confirm
 ```
 
 脚本只处理 Cloudinary `myblog/` 根目录下的图片资源，删除前会重新确认当前数据库没有引用；不会使用按前缀全量删除，也不会触碰 `myblog/` 之外的资产。
+### 4. `check-content.ts` / `fix-content.ts` - 只读检查与显式修复
 
-### 4. `check-content.ts` - 内容格式检查与自动修复
-自动扫描所有 Markdown 文章，验证必要字段（`title`, `slug`, `date`, `tags`, `status`）及本地图片路径的有效性。
+`content:check` 只读检查 Post Frontmatter、slug 冲突、图片路径和 Gallery 内容，不写 Markdown 或 YAML；即使传入 `--fix`，package 命令仍以只读模式执行。`content:fix` 才会执行可自动处理的写操作：补齐 Post Frontmatter、创建/补齐 Gallery `album.yaml` 图片清单，并重新生成自动维护的 `gallery.yaml`。修复后应人工审查 Git diff，尤其是新生成的人工维护 `album.yaml`。
 
 ```bash
+# 只读检查全部内容（默认 scope=all）
 # 1. 快速检查全量文件
 bun run content:check
 
-# 2. 自动格式化并补齐标准 Frontmatter
-bun run content:fix
+# 按内容域只读检查
+bun run content:check -- --scope posts --no-examples
+bun run content:check -- --scope galleries --no-examples
+
+# 显式修复；dry-run 预览但不写文件
+bun run content:fix -- --scope all --dry-run --no-examples
+
+# 显式写入修复指定内容域
+bun run content:fix -- --scope posts --no-examples
+bun run content:fix -- --scope galleries --no-examples
+
+# 旧入口兼容：仍可显式传 --fix；不传 --fix 时只读
+bun run scripts/check-content.ts -- --fix --scope all --no-examples
+```
+
+参数 `--scope posts|galleries|all` 默认 `all`；`--no-examples` 保持兼容。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写 Markdown、`album.yaml` 或 `gallery.yaml`。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
+
+```ts
+import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
+
+await checkContent({ ...DEFAULT_CONFIG, scope: 'posts' })
 ```
 
 ### 5. `init-content.ts` - 生成内容目录模板

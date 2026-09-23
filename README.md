@@ -194,8 +194,8 @@ http://localhost:3000
 | `bun run publish -- --scope posts --dry-run --json` | 只读预览 Post 发布并输出 JSON 摘要 |
 | `bun run publish -- --scope galleries --dry-run --json` | 只读预览 Gallery 发布并输出 JSON 摘要 |
 | `bun run publish -- --scope all --dry-run --json` | 只读预览全站发布并输出双域摘要 |
-| `bun run content:check` | 检查 Frontmatter、图片路径和元数据 |
-| `bun run content:fix` | 自动修复可安全修复的问题 |
+| `bun run content:check` | 只读检查 Frontmatter、图片路径、Slug 冲突和 Gallery 配置 |
+| `bun run content:fix` | 显式修复 Post Frontmatter、Gallery `album.yaml` 图片清单和索引 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
 | `bun run content:prepare-media` | 将 `.gallery-input` 原始图片转换为 Git 管理的 WebP |
 | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
@@ -232,6 +232,8 @@ git status --short
 ```
 
 `content:format` 和 `content:verify` 默认不会覆盖用户文件。确认格式预览后，单独执行 `bun run content:format -- --write` 才会重写白名单 Frontmatter/YAML 结构；正文语义不会被格式化器处理。
+
+`content:check` 始终只读（包括误传 `--fix` 的情况）；需要自动补齐时先运行 `bun run content:fix -- --dry-run` 预览，再显式运行 `bun run content:fix` 写入。修复后请检查 `git diff`，尤其确认新生成的 `album.yaml` 人工字段。
 
 `bun run publish` 未指定 scope 时会依次发布 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只发布单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。旧同步 CLI 已删除。
 

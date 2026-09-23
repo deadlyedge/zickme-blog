@@ -1,351 +1,104 @@
-import type { Stats } from 'node:fs'
-import * as fsPromises from 'node:fs/promises'
 import * as path from 'node:path'
-import matter from 'gray-matter'
+import { checkGalleries } from './content/check-galleries'
+import { checkPosts } from './content/check-posts'
+import type { CheckConfig } from './content/content-check-types'
 import {
-	generateTitleFromFileName,
-	normalizeTags,
-} from '../src/lib/content/post-frontmatter'
-import {
-	createAlbumSkeleton,
-	GALLERY_ROOT,
-	scanGalleryDirectory,
-	stringify,
-	writeGalleryIndex,
-} from '../src/lib/gallery/gallery-parser'
-import { normalizePostMetadata } from '../src/lib/post-metadata'
-import { generateSlugFromPath } from '../src/lib/slug'
-import type { MarkdownFrontmatter } from '../src/types/post-types'
+	fixGalleryAlbumConfig,
+	fixGalleryIndex,
+} from './content/fix-gallery-config'
+import { fixPostFrontmatter } from './content/fix-post-frontmatter'
 
-interface StandardFrontmatter {
-	title: string
-	slug: string
-	date: string
-	tags: string[]
-	status: string
-	excerpt?: string
-	image?: string
-	sourceUrl?: string
-	metadata?: ReturnType<typeof normalizePostMetadata>
-}
+export type {
+	CheckConfig,
+	ContentCheckResult,
+} from './content/content-check-types'
 
-interface ContentCheckResult {
-	filePath: string
-	slug?: string
-	issues: string[]
-	suggestions: string[]
-	formattedFrontmatter?: string
-}
-
-interface CheckConfig {
-	dryRun: boolean
-	autoFix: boolean
-	showExamples: boolean
-	postsDir: string
-	conflictingSlugs?: Set<string>
-	scope?: 'posts' | 'galleries' | 'all'
-}
-
-const DEFAULT_CONFIG: CheckConfig = {
-	dryRun: process.argv.includes('--dry-run'),
-	autoFix: process.argv.includes('--fix'),
-	showExamples: !process.argv.includes('--no-examples'),
+export const DEFAULT_CONFIG: CheckConfig = {
+	dryRun: false,
+	autoFix: false,
+	showExamples: true,
 	postsDir: path.join(process.cwd(), 'content/posts'),
 	scope: 'all',
 }
 
-/**
- * 处理图片URL，根据文件位置找到对应的本地图片路径
- */
-async function validateImagePath(
-	imagePath: string | undefined,
-	filePath: string,
-): Promise<{ isValid: boolean; absolutePath?: string; error?: string }> {
-	if (!imagePath) return { isValid: true }
-
-	if (imagePath.startsWith('./images/')) {
-		const fileDir = path.dirname(filePath)
-		const imageName = imagePath.replace('./images/', '')
-		const imageAbsolutePath = path.join(fileDir, 'images', imageName)
-
-		try {
-			const stats = await fsPromises.stat(imageAbsolutePath)
-			if (stats.isFile()) {
-				return { isValid: true, absolutePath: imageAbsolutePath }
-			}
-			return { isValid: false, error: '路径指向的不是文件' }
-		} catch {
-			return { isValid: false, error: '图片文件不存在' }
-		}
-	}
-
-	return { isValid: true }
+export function parseContentScope(
+	value: string | undefined,
+): NonNullable<CheckConfig['scope']> {
+	return value === 'posts' || value === 'galleries' || value === 'all'
+		? value
+		: 'all'
 }
 
-/**
- * 生成标准的frontmatter
- */
-function generateStandardFrontmatter(
-	frontmatter: MarkdownFrontmatter,
-	filePath: string,
-	postsDir: string,
-	fileName: string,
-	stats: Stats,
-): string {
-	const standard: StandardFrontmatter = {
-		title: frontmatter.title || generateTitleFromFileName(fileName),
-		slug: frontmatter.slug || generateSlugFromPath(filePath, postsDir),
-		date: frontmatter.date || stats.birthtime.toISOString().split('T')[0] || '',
-		tags: normalizeTags(frontmatter.tags),
-		status: frontmatter.draft ? 'draft' : frontmatter.status || 'published',
+export function parseContentCliConfig(args: string[]): CheckConfig {
+	const scopeIndex = args.indexOf('--scope')
+	return {
+		...DEFAULT_CONFIG,
+		autoFix: args.includes('--fix') && !args.includes('--check-only'),
+		dryRun: args.includes('--dry-run'),
+		showExamples: !args.includes('--no-examples'),
+		scope: parseContentScope(
+			scopeIndex >= 0 ? args[scopeIndex + 1] : undefined,
+		),
 	}
-
-	if (frontmatter.excerpt) {
-		standard.excerpt = frontmatter.excerpt
-	}
-
-	if (frontmatter.image) {
-		standard.image = frontmatter.image
-	}
-
-	if (frontmatter.sourceUrl) {
-		standard.sourceUrl = frontmatter.sourceUrl
-	}
-
-	const metadata = normalizePostMetadata(frontmatter)
-	if (
-		metadata.links.length > 0 ||
-		metadata.category ||
-		metadata.series ||
-		metadata.canonicalUrl ||
-		metadata.outdatedWarning ||
-		metadata.layout
-	) {
-		standard.metadata = metadata
-	}
-
-	const stringified = matter.stringify('', standard)
-	return stringified.trim()
 }
 
-/**
- * 递归扫描所有Markdown文件
- */
-async function scanMarkdownFiles(dir: string): Promise<string[]> {
-	const entries = await fsPromises.readdir(dir, { withFileTypes: true })
-	const files: string[] = []
+async function checkPostsScope(config: CheckConfig) {
+	const { files, results, conflictingSlugs } = await checkPosts(config.postsDir)
 
-	for (const entry of entries) {
-		const fullPath = path.join(dir, entry.name)
-
-		if (entry.isDirectory()) {
-			if (entry.name !== 'images') {
-				const subFiles = await scanMarkdownFiles(fullPath)
-				files.push(...subFiles)
-			}
-		} else if (entry.isFile() && entry.name.endsWith('.md')) {
-			files.push(fullPath)
-		}
+	console.log(`📁 发现 ${files.length} 个Markdown文件\n`)
+	for (const slug of conflictingSlugs) {
+		const sources = results
+			.filter((result) => result.slug === slug)
+			.map((result) => path.relative(config.postsDir, result.filePath))
+		console.log(
+			`❌ Slug 冲突 "${slug}": ${sources.join('、')}，请手动指定唯一 slug\n`,
+		)
 	}
 
-	return files
-}
+	let totalIssues = 0
+	let totalSuggestions = 0
+	for (const result of results) {
+		const relativePath = path.relative(config.postsDir, result.filePath)
+		console.log(`📄 ${relativePath}`)
+		for (const issue of result.issues) console.log(`   ${issue}`)
+		for (const suggestion of result.suggestions) console.log(`   ${suggestion}`)
+		totalIssues += result.issues.length
+		totalSuggestions += result.suggestions.length
 
-/**
- * 检查单个Markdown文件
- */
-async function checkMarkdownFile(
-	filePath: string,
-	config: CheckConfig,
-): Promise<ContentCheckResult> {
-	const result: ContentCheckResult = {
-		filePath,
-		issues: [],
-		suggestions: [],
-	}
-
-	try {
-		const fileContent = await fsPromises.readFile(filePath, 'utf-8')
-		const stats = await fsPromises.stat(filePath)
-		const fileName = path.basename(filePath, '.md')
-
-		const { data: frontmatter, content } = matter(fileContent)
-		const slug =
-			frontmatter.slug || generateSlugFromPath(filePath, config.postsDir)
-		result.slug = slug
-
-		if (!frontmatter.title) {
-			result.issues.push('❌ 缺少 title 字段')
-		}
-
-		if (!frontmatter.slug) {
-			result.issues.push('⚠️ 缺少 slug 字段 (将从路径自动生成)')
-		}
-
-		if (!frontmatter.date) {
-			result.suggestions.push('💡 建议添加 date 字段')
-		}
-
-		if (!frontmatter.tags || normalizeTags(frontmatter.tags).length === 0) {
-			result.suggestions.push('💡 建议添加 tags 字段')
-		}
-
-		if (!frontmatter.excerpt) {
-			result.suggestions.push('💡 建议添加 excerpt 字段')
-		}
-
-		if (frontmatter.image) {
-			const imageValidation = await validateImagePath(
-				frontmatter.image,
-				filePath,
-			)
-			if (!imageValidation.isValid) {
-				result.issues.push(
-					`❌ 封面图片错误: ${frontmatter.image} (${imageValidation.error})`,
+		if (config.autoFix) {
+			try {
+				const fixed = await fixPostFrontmatter(
+					result,
+					config.postsDir,
+					conflictingSlugs,
+					{ dryRun: config.dryRun },
 				)
-			}
-		}
-
-		const metadata = normalizePostMetadata(frontmatter)
-		if (
-			frontmatter.links &&
-			metadata.links.length !== frontmatter.links.length
-		) {
-			result.issues.push('❌ links 中存在无效或非 HTTP(S) 外链')
-		}
-		if (
-			frontmatter.canonicalUrl &&
-			!/^https?:\/\//i.test(frontmatter.canonicalUrl)
-		) {
-			result.issues.push('❌ canonicalUrl 必须使用 HTTP(S) URL')
-		}
-
-		if (
-			config.autoFix &&
-			(!frontmatter.slug || result.issues.length > 0) &&
-			!config.conflictingSlugs?.has(slug)
-		) {
-			const standardFrontmatter = generateStandardFrontmatter(
-				frontmatter,
-				filePath,
-				config.postsDir,
-				fileName,
-				stats,
-			)
-
-			const newContent = `${standardFrontmatter}\n\n${content.trim()}\n`
-			await fsPromises.writeFile(filePath, newContent, 'utf-8')
-			result.suggestions.push('✅ 已自动修复 frontmatter 格式')
-		}
-
-		return result
-	} catch (error) {
-		result.issues.push(
-			`❌ 解析文件失败: ${error instanceof Error ? error.message : String(error)}`,
-		)
-		return result
-	}
-}
-
-/**
- * 主检查函数
- */
-async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
-	console.log('🔍 开始检查本地内容...\n')
-
-	try {
-		const mdFiles = await scanMarkdownFiles(config.postsDir)
-		console.log(`📁 发现 ${mdFiles.length} 个Markdown文件\n`)
-
-		const slugSources = new Map<string, string[]>()
-		for (const filePath of mdFiles) {
-			const raw = await fsPromises.readFile(filePath, 'utf-8')
-			const { data } = matter(raw)
-			const slug =
-				typeof data.slug === 'string' && data.slug.trim()
-					? data.slug.trim()
-					: generateSlugFromPath(filePath, config.postsDir)
-			const sources = slugSources.get(slug) || []
-			sources.push(path.relative(config.postsDir, filePath))
-			slugSources.set(slug, sources)
-		}
-		const conflictingSlugs = new Set(
-			[...slugSources.entries()]
-				.filter(([, sources]) => sources.length > 1)
-				.map(([slug]) => slug),
-		)
-		for (const [slug, sources] of slugSources) {
-			if (sources.length > 1) {
+				if (fixed) {
+					totalSuggestions++
+					console.log('   ✅ 已自动修复 frontmatter 格式')
+				}
+			} catch (error) {
+				totalIssues++
 				console.log(
-					`❌ Slug 冲突 "${slug}": ${sources.join('、')}，请手动指定唯一 slug\n`,
+					`   ❌ 修复 Frontmatter 失败: ${error instanceof Error ? error.message : String(error)}`,
 				)
 			}
 		}
+		console.log('')
+	}
 
-		const results = await Promise.all(
-			mdFiles.map((file) =>
-				checkMarkdownFile(file, { ...config, conflictingSlugs }),
-			),
-		)
-		for (const result of results) {
-			if (result.slug && conflictingSlugs.has(result.slug)) {
-				result.issues.push(`❌ Slug 冲突: "${result.slug}"，请修改为唯一值`)
-			}
-		}
-
-		let totalIssues = 0
-		let totalSuggestions = 0
-
-		for (const result of results) {
-			const relativePath = path.relative(config.postsDir, result.filePath)
-			console.log(`📄 ${relativePath}`)
-
-			if (result.issues.length > 0) {
-				for (const issue of result.issues) {
-					console.log(`   ${issue}`)
-				}
-				totalIssues += result.issues.length
-			}
-
-			if (result.suggestions.length > 0) {
-				for (const suggestion of result.suggestions) {
-					console.log(`   ${suggestion}`)
-				}
-				totalSuggestions += result.suggestions.length
-			}
-
-			console.log('')
-		}
-
-		if (config.scope !== 'posts') {
-			const galleryResult = await checkGalleryContent(config)
-			totalIssues += galleryResult.issues
-			totalSuggestions += galleryResult.suggestions
-		}
-
-		console.log('📊 检查结果统计:')
-		console.log(`   🔍 检查文件: ${mdFiles.length}`)
-		console.log(`   ⚠️ 发现问题: ${totalIssues}`)
-		console.log(`   💡 提供建议: ${totalSuggestions}`)
-
-		if (totalIssues === 0) {
-			console.log('\n✅ 所有文件检查通过！')
-		} else {
-			console.log(`\n⚠️ 发现 ${totalIssues} 个问题需要处理`)
-		}
-		return totalIssues === 0
-	} catch (error) {
-		console.error('❌ 检查失败:', error)
-		return false
+	return {
+		files,
+		results,
+		conflictingSlugs,
+		totalIssues,
+		totalSuggestions,
 	}
 }
 
-async function checkGalleryContent(
-	config: CheckConfig,
-): Promise<{ issues: number; suggestions: number }> {
-	const scan = await scanGalleryDirectory(GALLERY_ROOT)
-	const issues = scan.issues.length
-	let suggestions = 0
+async function checkGalleriesScope(config: CheckConfig) {
+	const scan = await checkGalleries(config.galleryRoot)
+	let totalSuggestions = 0
 	console.log('🖼️ 检查 Gallery 内容...')
 
 	for (const album of scan.albums) {
@@ -354,70 +107,79 @@ async function checkGalleryContent(
 		for (const issue of album.issues) console.log(`   ❌ ${issue}`)
 
 		if (config.autoFix) {
-			const imageFiles = album.files
-			const configMissing = album.issues.includes('缺少 album.yaml')
-			const skeleton = createAlbumSkeleton(albumName, imageFiles)
-			const nextData = configMissing
-				? { ...skeleton, images: skeleton.images ?? [] }
-				: {
-						...album.data,
-						images: [
-							...album.data.images,
-							...imageFiles
-								.filter(
-									(file) =>
-										!album.data.images.some(
-											(image) => image.file === `images/${file}`,
-										),
-								)
-								.map((file, index) => ({
-									file: `images/${file}`,
-									title: '',
-									description: '',
-									alt: '',
-									order: album.data.images.length + index + 1,
-									hidden: false,
-								})),
-						],
-					}
-			const shouldWrite =
-				configMissing || nextData.images.length !== album.data.images.length
-			if (shouldWrite && !config.dryRun) {
-				await fsPromises.writeFile(
-					album.configPath,
-					stringify(nextData, { lineWidth: 120 }),
-					'utf8',
+			const repair = await fixGalleryAlbumConfig(album, {
+				dryRun: config.dryRun,
+				galleryRoot: config.galleryRoot,
+			})
+			if (repair.changed && !config.dryRun) {
+				totalSuggestions++
+				console.log(
+					repair.generated
+						? '   ✅ 已生成 album.yaml（请编辑并确认人工维护字段）'
+						: '   ✅ 已补齐 album.yaml 图片清单（保留已有人工字段）',
 				)
-				suggestions++
-				console.log('   ✅ 已生成/补齐 album.yaml（保留已有人工字段）')
 			}
 		}
 	}
 
-	if (config.autoFix && !config.dryRun) {
-		const refreshed = await scanGalleryDirectory(GALLERY_ROOT)
-		await writeGalleryIndex(refreshed.albums, GALLERY_ROOT)
-		console.log(
-			'   ✅ 已生成 photo-gallery/gallery.yaml（自动文件，请勿手动编辑）',
-		)
+	if (config.autoFix) {
+		if (!config.dryRun) {
+			await fixGalleryIndex({
+				dryRun: false,
+				galleryRoot: config.galleryRoot,
+			})
+			console.log(
+				'   ✅ 已生成 photo-gallery/gallery.yaml（自动文件，请勿手动编辑）',
+			)
+		} else {
+			console.log('   ℹ️ dry-run：未写入 album.yaml 或 gallery.yaml')
+			if (scan.albums.length > 0) totalSuggestions++
+		}
 	} else if (scan.albums.length > 0) {
-		console.log('   💡 使用 --fix 可生成/补齐 album.yaml 和 gallery.yaml')
-		suggestions++
+		console.log(
+			'   💡 使用 bun run content:fix 可显式生成/补齐 album.yaml 和 gallery.yaml',
+		)
+		totalSuggestions++
 	}
 
-	return { issues, suggestions }
+	return { issues: scan.issues.length, suggestions: totalSuggestions }
 }
 
-if (require.main === module) {
-	const scopeArg = process.argv[process.argv.indexOf('--scope') + 1]
-	const scope =
-		scopeArg === 'posts' || scopeArg === 'galleries' ? scopeArg : 'all'
-	checkContent({ ...DEFAULT_CONFIG, scope })
-		.then((valid) => {
-			if (!valid) process.exitCode = 1
-		})
-		.catch(console.error)
+export async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
+	console.log('🔍 开始检查本地内容...\n')
+
+	try {
+		let totalIssues = 0
+		let totalSuggestions = 0
+		let files: string[] = []
+
+		const postResult = await checkPostsScope(config)
+		files = postResult.files
+		totalIssues += postResult.totalIssues
+		totalSuggestions += postResult.totalSuggestions
+
+		if (config.scope !== 'posts') {
+			const galleryResult = await checkGalleriesScope(config)
+			totalIssues += galleryResult.issues
+			totalSuggestions += galleryResult.suggestions
+		}
+
+		console.log('📊 检查结果统计:')
+		console.log(`   🔍 检查文件: ${files.length}`)
+		console.log(`   ⚠️ 发现问题: ${totalIssues}`)
+		console.log(`   💡 提供建议: ${totalSuggestions}`)
+		if (totalIssues === 0) console.log('\n✅ 所有文件检查通过！')
+		else console.log(`\n⚠️ 发现 ${totalIssues} 个问题需要处理`)
+		return totalIssues === 0
+	} catch (error) {
+		console.error('❌ 检查失败:', error)
+		return false
+	}
 }
 
-export type { CheckConfig, ContentCheckResult }
-export { checkContent, DEFAULT_CONFIG }
+async function main() {
+	const valid = await checkContent(parseContentCliConfig(process.argv.slice(2)))
+	if (!valid) process.exitCode = 1
+}
+
+if (require.main === module) void main().catch(console.error)

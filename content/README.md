@@ -46,7 +46,10 @@ Gallery 前台和管理后台已实现。`album.yaml` 是人工编辑源，`gall
 
 ```bash
 bun run content:check
-bun run content:fix
+bun run content:check -- --scope galleries --no-examples
+bun run content:fix -- --dry-run
+bun run content:fix -- --scope posts
+bun run content:fix -- --scope galleries
 bun run content:format
 bun run content:prepare-media
 bun run content:verify
@@ -59,6 +62,8 @@ bun run publish -- --scope galleries --dry-run --json
 ```
 
 不带 `--scope` 的 `bun run publish` 默认发布 Post 和 Gallery，等价于 `bun run publish -- --scope all`。`--scope posts` 和 `--scope galleries` 用于单域预览或受控发布。旧同步 CLI 已删除。
+
+`content:check` 是只读命令，即使误传 `--fix` 也不会修改 Markdown 或 YAML。`content:fix` 是显式写入修复入口；可用 `--scope posts|galleries|all` 选择范围，并用 `--dry-run` 预览而不落盘。修复后请审查 Git diff，并人工确认新建的 `album.yaml` 字段。
 
 `content:format` 默认只预览 Frontmatter 和 `album.yaml` 的结构格式，不修改文件；确认后使用 `bun run content:format -- --write`。`content:verify` 运行完整检查和三个 scope 的 dry-run，默认不写文件、不执行真实 Publish、不 commit、不 push。
 

@@ -66,8 +66,10 @@ content/photo-gallery/japan-autumn/
 Gallery 前台和管理后台已实现。\`album.yaml\` 是人工编辑源，\`gallery.yaml\` 只能由 \`gallery:index\` 生成，不要直接编辑。不要将原始 JPEG、PNG、TIFF、BMP 或 RAW 文件提交到 Gallery 目录；原始输入只能放入 Git 忽略的 \`content/.gallery-input/{album}/\`。
 
 ## 常用命令
-
 \`\`\`bash
+\`\`\`bash
+bun run content:check
+bun run content:fix -- --dry-run
 bun run content:fix
 bun run content:format
 bun run content:verify
@@ -79,7 +81,7 @@ bun run publish -- --scope posts --dry-run --json
 bun run publish -- --scope galleries --dry-run --json
 \`\`\`
 
-不带 \`--scope\` 的 \`bun run publish\` 默认发布 Post 和 Gallery。不要提交 .env、密钥、数据库导出文件和 Gallery 原始图片。
+\`content:check\` 只读；\`content:fix\` 会显式写入 Frontmatter、album.yaml 和 gallery.yaml 修复，运行前可用 \`--dry-run\` 预览。不带 \`--scope\` 的 \`bun run publish\` 默认发布 Post 和 Gallery。不要提交 .env、密钥、数据库导出文件和 Gallery 原始图片。
 `,
 	},
 	{
