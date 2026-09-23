@@ -1,25 +1,19 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { eq } from 'drizzle-orm'
 import { stringify } from 'yaml'
-import {
-	GALLERY_INPUT_EXTENSIONS,
-	GALLERY_RAW_EXTENSIONS,
-} from '@/constants/media'
-import { db } from '@/db'
-import { galleries, galleryImages } from '@/db/schema'
-import {
-	createAlbumSkeleton,
-	GALLERY_ROOT,
-	parseAlbumData,
-	scanGalleryDirectory,
-} from '@/lib/gallery/gallery-parser'
+import { GALLERY_RAW_EXTENSIONS } from '@/constants/media'
+import { GALLERY_ROOT } from '@/lib/gallery/gallery-parser'
 import { prepareGalleryImage } from '@/lib/gallery/media-preparation'
 import { createLogger } from '@/lib/logger'
 import {
 	buildGalleryPublicId,
 	uploadGalleryWebp,
 } from '@/lib/media/gallery-media'
+import {
+	listGalleryInputFiles,
+	readGalleryAlbumConfig,
+} from '@/lib/publish/gallery-input-reader'
+import { galleryRepository } from '@/lib/publish/gallery-repository'
 import type { GalleryImageFrontmatter } from '@/types/gallery'
 
 const logger = createLogger('lib/publish/gallery-publish-service')
@@ -44,96 +38,6 @@ export interface GallerySyncSummary {
 	archived: number
 	errors: number
 	sourceMissing: string[]
-}
-
-async function listInputFiles(albumDirectory: string): Promise<string[]> {
-	const entries = await fs.readdir(albumDirectory, { withFileTypes: true })
-	return entries
-		.filter(
-			(entry) =>
-				entry.isFile() &&
-				(GALLERY_INPUT_EXTENSIONS.test(entry.name) ||
-					GALLERY_RAW_EXTENSIONS.test(entry.name)),
-		)
-		.sort((a, b) =>
-			a.name.localeCompare(b.name, undefined, {
-				numeric: true,
-				sensitivity: 'base',
-			}),
-		)
-		.map((entry) => path.join(albumDirectory, entry.name))
-}
-
-async function readExistingConfig(albumDirectory: string, files: string[]) {
-	const configPath = path.join(albumDirectory, 'album.yaml')
-	try {
-		const raw = await fs.readFile(configPath, 'utf8')
-		return {
-			configPath,
-			data: parseAlbumData((await import('yaml')).parse(raw), albumDirectory),
-		}
-	} catch {
-		return {
-			configPath,
-			data: createAlbumSkeleton(path.basename(albumDirectory), files),
-		}
-	}
-}
-
-async function syncAlbumOnlyMetadata(
-	galleryRoot: string,
-	knownSlugs: Set<string>,
-	dryRun: boolean,
-): Promise<string[]> {
-	if (dryRun) return []
-	const scan = await scanGalleryDirectory(galleryRoot)
-	const syncedSlugs: string[] = []
-	for (const album of scan.albums) {
-		const albumName = path.basename(album.directory)
-		if (knownSlugs.has(album.data.slug) || album.issues.length > 0) continue
-		const [gallery] = await db
-			.select({ id: galleries.id })
-			.from(galleries)
-			.where(eq(galleries.slug, album.data.slug))
-		if (!gallery) continue
-		const status =
-			album.data.status === 'published'
-				? ('PUBLISHED' as const)
-				: album.data.status === 'archived'
-					? ('ARCHIVED' as const)
-					: ('DRAFT' as const)
-		await db
-			.update(galleries)
-			.set({
-				title: album.data.title,
-				description: album.data.description || null,
-				cover: album.data.cover || null,
-				status,
-				publishedAt: status === 'PUBLISHED' ? new Date() : null,
-				sourcePath: `${albumName}/album.yaml`,
-				metadata: {
-					tags: album.data.tags,
-					location: album.data.location,
-					showExif: album.data.showExif,
-					showLocation: album.data.showLocation,
-				},
-			})
-			.where(eq(galleries.id, gallery.id))
-		for (const image of album.data.images ?? []) {
-			await db
-				.update(galleryImages)
-				.set({
-					title: image.title || null,
-					description: image.description || null,
-					alt: image.alt || album.data.title,
-					sortOrder: image.order ?? 0,
-					hidden: image.hidden ?? false,
-				})
-				.where(eq(galleryImages.sourcePath, `${albumName}/${image.file}`))
-		}
-		syncedSlugs.push(album.data.slug)
-	}
-	return syncedSlugs
 }
 
 export async function publishGallery(
@@ -188,14 +92,14 @@ export async function publishGallery(
 	for (const inputAlbum of inputAlbums.sort((a, b) =>
 		a.name.localeCompare(b.name),
 	)) {
-		const sourceFiles = await listInputFiles(
+		const sourceFiles = await listGalleryInputFiles(
 			path.join(inputRoot, inputAlbum.name),
 		)
 		if (sourceFiles.length === 0) continue
 		const albumDirectory = path.join(galleryRoot, inputAlbum.name)
 		if (!dryRun)
 			await fs.mkdir(path.join(albumDirectory, 'images'), { recursive: true })
-		const config = await readExistingConfig(
+		const config = await readGalleryAlbumConfig(
 			albumDirectory,
 			sourceFiles.map(
 				(file) => `${path.basename(file, path.extname(file))}.webp`,
@@ -235,9 +139,7 @@ export async function publishGallery(
 				const existing = configuredImages.get(prepared.file)
 				const previous =
 					existing && !dryRun
-						? await db.query.galleryImages.findFirst({
-								where: eq(galleryImages.sourcePath, sourcePathKey),
-							})
+						? await galleryRepository.findExistingImage(sourcePathKey)
 						: undefined
 				const publicId = buildGalleryPublicId(slug, prepared.file)
 				const unchanged =
@@ -278,68 +180,40 @@ export async function publishGallery(
 							showLocation: config.data.showLocation,
 						},
 					}
-					const [gallery] = await db
-						.insert(galleries)
-						.values(galleryValues)
-						.onConflictDoUpdate({
-							target: galleries.slug,
-							set: {
-								title: config.data.title,
-								description: config.data.description || null,
-								cover: config.data.cover || null,
-								status: galleryValues.status,
-								publishedAt: galleryValues.publishedAt,
-								sourcePath: `${inputAlbum.name}/album.yaml`,
-								metadata: galleryValues.metadata,
-								contentHash: prepared.hash,
-							},
-						})
-						.returning({ id: galleries.id })
-					await db
-						.insert(galleryImages)
-						.values({
-							galleryId: gallery.id,
-							sourcePath: sourcePathKey,
-							publicId: upload?.publicId || null,
-							url: upload?.url || null,
-							thumbnailUrl: upload?.thumbnailUrl || null,
-							title: existing?.title || null,
-							description: existing?.description || null,
-							alt: existing?.alt || config.data.title,
-							sortOrder: existing?.order ?? processedImages.length + 1,
-							hidden: existing?.hidden ?? false,
-							width: prepared.width,
-							height: prepared.height,
-							exif: prepared.exif,
-							fileHash: prepared.hash,
-							fileSize: prepared.size,
-							sourceModifiedAt: prepared.mtime,
-							lastSyncedAt: new Date(),
-							syncStatus: 'IN_SYNC',
+					const imageMetadata = {
+						publicId: upload?.publicId || null,
+						url: upload?.url || null,
+						thumbnailUrl: upload?.thumbnailUrl || null,
+						title: existing?.title || null,
+						description: existing?.description || null,
+						alt: existing?.alt || config.data.title,
+						sortOrder: existing?.order ?? processedImages.length + 1,
+						hidden: existing?.hidden ?? false,
+						width: prepared.width,
+						height: prepared.height,
+						exif: prepared.exif,
+						fileHash: prepared.hash,
+						fileSize: prepared.size,
+						sourceModifiedAt: prepared.mtime,
+						lastSyncedAt: new Date(),
+						syncStatus: 'IN_SYNC' as const,
+						contentHash: prepared.hash,
+					}
+					await galleryRepository.upsertGalleryImage({
+						galleryValues,
+						galleryUpdateValues: {
+							title: config.data.title,
+							description: config.data.description || null,
+							cover: config.data.cover || null,
+							status: galleryValues.status,
+							publishedAt: galleryValues.publishedAt,
+							sourcePath: `${inputAlbum.name}/album.yaml`,
+							metadata: galleryValues.metadata,
 							contentHash: prepared.hash,
-						})
-						.onConflictDoUpdate({
-							target: [galleryImages.galleryId, galleryImages.sourcePath],
-							set: {
-								publicId: upload?.publicId || null,
-								url: upload?.url || null,
-								thumbnailUrl: upload?.thumbnailUrl || null,
-								title: existing?.title || null,
-								description: existing?.description || null,
-								alt: existing?.alt || config.data.title,
-								sortOrder: existing?.order ?? processedImages.length + 1,
-								hidden: existing?.hidden ?? false,
-								width: prepared.width,
-								height: prepared.height,
-								exif: prepared.exif,
-								fileHash: prepared.hash,
-								fileSize: prepared.size,
-								sourceModifiedAt: prepared.mtime,
-								lastSyncedAt: new Date(),
-								syncStatus: 'IN_SYNC',
-								contentHash: prepared.hash,
-							},
-						})
+						},
+						imageValues: { sourcePath: sourcePathKey, ...imageMetadata },
+						imageUpdateValues: imageMetadata,
+					})
 				}
 				processedImages.push({
 					file: relativeWebp,
@@ -369,7 +243,7 @@ export async function publishGallery(
 				'utf8',
 			)
 	}
-	const metadataSlugs = await syncAlbumOnlyMetadata(
+	const metadataSlugs = await galleryRepository.syncAlbumOnlyMetadata(
 		galleryRoot,
 		new Set(seenSlugs),
 		dryRun,
@@ -377,47 +251,21 @@ export async function publishGallery(
 	seenSlugs.push(...metadataSlugs)
 
 	if (!dryRun) {
-		const persistedGalleries = await db.query.galleries.findMany({
-			columns: { slug: true },
-		})
-		const persistedImages = await db.query.galleryImages.findMany({
-			columns: { sourcePath: true },
-		})
-		const missingGalleries = persistedGalleries
-			.map((gallery) => gallery.slug)
-			.filter((slug) => !seenSlugs.includes(slug))
-		const missingImages = persistedImages
-			.map((image) => image.sourcePath)
-			.filter((sourcePath) => !seenSourcePaths.has(sourcePath))
-		summary.sourceMissing.push(...missingGalleries, ...missingImages)
+		summary.sourceMissing.push(
+			...(await galleryRepository.findSourceMissing(
+				seenSlugs,
+				seenSourcePaths,
+			)),
+		)
 	}
 
 	if (!dryRun && options.deleteOld === true) {
-		const persistedImages = await db.query.galleryImages.findMany({
-			columns: { id: true, sourcePath: true },
+		summary.archived += await galleryRepository.markRemovedSources({
+			inputAlbumNames: inputAlbums.map((album) => album.name),
+			seenSourcePaths,
+			seenSlugs,
+			galleryRoot,
 		})
-		for (const image of persistedImages) {
-			const albumName = image.sourcePath.split('/')[0]
-			if (!albumName || !inputAlbums.some((album) => album.name === albumName))
-				continue
-			if (seenSourcePaths.has(image.sourcePath)) continue
-			await db
-				.update(galleryImages)
-				.set({ syncStatus: 'PENDING_DELETE' })
-				.where(eq(galleryImages.id, image.id))
-		}
-		const local = await scanGalleryDirectory(galleryRoot)
-		await Promise.all(
-			local.albums
-				.filter((album) => !seenSlugs.includes(album.data.slug))
-				.map(async (album) => {
-					await db
-						.update(galleries)
-						.set({ status: 'ARCHIVED' })
-						.where(eq(galleries.slug, album.data.slug))
-					summary.archived++
-				}),
-		)
 	}
 	return summary
 }

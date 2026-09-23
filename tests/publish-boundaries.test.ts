@@ -3,12 +3,12 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
 import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/constants/publish'
+import { resolvePublishDeleteOld } from '../src/lib/publish/publish-workflow'
+import type { PublishSummary as RootPublishSummary } from '../src/types'
 import {
 	type PublishScope,
 	parsePublishScope,
-} from '../src/lib/publish/publish-types'
-import { resolvePublishDeleteOld } from '../src/lib/publish/publish-workflow'
-import type { PublishSummary as RootPublishSummary } from '../src/types'
+} from '../src/types/publish-types'
 
 const fixtureRoot = path.join(process.cwd(), '.tmp-publish-boundaries')
 const fixture = path.join(fixtureRoot, 'draft.md')

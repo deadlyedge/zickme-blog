@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { CommentWithReplies, PublicCommentAuthor } from '../src/types'
-import type { PublicCommentAuthor as DomainPublicCommentAuthor } from '../src/types/comments/public-comment'
+import type { PublicCommentAuthor as DomainPublicCommentAuthor } from '../src/types/comment/comment'
 
 describe('comment type boundaries', () => {
 	test('public author type is available from the domain and root exports', () => {

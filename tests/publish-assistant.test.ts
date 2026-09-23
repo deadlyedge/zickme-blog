@@ -2,11 +2,11 @@ import { describe, expect, test } from 'bun:test'
 import { mkdir, rm, utimes, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { repairCommand } from '../src/lib/publish/publish-repair'
-import { parsePublishScope } from '../src/lib/publish/publish-types'
 import {
 	getExpectedWebpPath,
 	getMediaPreparationIssue,
 } from '../src/lib/publish/publish-validation'
+import { parsePublishScope } from '../src/types/publish-types'
 
 const mediaFixtureRoot = path.join(
 	process.cwd(),

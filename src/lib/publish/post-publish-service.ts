@@ -3,15 +3,17 @@ import * as path from 'node:path'
 import { eq, isNull } from 'drizzle-orm'
 import matter from 'gray-matter'
 import { db } from '@/db'
-import { posts, postsToTags, syncLogs, tags } from '@/db/schema'
+import { posts, syncLogs } from '@/db/schema'
 import {
 	generateTitleFromFileName,
 	normalizeTags,
 	parseStatusType,
 } from '@/lib/content/post-frontmatter'
 import { createLogger } from '@/lib/logger'
-import { buildPostMediaPublicId, uploadPostImage } from '@/lib/media/post-media'
+import { uploadPostImage } from '@/lib/media/post-media'
 import { normalizePostMetadata } from '@/lib/post-metadata'
+import { PostMediaResolver } from '@/lib/publish/post-media-resolver'
+import { postRepository } from '@/lib/publish/post-repository'
 import { generateSlug, generateSlugFromPath } from '@/lib/slug'
 import type {
 	MarkdownFrontmatter,
@@ -37,6 +39,7 @@ export {
 export class PostPublishService {
 	private logs: SyncLogItem[] = []
 	private dryRun = false
+	private mediaResolver: PostMediaResolver | null = null
 
 	private addLog(
 		stage: SyncLogItem['stage'],
@@ -148,7 +151,9 @@ export class PostPublishService {
 
 			let poster = frontmatter.image
 			if (poster) {
-				poster = await this.resolveAndUploadImage(
+				if (!this.mediaResolver)
+					throw new Error('Post media resolver is not initialized')
+				poster = await this.mediaResolver.resolveAndUploadImage(
 					poster,
 					relativeFilePath,
 					slug,
@@ -157,7 +162,9 @@ export class PostPublishService {
 				)
 			}
 
-			const processedContent = await this.resolveMarkdownImages(
+			if (!this.mediaResolver)
+				throw new Error('Post media resolver is not initialized')
+			const processedContent = await this.mediaResolver.resolveMarkdownImages(
 				rawBody,
 				relativeFilePath,
 				slug,
@@ -199,107 +206,6 @@ export class PostPublishService {
 		}
 	}
 
-	private async resolveAndUploadImage(
-		imagePath: string,
-		relativeFilePath: string,
-		postSlug: string,
-		virtualImagesMap?: Map<string, Buffer>,
-		basePostsDir?: string,
-	): Promise<string> {
-		if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-			return imagePath
-		}
-		if (this.dryRun) return imagePath
-
-		const fileDir = path.dirname(relativeFilePath)
-		let normalizedImgPath = imagePath
-		if (imagePath.startsWith('./')) normalizedImgPath = imagePath.slice(2)
-		if (imagePath.startsWith('/')) normalizedImgPath = imagePath.slice(1)
-
-		const combinedPath =
-			fileDir && fileDir !== '.'
-				? path.join(fileDir, normalizedImgPath)
-				: normalizedImgPath
-		const cleanCombinedPath = combinedPath.replace(/\\/g, '/')
-		const publicId = buildPostMediaPublicId(postSlug, cleanCombinedPath)
-
-		if (virtualImagesMap) {
-			for (const [vPath, buf] of virtualImagesMap.entries()) {
-				const normVPath = vPath.replace(/\\/g, '/')
-				if (
-					normVPath === cleanCombinedPath ||
-					normVPath.endsWith(normalizedImgPath)
-				) {
-					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					if (!url) throw new Error(`Post 图片上传失败: ${publicId}`)
-					return url
-				}
-			}
-		}
-
-		if (basePostsDir) {
-			const absoluteImgPath = path.resolve(
-				path.isAbsolute(relativeFilePath)
-					? path.dirname(relativeFilePath)
-					: path.join(basePostsDir, path.dirname(relativeFilePath)),
-				imagePath,
-			)
-
-			try {
-				const imgStat = await fsPromises.stat(absoluteImgPath)
-				if (imgStat.isFile()) {
-					const buf = await fsPromises.readFile(absoluteImgPath)
-					const url = await this.uploadBufferToCloudinary(buf, publicId)
-					if (!url) throw new Error(`Post 图片上传失败: ${publicId}`)
-					return url
-				}
-			} catch {
-				// fallback
-			}
-		}
-
-		throw new Error(`Post 图片文件不存在: ${imagePath}`)
-	}
-
-	private async resolveMarkdownImages(
-		content: string,
-		relativeFilePath: string,
-		postSlug: string,
-		virtualImagesMap?: Map<string, Buffer>,
-		basePostsDir?: string,
-	): Promise<string> {
-		const imageReplacements: Array<{ original: string; replaced: string }> = []
-		const imgRegex = /!\[(.*?)\]\((.*?)\)/g
-		const matches = Array.from(content.matchAll(imgRegex))
-
-		for (const match of matches) {
-			const fullMatch = match[0]
-			const altText = match[1]
-			const src = match[2]?.split(' ')[0]
-
-			if (src && !src.startsWith('http://') && !src.startsWith('https://')) {
-				const uploadedUrl = await this.resolveAndUploadImage(
-					src,
-					relativeFilePath,
-					postSlug,
-					virtualImagesMap,
-					basePostsDir,
-				)
-				imageReplacements.push({
-					original: fullMatch,
-					replaced: `![${altText}](${uploadedUrl})`,
-				})
-			}
-		}
-
-		let finalContent = content
-		for (const rep of imageReplacements) {
-			finalContent = finalContent.replace(rep.original, rep.replaced)
-		}
-
-		return finalContent
-	}
-
 	private async savePostsToDb(
 		postsList: ProcessedPost[],
 		dryRun = false,
@@ -312,132 +218,10 @@ export class PostPublishService {
 			)
 			return postsList.length
 		}
-
-		const allTagNames = Array.from(
-			new Set(postsList.flatMap((p) => p.tags)),
-		).filter(Boolean)
-		const tagNameToId = new Map<string, string>()
-
-		for (const tagName of allTagNames) {
-			const tagSlug = generateSlug(tagName)
-			try {
-				const existing = await db.query.tags.findFirst({
-					where: eq(tags.name, tagName),
-				})
-				if (existing) {
-					tagNameToId.set(tagName, existing.id)
-				} else {
-					const [newTag] = await db
-						.insert(tags)
-						.values({
-							name: tagName,
-							slug: tagSlug,
-						})
-						.returning()
-					tagNameToId.set(tagName, newTag.id)
-					this.addLog('db', 'info', `创建新标签: ${tagName}`)
-				}
-			} catch (err) {
-				this.addLog(
-					'db',
-					'warn',
-					`处理标签失败: ${tagName}`,
-					err instanceof Error ? err.message : String(err),
-				)
-			}
-		}
-
-		let successCount = 0
-		for (const post of postsList) {
-			try {
-				const existingPost = await db.query.posts.findFirst({
-					where: eq(posts.slug, post.slug),
-				})
-
-				let postId: string
-				if (existingPost) {
-					if (
-						existingPost.sourcePath &&
-						existingPost.sourcePath !== post.sourcePath
-					) {
-						this.addLog(
-							'frontmatter',
-							'error',
-							`拒绝覆盖 Slug 冲突: ${post.slug}`,
-							`当前文件 ${post.sourcePath} 与数据库来源 ${existingPost.sourcePath} 不同，请修改 Frontmatter slug`,
-						)
-						continue
-					}
-					postId = existingPost.id
-					await db
-						.update(posts)
-						.set({
-							sourcePath: post.sourcePath,
-							title: post.title,
-							excerpt: post.excerpt,
-							poster: post.poster,
-							content: post.content,
-							publishedAt: post.publishedAt,
-							status: post.status,
-							sourceUrl: post.sourceUrl,
-							metadata: post.metadata,
-							archivedAt: null,
-							updatedAt: new Date(),
-						})
-						.where(eq(posts.id, postId))
-					this.addLog(
-						'db',
-						'success',
-						`文章更新成功: [${post.title}] (${post.slug})`,
-					)
-				} else {
-					const [newPost] = await db
-						.insert(posts)
-						.values({
-							slug: post.slug,
-							sourcePath: post.sourcePath,
-							title: post.title,
-							excerpt: post.excerpt,
-							poster: post.poster,
-							content: post.content,
-							publishedAt: post.publishedAt,
-							status: post.status,
-							sourceUrl: post.sourceUrl,
-							metadata: post.metadata,
-						})
-						.returning()
-					postId = newPost.id
-					this.addLog(
-						'db',
-						'success',
-						`文章新建入库: [${post.title}] (${post.slug})`,
-					)
-				}
-
-				await db.delete(postsToTags).where(eq(postsToTags.postId, postId))
-				for (const tName of post.tags) {
-					const tId = tagNameToId.get(tName)
-					if (tId) {
-						await db.insert(postsToTags).values({
-							postId,
-							tagId: tId,
-						})
-					}
-				}
-				successCount++
-			} catch (err) {
-				this.addLog(
-					'db',
-					'error',
-					`写入文章失败: ${post.slug}`,
-					err instanceof Error ? err.message : String(err),
-				)
-			}
-		}
-
-		return successCount
+		return postRepository.savePosts(postsList, (...args) =>
+			this.addLog(...args),
+		)
 	}
-
 	public async runPublish(
 		options: SyncRunnerOptions = {},
 	): Promise<SyncResult> {
@@ -445,6 +229,11 @@ export class PostPublishService {
 		const triggerType = options.triggerType || 'MANUAL'
 		const dryRun = options.dryRun || false
 		this.dryRun = dryRun
+		this.mediaResolver = new PostMediaResolver({
+			dryRun,
+			uploadBuffer: (buffer, publicId) =>
+				this.uploadBufferToCloudinary(buffer, publicId),
+		})
 
 		this.addLog(
 			'general',
