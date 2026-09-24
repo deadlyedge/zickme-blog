@@ -14,6 +14,7 @@
 ## 当前实施计划
 
 - [`../development-plan-stage13-home-gallery-experience.md`](../development-plan-stage13-home-gallery-experience.md)：首页 Gallery 与混合热门内容体验计划。
+- [`../development-plan-local-content-workbench.md`](../development-plan-local-content-workbench.md)：本地内容工作台、Post/Gallery 可视化整理与复用现有 Publish Workflow 的开发计划。
 - [`../old-plans/development-plan-stage11-architecture-governance.md`](../old-plans/development-plan-stage11-architecture-governance.md)：Stage 11 计划与验收清单。
 - [`../old-plans/development-plan-stage12-production-safety-and-migration.md`](../old-plans/development-plan-stage12-production-safety-and-migration.md)：Stage 12 生产安全、删除闭环与 Migration 执行计划。
 
