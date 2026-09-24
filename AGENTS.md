@@ -37,6 +37,7 @@ Blog / Gallery
    - **代码格式与 Lint**：统一使用 **Biome**（`bun run lint` / `bun run format`），遵循项目根目录 `biome.json`。
    - **绝对路径导入**：统一使用 `@/...` 路径别名引用 `src/` 下模块。
    - **快捷脚本**：如果 `package.json` 已提供 `publish:*` 快捷命令，优先按其名称调用。
+   - 检查git等操作请勿使用需要互动（如分页显示）的命令，避免打断自动进程。
 
 4. **安全与健壮性**：
    - 敏感配置必须且仅能来自环境变量（如 `.env`），不得硬编码任何 Key/Secret。
@@ -53,7 +54,8 @@ Blog / Gallery
 
 ## 🗺️ 2. 当前开发状况
 
-如果需要了解项目发展进程，`documents\project-summary-0915.md` 保存了上一阶段开发要点
+- 如果需要了解项目发展进程，`documents\project-summary-0915.md` 保存了上一阶段开发要点。
+- `/references` 中保存的是旧文档，仅用于开发者参考，开发过程中请无视。
 
 ---
 
