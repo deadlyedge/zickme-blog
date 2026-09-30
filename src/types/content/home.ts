@@ -1,4 +1,4 @@
-import type { GalleryExif } from '../gallery/image'
+import type { GalleryExif } from '../gallery'
 import type { SiteProfile } from '../site'
 import type { PostWithTags } from './post'
 

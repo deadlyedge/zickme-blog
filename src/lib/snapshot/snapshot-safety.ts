@@ -1,8 +1,5 @@
 import { createHash } from 'node:crypto'
-import type {
-	SnapshotPayload,
-	SnapshotSummary,
-} from '@/types/snapshot/snapshot'
+import type { SnapshotPayload, SnapshotSummary } from '@/types/snapshot'
 
 export function normalizeSnapshotValue(value: unknown): unknown {
 	if (value instanceof Date) return value.toISOString()

@@ -14,7 +14,7 @@ import type {
 	UserCommentItem,
 	UserPortalData,
 	UserReplyItem,
-} from '@/types/user/portal'
+} from '@/types/user'
 
 const logger = createLogger('actions/user-portal')
 
@@ -24,7 +24,7 @@ export type {
 	UserCommentItem,
 	UserPortalData,
 	UserReplyItem,
-} from '@/types/user/portal'
+} from '@/types/user'
 
 /**
  * 1. 获取当前登录用户的个人门户数据（个人信息、历史评论、收到的回复）

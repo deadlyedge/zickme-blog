@@ -7,8 +7,10 @@ import {
 } from '../src/lib/gallery/gallery-public'
 import { buildGalleryPublicId } from '../src/lib/media/gallery-media'
 import { buildPostMediaPublicId } from '../src/lib/media/post-media'
-import type { GalleryPublic } from '../src/types/gallery'
-import type { GalleryPublic as DomainGalleryPublic } from '../src/types/gallery/public'
+import type {
+	GalleryPublic as DomainGalleryPublic,
+	GalleryPublic,
+} from '../src/types/gallery'
 
 const image = {
 	id: 'image-1',

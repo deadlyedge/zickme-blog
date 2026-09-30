@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { updateProfile } from '@/lib/actions/profile'
 import { updateUserAvatarPreset } from '@/lib/actions/user-portal'
 import { signOut } from '@/lib/auth-client'
-import type { UserPortalData } from '@/types/user/portal'
+import type { UserPortalData } from '@/types/user'
 
 interface UserPortalClientProps {
 	initialData: UserPortalData

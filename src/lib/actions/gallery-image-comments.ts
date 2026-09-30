@@ -11,7 +11,7 @@ import { galleryImageComments, galleryImages } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
-import type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
+import type { GalleryImageCommentPublic } from '@/types/comment'
 import { formatZodError } from './zodError'
 
 const logger = createLogger('actions/gallery-image-comments')
@@ -29,7 +29,7 @@ const commentInputSchema = z.object({
 
 export type GalleryImageCommentInput = z.infer<typeof commentInputSchema>
 
-export type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
+// export type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
 
 export async function createGalleryImageComment(
 	data: GalleryImageCommentInput,

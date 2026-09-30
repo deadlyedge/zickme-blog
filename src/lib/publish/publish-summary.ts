@@ -5,4 +5,4 @@ export type {
 	PublishStatus,
 	PublishSummary,
 	PublishTrigger,
-} from '@/types/publish/publish'
+} from '@/types/publish'

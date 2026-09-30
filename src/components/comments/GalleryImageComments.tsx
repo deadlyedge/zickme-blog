@@ -14,7 +14,7 @@ import {
 } from '@/lib/actions/gallery-image-comments'
 import { useSession } from '@/lib/auth-client'
 import { useAppStore } from '@/lib/store'
-import type { GalleryImageCommentPublic } from '@/types/comment/gallery-image-comment'
+import type { GalleryImageCommentPublic } from '@/types/comment'
 
 function CompactCommentForm({
 	imageId,

@@ -6,7 +6,7 @@ import {
 	getExpectedWebpPath,
 	getMediaPreparationIssue,
 } from '../src/lib/publish/publish-validation'
-import { parsePublishScope } from '../src/types/publish-types'
+import { parsePublishScope } from '../src/types/publish'
 
 const mediaFixtureRoot = path.join(
 	process.cwd(),

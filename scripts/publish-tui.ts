@@ -10,7 +10,7 @@ import {
 	type ContentIssue,
 	type PublishScope,
 	parsePublishScope,
-} from '../src/types/publish-types'
+} from '../src/types/publish'
 
 const args = process.argv.slice(2)
 const scopeArg = args.includes('--scope')

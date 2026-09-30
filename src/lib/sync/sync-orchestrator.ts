@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { publishGallery } from '@/lib/publish/gallery-publish-service'
 import { PostPublishService } from '@/lib/publish/post-publish-service'
-import type { PublishSummary } from '@/types/publish/publish'
+import type { PublishSummary } from '@/types/publish'
 import { safeSyncError } from './sync-errors'
 import { acquireSyncLock } from './sync-lock'
 import { finishSyncRun } from './sync-repository'

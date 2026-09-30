@@ -1,0 +1,89 @@
+import type { InferSelectModel } from 'drizzle-orm'
+import type { galleries, galleryImages } from '@/db/schema'
+
+export type GalleryStatus = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'
+export type GalleryLayout = 'masonry' | 'grid' | 'justified'
+export type GallerySort = 'filename' | 'mtime' | 'manual'
+
+export type Gallery = InferSelectModel<typeof galleries>
+
+export interface GalleryAlbumFrontmatter {
+	slug?: string
+	title?: string
+	description?: string
+	date?: string
+	status?: 'published' | 'draft' | 'archived'
+	cover?: string
+	tags?: string[]
+	location?: string
+	layout?: GalleryLayout
+	sort?: GallerySort
+	showExif?: boolean
+	showLocation?: boolean
+	images?: GalleryImageFrontmatter[]
+}
+
+export interface GalleryIndexEntry {
+	slug: string
+	title: string
+	description: string
+	path: string
+	cover: string | null
+	imageCount: number
+	status: 'published' | 'draft' | 'archived'
+	updatedAt: string
+}
+
+export type GalleryImageSyncStatus =
+	| 'LOCAL_ONLY'
+	| 'REMOTE_ONLY'
+	| 'CONFLICT'
+	| 'IN_SYNC'
+	| 'PENDING_DELETE'
+	| 'ARCHIVED'
+export type GallerySyncStatus = GalleryImageSyncStatus
+
+export interface GalleryExif {
+	make?: string
+	model?: string
+	lensModel?: string
+	iso?: number
+	aperture?: string
+	exposureTime?: string
+	focalLength?: string
+	capturedAt?: string
+}
+
+export type GalleryImage = InferSelectModel<typeof galleryImages>
+
+export interface GalleryImageFrontmatter {
+	file: string
+	title?: string
+	description?: string
+	alt?: string
+	order?: number
+	hidden?: boolean
+}
+
+export interface GalleryPublicImage {
+	id: string
+	url: string
+	thumbnailUrl: string | null
+	title: string | null
+	description: string | null
+	alt: string
+	width: number | null
+	height: number | null
+	exif: GalleryExif | null
+}
+
+export interface GalleryPublic {
+	slug: string
+	title: string
+	description: string | null
+	tags: string[]
+	cover: string | null
+	status: GalleryStatus
+	location?: string
+	images: GalleryPublicImage[]
+}

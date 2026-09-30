@@ -5,10 +5,7 @@ import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
 import { PUBLISH_SCOPES, PUBLISH_STATUSES } from '../src/constants/publish'
 import { resolvePublishDeleteOld } from '../src/lib/publish/publish-workflow'
 import type { PublishSummary as RootPublishSummary } from '../src/types'
-import {
-	type PublishScope,
-	parsePublishScope,
-} from '../src/types/publish-types'
+import { type PublishScope, parsePublishScope } from '../src/types/publish'
 
 const fixtureRoot = path.join(process.cwd(), '.tmp-publish-boundaries')
 const fixture = path.join(fixtureRoot, 'draft.md')

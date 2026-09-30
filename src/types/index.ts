@@ -5,7 +5,7 @@ export type {
 	GalleryImageCommentPublic,
 	GalleryImageCommentStatus,
 	PublicCommentAuthor,
-} from './comment/index'
+} from './comment'
 export type { HomePageData } from './content/home'
 export type { PostLink, PostLinkType, PostMetadata } from './content/metadata'
 export type { Post, PostWithTags, StatusType } from './content/post'
@@ -24,14 +24,14 @@ export type {
 	GalleryPublicImage,
 	GallerySort,
 	GalleryStatus,
-} from './gallery/index'
+} from './gallery'
 export type {
 	PublishResult,
 	PublishScope,
 	PublishStatus,
 	PublishSummary,
 	PublishTrigger,
-} from './publish/publish'
+} from './publish'
 export type {
 	AboutPageConfig,
 	FeaturedProject,
@@ -51,10 +51,10 @@ export type {
 	SnapshotStatus,
 	SnapshotSummary,
 	SnapshotTableRow,
-} from './snapshot/snapshot'
+} from './snapshot'
 export type { Role, SyncLogItem, SyncResult, SyncStatus } from './sync'
 export type {
 	UserCommentItem,
 	UserPortalData,
 	UserReplyItem,
-} from './user/portal'
+} from './user'

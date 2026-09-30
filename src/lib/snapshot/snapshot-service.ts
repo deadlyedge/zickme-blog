@@ -15,7 +15,7 @@ import {
 	SNAPSHOT_SCHEMA_VERSION,
 	type SnapshotPayload,
 	type SnapshotSource,
-} from '@/types/snapshot/snapshot'
+} from '@/types/snapshot'
 import {
 	assertSnapshotPayload,
 	hashSnapshotPayload,
