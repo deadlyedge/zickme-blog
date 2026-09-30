@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PostClient } from '@/components/post/PostClient'
 import { createLogger } from '@/lib/logger'
-import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/post-providers'
+import { fetchAllPostSlugs, fetchPostBySlug } from '@/lib/posts/post-queries'
 import { buildMetadata } from '@/lib/seo'
 
 const logger = createLogger('app/posts/[slug]')

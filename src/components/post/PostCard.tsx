@@ -5,7 +5,7 @@ import { NavigationLink } from '@/components/NavigationLink'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CardTilt, CardTiltContent } from '@/components/ui/effects/CardTilt'
-import { calculateReadingTime, formatPublishedDate } from '@/lib/utils'
+import { calculateReadingTime, formatPublishedDate } from '@/lib/posts/format'
 import type { PostWithTags } from '@/types/content/post'
 
 type PostCardProps = { post: PostWithTags }

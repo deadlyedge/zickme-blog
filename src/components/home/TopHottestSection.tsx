@@ -13,7 +13,7 @@ import {
 	CarouselContent,
 	CarouselItem,
 } from '@/components/ui/carousel'
-import { formatPublishedDate } from '@/lib/utils'
+import { formatPublishedDate } from '@/lib/posts/format'
 import type { HomeGalleryImage } from '@/types/content/home'
 import type { PostWithTags } from '@/types/content/post'
 

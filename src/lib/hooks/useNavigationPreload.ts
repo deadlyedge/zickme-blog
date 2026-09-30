@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import { fetchPostBySlugAction } from '@/lib/actions/posts'
-import { contentQueryKeys } from '@/lib/content-queries'
+import { contentQueryKeys } from '@/lib/query/content-query-options'
 import { getQueryClient } from '@/lib/query-client'
 
 export function useNavigationPreload() {

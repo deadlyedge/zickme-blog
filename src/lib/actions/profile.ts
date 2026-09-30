@@ -12,7 +12,7 @@ import { auth } from '@/lib/auth'
 import { requireAdminSession, requireSession } from '@/lib/auth/guards'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { createLogger } from '@/lib/logger'
-import { fetchProfile } from '@/lib/post-providers'
+import { fetchProfile } from '@/lib/posts/post-queries'
 import type {
 	AboutPageConfig,
 	LandingPageConfig,

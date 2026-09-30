@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { HomeScrollArea } from '@/components/home/HomeScrollArea'
-import { fetchHomePageData } from '@/lib/post-providers'
+import { fetchHomePageData } from '@/lib/posts/home-queries'
 import { buildMetadata } from '@/lib/seo'
 
 export const revalidate = 3600 // 每小时重新验证一次，确保内容及时更新

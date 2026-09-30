@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { SettingsClient } from '@/components/dashboard/settings/SettingsClient'
 import { auth } from '@/lib/auth'
-import { fetchPosts, fetchProfile } from '@/lib/post-providers'
+import { fetchPosts, fetchProfile } from '@/lib/posts/post-queries'
 import { buildMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildMetadata({

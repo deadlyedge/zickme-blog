@@ -1,5 +1,7 @@
 import type { ThemeConfig, ThemeVariables } from '@/types/site'
 
+export { convertToTailwindColor } from './theme/color'
+
 // 将 ThemeVariables 对象转为 CSS 样式字符串
 export function variablesToCss(vars?: ThemeVariables): string {
 	if (!vars) return ''

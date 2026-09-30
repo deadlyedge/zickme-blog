@@ -4,15 +4,15 @@ import { z } from 'zod'
 import { POST_QUERY_LIMITS, POST_RULES } from '@/constants/post'
 import { createLogger } from '@/lib/logger'
 import {
-	fetchAllPostsForSearch,
-	fetchAllTagsForSearch,
 	fetchHomePageData as fetchHomePageDataProvider,
 	fetchPinnedPosts,
+	fetchTopHottestPosts,
+} from '@/lib/posts/home-queries'
+import {
 	fetchPostBySlug,
 	fetchPosts,
 	fetchTags,
-	fetchTopHottestPosts,
-} from '@/lib/post-providers'
+} from '@/lib/posts/post-queries'
 import type { HomePageData } from '@/types/content/home'
 import type { PostWithTags } from '@/types/content/post'
 import type { Tag } from '@/types/content/tag'
@@ -118,8 +118,8 @@ export async function fetchPostsForSearchAction() {
 	try {
 		logger.debug('[Drizzle fetch]: posts for search')
 		const [allPosts, allTags] = await Promise.all([
-			fetchAllPostsForSearch(),
-			fetchAllTagsForSearch(),
+			fetchPosts(200),
+			fetchTags(),
 		])
 
 		return {

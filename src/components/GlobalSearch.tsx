@@ -12,7 +12,7 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command'
-import { searchPostsOptions } from '@/lib/content-queries'
+import { searchPostsOptions } from '@/lib/query/content-query-options'
 import type { PostWithTags } from '@/types/content/post'
 import type { Tag } from '@/types/content/tag'
 
