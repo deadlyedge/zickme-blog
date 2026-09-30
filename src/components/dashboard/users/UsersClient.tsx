@@ -125,7 +125,7 @@ export default function UsersPage() {
 				newPassword,
 			})
 
-			if (res.success) {
+			if (res.ok) {
 				toast.success(`已成功重置用户 [${resetPasswordTargetUser.name}] 的密码`)
 				setResetPasswordTargetUser(null)
 				setNewPassword('')

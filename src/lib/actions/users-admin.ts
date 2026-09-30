@@ -8,6 +8,7 @@ import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { accounts, comments, sessions, users } from '@/db/schema'
+import type { ActionResult } from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { formatZodError } from './zodError'
@@ -37,16 +38,13 @@ const toggleUserBanSchema = z.object({
 export async function resetUserPasswordByAdmin(data: {
 	userId: string
 	newPassword: string
-}) {
+}): Promise<ActionResult<{ userId: string }>> {
 	try {
 		await requireAdminSession()
 
 		const parsed = adminResetPasswordSchema.safeParse(data)
 		if (!parsed.success) {
-			return {
-				success: false,
-				error: formatZodError(parsed.error),
-			}
+			return { ok: false, error: formatZodError(parsed.error) }
 		}
 
 		const targetUser = await db.query.users.findFirst({
@@ -54,7 +52,7 @@ export async function resetUserPasswordByAdmin(data: {
 		})
 
 		if (!targetUser) {
-			return { success: false, error: '用户不存在' }
+			return { ok: false, error: '用户不存在' }
 		}
 
 		// 使用 Better-Auth 的哈希算法加密密码
@@ -88,11 +86,11 @@ export async function resetUserPasswordByAdmin(data: {
 		await db.delete(sessions).where(eq(sessions.userId, targetUser.id))
 
 		revalidatePath('/dashboard/users')
-		return { success: true }
+		return { ok: true, data: { userId: targetUser.id } }
 	} catch (error) {
 		logger.error('Reset user password by admin error', error)
 		return {
-			success: false,
+			ok: false,
 			error: error instanceof Error ? error.message : '重置密码失败',
 		}
 	}
