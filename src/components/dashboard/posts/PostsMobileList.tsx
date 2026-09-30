@@ -5,7 +5,6 @@ import { CheckSquare, ExternalLink, Eye, Square, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { STATUS_BADGE_MAP } from '@/components/dashboard/posts/constants'
-import type { PostListProps } from '@/components/dashboard/posts/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import type { StatusType } from '@/types/content/post'
+import type { PostListProps, StatusType } from '@/types/content/post'
 
 type PostsMobileListProps = Pick<
 	PostListProps,

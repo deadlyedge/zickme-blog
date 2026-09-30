@@ -14,7 +14,6 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import { STATUS_BADGE_MAP } from '@/components/dashboard/posts/constants'
-import type { PostListProps } from '@/components/dashboard/posts/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,7 +31,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import type { StatusType } from '@/types/content/post'
+import type { PostListProps, StatusType } from '@/types/content/post'
 
 type PostsTableProps = PostListProps & {
 	onToggleSelectAll: () => void
