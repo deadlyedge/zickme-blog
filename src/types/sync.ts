@@ -1,4 +1,3 @@
-export type Role = 'ADMIN' | 'EDITOR' | 'USER'
 export type SyncStatus = 'SUCCESS' | 'FAILED' | 'PARTIAL'
 
 export interface SyncLogItem {

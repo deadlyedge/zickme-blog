@@ -1,3 +1,5 @@
+// export type UserRole = 'ADMIN' | 'EDITOR' | 'USER'
+
 export interface UserCommentItem {
 	id: string
 	content: string

@@ -52,7 +52,7 @@ export type {
 	SnapshotSummary,
 	SnapshotTableRow,
 } from './snapshot'
-export type { Role, SyncLogItem, SyncResult, SyncStatus } from './sync'
+export type { SyncLogItem, SyncResult, SyncStatus } from './sync'
 export type {
 	UserCommentItem,
 	UserPortalData,
