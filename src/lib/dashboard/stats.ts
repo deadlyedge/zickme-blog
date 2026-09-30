@@ -1,9 +1,10 @@
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { db } from '@/db'
 import { comments, posts, tags, users } from '@/db/schema'
+import type { DashboardStats } from './stats-types'
 
 /** 查询并组装仪表盘统计数据。 */
-export async function fetchDashboardStats() {
+export async function fetchDashboardStats(): Promise<DashboardStats> {
 	// 总用户数
 	const [userCountResult] = await db.select({ value: count() }).from(users)
 	const totalUsers = userCountResult?.value ?? 0

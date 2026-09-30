@@ -4,7 +4,7 @@ import { Clock, FileText, List } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSanitize from 'rehype-sanitize'
@@ -16,13 +16,9 @@ import { Button } from '@/components/ui/button'
 import { usePost } from '@/lib/hooks/useContent'
 import { calculateReadingTime, cn, formatPublishedDate } from '@/lib/utils'
 import type { PostWithTags } from '@/types/content/post'
+import { CodeBlock } from './CodeBlock'
 import { PostLinks } from './PostLinks'
-
-interface TocItem {
-	id: string
-	text: string
-	level: number
-}
+import { usePostReadingExperience } from './usePostReadingExperience'
 
 interface PostClientProps {
 	initialPost?: PostWithTags
@@ -55,15 +51,6 @@ const markdownComponents = {
 export function PostClient({ initialPost }: PostClientProps) {
 	const params = useParams()
 	const slug = params.slug as string
-	const scrollContainerRef = useRef<HTMLDivElement>(null)
-	const articleContentRef = useRef<HTMLDivElement>(null)
-
-	// 阅读进度
-	const [readingProgress, setReadingProgress] = useState(0)
-	// 活跃目录项
-	const [activeHeadingId, setActiveHeadingId] = useState<string>('')
-	// 目录列表
-	const [tocItems, setTocItems] = useState<TocItem[]>([])
 
 	// Use TanStack Query with initial data hydration
 	const { data: post, isLoading } = usePost(slug, {
@@ -77,165 +64,14 @@ export function PostClient({ initialPost }: PostClientProps) {
 	}, [post?.content])
 
 	const markdownContent = post?.content || ''
-
-	// 提取目录（从渲染后的标题中生成带 ID 的结构）
-	useEffect(() => {
-		if (!markdownContent || !articleContentRef.current) {
-			setTocItems([])
-			return
-		}
-
-		const container = articleContentRef.current
-		const headings = container.querySelectorAll('h1, h2, h3, h4')
-		const items: TocItem[] = []
-
-		headings.forEach((heading, index) => {
-			const text = heading.textContent || ''
-			let id = heading.id
-			if (!id) {
-				id = `heading-${index}-${text
-					.toLowerCase()
-					.replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-					.replace(/^-+|-+$/g, '')}`
-				heading.id = id
-			}
-			const level = Number.parseInt(heading.tagName.replace('H', ''), 10)
-			items.push({ id, text, level })
-		})
-
-		setTocItems(items)
-	}, [markdownContent])
-
-	// 滚动监听：计算阅读进度条与 TOC 高亮
-	useEffect(() => {
-		const container = scrollContainerRef.current
-		if (!container) return
-
-		const handleScroll = () => {
-			const { scrollTop, scrollHeight, clientHeight } = container
-			const totalScrollable = scrollHeight - clientHeight
-			if (totalScrollable > 0) {
-				const progress = Math.min(
-					100,
-					Math.max(0, (scrollTop / totalScrollable) * 100),
-				)
-				setReadingProgress(progress)
-			}
-
-			// 更新目录高亮
-			if (articleContentRef.current) {
-				const headings = Array.from(
-					articleContentRef.current.querySelectorAll('h1, h2, h3, h4'),
-				)
-				const containerTop = container.getBoundingClientRect().top
-
-				let currentActiveId = ''
-				for (const heading of headings) {
-					const rect = heading.getBoundingClientRect()
-					if (rect.top - containerTop <= 120) {
-						currentActiveId = heading.id
-					} else {
-						break
-					}
-				}
-				if (currentActiveId) {
-					setActiveHeadingId(currentActiveId)
-				} else if (headings.length > 0 && headings[0].id) {
-					setActiveHeadingId(headings[0].id)
-				}
-			}
-		}
-
-		container.addEventListener('scroll', handleScroll, { passive: true })
-		handleScroll()
-
-		return () => {
-			container.removeEventListener('scroll', handleScroll)
-		}
-	}, [])
-
-	// 目录点击平滑滚动
-	const handleScrollToHeading = (id: string) => {
-		const element = document.getElementById(id)
-		const container = scrollContainerRef.current
-		if (element && container) {
-			const containerRect = container.getBoundingClientRect()
-			const elementRect = element.getBoundingClientRect()
-			const targetScrollTop =
-				container.scrollTop + (elementRect.top - containerRect.top) - 80
-
-			container.scrollTo({
-				top: targetScrollTop,
-				behavior: 'smooth',
-			})
-			setActiveHeadingId(id)
-		}
-	}
-
-	// 增强代码块：注入复制按钮与语言提示
-	useEffect(() => {
-		if (!markdownContent || !articleContentRef.current) return
-
-		const container = articleContentRef.current
-		const preElements = container.querySelectorAll('pre')
-
-		preElements.forEach((pre) => {
-			if (pre.getAttribute('data-copy-enhanced')) return
-			pre.setAttribute('data-copy-enhanced', 'true')
-			pre.classList.add('relative', 'group')
-
-			// 获取代码语言（如果存在）
-			const codeElement = pre.querySelector('code')
-			const classNames = codeElement?.className || ''
-			const langMatch = classNames.match(/language-([a-zA-Z0-9_-]+)/)
-			const language = langMatch ? langMatch[1] : ''
-
-			// 顶栏工具条容器
-			const toolbar = document.createElement('div')
-			toolbar.className =
-				'absolute right-3 top-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10'
-
-			if (language) {
-				const langBadge = document.createElement('span')
-				langBadge.className =
-					'text-[10px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-white border border-slate-300 text-slate-600 select-none'
-				langBadge.textContent = language
-				toolbar.appendChild(langBadge)
-			}
-
-			const copyBtn = document.createElement('button')
-			copyBtn.className =
-				'p-1.5 rounded-md bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-300 transition-all text-xs flex items-center gap-1 shadow-sm'
-			copyBtn.setAttribute('title', '复制代码')
-			copyBtn.innerHTML = `
-				<svg class="size-3.5 copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-				<span class="copy-text hidden sm:inline text-[11px]">复制</span>
-			`
-
-			copyBtn.onclick = async (e) => {
-				e.preventDefault()
-				const codeText = codeElement?.textContent || pre.textContent || ''
-				try {
-					await navigator.clipboard.writeText(codeText)
-					copyBtn.innerHTML = `
-						<svg class="size-3.5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-						<span class="copy-text text-emerald-400 hidden sm:inline text-[11px]">已复制</span>
-					`
-					setTimeout(() => {
-						copyBtn.innerHTML = `
-							<svg class="size-3.5 copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-							<span class="copy-text hidden sm:inline text-[11px]">复制</span>
-						`
-					}, 2000)
-				} catch (err) {
-					console.error('Failed to copy code:', err)
-				}
-			}
-
-			toolbar.appendChild(copyBtn)
-			pre.appendChild(toolbar)
-		})
-	}, [markdownContent])
+	const {
+		articleContentRef,
+		scrollContainerRef,
+		readingProgress,
+		activeHeadingId,
+		tocItems,
+		handleScrollToHeading,
+	} = usePostReadingExperience(markdownContent)
 
 	if (isLoading) {
 		return (
@@ -396,7 +232,7 @@ export function PostClient({ initialPost }: PostClientProps) {
 								<ReactMarkdown
 									remarkPlugins={[remarkGfm, remarkBreaks]}
 									rehypePlugins={[rehypeSanitize, rehypeHighlight]}
-									components={markdownComponents}
+									components={{ ...markdownComponents, pre: CodeBlock }}
 								>
 									{markdownContent}
 								</ReactMarkdown>

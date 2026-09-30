@@ -67,7 +67,7 @@ src/lib/actions/dashboard.ts         # 仅保留 getDashboardStats 的鉴权包�
 
 要点：`'use server'` 文件只导出 action；查询函数放到无 `'use server'` 的模块，避免被误暴露为可调用端点。
 
-#### 3.3 清理“Sync”遗留命名与类型
+#### 3.3 清理“Sync”遗留命名与类型(delayed)
 
 `README` 已声明旧同步入口删除，但仍存在：
 
@@ -82,7 +82,7 @@ src/lib/actions/dashboard.ts         # 仅保留 getDashboardStats 的鉴权包�
 3. 全部迁完后再决定是否用 migration 改表名；不改也可，但在 schema 文件顶部加注释说明历史命名。
 4. `Role` 类型目前定义在 `types/sync.ts`，与同步无关，应移到 `types/user/`。
 
-#### 3.4 整理 `types/` 的入口
+#### 3.4 整理 `types/` 的入口(almost done)
 
 现状存在三种风格并存：`types/content/*`（按领域目录）、`types/post-types.ts`、`types/publish-types.ts`（顶层散文件）、`types/sync.ts`。
 
