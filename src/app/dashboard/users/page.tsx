@@ -38,13 +38,12 @@ import {
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
+import { deleteComment, toggleCommentSpam } from '@/lib/actions/comments-admin'
 import {
-	deleteComment,
 	getUsersList,
 	resetUserPasswordByAdmin,
-	toggleCommentSpam,
 	toggleUserBan,
-} from '@/lib/actions/dashboard'
+} from '@/lib/actions/users-admin'
 
 type User = {
 	id: string

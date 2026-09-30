@@ -1,0 +1,74 @@
+'use server'
+
+import { eq } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { COMMENT_MESSAGES } from '@/constants/comments'
+import { POST_RULES } from '@/constants/post'
+import { db } from '@/db'
+import { comments } from '@/db/schema'
+import { requireAdminSession } from '@/lib/auth/guards'
+import { createLogger } from '@/lib/logger'
+import { formatZodError } from './zodError'
+
+const logger = createLogger('actions/dashboard')
+
+const toggleCommentSpamSchema = z.object({
+	commentId: z
+		.string()
+		.min(1, COMMENT_MESSAGES.idRequired)
+		.max(POST_RULES.idMaxLength),
+	isSpam: z.boolean(),
+})
+
+const deleteCommentSchema = z
+	.string()
+	.min(1, COMMENT_MESSAGES.idRequired)
+	.max(POST_RULES.idMaxLength)
+
+/** 切换评论垃圾/正常状态。 */
+export async function toggleCommentSpam(commentId: string, isSpam: boolean) {
+	try {
+		await requireAdminSession()
+
+		const parsed = toggleCommentSpamSchema.safeParse({ commentId, isSpam })
+		if (!parsed.success) {
+			throw new Error(formatZodError(parsed.error))
+		}
+
+		await db
+			.update(comments)
+			.set({
+				status: parsed.data.isSpam ? 'SPAM' : 'PUBLISHED',
+			})
+			.where(eq(comments.id, parsed.data.commentId))
+
+		revalidatePath('/dashboard/users')
+		revalidatePath('/dashboard')
+		return { success: true }
+	} catch (error) {
+		logger.error('Toggle comment spam error', error)
+		throw error
+	}
+}
+
+/** 删除指定评论。 */
+export async function deleteComment(commentId: string) {
+	try {
+		await requireAdminSession()
+
+		const parsed = deleteCommentSchema.safeParse(commentId)
+		if (!parsed.success) {
+			throw new Error(formatZodError(parsed.error))
+		}
+
+		await db.delete(comments).where(eq(comments.id, parsed.data))
+
+		revalidatePath('/dashboard/users')
+		revalidatePath('/dashboard')
+		return { success: true }
+	} catch (error) {
+		logger.error('Delete comment error', error)
+		throw error
+	}
+}
