@@ -1,11 +1,10 @@
 'use server'
 
 import { and, desc, eq, isNull, sql } from 'drizzle-orm'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/db'
 import { posts, tags } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import type { PublishWorkflowResult } from '@/lib/publish/publish-workflow'
 import { runPublishWorkflow } from '@/lib/publish/publish-workflow'
@@ -36,22 +35,6 @@ const _batchUpdatePostStatusSchema = z.object({
 	postIds: z.array(postIdSchema).min(1, '未选中任何文章'),
 	status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']),
 })
-
-/**
- * 校验当前请求是否为 ADMIN
- */
-async function requireAdminSession() {
-	const headersList = await headers()
-	const session = await auth.api.getSession({
-		headers: headersList,
-	})
-
-	if (!session?.user?.id || session.user.role !== 'ADMIN') {
-		throw new Error('权限不足：需要管理员权限')
-	}
-
-	return session
-}
 
 /**
  * 1. 获取管理后台文章列表（支持状态、标签、搜索筛选）

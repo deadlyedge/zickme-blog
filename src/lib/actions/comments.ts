@@ -2,13 +2,12 @@
 
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
 import type { CommentWithReplies } from '@/types/comment'
@@ -47,14 +46,7 @@ export async function createComment(data: CreateCommentData) {
 			return { success: false, error: formatZodError(parsed.error) }
 		}
 
-		// Get current user session
-		const session = await auth.api.getSession({
-			headers: await headers(),
-		})
-
-		if (!session?.user?.id) {
-			return { success: false, error: '用户未登录' }
-		}
+		const session = await requireSession()
 
 		// Find the post by ID
 		const post = await db.query.posts.findFirst({

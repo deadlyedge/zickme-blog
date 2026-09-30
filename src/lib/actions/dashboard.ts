@@ -3,34 +3,17 @@
 import { hashPassword } from 'better-auth/crypto'
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
 import { COMMENT_MESSAGES } from '@/constants/comments'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { accounts, comments, posts, sessions, tags, users } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { formatZodError } from './zodError'
 
 const logger = createLogger('actions/dashboard')
-
-/**
- * 校验当前请求是否为 ADMIN
- */
-async function requireAdminSession() {
-	const headersList = await headers()
-	const session = await auth.api.getSession({
-		headers: headersList,
-	})
-
-	if (!session?.user?.id || session.user.role !== 'ADMIN') {
-		throw new Error('权限不足：需要管理员权限')
-	}
-
-	return session
-}
 
 const adminResetPasswordSchema = z.object({
 	userId: z.string().min(1, '用户ID不能为空').max(POST_RULES.idMaxLength),

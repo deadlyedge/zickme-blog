@@ -1,12 +1,11 @@
 'use server'
 
 import { asc } from 'drizzle-orm'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { GALLERY_RULES } from '@/constants/gallery'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('actions/gallery-admin')
@@ -49,12 +48,6 @@ const _imageUpdateSchema = z.object({
 		.max(GALLERY_RULES.sortOrder.max),
 	hidden: z.boolean(),
 })
-
-async function requireAdminSession() {
-	const session = await auth.api.getSession({ headers: await headers() })
-	if (!session?.user?.id || session.user.role !== 'ADMIN')
-		throw new Error('权限不足：需要管理员权限')
-}
 
 export async function getDashboardGalleries() {
 	try {

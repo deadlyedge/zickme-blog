@@ -2,13 +2,12 @@
 
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { galleryImageComments, galleryImages } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireAdminSession, requireSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
 import type { GalleryImageCommentPublic } from '@/types/comment'
@@ -38,8 +37,12 @@ export async function createGalleryImageComment(
 		const parsed = commentInputSchema.safeParse(data)
 		if (!parsed.success)
 			return { success: false, error: formatZodError(parsed.error) }
-		const session = await auth.api.getSession({ headers: await headers() })
-		if (!session?.user?.id) return { success: false, error: '用户未登录' }
+		const session = await requireSession().catch((error: unknown) => {
+			if (error instanceof Error && error.message === '用户未登录')
+				return undefined
+			throw error
+		})
+		if (!session) return { success: false, error: '用户未登录' }
 
 		const image = await db.query.galleryImages.findFirst({
 			where: and(
@@ -155,9 +158,16 @@ export async function toggleGalleryImageCommentSpam(
 		return { success: false, error: formatZodError(parsed.error) }
 
 	try {
-		const session = await auth.api.getSession({ headers: await headers() })
-		if (!session?.user?.id || session.user.role !== 'ADMIN') {
-			return { success: false, error: '权限不足：需要管理员权限' }
+		try {
+			await requireAdminSession()
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				error.message === '权限不足：需要管理员权限'
+			) {
+				return { success: false, error: '权限不足：需要管理员权限' }
+			}
+			throw error
 		}
 		await db
 			.update(galleryImageComments)

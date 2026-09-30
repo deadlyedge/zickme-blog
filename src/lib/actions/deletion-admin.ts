@@ -1,7 +1,6 @@
 'use server'
 
 import { and, count, eq, inArray } from 'drizzle-orm'
-import { headers } from 'next/headers'
 import { db } from '@/db'
 import {
 	comments,
@@ -10,7 +9,7 @@ import {
 	galleryImages,
 	posts,
 } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth/guards'
 import {
 	buildDeletionPreview,
 	deletionConfirmationInputSchema,
@@ -20,13 +19,6 @@ import {
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('actions/deletion-admin')
-
-async function requireAdminSession() {
-	const session = await auth.api.getSession({ headers: await headers() })
-	if (!session?.user?.id || session.user.role !== 'ADMIN')
-		throw new Error('权限不足：需要管理员权限')
-	return session
-}
 
 function invalidEntity() {
 	return { success: false as const, error: '删除目标不存在或已不可用' }

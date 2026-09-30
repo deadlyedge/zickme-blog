@@ -1,20 +1,12 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { z } from 'zod'
-import { auth } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth/guards'
 import { getSyncRun, listRecentSyncRuns } from '@/lib/sync/sync-repository'
 
 const listSchema = z
 	.object({ limit: z.number().int().min(1).max(100).optional() })
 	.optional()
-async function requireAdmin() {
-	const session = await auth.api.getSession({ headers: await headers() })
-	if (!session?.user?.id || session.user.role !== 'ADMIN')
-		throw new Error('权限不足：需要管理员权限')
-	return session.user.id
-}
-
 function toSafeRun(run: Awaited<ReturnType<typeof getSyncRun>>) {
 	if (!run) return null
 	return {
@@ -35,7 +27,7 @@ function toSafeRun(run: Awaited<ReturnType<typeof getSyncRun>>) {
 
 export async function listSyncRuns(input?: unknown) {
 	try {
-		await requireAdmin()
+		await requireAdminSession()
 		const parsed = listSchema.safeParse(input)
 		const runs = await listRecentSyncRuns(
 			parsed.success ? parsed.data?.limit : 30,
@@ -48,7 +40,7 @@ export async function listSyncRuns(input?: unknown) {
 
 export async function getSyncRunAction(runId: string) {
 	try {
-		await requireAdmin()
+		await requireAdminSession()
 		const parsed = z.uuid().safeParse(runId)
 		if (!parsed.success)
 			return { success: false as const, error: '运行 ID 无效' }

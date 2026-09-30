@@ -9,6 +9,7 @@ import { PROFILE_RULES } from '@/constants/profile'
 import { db } from '@/db'
 import { siteProfile, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { requireAdminSession, requireSession } from '@/lib/auth/guards'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { createLogger } from '@/lib/logger'
 import { fetchProfile } from '@/lib/post-providers'
@@ -83,14 +84,7 @@ export async function updateProfile(data: UpdateProfileData) {
 			throw new Error(formatZodError(parsed.error))
 		}
 
-		const headersList = await headers()
-		const session = await auth.api.getSession({
-			headers: headersList,
-		})
-
-		if (!session?.user?.id) {
-			throw new Error('未登录')
-		}
+		const session = await requireSession('未登录')
 
 		const userId = session.user.id
 
@@ -132,14 +126,7 @@ export async function updateProfile(data: UpdateProfileData) {
 
 export async function updateAvatar() {
 	try {
-		const headersList = await headers()
-		const session = await auth.api.getSession({
-			headers: headersList,
-		})
-
-		if (!session?.user?.id) {
-			throw new Error('未登录')
-		}
+		const session = await requireSession('未登录')
 
 		const userId = session.user.id
 		const bearAvatar = generateAvatarUri({
@@ -178,14 +165,7 @@ interface UpdateSiteProfileData {
 
 export async function updateSiteProfile(data: UpdateSiteProfileData) {
 	try {
-		const headersList = await headers()
-		const session = await auth.api.getSession({
-			headers: headersList,
-		})
-
-		if (!session?.user?.id || session.user.role !== 'ADMIN') {
-			throw new Error('需要管理员权限')
-		}
+		await requireAdminSession('需要管理员权限')
 
 		const parsed = updateSiteProfileSchema.safeParse(data)
 		if (!parsed.success) {
@@ -246,14 +226,7 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 
 export async function getSiteProfile() {
 	try {
-		const headersList = await headers()
-		const session = await auth.api.getSession({
-			headers: headersList,
-		})
-
-		if (!session?.user?.id || session.user.role !== 'ADMIN') {
-			throw new Error('需要管理员权限')
-		}
+		await requireAdminSession('需要管理员权限')
 
 		const profile = await fetchProfile()
 

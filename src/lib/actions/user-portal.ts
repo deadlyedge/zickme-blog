@@ -2,11 +2,10 @@
 
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/db'
 import { comments, users } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { requireSession } from '@/lib/auth/guards'
 import { generateAvatarUri } from '@/lib/generate-avatar'
 import { getGravatarAvatarUrl } from '@/lib/get-avatar'
 import { createLogger } from '@/lib/logger'
@@ -30,14 +29,7 @@ export type {
  * 1. 获取当前登录用户的个人门户数据（个人信息、历史评论、收到的回复）
  */
 export async function getUserPortalData(): Promise<UserPortalData> {
-	const headersList = await headers()
-	const session = await auth.api.getSession({
-		headers: headersList,
-	})
-
-	if (!session?.user?.id) {
-		throw new Error('用户未登录')
-	}
+	const session = await requireSession()
 
 	const userId = session.user.id
 
@@ -162,14 +154,7 @@ export async function updateUserAvatarPreset(
 			throw new Error('无效的头像类型')
 		}
 
-		const headersList = await headers()
-		const session = await auth.api.getSession({
-			headers: headersList,
-		})
-
-		if (!session?.user?.id) {
-			throw new Error('未登录')
-		}
+		const session = await requireSession('未登录')
 
 		if (parsedType.data === 'custom') {
 			throw new Error('不支持自定义外链头像')
