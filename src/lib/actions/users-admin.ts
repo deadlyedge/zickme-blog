@@ -9,6 +9,7 @@ import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { accounts, comments, sessions, users } from '@/db/schema'
 import type { ActionResult } from '@/lib/actions/action-result'
+import { actionFailure, actionSuccess } from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { formatZodError } from './zodError'
@@ -97,7 +98,29 @@ export async function resetUserPasswordByAdmin(data: {
 }
 
 /** 获取全站用户列表，包括评论和封禁状态。 */
-export async function getUsersList() {
+export async function getUsersList(): Promise<
+	ActionResult<
+		{
+			id: string
+			name: string
+			email: string
+			image: string | null
+			banned: boolean
+			role: string
+			emailVerified: boolean
+			createdAt: Date
+			updatedAt: Date
+			totalComments: number
+			comments: {
+				id: string
+				content: string
+				status: (typeof comments.$inferSelect)['status']
+				createdAt: Date
+				post: { id: string; title: string; slug: string }
+			}[]
+		}[]
+	>
+> {
 	try {
 		await requireAdminSession()
 
@@ -119,43 +142,50 @@ export async function getUsersList() {
 			orderBy: [desc(users.createdAt)],
 		})
 
-		return allUsers.map((u) => ({
-			id: u.id,
-			name: u.name,
-			email: u.email,
-			image: u.image,
-			banned: Boolean(u.banned),
-			role: u.role || 'USER',
-			emailVerified: u.emailVerified,
-			createdAt: u.createdAt,
-			updatedAt: u.updatedAt,
-			totalComments: u.comments?.length || 0,
-			comments: (u.comments || []).map((c) => ({
-				id: c.id,
-				content: c.content,
-				status: c.status,
-				createdAt: c.createdAt,
-				post: {
-					id: c.post?.id || '',
-					title: c.post?.title || '未知文章',
-					slug: c.post?.slug || '',
-				},
+		return actionSuccess(
+			allUsers.map((u) => ({
+				id: u.id,
+				name: u.name,
+				email: u.email,
+				image: u.image,
+				banned: Boolean(u.banned),
+				role: u.role || 'USER',
+				emailVerified: u.emailVerified,
+				createdAt: u.createdAt,
+				updatedAt: u.updatedAt,
+				totalComments: u.comments?.length || 0,
+				comments: (u.comments || []).map((c) => ({
+					id: c.id,
+					content: c.content,
+					status: c.status,
+					createdAt: c.createdAt,
+					post: {
+						id: c.post?.id || '',
+						title: c.post?.title || '未知文章',
+						slug: c.post?.slug || '',
+					},
+				})),
 			})),
-		}))
+		)
 	} catch (error) {
 		logger.error('Get users list error', error)
-		throw error
+		return actionFailure(
+			error instanceof Error ? error.message : '获取用户列表失败',
+		)
 	}
 }
 
 /** 切换用户封禁状态。 */
-export async function toggleUserBan(userId: string, banned: boolean) {
+export async function toggleUserBan(
+	userId: string,
+	banned: boolean,
+): Promise<ActionResult<null>> {
 	try {
 		await requireAdminSession()
 
 		const parsed = toggleUserBanSchema.safeParse({ userId, banned })
 		if (!parsed.success) {
-			throw new Error(formatZodError(parsed.error))
+			return actionFailure(formatZodError(parsed.error))
 		}
 
 		await db
@@ -164,9 +194,9 @@ export async function toggleUserBan(userId: string, banned: boolean) {
 			.where(eq(users.id, parsed.data.userId))
 
 		revalidatePath('/dashboard/users')
-		return { success: true }
+		return actionSuccess(null)
 	} catch (error) {
 		logger.error('Toggle user ban error', error)
-		throw error
+		return actionFailure(error instanceof Error ? error.message : '操作失败')
 	}
 }

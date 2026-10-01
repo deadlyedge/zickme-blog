@@ -89,7 +89,8 @@ export function useCreateComment() {
 
 	return useMutation({
 		mutationFn: (data: CreateCommentData) => createComment(data),
-		onSuccess: (_, variables) => {
+		onSuccess: (result, variables) => {
+			if (!result.ok) return
 			// Invalidate comments query for this specific post
 			void queryClient.invalidateQueries({
 				queryKey: contentQueryKeys.comments(variables.docId),

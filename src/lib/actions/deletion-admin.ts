@@ -9,6 +9,11 @@ import {
 	galleryImages,
 	posts,
 } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import {
 	buildDeletionPreview,
@@ -21,15 +26,16 @@ import { createLogger } from '@/lib/logger'
 const logger = createLogger('actions/deletion-admin')
 
 function invalidEntity() {
-	return { success: false as const, error: '删除目标不存在或已不可用' }
+	return actionFailure('删除目标不存在或已不可用')
 }
 
-export async function previewDeletion(input: unknown) {
+export async function previewDeletion(
+	input: unknown,
+): Promise<ActionResult<{ preview: ReturnType<typeof buildDeletionPreview> }>> {
 	try {
 		await requireAdminSession()
 		const parsed = deletionPreviewInputSchema.safeParse(input)
-		if (!parsed.success)
-			return { success: false as const, error: '删除预览参数无效' }
+		if (!parsed.success) return actionFailure('删除预览参数无效')
 		const value = parsed.data
 
 		if (value.type === 'post') {
@@ -41,14 +47,13 @@ export async function previewDeletion(input: unknown) {
 				.select({ count: count() })
 				.from(comments)
 				.where(eq(comments.postId, row.id))
-			return {
-				success: true as const,
+			return actionSuccess({
 				preview: buildDeletionPreview(value, {
 					version: row.updatedAt.toISOString(),
 					commentCount: Number(commentsResult?.count ?? 0),
 					media: [],
 				}),
-			}
+			})
 		}
 
 		if (value.type === 'gallery') {
@@ -71,14 +76,13 @@ export async function previewDeletion(input: unknown) {
 						? inArray(galleryImageComments.galleryImageId, imageIds)
 						: eq(galleryImageComments.galleryImageId, ''),
 				)
-			return {
-				success: true as const,
+			return actionSuccess({
 				preview: buildDeletionPreview(value, {
 					version: row.updatedAt.toISOString(),
 					commentCount: Number(commentsResult?.count ?? 0),
 					media,
 				}),
-			}
+			})
 		}
 
 		const row = await db.query.galleryImages.findFirst({
@@ -89,8 +93,7 @@ export async function previewDeletion(input: unknown) {
 			.select({ count: count() })
 			.from(galleryImageComments)
 			.where(eq(galleryImageComments.galleryImageId, row.id))
-		return {
-			success: true as const,
+		return actionSuccess({
 			preview: buildDeletionPreview(value, {
 				version: row.updatedAt.toISOString(),
 				commentCount: Number(commentsResult?.count ?? 0),
@@ -98,19 +101,20 @@ export async function previewDeletion(input: unknown) {
 					{ id: row.id, publicId: row.publicId, sourcePath: row.sourcePath },
 				],
 			}),
-		}
+		})
 	} catch (error) {
 		logger.error('删除预览失败', error)
-		return { success: false as const, error: '无法生成删除预览' }
+		return actionFailure('无法生成删除预览')
 	}
 }
 
-export async function confirmDeletion(input: unknown) {
+export async function confirmDeletion(
+	input: unknown,
+): Promise<ActionResult<{ cloudinary: 'NOT_REQUESTED' }>> {
 	try {
 		const session = await requireAdminSession()
 		const parsed = deletionConfirmationInputSchema.safeParse(input)
-		if (!parsed.success)
-			return { success: false as const, error: '删除确认参数无效' }
+		if (!parsed.success) return actionFailure('删除确认参数无效')
 		const value = parsed.data
 
 		if (value.type === 'post') {
@@ -124,17 +128,14 @@ export async function confirmDeletion(input: unknown) {
 					version: row.updatedAt.toISOString(),
 				})
 			)
-				return {
-					success: false as const,
-					error: '预览已过期或实体已发生变化，请重新预览',
-				}
+				return actionFailure('预览已过期或实体已发生变化，请重新预览')
 			const updated = await db
 				.update(posts)
 				.set({ archivedAt: new Date(), status: 'ARCHIVED' })
 				.where(and(eq(posts.id, row.id), eq(posts.updatedAt, row.updatedAt)))
 				.returning({ id: posts.id })
 			if (updated.length !== 1)
-				return { success: false as const, error: '实体已发生变化，请重新预览' }
+				return actionFailure('实体已发生变化，请重新预览')
 		}
 		if (value.type === 'gallery') {
 			const row = await db.query.galleries.findFirst({
@@ -147,10 +148,7 @@ export async function confirmDeletion(input: unknown) {
 					version: row.updatedAt.toISOString(),
 				})
 			)
-				return {
-					success: false as const,
-					error: '预览已过期或实体已发生变化，请重新预览',
-				}
+				return actionFailure('预览已过期或实体已发生变化，请重新预览')
 			const updated = await db
 				.update(galleries)
 				.set({ status: 'ARCHIVED' })
@@ -159,7 +157,7 @@ export async function confirmDeletion(input: unknown) {
 				)
 				.returning({ id: galleries.id })
 			if (updated.length !== 1)
-				return { success: false as const, error: '实体已发生变化，请重新预览' }
+				return actionFailure('实体已发生变化，请重新预览')
 		}
 		if (value.type === 'galleryImage') {
 			const row = await db.query.galleryImages.findFirst({
@@ -172,10 +170,7 @@ export async function confirmDeletion(input: unknown) {
 					version: row.updatedAt.toISOString(),
 				})
 			)
-				return {
-					success: false as const,
-					error: '预览已过期或实体已发生变化，请重新预览',
-				}
+				return actionFailure('预览已过期或实体已发生变化，请重新预览')
 			const updated = await db
 				.update(galleryImages)
 				.set({ syncStatus: 'PENDING_DELETE' })
@@ -187,7 +182,7 @@ export async function confirmDeletion(input: unknown) {
 				)
 				.returning({ id: galleryImages.id })
 			if (updated.length !== 1)
-				return { success: false as const, error: '实体已发生变化，请重新预览' }
+				return actionFailure('实体已发生变化，请重新预览')
 		}
 
 		logger.warn(
@@ -199,12 +194,9 @@ export async function confirmDeletion(input: unknown) {
 				cloudinary: 'NOT_REQUESTED',
 			},
 		)
-		return { success: true as const, cloudinary: 'NOT_REQUESTED' as const }
+		return actionSuccess({ cloudinary: 'NOT_REQUESTED' as const })
 	} catch (error) {
 		logger.error('删除确认失败', error)
-		return {
-			success: false as const,
-			error: '删除确认失败，请查看日志并人工处理',
-		}
+		return actionFailure('删除确认失败，请查看日志并人工处理')
 	}
 }

@@ -2,6 +2,11 @@
 
 import { z } from 'zod'
 import { POST_QUERY_LIMITS, POST_RULES } from '@/constants/post'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { createLogger } from '@/lib/logger'
 import {
 	fetchHomePageData as fetchHomePageDataProvider,
@@ -31,44 +36,44 @@ const pinnedIdsSchema = z.array(z.string().min(1).max(POST_RULES.idMaxLength))
 
 export async function fetchPostsAction(
 	limit = POST_QUERY_LIMITS.posts.default,
-): Promise<PostWithTags[]> {
+): Promise<ActionResult<PostWithTags[]>> {
 	try {
 		const safeLimit = limitSchema.safeParse(limit).data ?? 100
 		logger.debug('[Drizzle fetch]: posts')
-		return await fetchPosts(safeLimit)
+		return actionSuccess(await fetchPosts(safeLimit))
 	} catch (error) {
 		logger.error('Error fetching posts', error)
-		throw new Error('Failed to fetch posts')
+		return actionFailure('Failed to fetch posts')
 	}
 }
 
-export async function fetchTagsAction(): Promise<Tag[]> {
+export async function fetchTagsAction(): Promise<ActionResult<Tag[]>> {
 	try {
 		logger.debug('[Drizzle fetch]: tags')
-		return await fetchTags()
+		return actionSuccess(await fetchTags())
 	} catch (error) {
 		logger.error('Error fetching tags', error)
-		throw new Error('Failed to fetch tags')
+		return actionFailure('Failed to fetch tags')
 	}
 }
 
 export async function fetchPostBySlugAction(
 	slug: string,
-): Promise<PostWithTags | null> {
+): Promise<ActionResult<PostWithTags | null>> {
 	try {
 		const parsedSlug = slugSchema.safeParse(slug)
-		if (!parsedSlug.success) return null
+		if (!parsedSlug.success) return actionFailure('文章标识无效')
 		logger.debug(`[Drizzle fetch]: post "${parsedSlug.data}"`)
-		return await fetchPostBySlug(parsedSlug.data)
+		return actionSuccess(await fetchPostBySlug(parsedSlug.data))
 	} catch (error) {
 		logger.error(`Error fetching post ${slug}`, error)
-		throw new Error(`Failed to fetch post ${slug}`)
+		return actionFailure(`Failed to fetch post ${slug}`)
 	}
 }
 
 export async function fetchTopHottestPostsAction(
 	limit = POST_QUERY_LIMITS.hottestPosts.default,
-): Promise<PostWithTags[]> {
+): Promise<ActionResult<PostWithTags[]>> {
 	try {
 		const safeLimit =
 			z
@@ -79,42 +84,46 @@ export async function fetchTopHottestPostsAction(
 				.default(POST_QUERY_LIMITS.hottestPosts.default)
 				.safeParse(limit).data ?? POST_QUERY_LIMITS.hottestPosts.default
 		logger.debug('[Drizzle fetch]: hottest posts')
-		return await fetchTopHottestPosts(safeLimit)
+		return actionSuccess(await fetchTopHottestPosts(safeLimit))
 	} catch (error) {
 		logger.error('Error fetching hottest posts', error)
-		throw new Error('Failed to fetch hottest posts')
+		return actionFailure('Failed to fetch hottest posts')
 	}
 }
 
 export async function fetchPinnedPostsAction(
 	pinnedPostIds: string[] = [],
-): Promise<PostWithTags[]> {
+): Promise<ActionResult<PostWithTags[]>> {
 	try {
 		const parsedIds = pinnedIdsSchema.safeParse(pinnedPostIds)
 		const safeIds = parsedIds.success ? parsedIds.data : []
 		logger.debug('[Drizzle fetch]: pinned posts')
-		return await fetchPinnedPosts(safeIds)
+		return actionSuccess(await fetchPinnedPosts(safeIds))
 	} catch (error) {
 		logger.error('Error fetching pinned posts', error)
-		throw new Error('Failed to fetch pinned posts')
+		return actionFailure('Failed to fetch pinned posts')
 	}
 }
 
-export async function fetchSiteProfile() {
+export async function fetchSiteProfile(): Promise<
+	Awaited<ReturnType<typeof getSiteProfile>>
+> {
 	return await getSiteProfile()
 }
 
-export async function fetchHomePageData(): Promise<HomePageData> {
+export async function fetchHomePageData(): Promise<ActionResult<HomePageData>> {
 	try {
 		logger.debug('[Drizzle fetch]: home content')
-		return await fetchHomePageDataProvider()
+		return actionSuccess(await fetchHomePageDataProvider())
 	} catch (error) {
 		logger.error('Error fetching home content', error)
-		throw new Error('Failed to fetch home content')
+		return actionFailure('Failed to fetch home content')
 	}
 }
 
-export async function fetchPostsForSearchAction() {
+export async function fetchPostsForSearchAction(): Promise<
+	ActionResult<{ posts: PostWithTags[]; tags: Tag[] }>
+> {
 	try {
 		logger.debug('[Drizzle fetch]: posts for search')
 		const [allPosts, allTags] = await Promise.all([
@@ -122,12 +131,12 @@ export async function fetchPostsForSearchAction() {
 			fetchTags(),
 		])
 
-		return {
+		return actionSuccess({
 			posts: allPosts,
 			tags: allTags,
-		}
+		})
 	} catch (error) {
 		logger.error('Error fetching posts for search', error)
-		throw new Error('Failed to fetch posts for search')
+		return actionFailure('Failed to fetch posts for search')
 	}
 }

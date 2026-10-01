@@ -62,11 +62,11 @@ export function SnapshotDashboard({
 				description,
 				includeComments,
 			})
-			if (!result.success) {
+			if (!result.ok) {
 				toast.error(result.error)
 				return
 			}
-			if (result.snapshot) refreshSnapshot(result.snapshot)
+			if (result.data.snapshot) refreshSnapshot(result.data.snapshot)
 			setName('')
 			setDescription('')
 			toast.success('数据库快照已创建')
@@ -74,7 +74,7 @@ export function SnapshotDashboard({
 	const remove = (snapshot: SafeSnapshot) =>
 		startTransition(async () => {
 			const result = await deleteSnapshotAction(snapshot.id)
-			if (!result.success) {
+			if (!result.ok) {
 				toast.error(result.error)
 				return
 			}
@@ -94,7 +94,7 @@ export function SnapshotDashboard({
 				includeComments,
 				confirm: true,
 			})
-			if (!result.success) {
+			if (!result.ok) {
 				toast.error(result.error)
 				return
 			}

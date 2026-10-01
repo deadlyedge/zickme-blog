@@ -1,3 +1,4 @@
+import { unwrapActionResult } from '@/lib/actions/action-result'
 import { getComments } from '@/lib/actions/comments'
 import {
 	fetchHomePageData,
@@ -21,7 +22,7 @@ export const contentQueryKeys = {
 export function postsOptions() {
 	return {
 		queryKey: contentQueryKeys.posts(),
-		queryFn: () => fetchPostsAction(),
+		queryFn: async () => unwrapActionResult(await fetchPostsAction()),
 		staleTime: 5 * 60 * 1000,
 	}
 }
@@ -29,7 +30,7 @@ export function postsOptions() {
 export function tagsOptions() {
 	return {
 		queryKey: contentQueryKeys.tags(),
-		queryFn: () => fetchTagsAction(),
+		queryFn: async () => unwrapActionResult(await fetchTagsAction()),
 		staleTime: 10 * 60 * 1000,
 	}
 }
@@ -37,7 +38,7 @@ export function tagsOptions() {
 export function homePageOptions() {
 	return {
 		queryKey: contentQueryKeys.home(),
-		queryFn: () => fetchHomePageData(),
+		queryFn: async () => unwrapActionResult(await fetchHomePageData()),
 		staleTime: 30 * 60 * 1000,
 	}
 }
@@ -45,7 +46,7 @@ export function homePageOptions() {
 export function postOptions(slug: string) {
 	return {
 		queryKey: contentQueryKeys.post(slug),
-		queryFn: () => fetchPostBySlugAction(slug),
+		queryFn: async () => unwrapActionResult(await fetchPostBySlugAction(slug)),
 		staleTime: 5 * 60 * 1000,
 		enabled: !!slug,
 	}
@@ -54,7 +55,7 @@ export function postOptions(slug: string) {
 export function commentsOptions(docId: string) {
 	return {
 		queryKey: contentQueryKeys.comments(docId),
-		queryFn: () => getComments(docId),
+		queryFn: async () => unwrapActionResult(await getComments(docId)),
 		staleTime: 2 * 60 * 1000,
 		enabled: !!docId,
 	}
@@ -63,7 +64,7 @@ export function commentsOptions(docId: string) {
 export function searchPostsOptions() {
 	return {
 		queryKey: contentQueryKeys.search(),
-		queryFn: () => fetchPostsForSearchAction(),
+		queryFn: async () => unwrapActionResult(await fetchPostsForSearchAction()),
 		staleTime: 5 * 60 * 1000,
 	}
 }

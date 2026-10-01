@@ -5,6 +5,11 @@ import { z } from 'zod'
 import { GALLERY_RULES } from '@/constants/gallery'
 import { db } from '@/db'
 import { galleries, galleryImages } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 
@@ -49,46 +54,46 @@ const _imageUpdateSchema = z.object({
 	hidden: z.boolean(),
 })
 
-export async function getDashboardGalleries() {
+export async function getDashboardGalleries(): Promise<
+	ActionResult<Awaited<ReturnType<typeof db.query.galleries.findMany>>>
+> {
 	try {
 		await requireAdminSession()
-		return await db.query.galleries.findMany({
-			with: { images: { orderBy: [asc(galleryImages.sortOrder)] } },
-			orderBy: [asc(galleries.slug)],
-		})
+		return actionSuccess(
+			await db.query.galleries.findMany({
+				with: { images: { orderBy: [asc(galleryImages.sortOrder)] } },
+				orderBy: [asc(galleries.slug)],
+			}),
+		)
 	} catch (error) {
 		logger.error('Failed to load Gallery dashboard', error)
-		return {
-			success: false as const,
-			error: '无法加载 Gallery 管理数据',
-			galleries: [],
-		}
+		return actionFailure('无法加载 Gallery 管理数据')
 	}
 }
 
-export async function updateGallery(input: unknown) {
+export async function updateGallery(
+	input: unknown,
+): Promise<ActionResult<never>> {
 	void input
-	return {
-		success: false as const,
-		error:
-			'相册内容源由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
-	}
+	return actionFailure(
+		'相册内容源由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
+	)
 }
 
-export async function updateGalleryImage(input: unknown) {
+export async function updateGalleryImage(
+	input: unknown,
+): Promise<ActionResult<never>> {
 	void input
-	return {
-		success: false as const,
-		error:
-			'图片元数据由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
-	}
+	return actionFailure(
+		'图片元数据由 Git 的 album.yaml 管理，请直接编辑文件后通过 publish 发布。',
+	)
 }
 
-export async function markGalleryImageForDeletion(id: string) {
+export async function markGalleryImageForDeletion(
+	id: string,
+): Promise<ActionResult<never>> {
 	void id
-	return {
-		success: false as const,
-		error:
-			'不能从 Dashboard 回写或删除 Git 内容源，请编辑 album.yaml 后通过 publish 发布。',
-	}
+	return actionFailure(
+		'不能从 Dashboard 回写或删除 Git 内容源，请编辑 album.yaml 后通过 publish 发布。',
+	)
 }

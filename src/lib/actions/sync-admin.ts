@@ -1,6 +1,11 @@
 'use server'
 
 import { z } from 'zod'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import { getSyncRun, listRecentSyncRuns } from '@/lib/sync/sync-repository'
 
@@ -25,39 +30,39 @@ function toSafeRun(run: Awaited<ReturnType<typeof getSyncRun>>) {
 	}
 }
 
-export async function listSyncRuns(input?: unknown) {
+export async function listSyncRuns(
+	input?: unknown,
+): Promise<ActionResult<{ runs: ReturnType<typeof toSafeRun>[] }>> {
 	try {
 		await requireAdminSession()
 		const parsed = listSchema.safeParse(input)
 		const runs = await listRecentSyncRuns(
 			parsed.success ? parsed.data?.limit : 30,
 		)
-		return { success: true as const, runs: runs.map(toSafeRun) }
+		return actionSuccess({ runs: runs.map(toSafeRun) })
 	} catch {
-		return { success: false as const, error: '无法加载同步运行记录', runs: [] }
+		return actionFailure('无法加载同步运行记录')
 	}
 }
 
-export async function getSyncRunAction(runId: string) {
+export async function getSyncRunAction(
+	runId: string,
+): Promise<ActionResult<{ run: ReturnType<typeof toSafeRun> }>> {
 	try {
 		await requireAdminSession()
 		const parsed = z.uuid().safeParse(runId)
-		if (!parsed.success)
-			return { success: false as const, error: '运行 ID 无效' }
-		return {
-			success: true as const,
-			run: toSafeRun(await getSyncRun(parsed.data)),
-		}
+		if (!parsed.success) return actionFailure('运行 ID 无效')
+		return actionSuccess({ run: toSafeRun(await getSyncRun(parsed.data)) })
 	} catch {
-		return { success: false as const, error: '无法加载同步运行记录' }
+		return actionFailure('无法加载同步运行记录')
 	}
 }
 
-export async function triggerSyncAction(input: unknown) {
+export async function triggerSyncAction(
+	input: unknown,
+): Promise<ActionResult<never>> {
 	void input
-	return {
-		success: false as const,
-		error:
-			'内容源由 Git 管理，请修改 Markdown 或 album.yaml，执行 content:check 后再 publish。',
-	}
+	return actionFailure(
+		'内容源由 Git 管理，请修改 Markdown 或 album.yaml，执行 content:check 后再 publish。',
+	)
 }

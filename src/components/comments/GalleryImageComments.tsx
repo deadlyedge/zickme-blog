@@ -32,7 +32,7 @@ function CompactCommentForm({
 		mutationFn: () =>
 			createGalleryImageComment({ content, imageId, parentId, path }),
 		onSuccess: (result) => {
-			if (!result.success) {
+			if (!result.ok) {
 				toast.error(result.error)
 				return
 			}
@@ -98,7 +98,7 @@ function CommentNode({
 		mutationFn: () =>
 			toggleGalleryImageCommentSpam(comment.id, comment.status !== 'SPAM'),
 		onSuccess: (result) => {
-			if (!result.success) toast.error(result.error)
+			if (!result.ok) toast.error(result.error)
 			else onRefresh()
 		},
 	})
@@ -168,7 +168,11 @@ export function GalleryImageComments({ imageId }: { imageId: string }) {
 	const queryKey = ['gallery-image-comments', imageId]
 	const comments = useQuery({
 		queryKey,
-		queryFn: () => getGalleryImageComments(imageId),
+		queryFn: async () => {
+			const result = await getGalleryImageComments(imageId)
+			if (!result.ok) throw new Error(result.error)
+			return result.data
+		},
 		staleTime: 2 * 60 * 1000,
 	})
 	const refresh = () => void queryClient.invalidateQueries({ queryKey })

@@ -8,6 +8,11 @@ import { VALIDATION_MESSAGES, VALIDATION_RULES } from '@/constants/auth'
 import { PROFILE_RULES } from '@/constants/profile'
 import { db } from '@/db'
 import { siteProfile, users } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { auth } from '@/lib/auth'
 import { requireAdminSession, requireSession } from '@/lib/auth/guards'
 import { generateAvatarUri } from '@/lib/generate-avatar'
@@ -77,11 +82,13 @@ export interface UpdateProfileData {
 	newPassword?: string
 }
 
-export async function updateProfile(data: UpdateProfileData) {
+export async function updateProfile(
+	data: UpdateProfileData,
+): Promise<ActionResult<null>> {
 	try {
 		const parsed = updateProfileSchema.safeParse(data)
 		if (!parsed.success) {
-			throw new Error(formatZodError(parsed.error))
+			return actionFailure(formatZodError(parsed.error))
 		}
 
 		const session = await requireSession('未登录')
@@ -117,14 +124,16 @@ export async function updateProfile(data: UpdateProfileData) {
 			})
 		}
 
-		return { success: true }
+		return actionSuccess(null)
 	} catch (error) {
 		logger.error('Profile update error', error)
-		throw new Error(error instanceof Error ? error.message : '更新失败')
+		return actionFailure(error instanceof Error ? error.message : '更新失败')
 	}
 }
 
-export async function updateAvatar() {
+export async function updateAvatar(): Promise<
+	ActionResult<{ avatarUrl: string }>
+> {
 	try {
 		const session = await requireSession('未登录')
 
@@ -140,10 +149,10 @@ export async function updateAvatar() {
 			.where(and(eq(users.id, userId), isNull(users.image)))
 			.returning({ image: users.image })
 
-		return { success: true, avatarUrl: updatedUser?.image ?? bearAvatar }
+		return actionSuccess({ avatarUrl: updatedUser?.image ?? bearAvatar })
 	} catch (error) {
 		logger.error('Avatar update error', error)
-		throw new Error(error instanceof Error ? error.message : '更新失败')
+		return actionFailure(error instanceof Error ? error.message : '更新失败')
 	}
 }
 
@@ -163,13 +172,15 @@ interface UpdateSiteProfileData {
 	aboutPageConfig?: AboutPageConfig
 }
 
-export async function updateSiteProfile(data: UpdateSiteProfileData) {
+export async function updateSiteProfile(
+	data: UpdateSiteProfileData,
+): Promise<ActionResult<null>> {
 	try {
 		await requireAdminSession('需要管理员权限')
 
 		const parsed = updateSiteProfileSchema.safeParse(data)
 		if (!parsed.success) {
-			throw new Error(formatZodError(parsed.error))
+			return actionFailure(formatZodError(parsed.error))
 		}
 
 		const existingProfile = await db.query.siteProfile.findFirst()
@@ -217,22 +228,24 @@ export async function updateSiteProfile(data: UpdateSiteProfileData) {
 		revalidatePath('/about')
 		revalidatePath('/')
 		revalidatePath('/dashboard/settings')
-		return { success: true }
+		return actionSuccess(null)
 	} catch (error) {
 		logger.error('Site profile update error', error)
-		throw new Error(error instanceof Error ? error.message : '更新失败')
+		return actionFailure(error instanceof Error ? error.message : '更新失败')
 	}
 }
 
-export async function getSiteProfile() {
+export async function getSiteProfile(): Promise<
+	ActionResult<{ profile: Awaited<ReturnType<typeof fetchProfile>> }>
+> {
 	try {
 		await requireAdminSession('需要管理员权限')
 
 		const profile = await fetchProfile()
 
-		return { profile }
+		return actionSuccess({ profile })
 	} catch (error) {
 		logger.error('Get site profile error', error)
-		throw new Error(error instanceof Error ? error.message : '获取失败')
+		return actionFailure(error instanceof Error ? error.message : '获取失败')
 	}
 }

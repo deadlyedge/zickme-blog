@@ -11,7 +11,7 @@ import {
 	InputGroupTextarea,
 } from '@/components/ui/input-group'
 import { COMMENT_RULES } from '@/constants/comments'
-import { useCreateComment } from '@/lib/hooks/useContent'
+import { useCreateComment } from '@/hooks/useContent'
 import { useAppStore } from '@/lib/store'
 
 interface CommentFormProps {
@@ -49,7 +49,7 @@ export function CommentForm({ docId, parentId, autoFocus }: CommentFormProps) {
 				path: pathname || '/',
 			})
 
-			if (result.success) {
+			if (result.ok) {
 				setContent('')
 				// 使用zustand关闭回复表单
 				clearActiveReplyId()

@@ -4,6 +4,11 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '@/db'
 import { posts, tags } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireAdminSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import type { PublishWorkflowResult } from '@/lib/publish/publish-workflow'
@@ -44,7 +49,7 @@ export async function getDashboardPosts(options?: {
 	tagSlug?: string
 	search?: string
 	includeArchived?: boolean
-}): Promise<PostWithTags[]> {
+}): Promise<ActionResult<PostWithTags[]>> {
 	try {
 		await requireAdminSession()
 
@@ -98,51 +103,49 @@ export async function getDashboardPosts(options?: {
 			)
 		}
 
-		return postList
+		return actionSuccess(postList)
 	} catch (error) {
 		logger.error('Failed to get dashboard posts', error)
-		throw new Error(error instanceof Error ? error.message : '获取文章列表失败')
+		return actionFailure(
+			error instanceof Error ? error.message : '获取文章列表失败',
+		)
 	}
 }
 
 export async function updatePostPosterAction(
 	postId: string,
 	poster: string | null,
-) {
+): Promise<ActionResult<{ poster: string | null }>> {
 	void postId
 	void poster
-	return {
-		success: false as const,
-		error: '文章内容源由 Git 管理，请直接编辑 Markdown 后通过 publish 发布。',
-		poster: null,
-	}
+	return actionFailure(
+		'文章内容源由 Git 管理，请直接编辑 Markdown 后通过 publish 发布。',
+	)
 }
 
 export async function uploadPostPosterAction(
 	postId: string,
 	formData: FormData,
-) {
+): Promise<ActionResult<{ poster: string | null }>> {
 	void postId
 	void formData
-	return {
-		success: false as const,
-		error:
-			'文章封面不能通过 Dashboard 回写内容源，请编辑 Markdown 后通过 publish 发布。',
-		poster: null,
-	}
+	return actionFailure(
+		'文章封面不能通过 Dashboard 回写内容源，请编辑 Markdown 后通过 publish 发布。',
+	)
 }
 
 /**
  * 2. 更新文章状态 (PUBLISHED / DRAFT / ARCHIVED 等)
  */
-export async function updatePostStatus(postId: string, status: StatusType) {
+export async function updatePostStatus(
+	postId: string,
+	status: StatusType,
+): Promise<ActionResult<null>> {
 	void postId
 	void status
-	return {
-		success: false as const,
-		error:
-			'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
-	}
+	return actionFailure(
+		'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
+	)
 }
 
 /**
@@ -151,14 +154,12 @@ export async function updatePostStatus(postId: string, status: StatusType) {
 export async function batchUpdatePostStatus(
 	postIds: string[],
 	status: StatusType,
-) {
+): Promise<ActionResult<null>> {
 	void postIds
 	void status
-	return {
-		success: false as const,
-		error:
-			'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
-	}
+	return actionFailure(
+		'文章状态由 Git Frontmatter 管理，请编辑 Markdown 后通过 publish 发布。',
+	)
 }
 
 /**
@@ -180,25 +181,29 @@ export async function restorePost(postId: string) {
  */
 export async function deletePostPermanently(postId: string) {
 	void postId
-	return {
-		success: false as const,
-		error:
-			'不能从 Dashboard 删除 Git 内容源，请删除 Markdown 后通过 publish 发布。',
-	}
+	return actionFailure(
+		'不能从 Dashboard 删除 Git 内容源，请删除 Markdown 后通过 publish 发布。',
+	)
 }
 
 /**
  * 7. 获取全量标签列表（供筛选使用）
  */
-export async function getDashboardTags() {
+export async function getDashboardTags(): Promise<
+	ActionResult<(typeof tags.$inferSelect)[]>
+> {
 	try {
 		await requireAdminSession()
-		return await db.query.tags.findMany({
-			orderBy: [desc(tags.name)],
-		})
+		return actionSuccess(
+			await db.query.tags.findMany({
+				orderBy: [desc(tags.name)],
+			}),
+		)
 	} catch (error) {
 		logger.error('Failed to get tags for dashboard', error)
-		return []
+		return actionFailure(
+			error instanceof Error ? error.message : '获取标签失败',
+		)
 	}
 }
 
@@ -208,18 +213,20 @@ export async function getDashboardTags() {
  */
 export async function triggerPublish(options?: {
 	dryRun?: boolean
-}): Promise<PublishWorkflowResult> {
+}): Promise<ActionResult<PublishWorkflowResult>> {
 	try {
 		const session = await requireAdminSession()
-		return await runPublishWorkflow({
-			scope: 'all',
-			triggeredBy: 'DASHBOARD',
-			actorId: session.user.id,
-			dryRun: options?.dryRun ?? false,
-			deleteOld: false,
-		})
+		return actionSuccess(
+			await runPublishWorkflow({
+				scope: 'all',
+				triggeredBy: 'DASHBOARD',
+				actorId: session.user.id,
+				dryRun: options?.dryRun ?? false,
+				deleteOld: false,
+			}),
+		)
 	} catch (error) {
 		logger.error('Dashboard publish failed', error)
-		throw new Error(error instanceof Error ? error.message : '发布失败')
+		return actionFailure(error instanceof Error ? error.message : '发布失败')
 	}
 }

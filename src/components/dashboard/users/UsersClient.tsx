@@ -28,8 +28,12 @@ export default function UsersPage() {
 		const loadUsers = async () => {
 			try {
 				setLoading(true)
-				const usersData = await getUsersList()
-				setUsers(usersData)
+				const result = await getUsersList()
+				if (!result.ok) {
+					toast.error(result.error)
+					return
+				}
+				setUsers(result.data)
 			} catch (error) {
 				console.error('Failed to load users:', error)
 				toast.error('加载用户列表失败')
@@ -43,7 +47,11 @@ export default function UsersPage() {
 	const handleToggleBan = async (userId: string, newBanned: boolean) => {
 		try {
 			setActionLoading(userId)
-			await toggleUserBan(userId, newBanned)
+			const result = await toggleUserBan(userId, newBanned)
+			if (!result.ok) {
+				toast.error(result.error)
+				return
+			}
 			setUsers(
 				users.map((user) =>
 					user.id === userId ? { ...user, banned: newBanned } : user,
@@ -64,7 +72,11 @@ export default function UsersPage() {
 	) => {
 		try {
 			setActionLoading(commentId)
-			await toggleCommentSpam(commentId, isSpam)
+			const result = await toggleCommentSpam(commentId, isSpam)
+			if (!result.ok) {
+				toast.error(result.error)
+				return
+			}
 			setUsers(
 				users.map((user) => ({
 					...user,
@@ -89,7 +101,11 @@ export default function UsersPage() {
 	const handleDeleteComment = async (commentId: string) => {
 		try {
 			setActionLoading(commentId)
-			await deleteComment(commentId)
+			const result = await deleteComment(commentId)
+			if (!result.ok) {
+				toast.error(result.error)
+				return
+			}
 			setUsers(
 				users.map((user) => ({
 					...user,

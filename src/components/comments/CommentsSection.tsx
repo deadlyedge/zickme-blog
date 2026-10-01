@@ -8,8 +8,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useComments } from '@/hooks/useContent'
 import { useSession } from '@/lib/auth-client'
-import { useComments } from '@/lib/hooks/useContent'
 import { useAppStore } from '@/lib/store'
 import { CommentForm } from './CommentForm'
 import { CommentList } from './CommentList'

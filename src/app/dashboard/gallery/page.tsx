@@ -26,9 +26,9 @@ export default function DashboardGalleryPage() {
 	const load = useCallback(async () => {
 		setLoading(true)
 		const result = await getDashboardGalleries()
-		if ('success' in result && result.success === false)
+		if (!result.ok) {
 			toast.error(result.error)
-		else setItems(result as Gallery[])
+		} else setItems(result.data as Gallery[])
 		setLoading(false)
 	}, [])
 	useEffect(() => {
@@ -69,7 +69,7 @@ export default function DashboardGalleryPage() {
 					'showLocation' in gallery.metadata &&
 					gallery.metadata.showLocation === true,
 			})
-			if (result.success) {
+			if (result.ok) {
 				toast.success('相册已保存')
 				load()
 			} else toast.error(result.error)
@@ -170,7 +170,7 @@ export default function DashboardGalleryPage() {
 												const result = await markGalleryImageForDeletion(
 													image.id,
 												)
-												if (result.success) {
+												if (result.ok) {
 													toast.success('已标记待删除')
 													load()
 												} else {

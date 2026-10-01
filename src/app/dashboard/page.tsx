@@ -18,7 +18,9 @@ export default async function DashboardPage() {
 
 	if (!session?.user.id || session.user.role !== 'ADMIN') redirect('/')
 
-	const stats = await getDashboardStats()
+	const statsResult = await getDashboardStats()
+	if (!statsResult.ok) throw new Error(statsResult.error)
+	const stats = statsResult.data
 
 	return (
 		<div className="container mx-auto p-4 sm:p-6 py-8 space-y-8 max-w-7xl">

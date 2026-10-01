@@ -324,7 +324,7 @@ export function SettingsClient({
 					featuredProjects,
 				}
 
-				await updateSiteProfile({
+				const result = await updateSiteProfile({
 					name,
 					title,
 					bio,
@@ -339,6 +339,10 @@ export function SettingsClient({
 					landingPageConfig,
 					aboutPageConfig,
 				})
+				if (!result.ok) {
+					toast.error(result.error)
+					return
+				}
 
 				toast.success('站点配置已成功保存并立即生效！')
 				router.refresh()

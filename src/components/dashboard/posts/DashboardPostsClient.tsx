@@ -55,7 +55,7 @@ export default function DashboardPostsClient() {
 	const loadData = useCallback(async () => {
 		try {
 			setLoading(true)
-			const [postsData, tagsData] = await Promise.all([
+			const [postsResult, tagsResult] = await Promise.all([
 				getDashboardPosts({
 					status:
 						statusFilter === 'ALL' ? undefined : (statusFilter as StatusType),
@@ -65,8 +65,10 @@ export default function DashboardPostsClient() {
 				}),
 				getDashboardTags(),
 			])
-			setPosts(postsData)
-			setTagsList(tagsData as Tag[])
+			if (!postsResult.ok) throw new Error(postsResult.error)
+			if (!tagsResult.ok) throw new Error(tagsResult.error)
+			setPosts(postsResult.data)
+			setTagsList(tagsResult.data as Tag[])
 			setSelectedIds([])
 		} catch (error) {
 			console.error(error)
@@ -88,7 +90,7 @@ export default function DashboardPostsClient() {
 	const handleStatusChange = async (postId: string, newStatus: StatusType) => {
 		startTransition(async () => {
 			const result = await updatePostStatus(postId, newStatus)
-			if (result.success) {
+			if (result.ok) {
 				toast.success('文章状态已更新')
 				setPosts((previous) =>
 					previous.map((post) =>
@@ -104,7 +106,7 @@ export default function DashboardPostsClient() {
 	const handleArchive = async (postId: string) => {
 		startTransition(async () => {
 			const result = await archivePost(postId)
-			if (result.success) {
+			if (result.ok) {
 				toast.success('文章已归档')
 				loadData()
 			} else {
@@ -116,7 +118,7 @@ export default function DashboardPostsClient() {
 	const handleRestore = async (postId: string) => {
 		startTransition(async () => {
 			const result = await restorePost(postId)
-			if (result.success) {
+			if (result.ok) {
 				toast.success('文章已恢复发布状态')
 				loadData()
 			} else {
@@ -129,7 +131,7 @@ export default function DashboardPostsClient() {
 		if (!deleteTargetPost) return
 		startTransition(async () => {
 			const result = await deletePostPermanently(deleteTargetPost.id)
-			if (result.success) {
+			if (result.ok) {
 				toast.success(`文章 [${deleteTargetPost.title}] 已永久删除`)
 				setDeleteTargetPost(null)
 				loadData()
@@ -158,12 +160,12 @@ export default function DashboardPostsClient() {
 						posterTargetPost.id,
 						posterUrl.trim() || null,
 					)
-			if (result.success) {
+			if (result.ok) {
 				toast.success('文章封面已更新')
 				setPosts((previous) =>
 					previous.map((post) =>
 						post.id === posterTargetPost.id
-							? { ...post, poster: result.poster ?? null }
+							? { ...post, poster: result.data.poster }
 							: post,
 					),
 				)
@@ -178,7 +180,7 @@ export default function DashboardPostsClient() {
 		if (!posterTargetPost) return
 		startTransition(async () => {
 			const result = await updatePostPosterAction(posterTargetPost.id, null)
-			if (result.success) {
+			if (result.ok) {
 				toast.success('文章封面已移除')
 				setPosts((previous) =>
 					previous.map((post) =>
@@ -212,7 +214,7 @@ export default function DashboardPostsClient() {
 		if (selectedIds.length === 0) return
 		startTransition(async () => {
 			const result = await batchUpdatePostStatus(selectedIds, status)
-			if (result.success) {
+			if (result.ok) {
 				toast.success(`已批量将 ${selectedIds.length} 篇文章转为 ${status}`)
 				loadData()
 			} else {

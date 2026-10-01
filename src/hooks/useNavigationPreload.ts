@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
+import { unwrapActionResult } from '@/lib/actions/action-result'
 import { fetchPostBySlugAction } from '@/lib/actions/posts'
 import { contentQueryKeys } from '@/lib/query/content-query-options'
 import { getQueryClient } from '@/lib/query-client'
@@ -19,7 +20,8 @@ export function useNavigationPreload() {
 			if (!currentQueryData) {
 				void queryClient.query({
 					queryKey: contentQueryKeys.post(slug),
-					queryFn: () => fetchPostBySlugAction(slug),
+					queryFn: async () =>
+						unwrapActionResult(await fetchPostBySlugAction(slug)),
 					staleTime: 5 * 60 * 1000,
 				})
 			}
@@ -47,7 +49,8 @@ export function useNavigationPreload() {
 						// 预取数据并放入 React Query 缓存
 						await queryClient.query({
 							queryKey: contentQueryKeys.post(slug),
-							queryFn: () => fetchPostBySlugAction(slug),
+							queryFn: async () =>
+								unwrapActionResult(await fetchPostBySlugAction(slug)),
 							staleTime: 5 * 60 * 1000,
 						})
 					} catch (error) {

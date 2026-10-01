@@ -54,7 +54,8 @@ export function RegisterForm({ onSuccess }: AuthFormProps) {
 			}
 
 			// 仅在注册后初始化一次默认头像；后续登录不会覆盖用户选择。
-			await updateAvatar()
+			const avatarResult = await updateAvatar()
+			if (!avatarResult.ok) throw new Error(avatarResult.error)
 
 			onSuccess()
 			form.reset()

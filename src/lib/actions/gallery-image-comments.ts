@@ -7,6 +7,11 @@ import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { galleryImageComments, galleryImages } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireAdminSession, requireSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
@@ -32,17 +37,18 @@ export type GalleryImageCommentInput = z.infer<typeof commentInputSchema>
 
 export async function createGalleryImageComment(
 	data: GalleryImageCommentInput,
-) {
+): Promise<
+	ActionResult<{ comment: typeof galleryImageComments.$inferSelect }>
+> {
 	try {
 		const parsed = commentInputSchema.safeParse(data)
-		if (!parsed.success)
-			return { success: false, error: formatZodError(parsed.error) }
+		if (!parsed.success) return actionFailure(formatZodError(parsed.error))
 		const session = await requireSession().catch((error: unknown) => {
 			if (error instanceof Error && error.message === '用户未登录')
 				return undefined
 			throw error
 		})
-		if (!session) return { success: false, error: '用户未登录' }
+		if (!session) return actionFailure('用户未登录')
 
 		const image = await db.query.galleryImages.findFirst({
 			where: and(
@@ -50,7 +56,7 @@ export async function createGalleryImageComment(
 				eq(galleryImages.hidden, false),
 			),
 		})
-		if (!image) return { success: false, error: '图片不存在' }
+		if (!image) return actionFailure('图片不存在')
 
 		if (parsed.data.parentId) {
 			const parent = await db.query.galleryImageComments.findFirst({
@@ -59,7 +65,7 @@ export async function createGalleryImageComment(
 					eq(galleryImageComments.galleryImageId, parsed.data.imageId),
 				),
 			})
-			if (!parent) return { success: false, error: '引用的父评论不存在' }
+			if (!parent) return actionFailure('引用的父评论不存在')
 		}
 
 		const [comment] = await db
@@ -73,22 +79,22 @@ export async function createGalleryImageComment(
 			})
 			.returning()
 		revalidatePath(parsed.data.path)
-		return { success: true, comment }
+		return actionSuccess({ comment })
 	} catch (error) {
 		logger.error('Error creating GalleryImage comment', error)
-		return { success: false, error: '发表评论失败' }
+		return actionFailure('发表评论失败')
 	}
 }
 
 export async function getGalleryImageComments(
 	imageId: string,
-): Promise<GalleryImageCommentPublic[]> {
+): Promise<ActionResult<GalleryImageCommentPublic[]>> {
 	const parsed = z
 		.string()
 		.min(1)
 		.max(POST_RULES.idMaxLength)
 		.safeParse(imageId)
-	if (!parsed.success) return []
+	if (!parsed.success) return actionFailure(formatZodError(parsed.error))
 	try {
 		const rows = await db.query.galleryImageComments.findMany({
 			where: and(
@@ -137,25 +143,24 @@ export async function getGalleryImageComments(
 				map.get(item.parentId)?.replies.push(item)
 			else roots.push(item)
 		}
-		return roots
+		return actionSuccess(roots)
 	} catch (error) {
 		logger.error('Error fetching GalleryImage comments', error)
-		return []
+		return actionFailure('无法加载图片评论')
 	}
 }
 
 export async function toggleGalleryImageCommentSpam(
 	commentId: string,
 	isSpam: boolean,
-) {
+): Promise<ActionResult<null>> {
 	const parsed = z
 		.object({
 			commentId: z.string().min(1).max(POST_RULES.idMaxLength),
 			isSpam: z.boolean(),
 		})
 		.safeParse({ commentId, isSpam })
-	if (!parsed.success)
-		return { success: false, error: formatZodError(parsed.error) }
+	if (!parsed.success) return actionFailure(formatZodError(parsed.error))
 
 	try {
 		try {
@@ -165,7 +170,7 @@ export async function toggleGalleryImageCommentSpam(
 				error instanceof Error &&
 				error.message === '权限不足：需要管理员权限'
 			) {
-				return { success: false, error: '权限不足：需要管理员权限' }
+				return actionFailure('权限不足：需要管理员权限')
 			}
 			throw error
 		}
@@ -173,9 +178,9 @@ export async function toggleGalleryImageCommentSpam(
 			.update(galleryImageComments)
 			.set({ status: parsed.data.isSpam ? 'SPAM' : 'PUBLISHED' })
 			.where(eq(galleryImageComments.id, parsed.data.commentId))
-		return { success: true }
+		return actionSuccess(null)
 	} catch (error) {
 		logger.error('Error toggling GalleryImage comment spam', error)
-		return { success: false, error: '评论状态更新失败' }
+		return actionFailure('评论状态更新失败')
 	}
 }

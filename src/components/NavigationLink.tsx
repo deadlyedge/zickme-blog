@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { useNavigationPreload } from '@/lib/hooks/useNavigationPreload'
+import { useNavigationPreload } from '@/hooks/useNavigationPreload'
 
 interface NavigationLinkProps
 	extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {

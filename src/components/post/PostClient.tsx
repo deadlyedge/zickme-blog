@@ -13,13 +13,13 @@ import remarkGfm from 'remark-gfm'
 import { CommentsSection } from '@/components/comments/CommentsSection'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { usePost } from '@/lib/hooks/useContent'
+import { usePost } from '@/hooks/useContent'
+import { usePostReadingExperience } from '@/hooks/usePostReadingExperience'
 import { calculateReadingTime, formatPublishedDate } from '@/lib/posts/format'
 import { cn } from '@/lib/utils'
 import type { PostWithTags } from '@/types/content/post'
 import { CodeBlock } from './CodeBlock'
 import { PostLinks } from './PostLinks'
-import { usePostReadingExperience } from './usePostReadingExperience'
 
 interface PostClientProps {
 	initialPost?: PostWithTags

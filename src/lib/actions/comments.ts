@@ -7,6 +7,11 @@ import { COMMENT_MESSAGES, COMMENT_RULES } from '@/constants/comments'
 import { POST_RULES } from '@/constants/post'
 import { db } from '@/db'
 import { comments, posts } from '@/db/schema'
+import {
+	type ActionResult,
+	actionFailure,
+	actionSuccess,
+} from '@/lib/actions/action-result'
 import { requireSession } from '@/lib/auth/guards'
 import { createLogger } from '@/lib/logger'
 import { getPublicUserName } from '@/lib/public-user'
@@ -39,11 +44,13 @@ const getCommentsSchema = z
 
 export type CreateCommentData = z.infer<typeof createCommentSchema>
 
-export async function createComment(data: CreateCommentData) {
+export async function createComment(
+	data: CreateCommentData,
+): Promise<ActionResult<{ comment: typeof comments.$inferSelect }>> {
 	try {
 		const parsed = createCommentSchema.safeParse(data)
 		if (!parsed.success) {
-			return { success: false, error: formatZodError(parsed.error) }
+			return actionFailure(formatZodError(parsed.error))
 		}
 
 		const session = await requireSession()
@@ -54,7 +61,7 @@ export async function createComment(data: CreateCommentData) {
 		})
 
 		if (!post) {
-			return { success: false, error: '文章不存在' }
+			return actionFailure('文章不存在')
 		}
 
 		// Validate parent comment if provided
@@ -67,7 +74,7 @@ export async function createComment(data: CreateCommentData) {
 			})
 
 			if (!parentComment) {
-				return { success: false, error: '引用的父评论不存在' }
+				return actionFailure('引用的父评论不存在')
 			}
 		}
 
@@ -84,11 +91,11 @@ export async function createComment(data: CreateCommentData) {
 			.returning()
 
 		revalidatePath(parsed.data.path)
-		return { success: true, comment: newComment }
+		return actionSuccess({ comment: newComment })
 	} catch (error) {
 		logger.error('Error creating comment', error)
 		return {
-			success: false,
+			ok: false,
 			error: error instanceof Error ? error.message : '发表评论失败',
 		}
 	}
@@ -96,11 +103,11 @@ export async function createComment(data: CreateCommentData) {
 
 export async function getComments(
 	docId: string,
-): Promise<CommentWithReplies[]> {
+): Promise<ActionResult<CommentWithReplies[]>> {
 	try {
 		const parsed = getCommentsSchema.safeParse(docId)
 		if (!parsed.success) {
-			return []
+			return actionFailure(formatZodError(parsed.error))
 		}
 
 		// Fetch all comments for this post
@@ -169,9 +176,11 @@ export async function getComments(
 			}
 		})
 
-		return rootComments
+		return actionSuccess(rootComments)
 	} catch (error) {
 		logger.error('Error fetching comments', error)
-		return []
+		return actionFailure(
+			error instanceof Error ? error.message : '获取评论失败',
+		)
 	}
 }

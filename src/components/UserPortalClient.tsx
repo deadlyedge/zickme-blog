@@ -50,11 +50,15 @@ export function UserPortalClient({ initialData }: UserPortalClientProps) {
 
 		startTransition(async () => {
 			try {
-				await updateProfile({
+				const result = await updateProfile({
 					username,
 					currentPassword: currentPassword || undefined,
 					newPassword: newPassword || undefined,
 				})
+				if (!result.ok) {
+					toast.error(result.error)
+					return
+				}
 				toast.success('个人资料已成功更新！')
 				setCurrentPassword('')
 				setNewPassword('')
@@ -71,7 +75,11 @@ export function UserPortalClient({ initialData }: UserPortalClientProps) {
 	const handleAvatarSwitch = (type: 'dicebear' | 'gravatar') => {
 		startTransition(async () => {
 			try {
-				await updateUserAvatarPreset(type)
+				const result = await updateUserAvatarPreset(type)
+				if (!result.ok) {
+					toast.error(result.error)
+					return
+				}
 				toast.success('头像已更新！')
 				router.refresh()
 			} catch (error) {

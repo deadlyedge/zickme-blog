@@ -62,11 +62,15 @@ export function ProfileForm({ onSuccess }: AuthFormProps) {
 		try {
 			setFormError(undefined)
 			setIsSubmitting(true)
-			await updateProfile({
+			const result = await updateProfile({
 				username: data.username,
 				currentPassword: data.currentPassword,
 				newPassword: data.newPassword,
 			})
+			if (!result.ok) {
+				setFormError(result.error)
+				return
+			}
 			onSuccess()
 			form.reset()
 			setShowCurrentPassword(false)

@@ -43,7 +43,11 @@ export const CommentItem = React.memo(
 			try {
 				setSpamActionLoading(true)
 				const isSpam = comment.status !== 'SPAM'
-				await toggleCommentSpam(comment.id, isSpam)
+				const result = await toggleCommentSpam(comment.id, isSpam)
+				if (!result.ok) {
+					toast.error(result.error)
+					return
+				}
 				toast.success(
 					isSpam ? '评论已标记为垃圾信息' : '评论已取消标记为垃圾信息',
 				)

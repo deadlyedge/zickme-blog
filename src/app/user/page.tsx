@@ -21,7 +21,8 @@ export default async function UserPortalPage() {
 		redirect('/')
 	}
 
-	const data = await getUserPortalData()
+	const result = await getUserPortalData()
+	if (!result.ok) throw new Error(result.error)
 
-	return <UserPortalClient initialData={data} />
+	return <UserPortalClient initialData={result.data} />
 }
