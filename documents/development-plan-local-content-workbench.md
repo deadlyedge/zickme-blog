@@ -1,270 +1,260 @@
-# 下一阶段开发计划：本地内容工作台与可视化 Publish
+# 下一阶段开发计划:本地内容工作台与 Dashboard 收敛
 
-> 状态：待实施计划（尚未开始代码实现）
-> 目标：减少用户手动输入内容管理命令的需要，用可视化步骤管理本地 Post/Gallery 内容；用户确认内容后，可立即调用现有 Publish Workflow，并查看真实阶段进度和运行结果。
-> 前置架构：Git 是唯一人工内容源；PostgreSQL 和 Cloudinary 是运行时副本/媒体服务；Publish 保持单向。
-> 讨论依据：[`next-stage-discuss.md`](next-stage-discuss.md)；当前代码职责见 [`architecture/current-code-structure-summary.md`](architecture/current-code-structure-summary.md)。
+> 状态:待实施计划(尚未开始代码实现)
+> 目标:让**所有会被 Publish 覆盖的内容**都只在本地(Git)编辑;线上 Dashboard 收敛为运行时只读观察与运维工具;本地工作台提供可视化的编辑、检查、发布和评论查看。
+> 前置架构:Git 是唯一人工内容源;PostgreSQL 与 Cloudinary 是可重建的运行时副本;Publish 保持单向。
+> 相关文档:[`next-stage-discuss.md`](next-stage-discuss.md)、[`architecture/current-code-structure-summary.md`](architecture/current-code-structure-summary.md)。
+> 本版相对旧版的变化:新增"数据归属"判定表和 Dashboard 收敛计划;站点设置纳入 Git;移除线上 Publish;实时进度、多来源、Git 写操作延后;保留评论只读查看。
 
 ---
 
-## 一、阶段目标与产品定义
+## 一、核心判定:数据归属
 
-本阶段建设的是**本地内容工作台**，由图形界面与受限的本地工作台服务组成；它不是新的内容源、线上 Dashboard 替代品或第二套 Publish 实现。本地服务是文件、Git、数据库和 Publish 能力的唯一受控执行边界，图形界面负责用户引导、预览、确认和状态呈现。服务可以与现有项目代码同仓库、同一个本地应用进程部署，不要求拆成独立微服务或新增外部基础设施。
+唯一的判定问题:**这个字段被下一次 Publish 覆盖后,还能保留吗?** 不能,则它的真相必须在 Git,只能在本地改。
 
-工作台将目前分散在本地文件操作和多个命令中的内容准备步骤可视化，帮助用户理解“当前在哪一步、有哪些问题、将修改什么文件、发布结果如何”。最终工作流为：
+| 数据 | 真相所在 | 本地工作台 | 线上 Dashboard |
+|---|---|---|---|
+| Post 正文、frontmatter(含 `status`、封面 `image`) | Git `content/posts/` | 编辑 | 只读 |
+| Gallery `album.yaml`(标题、说明、图片元数据) | Git `content/photo-gallery/` | 编辑 | 只读 |
+| **站点设置**(profile、社交、skills、slogans、主题、Landing、About) | **Git `content/site/`(新增)** | 编辑 | 只读 |
+| 处理后的图片(WebP) | Git | 导入/生成 | — |
+| Publish 运行记录、同步日志 | 运行时 | 查看结果 | 只读 |
+| 用户、评论、封禁/垃圾标记 | 运行时 | 评论**只读查看** | 管理(保留) |
+| 站点统计 | 运行时 | — | 只读 |
+| Snapshot 备份/恢复 | 运行时 | — | 保留 |
+| 文章删除/归档 | Git(删除文件或改 `status`) | 经 frontmatter 与 Publish | **不提供**(线上无删除入口) |
+
+判定规则落地为代码审查红线:
+
+> **Dashboard 的任何 Server Action 不得写入 `posts`、`galleries`、`galleryImages`、`siteProfile` 中由 Git 内容派生的字段。**
+
+**可重建性验收**:执行 `bun run db:reset` 后,仅凭 `content/` 与 `bun run publish` 就能还原全部站点外观与内容(不含用户账户、评论、会话)。
+
+## 二、Dashboard 收敛计划
+
+### 2.1 现有写操作处置清单
+
+| 现有入口 | 处置 |
+|---|---|
+| `posts-admin`:`updatePostStatus`、`batchUpdatePostStatus`、`archivePost`、`restorePost` | **移除**。状态改为在工作台修改 frontmatter `status` 后 Publish |
+| `posts-admin`:`updatePostPosterAction`、`uploadPostPosterAction` | **移除**。封面在工作台改 frontmatter `image` |
+| `posts-admin`:`triggerPublish` | **移除**(线上不再发布,见 2.3) |
+| `sync-admin`:`triggerSyncAction` | **移除**;`listSyncRuns`/`getSyncRunAction` 保留为只读 |
+| `gallery-admin`:`updateGallery`、`updateGalleryImage` | **移除**。改为在工作台编辑 `album.yaml` |
+| `deletion-admin` 的 `post` 分支(`previewDeletion`/`confirmDeletion`) | **移除**。现状 `confirmDeletion` 会把文章写成 `ARCHIVED`,同样属于会被 Publish 覆盖的写入 |
+| `gallery-admin`:`markGalleryImageForDeletion`、`deletion-admin` 的 gallery/图片分支 | **建议同口径移除**(见 2.4,待你确认) |
+| `profile`:`updateSiteProfile` 及 Settings 页全部表单 | **迁出**:Settings 页改只读展示,编辑能力在工作台实现(见第三章) |
+| `profile`:`updateProfile`、`updateAvatar`(用户个人资料) | 保留,属用户运行时数据,与站点设置无关 |
+| 用户、评论、Snapshot、统计 | 保留 |
+| `posts-admin`:`deletePostPermanently` | **移除**。当前已是只返回失败提示的空实现,连同 Dashboard 的 `PostDeleteDialog` 与删除按钮一并删除 |
+
+### 2.2 迁移顺序(每步独立提交,可回滚)
+
+1. **先只读化**:在工作台就绪前不要删除线上写入口导致无处可改。每一类写操作的迁出流程为:工作台具备等价编辑能力 → Dashboard 对应 UI 改为只读(隐藏按钮)→ 删除 Server Action 与相关测试 → 更新 README。
+2. 顺序建议:**状态 → 封面 → Gallery 元数据 → 站点设置**(按冲突严重度与实现成本排序)。
+3. 收敛完成后,在 `tests/` 增加边界测试:扫描 `lib/actions/*-admin.ts` 与 `profile.ts` 的导出,断言不存在对内容派生表的 `db.update/insert/delete`(参考现有 `publish-boundaries.test.ts` 风格)。
+
+### 2.3 移除线上 Publish
+
+- 线上(Vercel)进程读不到本机 Git 内容,在线触发的 Publish 语义不清,且违背"内容只在本地发布"。删除 `triggerPublish` 与 Dashboard 的发布按钮;`PublishTriggeredBy` 中的 `DASHBOARD` 值保留以兼容历史运行记录,不再产生新记录。
+- Dashboard 的 `sync` 页面改名/定位为**"发布状态"**:展示最近运行、Post/Gallery(及 Site)分项摘要、错误、source missing 信息、最近一次成功发布时间。只读。
+- 同时展示"内容新鲜度"提示:数据库最新发布时间 vs 当前部署版本,不尝试判断本地 Git 状态(线上不可知)。
+
+### 2.4 删除的新语义
+
+- **线上不再有任何删除/归档文章的入口**。文章下线的方式:本地把 frontmatter `status` 改为 `archived`/`draft` 后 Publish;或删除 Markdown 源文件。
+- 删除 Markdown 后 Publish 只报告 source missing,**不自动删库**(沿用现有保护),数据库会残留一篇无源文件的文章。阶段 0 在两种方案中二选一:
+  1. **用 `archived` 表达下线(推荐)**:工作台发现 source missing 时,引导用户恢复文件并设 `status: archived`,而不是删除文件。保留评论和链接历史,无需新增任何删除能力。
+  2. **本地显式清理命令**:如 `bun run publish -- --scope posts --prune-missing --confirm`,经预览(列出评论与 Cloudinary 影响)和显式确认后才清理运行时副本。
+- Gallery 删除目前由同一 `deletion-admin` 处理。为保持"线上 Dashboard 无内容写入",建议同样移除线上入口并按同一方案处理;如果你想保留相册层面的线上删除,请在阶段 0 说明理由。
+
+## 三、站点设置纳入 Git
+
+### 3.1 内容格式
 
 ```text
-一个或多个本地内容来源
-        ↓
-本地工作台检测新增/修改/移除候选项
-        ↓
-工作台整理为 Post/Gallery 内容变更集
-        ↓
-用户审阅并确认目标文件、内容和 diff
-        ↓
-将确认的内容整理进 Git 内容工作区
-        ↓
-内容检查、媒体准备、Gallery 索引、dry-run
-        ↓
-用户确认真实 Publish
-        ↓
-本地服务调用现有 Publish Workflow
-        ↓
-PostgreSQL / Cloudinary，并向 UI 推送真实阶段进度与结果
+content/site/
+├── profile.yaml        # name/title/bio/location/email/website/portraitImage(引用 portraitImage/ 下的文件)
+├── social.yaml         # socialLinks
+├── skills.yaml
+├── slogans.yaml
+├── theme.yaml          # themeConfig
+├── landing.yaml        # landingPageConfig
+├── about.yaml          # aboutPageConfig(hero/timeline/featured projects 等)
+└── portraitImage/      # 站点头像/肖像的本地源图片(Git 管理)
 ```
 
-“待发布内容”是本地工作台生成、可审阅的变更集，不是数据库队列、独立内容库或第二个人工内容源。只有用户审阅确认后，候选内容才整理进 Git 内容工作区；真实 Publish 只读取该内容工作区。用户确认真实 Publish 后，服务立即调用现有 `runPublishWorkflow()`，不要求先 commit 或 push。界面必须明确提示尚未提交的内容，并区分本地 Publish 与 Git push 的结果。GitHub Actions 当前处于暂停状态，push 成功不能被呈现为网站 Publish 成功。
+拆分原则:一个文件对应一个概念,避免单个超大 YAML;文件与 `siteProfile` 的列/JSON 字段一一映射,便于校验与 diff。
 
-本地来源的变化检测和“将多处材料整理成项目内容”是工作台的产品方向。首期可以先支持当前项目工作区和通过文件/文件夹选择导入的内容，但服务契约必须预留多个来源、来源扫描结果和变更集转换能力，后续可扩展检测一个或多个本地工作区的新增、修改、移除候选项。
+### 3.2 发布方式
 
-## 二、当前实现与复用边界
+- 新增第三个独立内容域 `site`:`PublishScope` 扩展为 `posts | galleries | site | all`;**与 Post、Gallery 保持独立**,不合并为通用服务。
+- 实现位置:`src/lib/publish/site-input-reader.ts`(读取+Zod 校验)、`site-repository.ts`(upsert 单行 `siteProfile`)、`site-publish-service.ts`(编排,支持 dry-run)。复用现有 `publish-workflow` 的锁、运行记录和摘要。
+- Zod schema 复用现有 `src/types/site.ts` / `constants/profile.ts` 的规则,不重复定义。
+- 语义:Git 文件是整体权威来源;Publish 整体覆盖 `siteProfile` 单行;`dry-run` 只读(不连库、不写文件)。
+- 缺少文件时的行为:报校验错误并阻止该域发布,**不**以默认值静默覆盖线上设置。首次迁移时提供一次性导出命令。
 
-### 2.1 应复用的现有能力
+### 3.3 一次性迁移
 
-- 内容检查与结构化问题：`scripts/check-content.ts`、`src/lib/publish/publish-validation.ts`。
-- 显式 Frontmatter/YAML 修复及格式化：`content:fix`、`content:format`。
-- Gallery 原图准备与索引：`content:prepare-media`、`gallery:index`。
-- 统一发布入口：`src/lib/publish/publish-workflow.ts` 的 `runPublishWorkflow()`。
-- 现有 Post 与 Gallery 发布服务、Cloudinary 策略、运行记录、锁和发布摘要。
-- Git 状态与 diff 审查；`publish:tui` 中现有的检查和 dry-run 引导可作为行为参考，但不是第二个业务实现。
-- 现有评论查询能力作为工作台的只读决策信息来源；不新增评论写入或审核流程。
+- 提供 `bun run site:export`(一次性、显式、只读数据库→写 `content/site/*.yaml` 到工作区,默认不覆盖已有文件)。这是**唯一**允许的"数据库到文件"方向,仅用于初次迁移,完成后建议从 `package.json` 移除或标注为迁移用途,避免被理解为回写通道。
+- 迁移后 `site:export` 的输出必须经人工审阅并提交 Git,再 `publish --scope site` 验证数据库内容无差异。
 
-CLI 和 TUI 可以继续作为开发者/维护者入口。工作台是减少命令输入的图形化入口，不要求删除现有命令，也不改变它们的语义。
+### 3.4 媒体
 
-### 2.2 内容源和数据流
+- **站点头像先走 Cloudinary**:源图片放在 `content/site/portraitImage/`,`profile.yaml` 中只写相对路径(如 `portraitImage/portrait.webp`)。Publish 时上传 Cloudinary,并把 CDN 链接写入 `siteProfile.avatar`。
+- 复用 `src/lib/publish/media-upload.ts` 与 `cloudinary-public-id.ts`,在 `myblog/` 根目录下使用独立前缀(如 `myblog/site/`),保证 `media:audit` 能识别引用,不会被当作未引用资产清理。
+- 与 Post 媒体规则一致:`dry-run` 不上传、保留本地路径;缺失文件、不支持的格式、超限尺寸都在校验阶段报错;建议本地文件已是 WebP 以便 Git 管理。
+- 不支持直接填写任意外链(沿用现有隐私/安全约束);确有需要时再显式放宽。
+- `site:export` 迁移时,数据库中现有头像若为 Cloudinary 链接,只输出待人工处理的提示,不自动下载图片。
 
-- Post Markdown、Gallery `album.yaml`、处理后的图片和生成的 Gallery 索引仍按当前规则存放在 Git 内容工作区。工作台支持的额外本地来源只是候选输入，经审阅整理后才能进入该工作区。
-- 待发布变更集只表示来源输入到 Git 内容工作区的候选文件操作（新建、更新、移动或建议移除）及其预览状态；它不替代 Git 历史，不被 Publish 直接读取，也不作为数据库状态副本。移除候选只用于显式审阅和内容工作区整理；不得推导为普通 Publish 自动删除数据库记录、评论或 Cloudinary 资源。
-- 数据库数据可以在适当的管理流程中作为辅助信息展示，但不得将 Dashboard/数据库字段反向写入内容源。
-- 原始 Gallery 图片继续使用 Git 忽略的 `content/.gallery-input/` 输入区；处理后的 WebP 按当前约定进入 Git 管理的 Gallery 目录。
-- `gallery.yaml` 仍由现有索引流程生成，不作为手动编辑源。
-- 内容写入和 Publish 是两个清晰步骤；dry-run 必须保持只读。
+## 四、本地内容工作台(MVP)
 
-## 三、用户流程与功能范围
+### 4.1 定位与运行方式
 
-### 3.1 工作区选择与状态概览
+- 工作台是**只在本机运行的 Bun 服务 + 浏览器界面**，同仓库。它不是新的内容源，也不替代 CLI/TUI。
+- **已确定选型**：独立 Bun 进程，通过 `bun run workbench` 启动（`package.json` 新增脚本），绑定 `127.0.0.1`。**不放进 Next.js 应用的路由**，因此线上构建物理上不包含工作台代码，从根本上避免"线上暴露本地文件接口"。
+- 建议目录：
+  ```text
+  workbench/
+  ├── server.ts          # Bun.serve 入口（loopback、Host/Origin 校验、令牌）
+  ├── api/               # 路由处理：content / check / publish / comments / git
+  ├── ui/                # 浏览器界面（静态资源）
+  └── lib/               # workspace-paths、content-writer、DTO 与 Zod 校验
+  ```
+  复用 `src/lib/*` 的校验、Publish、媒体逻辑（`@/...` 别名保持可用）；`src/` 不得引用 `workbench/`，`next build` 不包含它，需确认 `tsconfig` 与 Biome 配置覆盖该目录。
+- 界面技术：优先 Bun 原生 HTML 导入 + React（项目已依赖 React 19、Radix、Tailwind），表单可复用 `components/ui/` 的基础组件；**不引入新的前端框架或打包工具**。复用时避免带入 Next 专属 API（`next/link`、`next/image`、Server Action）。
+- 工作台服务是文件、Git、数据库只读查询和 Publish 调用的唯一执行边界。UI 不直连数据库、不拼 Shell 命令。
 
-界面启动后应显示项目 Git 内容工作区及其可用性，并检查必要目录、Git 状态和内容状态。工作台服务应定义工作区来源接口，区分“规范内容工作区”和“只读/待导入来源”。MVP 可以只绑定当前项目并允许用户显式选择外部文件/文件夹；多工作区发现、变化监控和批量候选汇总可分阶段实施，但服务契约不得把来源路径与 `content/` 目标路径耦合为单一硬编码输入。
+### 4.2 MVP 功能
 
-首页用可视化步骤条表示工作流，例如：
+**M1:内容浏览与结构化编辑**
+- 列出 Post / Gallery / Site 的本地内容及关键字段(来源为 Git 工作区,非数据库)。
+- Post:frontmatter 表单(`title/slug/date/status/tags/excerpt/image` 等);未纳入表单的合法字段必须保留;正文用外部编辑器或简单 Markdown 文本框,不做富文本。
+- Gallery:`album.yaml` 常用字段表单;`gallery.yaml` 只读标注"生成文件"。
+- Site:对应 `content/site/*.yaml` 的各设置表单(迁移现有 Settings 组件的表单逻辑,但改为读写本地文件)。
+- 所有写入前展示目标文件与 diff;默认不覆盖已有内容;slug 或文件冲突明确提示。
 
-1. 工作区；
-2. 添加或选择内容；
-3. 编辑与整理；
-4. 内容检查；
-5. 发布预览；
-6. Publish 结果。
+**M2:检查、预览、发布**
+- 调用现有 `publish-validation` / `content:check`,以结构化列表展示问题。
+- 需要写入的修复(`content:fix`、`content:format`、`gallery:index`)先预览再确认。
+- 执行 `dry-run` 并展示 scope 和分项摘要。
+- 用户确认后调用 `runPublishWorkflow()`,**以最终结构化结果为主**:总体状态、运行 ID、Post/Gallery/Site 分项、错误、source missing。运行期间可用简单轮询刷新运行状态(读取运行记录),不要求事件流。
+- 防止重复提交;未 commit 的内容允许发布,但界面须提示。
 
-每一步都应显示未开始、进行中、需要处理、已完成或失败等明确状态，不能只提供无法理解的命令日志。
+**M3:Gallery 导入向导**
+- 从外部选择图片/文件夹,预览文件、格式与目标相册,复制到 `content/.gallery-input/`,调用现有 `prepare-media` 与 `gallery:index`;展示每张图的处理结果与失败原因,不静默忽略。
 
-### 3.2 Post 内容管理
+**M4:评论只读查看**
+- 在 Post / Gallery 图片的详情处显示相关评论与回复,支撑"是否归档/改状态"的决策。
+- 仅读:不提供创建、回复、编辑、删除、审核、标记垃圾等操作(这些仍留在线上 Dashboard)。
+- 必须使用最小返回 DTO:作者显示名、头像标识、内容、时间、状态(垃圾/正常)、所属内容;**不返回邮箱、凭据等**。
+- 查询失败时显示"数据不可用 + 更新时间",**不得显示为 0 条**。查询失败不阻塞编辑和 Publish。
+- 数据库只读连接使用现有 `DATABASE_URL`;建议在文档中提醒用户可配置只读账号,但不强制。
+- 评论按内容项(`postId` / 图片 ID)聚合显示数量,列表分页。
 
-- 列出本地 Post 内容及关键字段；默认内容清单来自当前 Git 工作区，而不是把数据库清单当成权威内容列表。
-- 提供新建/导入 Post 的向导，可预览将创建的 Markdown 和相关图片路径。
-- 对额外本地来源扫描出的文件变化生成候选变更项；首期允许用户手动选择导入文件/文件夹，不要求实现后台持续监控。
-- 以表单管理常用 Frontmatter：`title`、`slug`、`date`、`status`、`tags`、`excerpt`、封面图片等；未纳入表单的合法扩展字段必须在编辑和保存时保留。
-- 正文可交由现有编辑工具或工作区内的 Markdown 文件编辑器处理；首期不要求实现完整富文本编辑器。
-- 编辑前后预览目标文件和 diff；默认不覆盖已有内容，slug 冲突或目标文件存在时给出明确处理方式。
+**M5(可选):Git 状态与 diff 视图**
+- 只读显示 `git status`、选定路径 diff,区分工作台修改的文件与其他未提交变更。
+- 不做 stage/commit/push。
 
-### 3.3 Gallery 内容管理
+### 4.3 内部抽象(保持克制)
 
-- 支持从外部添加图片/文件夹并在导入前预览文件列表、格式和目标相册。
-- 将原始图片放入现有输入区，通过项目已有媒体准备流程生成处理后的 WebP。
-- 以表单维护相册标题、slug、说明、地点、标签、封面等 `album.yaml` 支持字段；未知或扩展字段必须保留。
-- 调用现有 Gallery 索引流程更新自动生成内容；明确标注 `gallery.yaml` 是生成文件。
-- 展示每张图片的处理结果、失败原因、输出路径和预期变更；不静默忽略不支持的格式或图片处理错误。
-- 将 Gallery 来源和 Post 来源以统一的变更集/预览契约呈现，但领域校验、目录结构和内容格式仍分别遵循各自规则。
+首期只有一个来源(当前项目 Git 内容工作区)和一种文件写入路径,**不要为多来源提前建立 `WorkspaceSource`/`ContentChangeSet` 类型体系**。只需保证:
 
-### 3.4 校验与内容预览
+- 写入逻辑集中在一个 `content-writer` 模块中,输入是"目标路径 + 新内容",输出是"预览 diff / 已写入结果",便于以后包装成变更集;
+- 路径解析集中在一个 `workspace-paths` 模块,所有写入都经过路径范围校验。
 
-- 以 UI 状态展示 Frontmatter、slug、图片路径、相册配置、索引及相关内容校验问题。
-- 对可以安全调用的既有修复能力，先展示计划修改，再要求用户确认执行；写入操作必须明确且可审查。
-- 检查通过后显示本次实际发布范围、Post/Gallery 数量、候选变更集与 Git 内容工作区之间的差异、尚未提交变更，以及将要发布的内容摘要。
-- 在真实 Publish 前允许执行现有 dry-run；dry-run 不得改工作区、连接数据库、上传 Cloudinary、获取真实运行锁或写入运行记录。
-- 明确区分内容校验、发布 dry-run 和真实 Publish，不得把其中一个步骤的成功误报为另一个步骤成功。
-- 评论/回复/关联内容仅作为只读辅助信息展示，例如关联数量、状态摘要或经隐私审查允许的评论列表；不得在工作台创建、编辑、删除、审核评论，也不得借评论数据回写内容源。
+当出现第二种来源的真实需求时再提取抽象。
 
-### 3.5 真实 Publish 与结果展示
+## 五、延后事项(Backlog)
 
-- 用户明确确认后，直接调用统一 `runPublishWorkflow()`；工作台不自行写数据库、不直接上传媒体，也不实现绕过 Workflow 的 Publish 路径。
-- 调用期间显示正在运行状态，并防止用户重复提交同一个 Publish 请求。
-- 必须提供可信的实时阶段进度。由本地服务订阅/接收统一 Publish Workflow 的真实阶段事件，并以有序、结构化事件推送给 UI；事件至少包含运行 ID、阶段标识、阶段状态、可安全展示的摘要和发生时间。阶段建议覆盖验证、Post 发布、Gallery 发布、媒体处理/上传、持久化和最终完成/失败，具体粒度以 Workflow 实际边界为准。
-- 进度事件由统一 Workflow 或其直接调用的领域服务产生，不得由 UI 定时器估算；进度渠道断开时必须能重连或查询运行状态，且事件传输失败不能改变 Publish 的成功/失败语义。
-- 完成后展示 Workflow 实际返回的运行 ID、总体状态、Post/Gallery 分项摘要、错误和 source missing 信息；遵循现有错误语义，不把部分成功显示为完全成功。
-- 失败时保留完整的可操作错误信息和工作区状态，方便用户修复后重新检查/发布。
-- 真实 Publish 后如需再次发布，仍须用户主动确认；工作台不能因重连、重试进度请求或浏览器刷新而重复启动真实 Publish。
+以下不在本阶段范围,不得作为验收条件:
 
-### 3.6 Git 操作
+1. Publish 实时阶段事件流(SSE)、断线重连、服务重启后运行快照恢复。M2 的轮询 + 运行记录已满足基本可见性;后续如需实时进度,再由 `runPublishWorkflow()` 提供可选的进度回调。
+2. 多本地来源扫描与持续变化监控。
+3. Git stage / commit / push 的 UI 与服务接口(含凭据)。
+4. 数据库删除、Cloudinary 清理与本地备份的整合闭环(2.4 方案 2 仅在确有需要时实现)。
+5. Short URL、二维码及 Gallery 图片规范长链接。
+6. 数据库 schema 规范化。
+7. 添加本地ai整理功能。
 
-- 显示 Git 工作区状态、目标文件列表及 diff，并区分工作台生成/修改的文件和工作区中其他未提交变更。
-- 可以提供选定内容路径的 stage、commit、push 可视化引导，但这些动作与 Publish 分离，并且各自需要清晰预览和用户确认。
-- 禁止默认 `git add .`、自动 commit 或自动 push；不得静默提交其他文件、密钥或非内容变更。
-- Publish 可在未 commit/push 时执行，但必须提示结果仅对应当前本地工作区；Publish 成功和 push 成功分别显示。
-- 本地服务 API/能力层应预留对选定文件 stage、commit、push 的显式操作接口和结构化结果类型；push 的完整图形化交互可延后，不要求首期管理凭据或实现全部 Git 流程。
-- 未来 Git 操作优先委托本机 Git 和系统现有 credential helper，不在应用数据库或 UI 状态中存储 Git 密码/令牌；每项操作仍需展示文件、分支/远端和结果并单独确认。
-- 即使 push 的 UI 操作延期，首期也应展示 Git 状态/diff，并为未来操作状态与错误保留 UI/service 扩展点。
+## 六、非目标与硬约束
 
-### 3.7 评论只读信息
+1. 不把线上 Dashboard 做成内容编辑器;反之,工作台不提供评论/用户/垃圾标记等运行时管理写操作。
+2. 不实现第二套校验器、Publish 引擎、数据库写入器或 Cloudinary 上传实现;一律复用 `src/lib/publish` 及现有脚本逻辑。
+3. 除第三章的一次性 `site:export` 外,不新增任何数据库→文件的回写。
+4. Publish 不因源文件缺失自动删除数据库记录、评论或 Cloudinary 资源。
+5. 不默认自动 commit/push;不新增队列、桌面壳(Electron/Tauri)或外部服务。
+6. Post、Gallery、Site 三个内容域保持独立。
 
-- 工作台可读取与 Post、Gallery 图片相关的评论/回复，作为归档、更新和发布前的辅助决策信息；至少提供每个内容项的关联数量。
-- 如首期提供评论列表，只返回管理决策所需字段，并复用服务端隐私边界；不要向浏览器返回不必要的邮箱、凭据或内部用户资料。
-- 评论功能只读：不提供创建、回复、编辑、删除、审核、标记垃圾或批量处理操作；本地服务对评论数据只开放只读查询。
-- 评论查询失败不能阻塞本地内容编辑和 Publish，但须明确显示数据不可用/更新时间，避免将缺失数据误报为零条评论。
+## 七、安全与运行边界
 
-## 四、非目标与明确延后事项
+- **只允许本机访问**:绑定 loopback;校验 `Host` 与 `Origin`;使用启动时生成的短期本机令牌或等价 CSRF 防护,防范 DNS rebinding 和恶意网页对本机端口的跨站请求。
+- 工作台是独立 Bun 进程,线上构建(Vercel/Next)**不得引用**它;增加测试确认 `src/` 不导入 `workbench/`、生产产物无本地文件操作端点。
+- 文件操作限定在项目 `content/` 目录(及明确的输入区 `content/.gallery-input/`);路径规范化后校验,拒绝路径穿越与符号链接逃逸。
+- 限制文件名、数量、单文件及总大小;校验文件类型与内容。
+- 不向浏览器返回 `.env`、数据库凭据、Auth secret、Cloudinary secret 或其他本机信息。
+- 调用现有脚本/命令时使用固定可执行程序与参数数组、明确工作目录和受限环境变量,禁止把用户输入拼接为 Shell 字符串。
+- 写入错误时保留可诊断结果,避免含糊的半成品状态(先写临时文件再原子替换)。
+- 不新增含糊的 `.backup-content` 目录;内容恢复依赖 Git 历史。
 
-本阶段首期不包括：
+## 八、实施阶段
 
-1. 将 Dashboard 变成内容编辑器，或把线上 Dashboard 整体迁入本地工作台。
-2. 新建独立的 Post/Gallery 发布引擎、重复校验器、数据库写入器或 Cloudinary 上传实现。
-3. 数据库到 Markdown/YAML/WebP 的回写，或第三方直接写入内部数据库表。
-4. 自动删除数据库文章、评论、Gallery 图片或 Cloudinary 资源。
-5. 将“删除内容文件”与“删除运行时记录/回复/CDN 资源”合成一个不可分的操作。
-6. 默认自动 commit/push，或把 Git push 当作 Publish 的替代品。
-7. 新增队列、分布式执行服务或为 UI 专门复制一套运行记录系统。
-8. Short URL、二维码及 Gallery 图片规范长链接；可按后续独立计划排期。
-9. 直接为第三方维护而大规模标准化/重构数据库 schema。应先稳定受版本控制的内容格式和 Publish 结果契约，再根据真实集成方需求评估。
+### 阶段 0:小型验证与契约(1 个短周期)
 
-删除、备份和永久删除闭环作为后续独立批次评估：默认优先归档；永久删除前必须显示关联回复和媒体影响，并分别设计本地源文件备份、数据库删除和 Cloudinary 清理的确认及恢复边界。评论/回复只读概览则按本阶段 3.7 实施。
+1. 验证 Bun 服务形态:`bun run workbench` 启动、loopback 绑定、Host/Origin 与令牌校验;确认 `src/lib` 模块可在 Bun 独立进程中直接导入(梳理哪些依赖 `next/headers`、`revalidatePath` 等 Next 专属 API);确认 `next build` 与生产产物不含 `workbench/`;确认 `@/...` 别名与 Biome/tsc 覆盖。
+2. 梳理 `runPublishWorkflow()` 的输入/输出/副作用和运行记录读取方式,确认轮询可行。
+3. 定稿 `content/site/*.yaml` 的字段与 Zod schema,盘点 Settings 页现有表单与 `siteProfile` 字段的映射。
+4. 输出简短的架构决策记录(ADR):选型、威胁清单、对 `AGENTS.md`/README 的潜在影响(更新 `AGENTS.md` 前需先确认)。
 
-## 五、技术与安全约束
+### 阶段 1:站点设置进入 Git(Publish 侧,不涉及 UI)
 
-### 5.1 本地运行边界
+1. 新增 `site` 内容域:reader / repository / publish service(含 `portraitImage` 的 Cloudinary 上传与 dry-run 行为),`PublishScope` 扩展,`content:check`/`content:verify` 覆盖 `content/site/`。
+2. 提供 `site:export` 一次性迁移,生成初始 YAML 并人工审阅提交。
+3. 验证:`publish --scope site --dry-run --json` 只读;真实 publish 后数据库与导出前一致;`db:reset` + `publish --scope all` 可还原站点外观。
+4. 增加测试:缺文件阻止发布、dry-run 无副作用、Zod 校验、与 Post/Gallery 域互不影响。
 
-工作台可复用 Next.js/React/现有 UI 组件，但必须在实施初期决定具体运行方式。由于线上 Vercel 工作进程不能访问用户电脑上的项目文件，任何本地文件读写能力只能存在于本地运行的进程中；不能把仅靠“隐藏路由”或普通 ADMIN 登录保护的线上页面当成本地文件管理方案。
+### 阶段 2:工作台骨架 + 内容浏览(M1 前半)
 
-至少应做到：
+1. 建立 `workbench/` Bun 服务与 UI 最小纵向切片,含 `bun run workbench` 脚本、安全启动与 Host/Origin 校验。
+2. `workspace-paths`、`content-writer` 模块与单元测试(使用临时目录夹具)。
+3. 列出 Post/Gallery/Site 内容与关键字段;Git 状态(只读)。
 
-- 只允许本地访问；不得在未经认证的远程接口上开放本地文件操作。
-- 本地 HTTP 服务须绑定 loopback，并校验 Host/Origin、采用适当的 CSRF 防护或本机短期会话令牌；不得仅凭“监听 localhost”假定浏览器请求安全，需防范 DNS rebinding、恶意网页发起跨站本机请求和本机其他用户越权。
-- 文件操作限定在明确的项目工作区/允许目录内；校验规范化后的路径，防止路径穿越和不可信符号链接逃逸。
-- 文件名、目录名、上传数量、单文件大小和总大小均有明确限制；路径、文件类型和内容输入经过验证。
-- 不向浏览器返回 `.env`、数据库凭据、Auth secret、Cloudinary secret 或其他不必要的本机信息。
-- 外部文件在写入前预览目标路径；冲突不覆盖；写入操作错误时保留可诊断结果并避免留下含糊的半成品状态。
-- 禁止请求任意命令字符串后直接传给 Shell；如果调用现有脚本，使用固定可执行程序、参数数组、明确工作目录和受限环境变量。
+### 阶段 3:结构化编辑 + Dashboard 第一批收敛(M1 后半)
 
-本地工作台服务是本计划确定的架构边界；“服务”表示隔离文件/Git/数据库/Publish 副作用的本机服务端能力，不表示必须使用独立微服务部署。可先与项目代码同仓库、同一个受限本地进程实现。具体采用现有 Next.js 本地进程、同仓库独立 Bun 服务或其他方式，应在阶段 0 验证开发/生产隔离、安全性和长任务能力后选定；线上 Vercel 进程绝不能提供访问用户本机文件的端点。图形界面可复用现有 Web 技术栈。只有 Web UI 无法安全满足必要的文件选择体验时，才评估桌面壳；不得在没有需求证据前引入 Electron/Tauri 等额外平台复杂度。
+1. Post frontmatter 表单(含 `status`、封面),保留未知字段,写前 diff。
+2. 完成后:移除 Dashboard 的状态变更、封面编辑与删除入口(`updatePostStatus`、`batchUpdatePostStatus`、`archivePost`、`restorePost`、封面相关 action、`deletePostPermanently`、`PostDeleteDialog`、`deletion-admin` 的 post 分支),Dashboard 文章页改只读。
+3. Gallery `album.yaml` 表单 → 移除 `updateGallery`、`updateGalleryImage`,Dashboard 相册页改只读。
+4. Site 设置表单(迁移 Settings 组件逻辑)→ Dashboard Settings 页改只读展示;删除 `updateSiteProfile` 的 Dashboard 调用路径。
 
-### 5.2 内容写入与可恢复性
+### 阶段 4:检查、发布与线上 Publish 移除(M2)
 
-- 对内容写入先预览目标路径、写入/移动/生成文件列表和冲突处理结果。
-- 自动整理不能覆盖用户已有文件；改名或移动操作需展示来源与目标。
-- Gallery 原图输入、处理后的 WebP、`album.yaml` 和自动生成索引必须遵循当前职责边界。
-- 不新增含糊的 `.backup-content` 目录。若后续需要本地备份，应单独确定 Git 忽略位置、保留结构、时间戳命名、保留期和恢复流程；本地备份不能替代 Git 历史、数据库备份或原始媒体备份。
+1. 结构化校验结果、修复预览确认、dry-run、真实 Publish(轮询运行记录)。
+2. 移除 `triggerPublish`、`triggerSyncAction`;Dashboard `sync` 页改为"发布状态"只读。
+3. 加入"Dashboard 不写内容派生表"的边界测试。
 
-## 六、实施阶段与交付物
+### 阶段 5:评论只读查看与 Gallery 导入(M3、M4)
 
-### 阶段 0：本地服务、工作区和进度契约验证
+1. 评论只读 DTO 与查询(失败/不可用与零条可区分);Post 与 Gallery 图片详情展示。
+2. Gallery 导入向导,复用 `prepare-media` / `gallery:index`。
 
-1. 明确本地工作台服务作为文件系统、Git、只读评论查询和 Publish 的唯一受控执行层；UI 不直接访问数据库、不自行运行 Shell 命令或绕过服务。
-2. 对照现有 `runPublishWorkflow()`、检查/修复命令、媒体准备、Gallery 索引和 `publish:tui`，列出各步骤输入、输出和副作用，并为真实 Publish 定义结构化阶段事件契约。
-3. 阶段事件至少包含稳定的运行 ID、单调递增事件 ID、阶段标识/状态、发生时间和不含密钥的摘要；服务应支持事件流断线重连及获取当前运行快照。运行状态/事件快照的保留方式需支持服务重启后查询已启动 Publish 的终态；不得仅依赖浏览器内存状态。阶段完成、部分失败和整体结束必须由真实 Workflow 结果驱动。
-4. 验证长时间任务执行模型：UI 断开后 Publish 不应被浏览器生命周期意外取消；服务重启、事件流丢失、请求重试时不得重复触发 Publish。进度通道失败不得改变 Publish 的业务结果。
-5. 定义 `WorkspaceSource`/来源扫描和 `ContentChangeSet` 一类服务契约，将规范 Git 内容工作区与外部候选来源分开；为后续多工作区变化检测预留 added/modified/removed 候选、来源标识、目标路径、冲突和审阅状态。
-6. 定义 Git 能力边界：首期必有 status/diff；为经过显式确认的 stage/commit/push 操作预留请求和结构化结果接口，push UI/完整凭据流程可延后。
-7. 确认本机访问限制、目录/文件夹导入传输方式、路径安全和评论最小只读 DTO；线上部署不得暴露本地服务 API。
-8. 形成架构决策记录和威胁清单；如提出新增依赖或独立进程，说明必要性、替代方案与维护成本。
+### 阶段 6(可选):Git diff 视图与文档收尾
 
-**交付物：** 本地服务/UI/现有 Publish 调用边界、来源与变更集契约、Publish 实时进度契约、Git 操作预留接口，以及本地/线上安全隔离决策。
+1. M5 只读 Git 视图。
+2. 更新根 `README.md`、`scripts/README.md`(启动方式、命令变化、Dashboard 角色);如需改 `AGENTS.md` 先确认。
 
-### 阶段 1：工作台骨架与工作流总览
+## 九、测试与验证
 
-1. 建立本地工作台服务与 UI 的最小纵向切片，并增加安全启动入口；线上部署不得开放本地文件访问能力。
-2. 实现步骤导航、当前工作区信息、空状态、加载态和错误状态。
-3. 实现 `WorkspaceSource`/`ContentChangeSet` 的首个当前项目适配器，展示 Post/Gallery 本地内容概览、Git dirty 状态和当前可执行步骤；外部多工作区适配器可暂不实现。
-4. 实现本地服务的 Git status/diff 查询和只读评论查询契约；stage/commit/push 先提供稳定接口类型或能力边界，不要求此阶段执行写操作。
-5. 为文件系统操作实现可测试的路径范围检查和结构化错误，不实现不受限目录浏览。
+每阶段至少覆盖:
 
-**交付物：** 可在受支持的本地开发环境启动的 UI 骨架；暂不触发真实 Publish。
+- 路径规范化、允许根目录、路径穿越、符号链接逃逸、拒绝敏感文件。
+- Frontmatter/YAML 读写往返、未知字段保留、slug/文件冲突、默认不覆盖。
+- `site` 域:校验、缺文件阻止发布、dry-run 只读、与其他域独立。
+- Publish 仅经 `runPublishWorkflow()` 触发;重复提交防护;成功/部分成功/失败结果映射。
+- `dry-run` 在文件、数据库、Cloudinary、锁与运行记录上无副作用。
+- Dashboard 边界:不存在对内容派生表的写入 action;生产构建不含工作台端点。
+- 评论 DTO 不含邮箱等敏感字段;失败状态不显示为 0 条;无写入能力。
 
-### 阶段 2：Post/Gallery 导入与结构化编辑
-
-1. 实现 Post 导入/新建预览和常用 Frontmatter 表单，保留未编辑的合法扩展字段。
-2. 实现 Gallery 图片/文件夹导入预览、目标相册选择和 `album.yaml` 常用字段表单。
-3. 首期实现当前项目工作区和明确选择的外部文件/文件夹导入；将来源扫描结果转换为 `ContentChangeSet`，不要求持续监控多个外部目录。
-4. 复用现有内容写入规则、媒体准备和 Gallery 索引实现；UI 只负责编排和呈现。
-5. 展示目标目录、文件清单、变更 diff、命名冲突和覆盖风险；所有冲突默认停止而不是覆盖。
-6. 在 Post/Gallery 内容详情处提供评论/回复只读摘要；数据不可用时显示未知状态，不显示误导性的零评论。
-7. 用临时工作区验证写入、取消、冲突和路径边界；不要依赖真实用户内容作为测试夹具。
-
-**交付物：** 能从图形界面添加并整理 Post/Gallery 源内容，且变更可审查。
-
-### 阶段 3：可视化检查与 Publish 预览
-
-1. 调用既有内容校验，结构化展示问题、scope、文件路径、建议操作和阻断原因。
-2. 将媒体准备、Gallery 索引等显式写入步骤整合到图形化向导；执行前展示副作用及目标文件。
-3. 接入现有 Publish dry-run，展示发布 scope 和结果；验证 dry-run 仍真正只读。
-4. 把变更集审阅/确认与写入 Git 内容工作区作为明确门槛；显示来源到目标的文件映射及完整 diff。
-5. 添加 Git 状态和 diff 视图，避免把工作区无关文件误认为本次内容变更。
-
-**交付物：** 用户可从界面完成内容检查和只读发布预览，不需手动记忆命令顺序。
-
-### 阶段 4：确认后真实 Publish 与结果反馈
-
-1. 为真实 Publish 设置清楚的范围、数据库/CDN 副作用提示和用户确认。
-2. 通过本地服务端调用 `runPublishWorkflow()`；不要从客户端直接访问数据库或 Cloudinary 凭据。
-3. 在统一 Workflow/领域服务中产生真实结构化进度事件，并通过本地服务的事件流推送到 UI；实现有序事件、重连/快照和阶段状态展示。
-4. 展示进行中、成功、部分成功、失败和可重试/需人工处理状态；显示真实运行 ID、Post/Gallery 分项摘要和错误。
-5. 防止重复触发；断开页面、请求超时或服务重启时，可按运行 ID 重连并查询最终状态，不误报成功、不自动重复启动。
-6. 注入/模拟事件流中断、乱序、重复和终态到达等情况，保证 UI 最终态与 Workflow 权威结果一致。
-
-**交付物：** 从本地界面完成“确认内容 → 真实 Publish → 查看结果”的最小闭环。
-
-### 阶段 5：Git 可视化引导与可选操作
-
-1. 完善 status/diff 文件范围视图和内容变更说明。
-2. 首期可只读使用 Git 状态/diff，并在服务层建立针对选定路径的 stage、commit、push 能力接口及结果类型。
-3. 若凭据管理和失败语义可控，再实现一项或多项 Git 写操作 UI；否则将完整交互留给后续阶段，不能删除或绕过预留接口。
-4. 实现提交/推送时，每一步均显示具体文件/目标远端/分支并单独确认；禁止广泛 staging 和默认自动 push，优先复用系统 Git credential helper。
-5. 在界面区分 Git 本地提交状态、远端推送状态和真实 Publish 结果。
-
-**交付物：** 用户能从一个界面了解和选择后续 Git 操作；不会把 Git 操作隐式耦合进 Publish。
-
-### 阶段 6：用户试用、兼容与文档收尾
-
-1. 对接第二个临时本地来源适配器或测试夹具，验证预留的多来源扫描/变更集接口无需重做核心工作流；持续变化监控和多目录管理可以作为后续交付。
-2. 使用无特殊 Git 经验的用户任务清单试走 Post 与 Gallery 两条主路径。
-3. 确认现有 CLI/TUI 仍可独立工作；工作台和命令入口调用同一套规则与 Publish Workflow。
-4. 记录本地 OS/运行时支持范围、启动/停止方式、故障排查、导入限制、进度恢复行为、评论只读边界和备份/恢复边界。
-5. 若决定改动根 README、脚本入口或工作区约定，同步更新相关说明；本计划本身不构成对 `AGENTS.md` 的更新授权。
-
-## 七、测试与验证要求
-
-新增/修改实现时至少覆盖：
-
-- 路径规范化、允许根目录、路径穿越、符号链接逃逸和拒绝访问敏感文件。
-- Post Frontmatter 读写往返、未知扩展字段保留、非法值和 slug/文件冲突。
-- Gallery 输入预览、文件排序/类型拒绝、路径映射、元数据保留及索引生成调用边界。
-- 写入预览/取消/确认行为、默认不覆盖、失败后的工作区状态。
-- Publish UI 只能经 `runPublishWorkflow()` 触发；重复点击保护；validation、成功、部分成功、失败结果映射。
-- `dry-run` 文件系统、数据库、Cloudinary、锁和运行记录边界不被 UI 绕过。
-- 工作区来源适配器、扫描结果到变更集的转换、多个来源合并与路径冲突检测；首期当前项目来源与外部导入均经过同一变更集契约。
-- 评论查询为只读，失败/不可用与真实零条数据可区分；UI 与服务均无评论写入能力。
-- Publish 阶段事件来源真实、顺序稳定、运行 ID 关联正确；断线重连/快照可恢复；事件重复或丢失不改变 Workflow 终态。
-- Git 文件选择操作不能意外 stage 非选中路径；预留的 stage/commit/push API 参数经过验证，commit/push 与 Publish 状态独立。
-- 工作台不能在生产线上提供本机文件访问端点。
-
-按项目约定，涉及内容或发布流程的实施变更需运行：
+命令:
 
 ```bash
 bun run lint
@@ -276,38 +266,33 @@ bun run publish -- --scope all --dry-run --json
 bun run build
 ```
 
-并确认 dry-run 无文件、数据库、Cloudinary、锁或运行记录副作用。涉及 UI 浏览器权限、本地服务器监听或跨页面状态时，应增加相应的浏览器/集成验证；验证需使用临时工作区与安全测试配置，不触发生产 Publish。
+涉及本地服务监听和浏览器交互的功能,另做使用临时工作区与测试配置的集成验证,不触发生产 Publish。
 
-## 八、阶段验收标准
+## 十、验收标准
 
-本阶段可视为完成，当且仅当：
+1. `content/` 单独即可完整还原站点:`db:reset` → `publish --scope all` 后,文章、相册、站点设置与重置前一致(不含用户与评论)。
+2. 线上 Dashboard 无任何会被 Publish 覆盖的内容写入;无 Publish 触发入口、无文章删除/归档入口;提供发布状态只读视图。
+3. 工作台能编辑 Post(含状态、封面)、Gallery(`album.yaml`)、Site 设置,写入前有 diff,默认不覆盖。
+4. 工作台能运行检查、dry-run 和真实 Publish,展示 Workflow 返回的真实结果,不伪造进度或把校验通过当作发布成功。
+5. 工作台可只读查看评论,不提供评论写操作;不可用状态与零条评论可区分。
+6. 本机访问与路径边界、生产构建隔离的测试通过;现有 CLI/TUI 行为不变,且调用同一套 Publish Workflow。
+7. README 与实际启动方式、命令和 Dashboard 角色一致。
 
-1. 用户可以通过图形步骤发现需要执行的内容工作，而不是被要求记忆多个命令。
-2. 本地服务是文件、Git、只读评论和 Publish 能力的受控执行边界；UI 不直连数据库或执行任意系统命令；线上部署不暴露本机文件操作。
-3. Post 与 Gallery 均能通过界面导入、整理并审查文件变更；Gallery 原图、WebP、`album.yaml`、`gallery.yaml` 边界保持正确。
-4. 待发布内容以可审阅变更集表示，内容确认后写入 Git 内容工作区；Publish 只从该内容工作区读取。来源接口支持当前工作区和显式导入，并通过第二来源适配器/测试夹具证明多工作区扫描扩展无需改写核心流程。
-5. 表单编辑不会静默丢弃合法扩展字段；文件冲突不会默认覆盖；路径操作不能越出许可工作区。
-6. 界面内容校验、修复、dry-run 和真实 Publish 使用现有实现，不出现独立业务规则分叉。
-7. 用户确认发布后，服务能立即调用统一 `runPublishWorkflow()`，并能区分成功、部分成功、失败及最终状态未知。
-8. UI 展示由 Workflow 实际产生的实时阶段事件；事件可关联运行、断线后恢复，且 UI 不伪造进度、不把校验通过或 Git push 成功误报为 Publish 成功。
-9. 未 commit/push 的工作区仍可按产品定义直接 Publish，但界面清晰提示其本地状态和 Git 风险；Git push 与 Publish 分别反馈。
-10. 评论/回复信息只读展示；无创建、回复、编辑、审核或删除能力；不可用状态与零条评论可区分，并遵守隐私约束。
-11. Git status/diff 可用，stage/commit/push 服务接口及结构化结果类型已预留；若操作 UI 延期，文档说明原因和后续接入点。
-12. 密钥不泄露，文件路径边界、进度事件、只读权限和 dry-run 副作用测试通过；现有 CLI/TUI 与线上 Dashboard 边界未破坏。
-13. README 与实际启动、操作和发布流程一致。
+## 十一、已确认的决策
 
----
+| 议题 | 决定 |
+|---|---|
+| 站点设置 | 纳入 Git 真相,新增 `site` 内容域 |
+| 线上 Publish | 移除;线上 Dashboard 对内容只读 |
+| 实时进度 | 延后;MVP 以最终结果与轮询为主 |
+| 评论 | 工作台只读查看,管理写操作留在线上 Dashboard |
+| 本地服务 | 独立 Bun 进程(`bun run workbench`),只在本机运行,不放进 Next 路由 |
+| 站点头像 | 源文件放 `content/site/portraitImage/`,Publish 上传 Cloudinary |
+| 线上文章删除 | 不保留;下线通过本地 `status` + Publish |
+| 多来源、Git 写操作 | 延后 |
 
-## 九、已确认的产品决策与实施期选型
+## 十二、仍需在阶段 0 确认
 
-以下产品边界已确认，不再作为是否实施的待决策项：
-
-1. **本地服务是核心架构边界。** 服务负责本机文件、Git、只读评论查询和 Publish 调用；具体可与 UI 同进程或为同仓库的独立本地进程，但不要求微服务化。具体运行模式由阶段 0 结合安全性、长任务与线上隔离验证后选型。
-2. **最终支持一个或多个本地来源。** 首期可限制来源数量或通过用户显式选择导入；变化扫描与变更集接口必须预留，后续扩展不得重写 UI 到内容工作区的核心流程。
-3. **Publish 实时阶段进度是需求。** 进度由统一 Workflow/领域服务产生并经本地服务传输；阶段粒度、事件流传输手段（例如 SSE 或等效机制）、断线恢复方式属于实现选型，不得降级为仅显示“运行中”或伪进度。服务端需有可查询的运行快照/终态来源，以处理页面断开或服务重启。
-4. **支持 Git push 是产品方向。** 首期可以延后复杂凭据和图形化 push 操作，但必须有 Git 能力扩展接口；后续优先使用本机 Git credential helper，操作确认和状态不得与 Publish 混淆。
-5. **评论在工作台只读。** 可展示必要的评论/回复决策信息；不提供任何评论写入、审核或删除操作。
-
-仍需在实施阶段通过小型技术验证决定：本地服务与 Next.js UI 的进程组织、受支持 OS 与文件夹导入交互、单文件/批量大小限制、实时事件流具体协议、运行快照存储和恢复策略，以及 Git push 的失败处理和凭据可用性。验证应落实已确认的产品边界，而不是重新讨论是否需要本地服务、多工作区扩展点、真实进度、push 接口或评论只读。
-
-在这些选型完成前，不引入未经确认的桌面运行时、队列、外部服务或新的数据库内容维护入口。
+1. `src/lib` 中哪些模块依赖 Next 专属 API,需要拆出纯逻辑才能被 Bun 服务复用。
+2. source missing 选 2.4 的方案 1 还是 2;Gallery 线上删除是否同口径移除。
+3. Dashboard 页面的最终命名与导航(例如把 `sync` 改为"发布状态"、Settings 改为"站点信息(只读)")。
