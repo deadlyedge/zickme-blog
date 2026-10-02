@@ -98,7 +98,7 @@ bun run content:fix -- --scope galleries --no-examples
 bun run scripts/check-content.ts -- --fix --scope all --no-examples
 ```
 
-参数 `--scope posts|galleries|site|all` 默认 `all`；`site` 检查 3 个必需 YAML、头像 WebP 和置顶文章 slug；`--no-examples` 保持兼容。站点 YAML 中，`landing.yaml` 收纳首页编排与 slogans，`profile.yaml` 收纳基础资料、social links、skills 与 About 配置，`theme.yaml` 单独保存主题。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写内容文件。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
+参数 `--scope posts|galleries|site|all` 默认 `all`；`site` 检查 3 个必需 YAML、头像 WebP 和置顶文章 slug；`--no-examples` 保持兼容。站点 YAML 中，`landing.yaml` 收纳首页编排与 slogans，`profile.yaml` 按简历顺序平铺基础资料、social links、skills、简介、经历、教育和精选项目字段，`theme.yaml` 单独保存主题。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写内容文件。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
 
 ```ts
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'

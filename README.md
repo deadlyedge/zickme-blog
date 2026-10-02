@@ -67,7 +67,7 @@ links:
 
 支持 `links`、`github`、`twitter`、`demo`、`figma`、`paper`、`category`、`series`、`canonicalUrl`、`outdatedWarning` 和 `layout` 等扩展字段。
 
-站点设置也以 Git 内容为唯一人工来源，保存在 `content/site/`：`profile.yaml` 合并基础资料、Social Links、Skills 与 About 配置，`landing.yaml` 合并首页编排与 Slogans，`theme.yaml` 单独保存主题。站点头像来源是 `portrait.webp`，YAML 只引用相对文件名；Publish 后由 Cloudinary 提供站点头像。首页置顶在 `landing.yaml` 中用 `pinnedPostSlugs` 表示，发布时解析成当前数据库 Post ID，因此数据库重置后仍可还原置顶关系。
+站点设置也以 Git 内容为唯一人工来源，保存在 `content/site/`：`profile.yaml` 按简历顺序平铺基础资料、Social Links、Skills、简介、经历、教育与精选项目字段，`landing.yaml` 合并首页编排与 Slogans，`theme.yaml` 单独保存主题。站点头像来源是 `portrait.webp`，YAML 只引用相对文件名；Publish 后由 Cloudinary 提供站点头像。首页置顶在 `landing.yaml` 中用 `pinnedPostSlugs` 表示，发布时解析成当前数据库 Post ID，因此数据库重置后仍可还原置顶关系。
 
 文章外链会显示可识别图标和完整 URL。GitHub 与 X/Twitter 使用项目内置的自定义 SVG 图标。
 

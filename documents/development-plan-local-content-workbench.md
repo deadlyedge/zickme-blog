@@ -74,13 +74,13 @@
 
 ```text
 content/site/
-├── profile.yaml        # 基础资料 + socialLinks + skills + aboutPageConfig
+├── profile.yaml        # 按简历顺序平铺：基础资料 + socialLinks + skills + 简介/经历/教育/项目
 ├── landing.yaml        # landingPageConfig + slogans
 ├── theme.yaml          # themeConfig
 └── portrait.webp       # 站点头像/肖像的本地源图片(Git 管理)
 ```
 
-组织原则:按手动编辑时的页面上下文聚合设置，避免每个小字段独占一个文件；`profile.yaml` 集中个人资料与 About 页面，`landing.yaml` 集中首页编排与 Slogans，主题仍单独维护。各区块由严格 schema 校验，再映射到 `siteProfile` 对应列/JSON 字段。
+组织原则:按手动编辑时的页面上下文聚合设置，避免每个小字段独占一个文件；`profile.yaml` 以常见简历顺序平铺个人资料、社交、技能、简介、经历、教育和项目字段，不增加 `about` 子分区；`landing.yaml` 集中首页编排与 Slogans，主题仍单独维护。字段由严格 schema 校验，再映射到 `siteProfile` 对应列/JSON 字段。
 
 ### 3.2 发布方式
 

@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { PROFILE_RULES } from '@/constants/profile'
 import type {
-	AboutPageConfig,
 	SiteLandingFileConfig,
 	Skill,
 	Slogan,
@@ -210,10 +209,6 @@ const siteLandingObjectSchema = z
 			})
 	})
 
-export const siteAboutFileSchema = nullableSchema<AboutPageConfig>(
-	aboutPageConfigSchema,
-)
-
 export const siteProfileFileSchema = z
 	.object({
 		name: z
@@ -235,7 +230,7 @@ export const siteProfileFileSchema = z
 		portraitImage: z.literal('portrait.webp').optional(),
 		socialLinks: siteSocialFileSchema,
 		skills: siteSkillsFileSchema,
-		about: siteAboutFileSchema,
+		...aboutPageConfigSchema.shape,
 	})
 	.strict()
 

@@ -35,7 +35,6 @@ async function createSiteFixture(): Promise<string> {
 				bio: '',
 				socialLinks: [],
 				skills: [],
-				about: {},
 			},
 		},
 		{ name: 'theme.yaml', value: {} },
@@ -82,6 +81,14 @@ describe('Site content publish', () => {
 				name: 'Example',
 				title: '',
 				bio: '',
+				about: { headline: 'Not a YAML section' },
+			}).success,
+		).toBe(false)
+		expect(
+			siteProfileFileSchema.safeParse({
+				name: 'Example',
+				title: '',
+				bio: '',
 				website: 'javascript:alert(1)',
 			}).success,
 		).toBe(false)
@@ -120,7 +127,10 @@ describe('Site content publish', () => {
 			skills: [
 				{ category: 'Engineering', technologies: [{ name: 'TypeScript' }] },
 			],
-			about: { headline: 'About me', educationTimeline: [] },
+			headline: 'About me',
+			subheadline: 'A short introduction',
+			educationTimeline: [],
+			featuredProjects: [],
 		})
 		await replaceSiteYaml(siteRoot, 'landing.yaml', {
 			showSlogans: true,
@@ -137,7 +147,9 @@ describe('Site content publish', () => {
 		])
 		expect(values.aboutPageConfig).toEqual({
 			headline: 'About me',
+			subheadline: 'A short introduction',
 			educationTimeline: [],
+			featuredProjects: [],
 		})
 		expect(values.slogans).toEqual([{ text: 'Build carefully' }])
 		expect(values.landingPageConfig).toMatchObject({
@@ -162,7 +174,6 @@ describe('Site content publish', () => {
 							bio: '',
 							socialLinks: [],
 							skills: [],
-							about: {},
 						}
 					: fileName === 'landing.yaml'
 						? { pinnedPostSlugs: ['existing', 'missing'], slogans: [] }
@@ -210,10 +221,8 @@ describe('Site content publish', () => {
 			category: 'Engineering',
 			technologies: [{ name: 'TypeScript' }],
 		})
-		expect(result.files.profile.about).toEqual({
-			headline: 'About me',
-			educationTimeline: [],
-		})
+		expect(result.files.profile.headline).toBe('About me')
+		expect(result.files.profile.educationTimeline).toEqual([])
 		expect(result.files.landing.slogans).toEqual([{ text: 'Build carefully' }])
 		expect(
 			siteFileSchemaByName['profile.yaml'].safeParse(result.files.profile)

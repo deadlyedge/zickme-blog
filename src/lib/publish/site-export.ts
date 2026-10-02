@@ -52,7 +52,7 @@ export function toSiteFilesForExport(
 							...(technology.level ? { level: technology.level } : {}),
 						})),
 					})) ?? null,
-				about: profile.aboutPageConfig ?? null,
+				...(profile.aboutPageConfig ?? {}),
 			},
 			theme: profile.themeConfig ?? null,
 			landing:

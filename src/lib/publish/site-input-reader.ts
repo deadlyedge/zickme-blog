@@ -202,9 +202,22 @@ export function getSitePublishValues(
 		portraitImage: _portraitImage,
 		socialLinks,
 		skills,
-		about,
+		headline,
+		subheadline,
+		statusText,
+		careerTimeline,
+		educationTimeline,
+		featuredProjects,
 		...profile
 	} = files.profile
+	const aboutPageConfig = {
+		...(headline !== undefined ? { headline } : {}),
+		...(subheadline !== undefined ? { subheadline } : {}),
+		...(statusText !== undefined ? { statusText } : {}),
+		...(careerTimeline !== undefined ? { careerTimeline } : {}),
+		...(educationTimeline !== undefined ? { educationTimeline } : {}),
+		...(featuredProjects !== undefined ? { featuredProjects } : {}),
+	}
 	return {
 		...profile,
 		socialLinks,
@@ -225,6 +238,7 @@ export function getSitePublishValues(
 					pinnedPostIds,
 				}
 			: null,
-		aboutPageConfig: files.profile.about,
+		aboutPageConfig:
+			Object.keys(aboutPageConfig).length > 0 ? aboutPageConfig : null,
 	}
 }

@@ -54,7 +54,7 @@ content/site/
 └── portrait.webp       # 可选；profile.yaml 中 portraitImage: portrait.webp 时必需
 ```
 
-`landing.yaml` 收纳首页编排与 slogans；`profile.yaml` 收纳基础资料、`socialLinks`、`skills` 和 `about`(About 页 Hero、经历、教育与精选项目)；主题单独放在 `theme.yaml`。Landing 配置将 `pinnedPostIds` 改为稳定的 `pinnedPostSlugs`。Site 发布时会解析 slug 并写入当前数据库 ID；`all` 发布先处理 Posts 再处理 Site。头像须为有效 WebP，本地文件上传 Cloudinary 后写入运行时 profile；YAML 不记录外部头像 URL。
+`landing.yaml` 收纳首页编排与 slogans；`profile.yaml` 按常见简历顺序平铺基础资料、Social Links、Skills、简介、经历、教育与精选项目字段，不再套用 `about` 子分区；主题单独放在 `theme.yaml`。Landing 配置将 `pinnedPostIds` 改为稳定的 `pinnedPostSlugs`。Site 发布时会解析 slug 并写入当前数据库 ID；`all` 发布先处理 Posts 再处理 Site。头像须为有效 WebP，本地文件上传 Cloudinary 后写入运行时 profile；YAML 不记录外部头像 URL。
 
 ## 常用命令
 

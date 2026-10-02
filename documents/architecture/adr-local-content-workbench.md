@@ -149,9 +149,9 @@
 | `slogans` | `landing.yaml` 的 `slogans` 区块 | About 页内容 → Slogans |
 | `themeConfig` | `theme.yaml` | 动态主题 |
 | `landingPageConfig` | `landing.yaml`(不含 slogans 区块) | 首页编排 |
-| `aboutPageConfig` | `profile.yaml` 的 `about` 区块 | About 页内容 → Hero / 经历 / 精选项目 |
+| `aboutPageConfig` | `profile.yaml` 根层级的简介、经历、教育与精选项目字段 | About 页内容 → Hero / 经历 / 精选项目 |
 
-文件按手动编辑上下文聚合，当前必需 YAML 为 `profile.yaml`、`landing.yaml`、`theme.yaml`；旧的 `social.yaml`、`skills.yaml`、`slogans.yaml`、`about.yaml` 不再接受。
+文件按手动编辑上下文聚合，当前必需 YAML 为 `profile.yaml`、`landing.yaml`、`theme.yaml`；`profile.yaml` 的简历字段直接放在根层级，不使用 `about` 包装分区。旧的 `social.yaml`、`skills.yaml`、`slogans.yaml`、`about.yaml` 不再接受。
 
 补充:
 - `educationTimeline` 在 Dashboard 里**没有编辑入口**(`SettingsClient` 把 setter 丢弃),只能在 YAML 里维护,工作台必须保留该字段。
