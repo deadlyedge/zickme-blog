@@ -3,3 +3,4 @@ export const CLOUDINARY_ROOT_PATH = `${CLOUDINARY_ROOT_PREFIX}/`
 
 export const POST_CLOUDINARY_PUBLIC_ID_PREFIX = 'posts'
 export const GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX = 'gallery'
+export const SITE_CLOUDINARY_PUBLIC_ID_PREFIX = 'site'

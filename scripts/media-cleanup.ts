@@ -2,9 +2,10 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { v2 as cloudinary } from 'cloudinary'
 import { db } from '../src/db'
-import { galleryImages, posts } from '../src/db/schema'
+import { galleryImages, posts, siteProfile } from '../src/db/schema'
 import {
 	collectCloudinaryReferences,
+	collectSiteProfileAvatarReferences,
 	getUnreferencedAssetIds,
 	normalizeCloudinaryPublicId,
 } from '../src/lib/media/cloudinary-asset-audit'
@@ -39,7 +40,7 @@ function configureCloudinary() {
 }
 
 async function getReferences() {
-	const [galleryRows, postRows] = await Promise.all([
+	const [galleryRows, postRows, siteProfileRows] = await Promise.all([
 		db
 			.select({
 				publicId: galleryImages.publicId,
@@ -54,8 +55,9 @@ async function getReferences() {
 				content: posts.content,
 			})
 			.from(posts),
+		db.select({ avatar: siteProfile.avatar }).from(siteProfile),
 	])
-	return collectCloudinaryReferences([
+	const references = collectCloudinaryReferences([
 		...galleryRows.flatMap((row) => [
 			{
 				value: row.publicId,
@@ -75,6 +77,11 @@ async function getReferences() {
 			{ value: row.content, source: `Post:${row.slug}:content` },
 		]),
 	])
+	for (const [publicId, reference] of collectSiteProfileAvatarReferences(
+		siteProfileRows,
+	))
+		references.set(publicId, reference)
+	return references
 }
 
 async function listAssets() {

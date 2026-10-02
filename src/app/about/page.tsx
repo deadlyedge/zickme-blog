@@ -10,9 +10,9 @@ import { fetchProfile } from '@/lib/posts/post-queries'
 import { buildMetadata } from '@/lib/seo'
 import type { TimelineItem } from '@/types/site'
 
-// About 内容平时变化不频繁，使用长时间 ISR 缓存；
-// Dashboard 保存后由 updateSiteProfile 通过 revalidatePath('/about') 立即失效。
-export const revalidate = 86400
+// 与首页的小时级 ISR 对齐；未来 CLI Publish 无法调用 revalidatePath。
+// 当前 Dashboard 保存仍会通过 updateSiteProfile 立即失效此页面。
+export const revalidate = 3600
 
 export const metadata: Metadata = buildMetadata({
 	title: 'About',

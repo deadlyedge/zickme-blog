@@ -15,3 +15,4 @@
 - 现在的/gallery地址显示逻辑似乎更适合类似shorturl，我希望进入页面后还是应该显示类似/gallery/album_name/image_title or image_index_in_album 这种形式。
 - 考虑添加功能，本地工作台将用户评论合并入md文档
 - 考虑添加功能，本地工作流引入ai模块，支持本地ai(ollama/lm studio)进行内容总结/标签生成/精选评论/翻译。
+- sitePortrait应该在ui中提供上传/外链，转换后存于本地.webp，等待publish时上传cloudinary。

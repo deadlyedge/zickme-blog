@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	collectCloudinaryReferences,
+	collectSiteProfileAvatarReferences,
 	extractCloudinaryPublicId,
 	getUnreferencedAssetIds,
 	normalizeCloudinaryPublicId,
 } from '../src/lib/media/cloudinary-asset-audit'
+import { buildSitePublicId } from '../src/lib/media/cloudinary-public-id'
 
 describe('Cloudinary asset audit helpers', () => {
 	test('normalizes public IDs and delivery URLs to the same asset', () => {
@@ -49,5 +51,29 @@ describe('Cloudinary asset audit helpers', () => {
 				references,
 			),
 		).toEqual(['myblog/gallery/old/photo'])
+	})
+
+	test('keeps site portrait assets referenced by a profile public ID or URL', () => {
+		const references = collectSiteProfileAvatarReferences([
+			{ avatar: 'site/portrait' },
+			{
+				avatar:
+					'https://res.cloudinary.com/demo/image/upload/v1/myblog/site/portrait.webp',
+			},
+		])
+		expect([...references.keys()]).toEqual(['myblog/site/portrait'])
+		expect(
+			getUnreferencedAssetIds(
+				[
+					{ public_id: 'myblog/site/portrait' },
+					{ public_id: 'myblog/site/unused' },
+				],
+				references,
+			),
+		).toEqual(['myblog/site/unused'])
+	})
+
+	test('builds a stable site portrait public ID in its own namespace', () => {
+		expect(buildSitePublicId('portrait.webp')).toBe('site/portrait')
 	})
 })

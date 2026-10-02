@@ -1,6 +1,6 @@
 # 下一阶段开发计划:本地内容工作台与 Dashboard 收敛
 
-> 状态:阶段 0 已完成(结论见 [`architecture/adr-local-content-workbench.md`](architecture/adr-local-content-workbench.md),待你确认其中第 8 节决策后进入阶段 1);阶段 1 及之后尚未开始代码实现
+> 状态:阶段 0 已完成;决策 3、4、5 已确认且独立前置改动已完成(详见 [`architecture/adr-local-content-workbench.md`](architecture/adr-local-content-workbench.md));阶段 1 尚未开始实现
 > 目标:让**所有会被 Publish 覆盖的内容**都只在本地(Git)编辑;线上 Dashboard 收敛为运行时只读观察与运维工具;本地工作台提供可视化的编辑、检查、发布和评论查看。
 > 前置架构:Git 是唯一人工内容源;PostgreSQL 与 Cloudinary 是可重建的运行时副本;Publish 保持单向。
 > 相关文档:[`next-stage-discuss.md`](next-stage-discuss.md)、[`architecture/current-code-structure-summary.md`](architecture/current-code-structure-summary.md)。
@@ -63,10 +63,10 @@
 ### 2.4 删除的新语义
 
 - **线上不再有任何删除/归档文章的入口**。文章下线的方式:本地把 frontmatter `status` 改为 `archived`/`draft` 后 Publish;或删除 Markdown 源文件。
-- 删除 Markdown 后 Publish 只报告 source missing,**不自动删库**(沿用现有保护),数据库会残留一篇无源文件的文章。阶段 0 在两种方案中二选一:
+- 删除 Markdown 后 Publish 只报告 source missing,**不自动删库**(沿用现有保护),数据库会残留一篇无源文件的文章。处理方案仍待确认(见 ADR 第 8 节):
   1. **用 `archived` 表达下线(推荐)**:工作台发现 source missing 时,引导用户恢复文件并设 `status: archived`,而不是删除文件。保留评论和链接历史,无需新增任何删除能力。
   2. **本地显式清理命令**:如 `bun run publish -- --scope posts --prune-missing --confirm`,经预览(列出评论与 Cloudinary 影响)和显式确认后才清理运行时副本。
-- Gallery 删除目前由同一 `deletion-admin` 处理。为保持"线上 Dashboard 无内容写入",建议同样移除线上入口并按同一方案处理;如果你想保留相册层面的线上删除,请在阶段 0 说明理由。
+- Gallery 删除目前由同一 `deletion-admin` 处理。为保持"线上 Dashboard 无内容写入",建议同样移除线上入口并按同一方案处理;该决策待 Dashboard 收敛前确认(见 ADR 第 8 节)。
 
 ## 三、站点设置纳入 Git
 
@@ -74,14 +74,14 @@
 
 ```text
 content/site/
-├── profile.yaml        # name/title/bio/location/email/website/portraitImage(引用 portraitImage/ 下的文件)
+├── profile.yaml        # name/title/bio/location/email/website/portraitImage(引用 portrait.webp)
 ├── social.yaml         # socialLinks
 ├── skills.yaml
 ├── slogans.yaml
 ├── theme.yaml          # themeConfig
 ├── landing.yaml        # landingPageConfig
 ├── about.yaml          # aboutPageConfig(hero/timeline/featured projects 等)
-└── portraitImage/      # 站点头像/肖像的本地源图片(Git 管理)
+└── portrait.webp       # 站点头像/肖像的本地源图片(Git 管理)
 ```
 
 拆分原则:一个文件对应一个概念,避免单个超大 YAML;文件与 `siteProfile` 的列/JSON 字段一一映射,便于校验与 diff。
@@ -101,7 +101,7 @@ content/site/
 
 ### 3.4 媒体
 
-- **站点头像先走 Cloudinary**:源图片放在 `content/site/portraitImage/`,`profile.yaml` 中只写相对路径(如 `portraitImage/portrait.webp`)。Publish 时上传 Cloudinary,并把 CDN 链接写入 `siteProfile.avatar`。
+- **站点头像先走 Cloudinary**:源图片放在 `content/site/portrait.webp`,`profile.yaml` 的 `portraitImage` 字段只写相对路径(如 `portrait.webp`)。Publish 时上传 Cloudinary,并把 CDN 链接写入 `siteProfile.avatar`。
 - 复用 `src/lib/publish/media-upload.ts` 与 `cloudinary-public-id.ts`,在 `myblog/` 根目录下使用独立前缀(如 `myblog/site/`),保证 `media:audit` 能识别引用,不会被当作未引用资产清理。
 - 与 Post 媒体规则一致:`dry-run` 不上传、保留本地路径;缺失文件、不支持的格式、超限尺寸都在校验阶段报错;建议本地文件已是 WebP 以便 Git 管理。
 - 不支持直接填写任意外链(沿用现有隐私/安全约束);确有需要时再显式放宽。

@@ -1,9 +1,9 @@
 # ADR:本地内容工作台与站点设置入 Git(阶段 0 结论)
 
-> 状态:阶段 0 已完成,待用户确认第 8 节的决策后进入阶段 1
+> 状态:阶段 0 已完成;决策 3、4、5 已确认,独立前置改动已完成;阶段 1 尚未开始实现
 > 日期:2026-10-02
 > 依据:[`../development-plan-local-content-workbench.md`](../development-plan-local-content-workbench.md)
-> 验证方式:在临时目录里做了可运行的探测(Bun 服务、HTML 打包、Zod 草案、Next 专属 API 导入),验证后全部删除。仓库内只新增本文档并更新计划文档状态。
+> 验证方式:阶段 0 的临时探测已删除;本次增加 Cloudinary 站点头像命名/引用测试并运行项目验证。仓库内没有迁入头像图片,需在站点设置迁移时人工准备 `content/site/portrait.webp`。
 > 说明:"已验证"表示实际运行过;"建议"表示设计决定,尚未实现。
 
 ---
@@ -170,7 +170,7 @@
 
 **1. `pinnedPostIds` 是随机 UUID(最高优先级)**
 `posts.id` 由 `crypto.randomUUID()` 生成,`db:reset` 后重新 Publish 会得到新 ID,现有置顶配置会全部失效,违反验收标准 1。
-- 建议(决策 5):Git 中改存 `pinnedPostSlugs`;Publish 站点域时解析 slug → 当前 `posts.id`,再写入数据库的 `pinnedPostIds`。运行时代码(`fetchPinnedPosts` 等)无需改动。
+- 决策 5 已确认:Git 中改存 `pinnedPostSlugs`;Publish 站点域时解析 slug → 当前 `posts.id`,再写入数据库的 `pinnedPostIds`。运行时代码(`fetchPinnedPosts` 等)无需改动。
 - 约束:`all` 范围必须先发布 Post 再发布 Site;dry-run 不连库,所以 dry-run 对照**本地 Markdown 的 slug** 校验;真实发布找不到对应 Post 时该域失败。
 - 已验证:现有 2 个置顶 ID 都能解析回 slug。
 
@@ -179,19 +179,19 @@
 - 要求:站点 schema 一律使用 `z.httpUrl()`(Zod 4.6.5 已提供,已验证会拒绝 `javascript:` 与 `ftp:`)。
 
 **3. 头像迁移**
-数据库现有 `avatar` 是外部地址(`c.zick.xyz`),不是 Cloudinary。计划中的 `portraitImage` 本地文件方案不允许外链,`site:export` 无法生成与现有数据库一致的结果,"发布后与导出前一致"的验证会在 `avatar` 上不一致。见决策 4。
+数据库现有 `avatar` 是外部地址(`c.zick.xyz`),不是 Cloudinary。计划中的 `portraitImage` 本地文件方案不允许外链,`site:export` 无法生成与现有数据库一致的结果,"发布后与导出前一致"的验证会在 `avatar` 上不一致。决策 4 已确认:迁移时人工把现有头像保存为 `content/site/portrait.webp`;导出只提示,不下载,不开放任意外链。
 
 **4. Cloudinary 前缀与 `media:cleanup` 冲突(会导致误删)**
 - 现有常量:`CLOUDINARY_ROOT_PREFIX='myblog'`,Post 为 `posts`,Gallery 为 `gallery`。
-- `scripts/media-cleanup.ts` 的 `getReferences()` **只收集** `galleryImages` 与 `posts`。若头像上传到 `myblog/site/...` 而不改脚本,`media:audit` 会把它当作未引用资产,`media:cleanup --confirm` 会删掉头像。
-- 需要同时修改:新增 `SITE_CLOUDINARY_PUBLIC_ID_PREFIX='site'` 与 `buildSitePublicId`;`media-cleanup.ts` 加入 `siteProfile.avatar` 引用;`cloudinary-asset-audit.ts` 中裸前缀正则 `^(posts|gallery)/` 加入 `site`;补充测试。
+- 原先 `scripts/media-cleanup.ts` 的 `getReferences()` 只收集 `galleryImages` 与 `posts`,站点头像会被误判为未引用。
+- **阶段 0 前置改动已完成**:新增 `SITE_CLOUDINARY_PUBLIC_ID_PREFIX='site'` 与 `buildSitePublicId`;审计识别 `site/` 前缀,清理从 `siteProfile.avatar` 收集引用,并补充头像公有 ID/URL 与未引用判断测试。
 
 **5. `customCss` 注入 `<style>`**
 `src/app/layout.tsx` 用 `dangerouslySetInnerHTML` 把 `generateDynamicThemeCss(themeConfig)` 注入 `<style>`,内容含 `</style>` 即可跳出样式标签。内容来自 Git 且作者可信,但按"外部 HTML 必须净化"的原则,校验阶段应拒绝 `customCss` 与 `light/dark` 变量值中的 `<`、`>`(已验证该规则能拦截 `</style><script>`)。
 
 **6. About 页缓存 24 小时**
 `about/page.tsx` 设置 `revalidate = 86400`,靠 `updateSiteProfile` 里的 `revalidatePath('/about')` 立即失效。迁移后 Publish 在 CLI 进程里运行,调不了 `revalidatePath`,站点设置发布后 About 页最长 24 小时才更新,首页最长 1 小时。
-- 建议:把 `about` 的 `revalidate` 降到与其他页面同量级(例如 3600)并写入文档;不新增带密钥的按需失效端点(避免新增线上写入口)。
+- **阶段 0 前置改动已完成**:`about/page.tsx` 的 `revalidate` 已调整为 3600 秒,与首页同为小时级 ISR;不新增带密钥的按需失效端点。
 
 **可选 id**
 原型里把时间线/精选项目的 `id` 设为必填,定稿建议改为**可选**:公共页面渲染本来就有回退 key(`item.id || ...`)。`skills`/`slogans`/`technologies` 的 `id` 不进 YAML(`SettingsClient` 加载时本来就会重新生成)。
@@ -216,7 +216,9 @@
 
 ---
 
-## 6. 基线状态(开始实现前)
+## 6. 基线状态与本次验证
+
+阶段 0 初始探测时的历史基线:
 
 | 检查 | 结果 |
 |---|---|
@@ -224,7 +226,21 @@
 | `bunx tsc --noEmit` | 通过 |
 | `bun run build` | 通过 |
 | `bun run publish -- --scope all --dry-run --json` | 通过(10 篇 Post、3 个相册、6 张图,0 错误) |
-| `bun run lint` | **失败,已存在**:`.pi/settings.json` 格式问题(缺少结尾换行),与本阶段无关,未修改 |
+| `bun run lint` | 当时报告 `.pi/settings.json` 缺少结尾换行;本次 lint 全量通过 |
+
+本次完成独立前置改动后的验证:
+
+| 检查 | 结果 |
+|---|---|
+| `bun run lint` | 通过(Biome 检查 268 个文件) |
+| Cloudinary 与 Gallery 相关测试 | 11 通过 / 0 失败 |
+| `bun test` | 52 通过 / 0 失败 |
+| `bunx tsc --noEmit --pretty false` | 通过 |
+| `bun run content:check -- --no-examples` | 通过(10 篇 Post、3 个相册;0 错误) |
+| `bun run content:verify` | 通过;含格式/索引检查及 Post/Gallery/all dry-run |
+| `bun run publish -- --scope all --dry-run --json` | 通过(10 篇 Post、3 个相册、6 张图,0 错误) |
+| `bun run build` | 通过;`/about` 构建输出为 1h ISR |
+| `git diff --check` | 通过 |
 
 探测期间对 `package.json`、`bun.lock` 的依赖变更已撤销,`bun install` 确认无差异。
 
@@ -232,8 +248,9 @@
 
 ## 7. 对 `AGENTS.md` / README 的潜在影响
 
-阶段 0 不改变任何命令或行为,**本次没有修改根 `README.md` 与 `AGENTS.md`**。后续需要同步:
+本次没有新增/修改命令,但调整了 About ISR 与 Cloudinary 媒体引用审计范围。**本次没有修改根 `README.md` 与 `AGENTS.md`**。后续需要同步:
 
+- 阶段 0 收尾:本次更新 `scripts/README.md` 的 Cloudinary 引用范围说明;About ISR 改为 3600 秒。根 `README.md` 与命令行为未改变。
 - 阶段 1:`scripts/README.md`、根 `README.md`(`site` scope、`site:export`、`publish:site`)、`AGENTS.md` 的"内容源与架构边界"(增加 `content/site/`)。
 - 阶段 2:根 `README.md` 与 `AGENTS.md` 增加 `bun run workbench`、`bunfig.toml`、`@types/bun`。
 - 阶段 4/6:Dashboard 角色描述(只读 + 运行时管理)。
@@ -243,22 +260,24 @@
 
 ## 8. 待用户确认的决策
 
-| # | 议题 | 建议 |
+| # | 议题 | 决定 / 状态 |
 |---|---|---|
-| 1 | source missing 的处理方式 | **方案 1**:保留文件并设 `status: archived`;保留评论与链接历史,无需新增删除能力 |
-| 2 | Gallery 线上删除 | **同口径移除** `confirmDeletion` 的 gallery/galleryImage 分支;下线改用相册 `status: archived` / 图片 `hidden: true` |
-| 3 | Dashboard 命名 | 文章 → "文章(只读)";Gallery → "相册(只读)";站点与主题 → "站点信息(只读)";新建"发布状态"页(替换停用页) |
-| 4 | 头像迁移 | 一次性手动把现有头像保存为 `content/site/portrait.webp`;`site:export` 对外链头像只输出提示;不开放外链字段 |
-| 5 | 置顶文章表示 | 采用 4.3 第 1 项(`pinnedPostSlugs`,Publish 时解析为 ID) |
-| 6 | 触发来源标记 | 新增 `'WORKBENCH'`(无需数据库迁移,改三处联合类型) |
-| 7 | 是否更新 `AGENTS.md` | 阶段 2、4 完成后统一给出修改稿,经你确认再改 |
+| 1 | source missing 的处理方式 | 建议方案 1(`status: archived`);**待确认**,不阻塞阶段 1 |
+| 2 | Gallery 线上删除 | 建议移除线上 Gallery/图片删除分支;**待确认**,在 Dashboard 收敛阶段处理 |
+| 3 | Dashboard 命名 | 文章 → "文章(只读)";Gallery → "相册(只读)";站点与主题 → "站点信息(只读)";新建"发布状态"页;**已确认** |
+| 4 | 头像迁移 | 人工准备 `content/site/portrait.webp`;`site:export` 对外链头像只提示、不下载;不开放外链字段;**已确认** |
+| 5 | 置顶文章表示 | Git 中使用 `pinnedPostSlugs`,Publish 时解析为数据库 ID;**已确认** |
+| 6 | 触发来源标记 | 建议新增 `'WORKBENCH'`(无需数据库迁移);**待阶段 4 确认/实现** |
+| 7 | 是否更新 `AGENTS.md` | 阶段 2、4 完成后给出修改稿,经你确认再改 |
 
 ---
 
-## 9. 进入阶段 1 的前置条件
+## 9. 阶段 1 入口状态与实施顺序
 
-- [ ] 决策 3、4、5 已确认(直接影响 YAML 契约与 `site:export`)。
-- [ ] 按 3.3 清单逐项修改 `PublishScope` 触及点。
-- [ ] 按 4.3 第 4 项同步修改 `media-cleanup.ts` 与审计正则并补测试。
-- [ ] 按 4.3 第 6 项调整 `about` 的 `revalidate`。
+- [x] 决策 3、4、5 已确认,并统一头像文件路径为 `content/site/portrait.webp`。
+- [x] 新增 `site` Cloudinary public ID 命名;审计和清理引用 `siteProfile.avatar`;补充纯函数测试。
+- [x] About 页 ISR 调整为 3600 秒,与首页保持同量级。
+- [ ] **阶段 1 第一个纵向切片**:新增 `site` scope 时,须与 reader / repository / publish service、summary、Workflow 执行顺序、锁和校验同步实现。前置阶段不单独把 `site` 加进 scope 常量/解析器,避免它被旧 Workflow 当作 `all` 处理。
+
+决策 1、2 不影响站点设置的 Git/Publish 契约,可在 Dashboard 收敛实施前确认;决策 6 在工作台真实 Publish 接入前确认。本次未修改 `AGENTS.md`。
 

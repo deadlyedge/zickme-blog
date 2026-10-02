@@ -2,11 +2,13 @@ import {
 	CLOUDINARY_ROOT_PREFIX,
 	GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX,
 	POST_CLOUDINARY_PUBLIC_ID_PREFIX,
+	SITE_CLOUDINARY_PUBLIC_ID_PREFIX,
 } from '@/constants/cloudinary'
 
 export {
 	GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX,
 	POST_CLOUDINARY_PUBLIC_ID_PREFIX,
+	SITE_CLOUDINARY_PUBLIC_ID_PREFIX,
 } from '@/constants/cloudinary'
 
 export function sanitizeCloudinarySegment(value: string): string {
@@ -44,6 +46,15 @@ export function buildGalleryPublicId(
 		GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX,
 		[albumSlug, fileName.replace(/\.webp$/i, '')],
 		`${albumSlug}/${fileName}`,
+	)
+}
+
+export function buildSitePublicId(imagePath: string): string {
+	const imageName = imagePath.split(/[\\/]/).pop() ?? imagePath
+	return buildScopedPublicId(
+		SITE_CLOUDINARY_PUBLIC_ID_PREFIX,
+		[imageName.replace(/\.[^/.]+$/, '')],
+		imagePath,
 	)
 }
 

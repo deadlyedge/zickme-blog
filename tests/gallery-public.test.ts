@@ -5,6 +5,7 @@ import {
 	getGalleryImageUrl,
 	parseGalleryTags,
 } from '../src/lib/gallery/gallery-public'
+import { buildSitePublicId } from '../src/lib/media/cloudinary-public-id'
 import { buildGalleryPublicId } from '../src/lib/media/gallery-media'
 import { buildPostMediaPublicId } from '../src/lib/media/post-media'
 import type {
@@ -47,6 +48,7 @@ describe('gallery public helpers', () => {
 		expect(buildPostMediaPublicId('my-post', 'assets/cover.png')).toBe(
 			'posts/my-post/cover',
 		)
+		expect(buildSitePublicId('portrait.webp')).toBe('site/portrait')
 	})
 
 	test('formats exposure time as a readable shutter speed', () => {

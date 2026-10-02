@@ -1,4 +1,15 @@
-import { CLOUDINARY_ROOT_PATH } from '@/constants/cloudinary'
+import {
+	CLOUDINARY_ROOT_PATH,
+	GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX,
+	POST_CLOUDINARY_PUBLIC_ID_PREFIX,
+	SITE_CLOUDINARY_PUBLIC_ID_PREFIX,
+} from '@/constants/cloudinary'
+
+const UNROOTED_PUBLIC_ID_PREFIXES = [
+	POST_CLOUDINARY_PUBLIC_ID_PREFIX,
+	GALLERY_CLOUDINARY_PUBLIC_ID_PREFIX,
+	SITE_CLOUDINARY_PUBLIC_ID_PREFIX,
+]
 
 export interface CloudinaryAssetReference {
 	publicId: string
@@ -20,7 +31,11 @@ export function normalizeCloudinaryPublicId(value: string): string | null {
 	if (!normalized) return null
 	if (normalized.startsWith(CLOUDINARY_ROOT_PATH))
 		return stripAssetExtension(normalized)
-	if (/^(posts|gallery)\//.test(normalized))
+	if (
+		UNROOTED_PUBLIC_ID_PREFIXES.some((prefix) =>
+			normalized.startsWith(`${prefix}/`),
+		)
+	)
 		return stripAssetExtension(`${CLOUDINARY_ROOT_PATH}${normalized}`)
 	return null
 }
@@ -58,6 +73,17 @@ export function collectCloudinaryReferences(
 		if (publicId) references.set(publicId, { publicId, source })
 	}
 	return references
+}
+
+export function collectSiteProfileAvatarReferences(
+	rows: Array<{ avatar: string | null }>,
+): Map<string, CloudinaryAssetReference> {
+	return collectCloudinaryReferences(
+		rows.map(({ avatar }) => ({
+			value: avatar,
+			source: 'SiteProfile:avatar',
+		})),
+	)
 }
 
 export function getUnreferencedAssetIds(

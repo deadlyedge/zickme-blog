@@ -19,7 +19,7 @@
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
-| **`media-cleanup.ts`** | `bun run media:audit` / `bun run media:cleanup` | 审计并在显式确认后清理未被当前数据库引用的 `myblog/` Cloudinary 图片资产 |
+| **`media-cleanup.ts`** | `bun run media:audit` / `bun run media:cleanup` | 审计并在显式确认后清理未被当前数据库引用的 Post、Gallery 和站点头像 `myblog/` Cloudinary 图片资产 |
 
 ---
 
@@ -70,7 +70,7 @@ bun run media:audit
 bun run media:cleanup -- --manifest media-cleanup-manifest.json --confirm
 ```
 
-脚本只处理 Cloudinary `myblog/` 根目录下的图片资源，删除前会重新确认当前数据库没有引用；不会使用按前缀全量删除，也不会触碰 `myblog/` 之外的资产。
+脚本只处理 Cloudinary `myblog/` 根目录下的图片资源，并从 Post、Gallery 与 `siteProfile.avatar` 收集引用；删除前会重新确认当前数据库没有引用。站点头像使用独立的 `myblog/site/` 命名空间，不会被误判为未引用资产。脚本不会使用按前缀全量删除，也不会触碰 `myblog/` 之外的资产。
 ### 4. `check-content.ts` / `fix-content.ts` - 只读检查与显式修复
 
 `content:check` 只读检查 Post Frontmatter、slug 冲突、图片路径和 Gallery 内容，不写 Markdown 或 YAML；即使传入 `--fix`，package 命令仍以只读模式执行。`content:fix` 才会执行可自动处理的写操作：补齐 Post Frontmatter、创建/补齐 Gallery `album.yaml` 图片清单，并重新生成自动维护的 `gallery.yaml`。修复后应人工审查 Git diff，尤其是新生成的人工维护 `album.yaml`。
