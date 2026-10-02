@@ -10,13 +10,13 @@
 | :--- | :--- | :--- |
 | **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery/Site 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
 | **`publish-tui.ts`** | `bun run publish:tui` | 推荐的交互式入口；执行内容检查、修复确认、Git diff、dry-run 和真实发布确认 |
-| **`check-content.ts`** | `bun run content:check` | 只读检查 Post Frontmatter、图片路径、Slug 冲突和 Gallery 配置 |
+| **`check-content.ts`** | `bun run content:check` | 只读检查 Post Frontmatter、图片路径、Slug 冲突、Gallery 配置和 Site YAML |
 | **`fix-content.ts`** | `bun run content:fix` | 显式修复 Post Frontmatter、Gallery `album.yaml` 和自动生成索引 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`prepare-media.ts`** | `bun run content:prepare-media` | 将 Gallery 原始输入转换为 Git 管理的 WebP |
 | **`gallery-index.ts`** | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
 | **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、Post/Gallery/Site/all dry-run 和 Git diff 检查 |
-| **`export-site.ts`** | `bun run site:export` | 一次性数据库只读导出到 `content/site/*.yaml`；默认不覆盖已有文件 |
+| `export-site.ts` | `bun run site:export` | 一次性数据库只读导出到 `content/site/profile.yaml`、`landing.yaml`、`theme.yaml`；默认不覆盖已有文件 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
@@ -98,7 +98,7 @@ bun run content:fix -- --scope galleries --no-examples
 bun run scripts/check-content.ts -- --fix --scope all --no-examples
 ```
 
-参数 `--scope posts|galleries|site|all` 默认 `all`；`site` 检查 7 个必需 YAML、头像 WebP 和置顶文章 slug；`--no-examples` 保持兼容。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写内容文件。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
+参数 `--scope posts|galleries|site|all` 默认 `all`；`site` 检查 3 个必需 YAML、头像 WebP 和置顶文章 slug；`--no-examples` 保持兼容。站点 YAML 中，`landing.yaml` 收纳首页编排与 slogans，`profile.yaml` 收纳基础资料、social links、skills 与 About 配置，`theme.yaml` 单独保存主题。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写内容文件。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
 
 ```ts
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'

@@ -25,12 +25,8 @@ async function main() {
 	)
 	const values = [
 		exported.files.profile,
-		exported.files.social,
-		exported.files.skills,
-		exported.files.slogans,
-		exported.files.theme,
 		exported.files.landing,
-		exported.files.about,
+		exported.files.theme,
 	]
 	for (const [index, fileName] of SITE_FILE_NAMES.entries()) {
 		const value = values[index]
@@ -78,7 +74,7 @@ async function main() {
 		console.log(`✅ 已导出：${path.relative(process.cwd(), filePath)}`)
 	}
 	console.log(
-		`数据库只读导出完成：新写入 ${written}/${SITE_FILE_NAMES.length} 个文件。`,
+		`数据库只读导出完成：新写入 ${written}/${SITE_FILE_NAMES.length} 个 YAML 文件。`,
 	)
 	if (exported.hasLegacyAvatar)
 		console.warn(

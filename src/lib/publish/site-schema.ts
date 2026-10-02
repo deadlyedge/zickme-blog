@@ -14,12 +14,8 @@ export const SITE_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024
 export const SITE_PORTRAIT_MAX_DIMENSION = 4096
 export const SITE_FILE_NAMES = [
 	'profile.yaml',
-	'social.yaml',
-	'skills.yaml',
-	'slogans.yaml',
-	'theme.yaml',
 	'landing.yaml',
-	'about.yaml',
+	'theme.yaml',
 ] as const
 
 const optionalText = (maxLength: number) =>
@@ -175,40 +171,18 @@ const themeConfigSchema = z
 			}) as ThemeConfig,
 	)
 
-export const siteProfileFileSchema = z
-	.object({
-		name: z
-			.string()
-			.trim()
-			.min(PROFILE_RULES.name.minLength)
-			.max(PROFILE_RULES.name.maxLength),
-		title: z.string().trim().max(PROFILE_RULES.title.maxLength),
-		bio: z.string().max(PROFILE_RULES.bio.maxLength),
-		location: optionalText(PROFILE_RULES.location.maxLength),
-		email: z.preprocess(
-			(value) => (value === '' || value === null ? undefined : value),
-			z.email().optional(),
-		),
-		website: z.preprocess(
-			(value) => (value === '' || value === null ? undefined : value),
-			httpUrl.optional(),
-		),
-		portraitImage: z.literal('portrait.webp').optional(),
-	})
-	.strict()
-
 const nullableSchema = <T>(schema: z.ZodType<T>) =>
 	z.custom<T | null>(
 		(value) => value === null || schema.safeParse(value).success,
 	)
 
-export const siteSocialFileSchema = nullableSchema(
+export const siteSocialFileSchema = nullableSchema<SocialLink[]>(
 	z.array(socialLinkSchema).max(100),
 )
-export const siteSkillsFileSchema = nullableSchema(
+export const siteSkillsFileSchema = nullableSchema<Skill[]>(
 	z.array(skillSchema).max(100),
 )
-export const siteSlogansFileSchema = nullableSchema(
+export const siteSlogansFileSchema = nullableSchema<Slogan[]>(
 	z.array(sloganSchema).max(100),
 )
 export const siteThemeFileSchema = nullableSchema(themeConfigSchema)
@@ -236,30 +210,55 @@ const siteLandingObjectSchema = z
 			})
 	})
 
-export const siteLandingFileSchema = nullableSchema(siteLandingObjectSchema)
-export const siteAboutFileSchema = nullableSchema(aboutPageConfigSchema)
+export const siteAboutFileSchema = nullableSchema<AboutPageConfig>(
+	aboutPageConfigSchema,
+)
+
+export const siteProfileFileSchema = z
+	.object({
+		name: z
+			.string()
+			.trim()
+			.min(PROFILE_RULES.name.minLength)
+			.max(PROFILE_RULES.name.maxLength),
+		title: z.string().trim().max(PROFILE_RULES.title.maxLength),
+		bio: z.string().max(PROFILE_RULES.bio.maxLength),
+		location: optionalText(PROFILE_RULES.location.maxLength),
+		email: z.preprocess(
+			(value) => (value === '' || value === null ? undefined : value),
+			z.email().optional(),
+		),
+		website: z.preprocess(
+			(value) => (value === '' || value === null ? undefined : value),
+			httpUrl.optional(),
+		),
+		portraitImage: z.literal('portrait.webp').optional(),
+		socialLinks: siteSocialFileSchema,
+		skills: siteSkillsFileSchema,
+		about: siteAboutFileSchema,
+	})
+	.strict()
+
+export const siteLandingFileSchema = nullableSchema(
+	siteLandingObjectSchema.extend({
+		slogans: siteSlogansFileSchema,
+	}),
+)
 
 export const siteFileSchemaByName = {
 	'profile.yaml': siteProfileFileSchema,
-	'social.yaml': siteSocialFileSchema,
-	'skills.yaml': siteSkillsFileSchema,
-	'slogans.yaml': siteSlogansFileSchema,
-	'theme.yaml': siteThemeFileSchema,
 	'landing.yaml': siteLandingFileSchema,
-	'about.yaml': siteAboutFileSchema,
+	'theme.yaml': siteThemeFileSchema,
 }
 
 export type SiteProfileFile = z.infer<typeof siteProfileFileSchema>
 export type SiteThemeFile = ThemeConfig | null
-export type SiteLandingFile = SiteLandingFileConfig | null
-export type SiteAboutFile = AboutPageConfig | null
+export type SiteLandingFile =
+	| (SiteLandingFileConfig & { slogans: Slogan[] | null })
+	| null
 
 export interface SiteFiles {
 	profile: SiteProfileFile
-	social: SocialLink[] | null
-	skills: Skill[] | null
-	slogans: Slogan[] | null
-	theme: SiteThemeFile
 	landing: SiteLandingFile
-	about: SiteAboutFile
+	theme: SiteThemeFile
 }

@@ -16,7 +16,7 @@
 | 复用 `src/lib` | Publish 主链路没有 Next 依赖,可直接复用。`lib/actions/*` 和 `lib/auth/guards.ts` 不能调用 |
 | 构建隔离 | `workbench/` 存在时 `next build` 与 `tsc` 通过;Next 只打包 `src/app` 引用图,工作台不会进入产物(阶段 2 用测试固化) |
 | 轮询可行性 | 可行,但 `runId` 要等运行结束才返回(见 3.2) |
-| 站点设置 | 7 个 YAML 的 Zod 草案已用真实数据库行验证通过,并发现 6 个阶段 1 必须处理的问题(见 4.3) |
+| 站点设置 | 阶段 0 原型的 7 个 YAML Zod 草案已用**真实数据库行**验证通过；阶段 1 实施时按手动编辑上下文聚合为 3 个 YAML(见 4.1),并处理 6 个必须项(见 4.3) |
 | 阶段 1 最大风险 | `pinnedPostIds` 是随机 UUID,`db:reset` 后失效,会直接违反验收标准 1 |
 
 ---
@@ -144,12 +144,14 @@
 |---|---|---|
 | `name`/`title`/`bio`/`location`/`email`/`website` | `profile.yaml` | About 页内容 → 基础站点资料 |
 | `avatar` | `profile.yaml` 的 `portraitImage`(本地路径) | 同上("头像 URL") |
-| `socialLinks` | `social.yaml` | Social Networks |
-| `skills` | `skills.yaml` | About 页内容 → Skills |
-| `slogans` | `slogans.yaml` | About 页内容 → Slogans |
+| `socialLinks` | `profile.yaml` 的 `socialLinks` 区块 | Social Networks |
+| `skills` | `profile.yaml` 的 `skills` 区块 | About 页内容 → Skills |
+| `slogans` | `landing.yaml` 的 `slogans` 区块 | About 页内容 → Slogans |
 | `themeConfig` | `theme.yaml` | 动态主题 |
-| `landingPageConfig` | `landing.yaml` | 首页编排 |
-| `aboutPageConfig` | `about.yaml` | About 页内容 → Hero / 经历 / 精选项目 |
+| `landingPageConfig` | `landing.yaml`(不含 slogans 区块) | 首页编排 |
+| `aboutPageConfig` | `profile.yaml` 的 `about` 区块 | About 页内容 → Hero / 经历 / 精选项目 |
+
+文件按手动编辑上下文聚合，当前必需 YAML 为 `profile.yaml`、`landing.yaml`、`theme.yaml`；旧的 `social.yaml`、`skills.yaml`、`slogans.yaml`、`about.yaml` 不再接受。
 
 补充:
 - `educationTimeline` 在 Dashboard 里**没有编辑入口**(`SettingsClient` 把 setter 丢弃),只能在 YAML 里维护,工作台必须保留该字段。

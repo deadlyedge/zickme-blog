@@ -67,7 +67,7 @@ links:
 
 支持 `links`、`github`、`twitter`、`demo`、`figma`、`paper`、`category`、`series`、`canonicalUrl`、`outdatedWarning` 和 `layout` 等扩展字段。
 
-站点设置也以 Git 内容为唯一人工来源，保存在 `content/site/`：`profile.yaml`、`social.yaml`、`skills.yaml`、`slogans.yaml`、`theme.yaml`、`landing.yaml` 和 `about.yaml`。站点头像来源是 `portrait.webp`，YAML 只引用相对文件名；Publish 后由 Cloudinary 提供站点头像。首页置顶在 `landing.yaml` 中用 `pinnedPostSlugs` 表示，发布时解析成当前数据库 Post ID，因此数据库重置后仍可还原置顶关系。
+站点设置也以 Git 内容为唯一人工来源，保存在 `content/site/`：`profile.yaml` 合并基础资料、Social Links、Skills 与 About 配置，`landing.yaml` 合并首页编排与 Slogans，`theme.yaml` 单独保存主题。站点头像来源是 `portrait.webp`，YAML 只引用相对文件名；Publish 后由 Cloudinary 提供站点头像。首页置顶在 `landing.yaml` 中用 `pinnedPostSlugs` 表示，发布时解析成当前数据库 Post ID，因此数据库重置后仍可还原置顶关系。
 
 文章外链会显示可识别图标和完整 URL。GitHub 与 X/Twitter 使用项目内置的自定义 SVG 图标。
 
@@ -223,7 +223,7 @@ bun run gallery:index
 bun run publish -- --scope all --dry-run --json # 只读预览，不写 DB/Cloudinary/工作区
 git diff --check
 git status --short
-git add content/posts content/photo-gallery
+git add content/posts content/photo-gallery content/site
 git commit -m "content: update blog"
 bun run publish -- --scope all # 受控单向发布；提交 Git 后再执行
 ```

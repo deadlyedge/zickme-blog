@@ -74,17 +74,13 @@
 
 ```text
 content/site/
-├── profile.yaml        # name/title/bio/location/email/website/portraitImage(引用 portrait.webp)
-├── social.yaml         # socialLinks
-├── skills.yaml
-├── slogans.yaml
+├── profile.yaml        # 基础资料 + socialLinks + skills + aboutPageConfig
+├── landing.yaml        # landingPageConfig + slogans
 ├── theme.yaml          # themeConfig
-├── landing.yaml        # landingPageConfig
-├── about.yaml          # aboutPageConfig(hero/timeline/featured projects 等)
 └── portrait.webp       # 站点头像/肖像的本地源图片(Git 管理)
 ```
 
-拆分原则:一个文件对应一个概念,避免单个超大 YAML;文件与 `siteProfile` 的列/JSON 字段一一映射,便于校验与 diff。
+组织原则:按手动编辑时的页面上下文聚合设置，避免每个小字段独占一个文件；`profile.yaml` 集中个人资料与 About 页面，`landing.yaml` 集中首页编排与 Slogans，主题仍单独维护。各区块由严格 schema 校验，再映射到 `siteProfile` 对应列/JSON 字段。
 
 ### 3.2 发布方式
 

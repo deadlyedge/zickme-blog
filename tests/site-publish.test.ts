@@ -5,12 +5,14 @@ import path from 'node:path'
 import { stringify } from 'yaml'
 import { toSiteFilesForExport } from '../src/lib/publish/site-export'
 import {
+	getSitePublishValues,
 	readSiteFiles,
 	validatePinnedPostSlugs,
 } from '../src/lib/publish/site-input-reader'
 import { publishSite } from '../src/lib/publish/site-publish-service'
 import {
 	SITE_FILE_NAMES,
+	siteFileSchemaByName,
 	siteLandingFileSchema,
 	siteProfileFileSchema,
 	siteThemeFileSchema,
@@ -27,14 +29,20 @@ async function createSiteFixture(): Promise<string> {
 	const files = [
 		{
 			name: 'profile.yaml',
-			value: { name: 'Example', title: 'Engineer', bio: '' },
+			value: {
+				name: 'Example',
+				title: 'Engineer',
+				bio: '',
+				socialLinks: [],
+				skills: [],
+				about: {},
+			},
 		},
-		{ name: 'social.yaml', value: [] },
-		{ name: 'skills.yaml', value: [] },
-		{ name: 'slogans.yaml', value: [] },
 		{ name: 'theme.yaml', value: {} },
-		{ name: 'landing.yaml', value: { pinnedPostSlugs: [] } },
-		{ name: 'about.yaml', value: {} },
+		{
+			name: 'landing.yaml',
+			value: { pinnedPostSlugs: [], slogans: [] },
+		},
 	]
 	for (const file of files)
 		await writeFile(
@@ -102,6 +110,42 @@ describe('Site content publish', () => {
 		})
 	})
 
+	test('publishes merged profile and landing YAML sections to their runtime fields', async () => {
+		const siteRoot = await createSiteFixture()
+		await replaceSiteYaml(siteRoot, 'profile.yaml', {
+			name: 'Example',
+			title: 'Engineer',
+			bio: '',
+			socialLinks: [{ platform: 'GitHub', url: 'https://github.com/example' }],
+			skills: [
+				{ category: 'Engineering', technologies: [{ name: 'TypeScript' }] },
+			],
+			about: { headline: 'About me', educationTimeline: [] },
+		})
+		await replaceSiteYaml(siteRoot, 'landing.yaml', {
+			showSlogans: true,
+			slogans: [{ text: 'Build carefully' }],
+		})
+		const files = await readSiteFiles(siteRoot)
+		const values = getSitePublishValues(files, null, [])
+
+		expect(values.socialLinks).toEqual([
+			{ platform: 'GitHub', url: 'https://github.com/example' },
+		])
+		expect(values.skills).toEqual([
+			{ category: 'Engineering', technologies: [{ name: 'TypeScript' }] },
+		])
+		expect(values.aboutPageConfig).toEqual({
+			headline: 'About me',
+			educationTimeline: [],
+		})
+		expect(values.slogans).toEqual([{ text: 'Build carefully' }])
+		expect(values.landingPageConfig).toMatchObject({
+			showSlogans: true,
+			pinnedPostIds: [],
+		})
+	})
+
 	test('validates pinnedPostSlugs against local Markdown slugs', async () => {
 		const root = await mkdtemp(path.join(os.tmpdir(), 'site-pinned-'))
 		temporaryRoots.push(root)
@@ -112,15 +156,17 @@ describe('Site content publish', () => {
 		for (const fileName of SITE_FILE_NAMES) {
 			const value =
 				fileName === 'profile.yaml'
-					? { name: 'Example', title: '', bio: '' }
+					? {
+							name: 'Example',
+							title: '',
+							bio: '',
+							socialLinks: [],
+							skills: [],
+							about: {},
+						}
 					: fileName === 'landing.yaml'
-						? { pinnedPostSlugs: ['existing', 'missing'] }
-						: fileName.endsWith('yaml') &&
-								['social.yaml', 'skills.yaml', 'slogans.yaml'].includes(
-									fileName,
-								)
-							? []
-							: {}
+						? { pinnedPostSlugs: ['existing', 'missing'], slogans: [] }
+						: {}
 			await replaceSiteYaml(siteRoot, fileName, value)
 		}
 		await writeFile(
@@ -147,6 +193,10 @@ describe('Site content publish', () => {
 					technologies: [{ id: 'generated-tech-id', name: 'TypeScript' }],
 				},
 			],
+			aboutPageConfig: {
+				headline: 'About me',
+				educationTimeline: [],
+			},
 			slogans: [{ id: 'generated-slogan-id', text: 'Build carefully' }],
 			landingPageConfig: { pinnedPostIds: ['post-id'] },
 		} as unknown as SiteProfile & { avatar: string }
@@ -156,21 +206,42 @@ describe('Site content publish', () => {
 		)
 		expect(result.files.profile.portraitImage).toBe('portrait.webp')
 		expect(result.files.landing.pinnedPostSlugs).toEqual(['post-slug'])
-		expect(result.files.skills[0]).toEqual({
+		expect(result.files.profile.skills?.[0]).toEqual({
 			category: 'Engineering',
 			technologies: [{ name: 'TypeScript' }],
 		})
-		expect(result.files.slogans).toEqual([{ text: 'Build carefully' }])
+		expect(result.files.profile.about).toEqual({
+			headline: 'About me',
+			educationTimeline: [],
+		})
+		expect(result.files.landing.slogans).toEqual([{ text: 'Build carefully' }])
+		expect(
+			siteFileSchemaByName['profile.yaml'].safeParse(result.files.profile)
+				.success,
+		).toBe(true)
+		expect(
+			siteFileSchemaByName['landing.yaml'].safeParse(result.files.landing)
+				.success,
+		).toBe(true)
+		expect(
+			siteFileSchemaByName['theme.yaml'].safeParse(result.files.theme).success,
+		).toBe(true)
 		expect(result.hasLegacyAvatar).toBe(true)
 		expect(result.unmappedPinnedIds).toEqual([])
 	})
 
 	test('site dry-run rejects a missing required Site YAML file', async () => {
 		const siteRoot = await createSiteFixture()
-		await rm(path.join(siteRoot, 'about.yaml'))
+		await rm(path.join(siteRoot, 'theme.yaml'))
 		await expect(publishSite({ dryRun: true, siteRoot })).rejects.toThrow(
-			'about.yaml',
+			'theme.yaml',
 		)
+	})
+
+	test('rejects legacy split YAML files instead of silently ignoring them', async () => {
+		const siteRoot = await createSiteFixture()
+		await writeFile(path.join(siteRoot, 'social.yaml'), '- platform: GitHub\n')
+		await expect(readSiteFiles(siteRoot)).rejects.toThrow('social.yaml')
 	})
 })
 

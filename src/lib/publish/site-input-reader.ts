@@ -144,18 +144,13 @@ export async function readSiteFiles(
 			`content/site 包含不支持的文件或目录：${unexpected.map((entry) => entry.name).join(', ')}`,
 			path.join(root, unexpected[0]?.name ?? ''),
 		)
-	const [profile, social, skills, slogans, theme, landing, about] =
-		await Promise.all([
-			readYamlFile(root, 'profile.yaml', siteFileSchemaByName['profile.yaml']),
-			readYamlFile(root, 'social.yaml', siteFileSchemaByName['social.yaml']),
-			readYamlFile(root, 'skills.yaml', siteFileSchemaByName['skills.yaml']),
-			readYamlFile(root, 'slogans.yaml', siteFileSchemaByName['slogans.yaml']),
-			readYamlFile(root, 'theme.yaml', siteFileSchemaByName['theme.yaml']),
-			readYamlFile(root, 'landing.yaml', siteFileSchemaByName['landing.yaml']),
-			readYamlFile(root, 'about.yaml', siteFileSchemaByName['about.yaml']),
-		])
+	const [profile, landing, theme] = await Promise.all([
+		readYamlFile(root, 'profile.yaml', siteFileSchemaByName['profile.yaml']),
+		readYamlFile(root, 'landing.yaml', siteFileSchemaByName['landing.yaml']),
+		readYamlFile(root, 'theme.yaml', siteFileSchemaByName['theme.yaml']),
+	])
 	if (profile.portraitImage) await validateSitePortrait(root)
-	return { profile, social, skills, slogans, theme, landing, about }
+	return { profile, landing, theme }
 }
 
 export async function listLocalPostSlugs(
@@ -203,16 +198,22 @@ export function getSitePublishValues(
 	avatarUrl: string | null,
 	pinnedPostIds: string[],
 ): SiteProfileInsert {
-	const { portraitImage: _portraitImage, ...profile } = files.profile
+	const {
+		portraitImage: _portraitImage,
+		socialLinks,
+		skills,
+		about,
+		...profile
+	} = files.profile
 	return {
 		...profile,
+		socialLinks,
+		skills,
+		slogans: files.landing?.slogans ?? null,
 		location: profile.location ?? null,
 		email: profile.email ?? null,
 		website: profile.website ?? null,
 		avatar: avatarUrl,
-		socialLinks: files.social,
-		skills: files.skills,
-		slogans: files.slogans,
 		themeConfig: files.theme,
 		landingPageConfig: files.landing
 			? {
@@ -224,6 +225,6 @@ export function getSitePublishValues(
 					pinnedPostIds,
 				}
 			: null,
-		aboutPageConfig: files.about,
+		aboutPageConfig: files.profile.about,
 	}
 }
