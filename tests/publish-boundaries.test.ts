@@ -52,6 +52,7 @@ describe('publish boundaries', () => {
 	test('only the supported publish scopes are accepted', () => {
 		expect(parsePublishScope('posts')).toBe('posts')
 		expect(parsePublishScope('galleries')).toBe('galleries')
+		expect(parsePublishScope('site')).toBe('site')
 		expect(parsePublishScope('all')).toBe('all')
 		expect(() => parsePublishScope('remote')).toThrow()
 	})
@@ -87,6 +88,7 @@ describe('publish boundaries', () => {
 				errors: 0,
 				sourceMissing: [],
 			},
+			site: { profiles: 0, portraitUploaded: 0, pinnedPosts: 0, errors: 0 },
 			conflicts: 0,
 			errors: 0,
 		}
@@ -95,7 +97,7 @@ describe('publish boundaries', () => {
 	})
 
 	test('publish constants remain centralized and stable', () => {
-		expect(PUBLISH_SCOPES).toEqual(['posts', 'galleries', 'all'])
+		expect(PUBLISH_SCOPES).toEqual(['posts', 'galleries', 'site', 'all'])
 		expect(PUBLISH_STATUSES).toContain('SUCCEEDED')
 	})
 
@@ -130,6 +132,7 @@ describe('publish boundaries', () => {
 				errors: 0,
 				sourceMissing: ['travel/missing.webp'],
 			},
+			site: { profiles: 0, portraitUploaded: 0, pinnedPosts: 0, errors: 0 },
 			conflicts: 0,
 			errors: 0,
 		}

@@ -18,7 +18,9 @@ async function walk(root: string): Promise<string[]> {
 			files.push(...(await walk(filePath)))
 		else if (
 			entry.isFile() &&
-			(entry.name.endsWith('.md') || entry.name === 'album.yaml')
+			(entry.name.endsWith('.md') ||
+				entry.name === 'album.yaml' ||
+				(path.basename(root) === 'site' && entry.name.endsWith('.yaml')))
 		)
 			files.push(filePath)
 	}

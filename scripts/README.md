@@ -8,14 +8,15 @@
 
 | 脚本文件 | 推荐调用命令 | 说明 |
 | :--- | :--- | :--- |
-| **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
+| **`publish.ts`** | `bun run publish` | 单向读取 Post/Gallery/Site 内容并发布到运行时副本；未指定 scope 时默认执行 `all` |
 | **`publish-tui.ts`** | `bun run publish:tui` | 推荐的交互式入口；执行内容检查、修复确认、Git diff、dry-run 和真实发布确认 |
 | **`check-content.ts`** | `bun run content:check` | 只读检查 Post Frontmatter、图片路径、Slug 冲突和 Gallery 配置 |
 | **`fix-content.ts`** | `bun run content:fix` | 显式修复 Post Frontmatter、Gallery `album.yaml` 和自动生成索引 |
 | **`format-content.ts`** | `bun run content:format` | 预览或写入白名单 Frontmatter/YAML 格式，不修改 Markdown 正文 |
 | **`prepare-media.ts`** | `bun run content:prepare-media` | 将 Gallery 原始输入转换为 Git 管理的 WebP |
 | **`gallery-index.ts`** | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
-| **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
+| **`verify-content.ts`** | `bun run content:verify` | 串联内容检查、格式预览、索引预览、Post/Gallery/Site/all dry-run 和 Git diff 检查 |
+| **`export-site.ts`** | `bun run site:export` | 一次性数据库只读导出到 `content/site/*.yaml`；默认不覆盖已有文件 |
 | **`init-content.ts`** | `bun run content:init` | 生成内容目录、模板和用户说明（默认不覆盖已有文件） |
 | **`reset-admin-password.ts`** | `bun run reset-admin-password` | 服务端安全重置管理员密码（免邮件系统的自救方案） |
 | **`reset-db.ts`** | `bun run db:reset` | 级联清空数据库所有业务表与会话数据（谨慎使用） |
@@ -26,7 +27,7 @@
 ## 📖 详细使用说明
 
 ### 1. `publish.ts` - 单向内容发布
-正式发布入口会先检查 Git 工作区中的 Markdown、`album.yaml` 和处理后的 WebP，再将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。缺失 Frontmatter、album 配置或 WebP 时会停止并给出显式修复命令；dry-run 不写入工作区、数据库、Cloudinary 或运行记录。解析失败、媒体上传失败和数据库写入失败都会进入发布摘要，不能被静默视为成功。它支持 `posts`、`galleries`、`all` 三种 scope，不执行数据库到文件的回写、merge、自动 commit 或 push。
+正式发布入口会先检查 Git 工作区中的 Post、Gallery 与 Site 内容，再将结果写入 PostgreSQL 运行时副本和 Cloudinary 媒体 CDN。缺失 Frontmatter、album 配置、站点 YAML 或头像 WebP 时会停止；dry-run 不写入工作区、数据库、Cloudinary 或运行记录。解析失败、媒体上传失败和数据库写入失败都会进入发布摘要，不能被静默视为成功。它支持 `posts`、`galleries`、`site`、`all` 四种 scope，不执行数据库到文件的常规回写、merge、自动 commit 或 push。
 
 ```bash
 # 预览全站发布，不写入文件、数据库、Cloudinary 或运行记录
@@ -35,6 +36,8 @@ bun run publish -- --scope all --dry-run --json
 # 发布单个内容域
 bun run publish -- --scope posts
 bun run publish -- --scope galleries
+bun run publish -- --scope site --dry-run --json
+bun run publish -- --scope site
 
 # 查看交互式维护工具帮助
 bun run publish:tui -- --help
@@ -95,7 +98,7 @@ bun run content:fix -- --scope galleries --no-examples
 bun run scripts/check-content.ts -- --fix --scope all --no-examples
 ```
 
-参数 `--scope posts|galleries|all` 默认 `all`；`--no-examples` 保持兼容。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写 Markdown、`album.yaml` 或 `gallery.yaml`。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
+参数 `--scope posts|galleries|site|all` 默认 `all`；`site` 检查 7 个必需 YAML、头像 WebP 和置顶文章 slug；`--no-examples` 保持兼容。`--dry-run` 仅在显式修复模式下有意义，可计算修复结果但不写内容文件。程序化调用 `checkContent()` 默认只读；旧 `checkContent(config)`、`DEFAULT_CONFIG` 导出继续保留。
 
 ```ts
 import { checkContent, DEFAULT_CONFIG } from '../scripts/check-content'
@@ -121,7 +124,7 @@ bun run content:init -- --dir ./my-content
 bun run content:init -- --force
 ```
 
-脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post 和 Gallery 由统一 `publish` service 按 scope 执行；旧 sync 入口不属于正式内容流程。
+脚本会生成 `README.md`、`templates/post.md`、`templates/album.yaml`、`photo-gallery/gallery.yaml`、示例相册配置以及必要的目录占位文件。已有文件默认跳过。Post、Gallery 和 Site 由统一 `runPublishWorkflow()` 按 scope 执行；旧 sync 入口不属于正式内容流程。
 
 ### 6. `format-content.ts` / `verify-content.ts` - 提交前流水线
 
@@ -132,12 +135,12 @@ bun run content:format
 # 明确确认后才写入 Frontmatter/YAML 结构
 bun run content:format -- --write
 
-# 运行完整验证：检查、索引预览、Post/Gallery/ALL dry-run、git diff --check
+# 运行完整验证：检查、索引预览、Post/Gallery/Site/ALL dry-run、git diff --check
 bun run content:verify
 
 ```
 
-格式化器只处理 Markdown Frontmatter 和 `album.yaml` 的 YAML 结构，不修改正文语义，也不手工编辑或生成 `gallery.yaml`。验证流程会拒绝被 Git 跟踪的 `content/.gallery-input/` 原始图片，以及放入 Gallery 目录的 JPEG、PNG、TIFF、BMP 或 RAW 文件。
+格式化器处理 Markdown Frontmatter、`album.yaml` 和 `content/site/*.yaml` 的 YAML 结构，不修改正文语义，也不手工编辑或生成 `gallery.yaml`。验证流程会拒绝被 Git 跟踪的 `content/.gallery-input/` 原始图片，以及放入 Gallery 目录的 JPEG、PNG、TIFF、BMP 或 RAW 文件。
 
 ---
 

@@ -12,5 +12,6 @@ export interface CheckConfig {
 	showExamples: boolean
 	postsDir: string
 	galleryRoot?: string
-	scope?: 'posts' | 'galleries' | 'all'
+	siteDir?: string
+	scope?: 'posts' | 'galleries' | 'site' | 'all'
 }

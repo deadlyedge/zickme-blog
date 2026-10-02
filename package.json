@@ -27,7 +27,9 @@
 		"publish:all": "bun run publish -- --scope all",
 		"publish:posts": "bun run publish -- --scope posts",
 		"publish:galleries": "bun run publish -- --scope galleries",
+		"publish:site": "bun run publish -- --scope site",
 		"publish:preview": "bun run publish -- --scope all --dry-run --json",
+		"site:export": "bun run scripts/export-site.ts",
 		"media:audit": "bun run scripts/media-cleanup.ts audit",
 		"media:cleanup": "bun run scripts/media-cleanup.ts cleanup",
 		"reset-admin-password": "bun run scripts/reset-admin-password.ts"

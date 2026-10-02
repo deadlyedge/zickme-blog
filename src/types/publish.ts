@@ -30,6 +30,13 @@ export type GalleryPublishSummary = {
 	sourceMissing: string[]
 }
 
+export type SitePublishSummary = {
+	profiles: number
+	portraitUploaded: number
+	pinnedPosts: number
+	errors: number
+}
+
 export type PublishSummary = {
 	runId: string
 	scope: PublishScope
@@ -40,6 +47,7 @@ export type PublishSummary = {
 	finishedAt: string | null
 	posts: PostPublishSummary
 	galleries: GalleryPublishSummary
+	site: SitePublishSummary
 	conflicts: number
 	errors: number
 	errorCode?: string
@@ -56,6 +64,8 @@ export type ContentIssueCode =
 	| 'ALBUM_REBUILD_REQUIRED'
 	| 'GALLERY_INDEX_REQUIRED'
 	| 'MEDIA_INVALID'
+	| 'SITE_INVALID'
+	| 'SITE_MEDIA_INVALID'
 
 export type RepairReviewMode =
 	| 'none'
@@ -87,6 +97,7 @@ export type ValidationReport = {
 	checkedFiles: number
 	checkedAlbums: number
 	checkedImages: number
+	checkedSiteFiles: number
 }
 
 export function parsePublishScope(value: string | undefined): PublishScope {
@@ -95,8 +106,9 @@ export function parsePublishScope(value: string | undefined): PublishScope {
 	if (
 		normalized === 'posts' ||
 		normalized === 'galleries' ||
+		normalized === 'site' ||
 		normalized === 'all'
 	)
 		return normalized
-	throw new Error('scope 必须是 posts、galleries 或 all')
+	throw new Error('scope 必须是 posts、galleries、site 或 all')
 }

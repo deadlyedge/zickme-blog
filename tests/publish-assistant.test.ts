@@ -18,6 +18,7 @@ describe('publish assistant', () => {
 		expect(parsePublishScope(undefined)).toBe('all')
 		expect(parsePublishScope('posts')).toBe('posts')
 		expect(parsePublishScope('GALLERIES')).toBe('galleries')
+		expect(parsePublishScope('SITE')).toBe('site')
 		expect(() => parsePublishScope('remote')).toThrow()
 	})
 

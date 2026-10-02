@@ -36,7 +36,7 @@ afterEach(async () => {
 })
 
 describe('content check and repair boundaries', () => {
-	test('scope parsing preserves posts, galleries, all, and defaults to all', async () => {
+	test('scope parsing preserves posts, galleries, site, all, and defaults to all', async () => {
 		const { parseContentCliConfig } = await import('../scripts/check-content')
 		expect(parseContentCliConfig([]).scope).toBe('all')
 		expect(parseContentCliConfig([]).autoFix).toBe(false)
@@ -56,6 +56,7 @@ describe('content check and repair boundaries', () => {
 		expect(parseContentCliConfig(['--scope', 'galleries']).scope).toBe(
 			'galleries',
 		)
+		expect(parseContentCliConfig(['--scope', 'site']).scope).toBe('site')
 		expect(parseContentCliConfig(['--scope', 'all']).scope).toBe('all')
 		expect(parseContentCliConfig(['--scope', 'invalid']).scope).toBe('all')
 	})

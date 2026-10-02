@@ -10,7 +10,7 @@ const deleteOld = !args.includes('--no-delete')
 
 function usage(): never {
 	console.error(
-		'用法：bun run publish -- [--scope posts|galleries|all] [--dry-run] [--json] [--no-delete]',
+		'用法：bun run publish -- [--scope posts|galleries|site|all] [--dry-run] [--json] [--no-delete]',
 	)
 	console.error('未指定 --scope 时默认发布所有内容域（等价于 --scope all）。')
 	process.exit(2)
@@ -34,6 +34,10 @@ function printSummary(
 		`Post：${summary.posts.succeeded}/${summary.posts.total} 成功，${summary.posts.errors} 错误；` +
 			`Gallery：${summary.galleries.processed} 处理，${summary.galleries.uploaded} 上传，` +
 			`${summary.galleries.unsupported} unsupported，${summary.galleries.errors} 错误`,
+	)
+	console.log(
+		`Site：${summary.site.profiles} 个配置，头像上传 ${summary.site.portraitUploaded}，` +
+			`置顶文章 ${summary.site.pinnedPosts}，错误 ${summary.site.errors}`,
 	)
 	const sourceMissing = [
 		...summary.posts.sourceMissing,

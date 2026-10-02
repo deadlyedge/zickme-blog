@@ -36,6 +36,8 @@ export function repairCommand(issue: ContentIssue): string[] | null {
 	}
 	if (issue.code === 'GALLERY_INDEX_REQUIRED')
 		return ['run', 'scripts/gallery-index.ts']
+	if (issue.code === 'SITE_INVALID' || issue.code === 'SITE_MEDIA_INVALID')
+		return null
 	return null
 }
 

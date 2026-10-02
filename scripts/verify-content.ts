@@ -47,6 +47,11 @@ async function main() {
 		) && valid
 	valid =
 		runBunScript(
+			['run', 'scripts/publish.ts', '--scope', 'site', '--dry-run', '--json'],
+			'Site dry-run',
+		) && valid
+	valid =
+		runBunScript(
 			['run', 'scripts/publish.ts', '--scope', 'all', '--dry-run', '--json'],
 			'全站 dry-run',
 		) && valid

@@ -1,4 +1,4 @@
-export const SYNC_SCOPES = ['POSTS', 'GALLERIES', 'ALL'] as const
+export const SYNC_SCOPES = ['POSTS', 'GALLERIES', 'SITE', 'ALL'] as const
 export type SyncScope = (typeof SYNC_SCOPES)[number]
 
 export const SYNC_RUN_STATUSES = [
@@ -40,6 +40,13 @@ export type GallerySyncSummary = {
 	sourceMissing: string[]
 }
 
+export type SiteSyncSummary = {
+	profiles: number
+	portraitUploaded: number
+	pinnedPosts: number
+	errors: number
+}
+
 export type SyncRunSummary = {
 	runId: string
 	scope: SyncScope
@@ -50,6 +57,7 @@ export type SyncRunSummary = {
 	finishedAt: string | null
 	posts: PostSyncSummary
 	galleries: GallerySyncSummary
+	site: SiteSyncSummary
 	conflicts: number
 	errors: number
 	errorCode?: string
@@ -99,10 +107,20 @@ export function parseSyncScope(value: string | undefined): SyncScope {
 	if (
 		normalized === 'POSTS' ||
 		normalized === 'GALLERIES' ||
+		normalized === 'SITE' ||
 		normalized === 'ALL'
 	)
 		return normalized
-	throw new Error('scope 必须是 posts、galleries 或 all')
+	throw new Error('scope 必须是 posts、galleries、site 或 all')
+}
+
+export function emptySiteSummary(): SiteSyncSummary {
+	return {
+		profiles: 0,
+		portraitUploaded: 0,
+		pinnedPosts: 0,
+		errors: 0,
+	}
 }
 
 export function emptyPostSummary(): PostSyncSummary {

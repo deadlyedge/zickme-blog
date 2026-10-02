@@ -31,6 +31,7 @@ export type {
 	PublishStatus,
 	PublishSummary,
 	PublishTrigger,
+	SitePublishSummary,
 } from './publish'
 export type {
 	AboutPageConfig,

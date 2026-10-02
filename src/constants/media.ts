@@ -4,6 +4,9 @@ export const GALLERY_RAW_EXTENSIONS =
 	/\.(orf|raw|cr2|cr3|nef|arw|dng|rw2|raf|srw)$/i
 export const GALLERY_WEBP_PATTERN = /^.+\.webp$/i
 
+export const SITE_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024
+export const SITE_PORTRAIT_MAX_DIMENSION = 4096
+
 export const POST_MEDIA_MAX_WIDTH = 3840
 export const POST_MEDIA_MAX_HEIGHT = 2160
 export const POST_MEDIA_WEBP_QUALITY = 85

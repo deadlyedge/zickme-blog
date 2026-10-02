@@ -1,4 +1,8 @@
 import * as path from 'node:path'
+import {
+	readSiteFiles,
+	validatePinnedPostSlugs,
+} from '@/lib/publish/site-input-reader'
 import { checkGalleries } from './content/check-galleries'
 import { checkPosts } from './content/check-posts'
 import type { CheckConfig } from './content/content-check-types'
@@ -18,13 +22,17 @@ export const DEFAULT_CONFIG: CheckConfig = {
 	autoFix: false,
 	showExamples: true,
 	postsDir: path.join(process.cwd(), 'content/posts'),
+	siteDir: path.join(process.cwd(), 'content/site'),
 	scope: 'all',
 }
 
 export function parseContentScope(
 	value: string | undefined,
 ): NonNullable<CheckConfig['scope']> {
-	return value === 'posts' || value === 'galleries' || value === 'all'
+	return value === 'posts' ||
+		value === 'galleries' ||
+		value === 'site' ||
+		value === 'all'
 		? value
 		: 'all'
 }
@@ -145,6 +153,21 @@ async function checkGalleriesScope(config: CheckConfig) {
 	return { issues: scan.issues.length, suggestions: totalSuggestions }
 }
 
+async function checkSiteScope(config: CheckConfig): Promise<number> {
+	console.log('🌐 检查 Site 设置...')
+	try {
+		const files = await readSiteFiles(config.siteDir)
+		await validatePinnedPostSlugs(files.landing, config.postsDir)
+		console.log('   ✅ content/site 必需 YAML、头像和置顶文章 slug 校验通过。')
+		return 0
+	} catch (error) {
+		console.log(
+			`   ❌ ${error instanceof Error ? error.message : String(error)}`,
+		)
+		return 1
+	}
+}
+
 export async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 	console.log('🔍 开始检查本地内容...\n')
 
@@ -153,16 +176,21 @@ export async function checkContent(config: CheckConfig = DEFAULT_CONFIG) {
 		let totalSuggestions = 0
 		let files: string[] = []
 
-		const postResult = await checkPostsScope(config)
-		files = postResult.files
-		totalIssues += postResult.totalIssues
-		totalSuggestions += postResult.totalSuggestions
+		if (config.scope !== 'site') {
+			const postResult = await checkPostsScope(config)
+			files = postResult.files
+			totalIssues += postResult.totalIssues
+			totalSuggestions += postResult.totalSuggestions
+		}
 
-		if (config.scope !== 'posts') {
+		if (config.scope !== 'posts' && config.scope !== 'site') {
 			const galleryResult = await checkGalleriesScope(config)
 			totalIssues += galleryResult.issues
 			totalSuggestions += galleryResult.suggestions
 		}
+
+		if (config.scope === 'site' || config.scope === 'all')
+			totalIssues += await checkSiteScope(config)
 
 		console.log('📊 检查结果统计:')
 		console.log(`   🔍 检查文件: ${files.length}`)

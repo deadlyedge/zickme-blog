@@ -14,7 +14,7 @@ export type SocialLink = {
 }
 
 export type Technology = {
-	id: string
+	id?: string
 	name: string
 	level?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
 }
@@ -75,8 +75,12 @@ export interface LandingPageConfig {
 	pinnedPostIds?: string[]
 }
 
+export type SiteLandingFileConfig = Omit<LandingPageConfig, 'pinnedPostIds'> & {
+	pinnedPostSlugs?: string[]
+}
+
 export interface TimelineItem {
-	id: string
+	id?: string
 	period: string
 	role: string
 	company: string
@@ -88,7 +92,7 @@ export interface TimelineItem {
 }
 
 export interface FeaturedProject {
-	id: string
+	id?: string
 	title: string
 	description: string
 	url?: string

@@ -1,12 +1,15 @@
 import { randomUUID } from 'node:crypto'
 import { publishGallery } from '@/lib/publish/gallery-publish-service'
 import { PostPublishService } from '@/lib/publish/post-publish-service'
+import { publishSite } from '@/lib/publish/site-publish-service'
 import type { PublishSummary } from '@/types/publish'
 import { safeSyncError } from './sync-errors'
 import { acquireSyncLock } from './sync-lock'
 import { finishSyncRun } from './sync-repository'
 import {
 	emptyGallerySummary,
+	emptyPostSummary,
+	emptySiteSummary,
 	type SyncRunSummary,
 	type SyncScope,
 	type SyncTrigger,
@@ -75,20 +78,21 @@ export async function runSync(
 		triggeredBy: options.triggeredBy ?? 'CLI',
 		startedAt,
 		finishedAt: null,
-		posts: {
-			total: 0,
-			processed: 0,
-			succeeded: 0,
-			errors: 0,
-			mediaErrors: 0,
-			archived: 0,
-			sourceMissing: [],
-		},
+		posts: emptyPostSummary(),
 		galleries: emptyGallerySummary(),
+		site: emptySiteSummary(),
 		conflicts: 0,
 		errors: 0,
 	}
 	const failures: string[] = []
+	const domainCount =
+		options.scope === 'ALL'
+			? 3
+			: options.scope === 'POSTS' ||
+					options.scope === 'GALLERIES' ||
+					options.scope === 'SITE'
+				? 1
+				: 0
 
 	try {
 		if (options.scope === 'POSTS' || options.scope === 'ALL') {
@@ -125,14 +129,26 @@ export async function runSync(
 			}
 		}
 
+		if (options.scope === 'SITE' || options.scope === 'ALL') {
+			try {
+				summary.site = await publishSite({ dryRun: options.dryRun })
+				if (summary.site.errors > 0) failures.push('site')
+			} catch (error) {
+				failures.push('site')
+				summary.errors++
+				summary.errorCode = safeSyncError(error).code
+			}
+		}
+
 		summary.errors +=
 			summary.posts.errors +
 			summary.galleries.errors +
-			summary.galleries.unsupported
+			summary.galleries.unsupported +
+			summary.site.errors
 		summary.status =
 			failures.length === 0
 				? 'SUCCEEDED'
-				: failures.length < (options.scope === 'ALL' ? 2 : 1)
+				: failures.length < domainCount
 					? 'PARTIAL_SUCCESS'
 					: 'FAILED'
 	} catch (error) {
@@ -150,7 +166,7 @@ export async function runSync(
 
 /** Publish-facing adapter; SyncRun and lock persistence remain internal here. */
 export async function runPublish(options: {
-	scope: 'posts' | 'galleries' | 'all'
+	scope: 'posts' | 'galleries' | 'site' | 'all'
 	dryRun?: boolean
 	deleteOld?: boolean
 	triggeredBy?: 'CLI' | 'DASHBOARD' | 'CI'
@@ -161,7 +177,9 @@ export async function runPublish(options: {
 			? 'POSTS'
 			: options.scope === 'galleries'
 				? 'GALLERIES'
-				: 'ALL'
+				: options.scope === 'site'
+					? 'SITE'
+					: 'ALL'
 	const summary = await runSync({
 		scope,
 		dryRun: options.dryRun,
@@ -183,6 +201,7 @@ export async function runPublish(options: {
 			pendingDelete: summary.galleries.pendingDelete ?? 0,
 			conflicts: summary.galleries.conflicts ?? 0,
 		},
+		site: summary.site,
 		conflicts: summary.conflicts,
 		errors: summary.errors,
 		errorCode: summary.errorCode,

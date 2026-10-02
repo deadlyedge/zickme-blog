@@ -5,6 +5,12 @@ import {
 	GALLERY_ROOT,
 	scanGalleryDirectory,
 } from '@/lib/gallery/gallery-parser'
+import {
+	readSiteFiles,
+	SiteContentError,
+	validatePinnedPostSlugs,
+} from '@/lib/publish/site-input-reader'
+import { SITE_FILE_NAMES } from '@/lib/publish/site-schema'
 import type {
 	ContentIssue,
 	PublishScope,
@@ -241,11 +247,42 @@ export async function validatePublishContent(
 	scope: PublishScope,
 ): Promise<ValidationReport> {
 	const issues: ContentIssue[] = []
-	const checkedFiles = scope === 'galleries' ? 0 : await validatePosts(issues)
-	const gallery =
-		scope === 'posts'
-			? { albums: 0, images: 0 }
-			: await validateGalleries(issues)
+	const checksPosts = scope === 'posts' || scope === 'all'
+	const checksGalleries = scope === 'galleries' || scope === 'all'
+	const checksSite = scope === 'site' || scope === 'all'
+	const checkedFiles = checksPosts ? await validatePosts(issues) : 0
+	const gallery = checksGalleries
+		? await validateGalleries(issues)
+		: { albums: 0, images: 0 }
+	let checkedSiteFiles = 0
+	if (checksSite) {
+		try {
+			const files = await readSiteFiles()
+			await validatePinnedPostSlugs(files.landing)
+			checkedSiteFiles = SITE_FILE_NAMES.length
+		} catch (error) {
+			const siteError =
+				error instanceof SiteContentError
+					? error
+					: new SiteContentError(
+							error instanceof Error ? error.message : String(error),
+						)
+			issues.push(
+				issue({
+					scope: 'site',
+					code: siteError.filePath?.endsWith('portrait.webp')
+						? 'SITE_MEDIA_INVALID'
+						: 'SITE_INVALID',
+					filePath: siteError.filePath
+						? path.relative(process.cwd(), siteError.filePath)
+						: 'content/site',
+					message: siteError.message,
+					canExecuteFromTui: false,
+					requiresManualReview: true,
+				}),
+			)
+		}
+	}
 	return {
 		scope,
 		valid: issues.length === 0,
@@ -254,5 +291,6 @@ export async function validatePublishContent(
 		checkedFiles,
 		checkedAlbums: gallery.albums,
 		checkedImages: gallery.images,
+		checkedSiteFiles,
 	}
 }

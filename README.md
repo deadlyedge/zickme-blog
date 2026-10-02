@@ -12,10 +12,11 @@
 
 ```text
 Git 管理的 Markdown 内容
+        + Site YAML 与肖像 WebP (`content/site/`)
         ↓
-PostgreSQL / Drizzle 运行时数据
+检查与单向 Publish
         ↓
-Cloudinary 媒体 CDN
+PostgreSQL / Drizzle 运行时数据 + Cloudinary 媒体 CDN
 ```
 
 同时提供带有 ADMIN 权限控制的 Dashboard、单向发布、媒体管理和运行时诊断工具。
@@ -65,6 +66,8 @@ links:
 ```
 
 支持 `links`、`github`、`twitter`、`demo`、`figma`、`paper`、`category`、`series`、`canonicalUrl`、`outdatedWarning` 和 `layout` 等扩展字段。
+
+站点设置也以 Git 内容为唯一人工来源，保存在 `content/site/`：`profile.yaml`、`social.yaml`、`skills.yaml`、`slogans.yaml`、`theme.yaml`、`landing.yaml` 和 `about.yaml`。站点头像来源是 `portrait.webp`，YAML 只引用相对文件名；Publish 后由 Cloudinary 提供站点头像。首页置顶在 `landing.yaml` 中用 `pinnedPostSlugs` 表示，发布时解析成当前数据库 Post ID，因此数据库重置后仍可还原置顶关系。
 
 文章外链会显示可识别图标和完整 URL。GitHub 与 X/Twitter 使用项目内置的自定义 SVG 图标。
 
@@ -193,13 +196,15 @@ http://localhost:3000
 | `bun run publish` | 单向发布所有内容域；未指定 scope 时等价于 `all` |
 | `bun run publish -- --scope posts --dry-run --json` | 只读预览 Post 发布并输出 JSON 摘要 |
 | `bun run publish -- --scope galleries --dry-run --json` | 只读预览 Gallery 发布并输出 JSON 摘要 |
-| `bun run publish -- --scope all --dry-run --json` | 只读预览全站发布并输出双域摘要 |
-| `bun run content:check` | 只读检查 Frontmatter、图片路径、Slug 冲突和 Gallery 配置 |
+| `bun run publish -- --scope site --dry-run --json` | 只读预览 Site 设置校验和发布 |
+| `bun run publish -- --scope all --dry-run --json` | 只读预览 Post、Gallery、Site 全站发布 |
+| `bun run site:export` | 一次性从数据库导出 Site YAML；默认不覆盖已有文件，需人工审阅 |
+| `bun run content:check` | 只读检查 Post、Gallery 和 Site 内容 |
 | `bun run content:fix` | 显式修复 Post Frontmatter、Gallery `album.yaml` 图片清单和索引 |
 | `bun run content:format` | 默认预览 Frontmatter/YAML 格式化；使用 `-- --write` 才写入 |
 | `bun run content:prepare-media` | 将 `.gallery-input` 原始图片转换为 Git 管理的 WebP |
 | `bun run gallery:index` | 生成自动维护的 `gallery.yaml` |
-| `bun run content:verify` | 检查、格式预览、索引预览、双域 dry-run 和 Git diff 检查 |
+| `bun run content:verify` | 检查、格式预览、索引预览、Post/Gallery/Site/all dry-run 和 Git diff 检查 |
 | `bun run content:init` | 生成内容目录模板和使用说明 |
 | `bun run db:generate` | 根据 Schema 生成迁移 |
 | `bun run db:migrate` | 执行未应用的迁移 |
@@ -235,7 +240,7 @@ git status --short
 
 `content:check` 始终只读（包括误传 `--fix` 的情况）；需要自动补齐时先运行 `bun run content:fix -- --dry-run` 预览，再显式运行 `bun run content:fix` 写入。修复后请检查 `git diff`，尤其确认新生成的 `album.yaml` 人工字段。
 
-`bun run publish` 未指定 scope 时会依次发布 Post 和 Gallery；如果某个内容域失败，运行摘要会保留已成功内容域的结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只发布单个域时必须显式指定 `--scope posts` 或 `--scope galleries`。旧同步 CLI 已删除。
+`bun run publish` 未指定 scope 时会依次发布 Post、Gallery 和 Site；`all` 中 Post 先发布，再发布 Gallery，最后发布 Site，以便置顶 slug 能解析为当前 Post ID。如果某个内容域失败，运行摘要会保留各域结果，并返回 `PARTIAL_SUCCESS` 或 `FAILED`。只发布单个域时可显式指定 `--scope posts`、`--scope galleries` 或 `--scope site`。旧同步 CLI 已删除。
 
 Publish 失败不会把解析失败或媒体上传失败的 Post 静默视为成功：摘要会统计实际扫描数量、失败数量和媒体错误。`--dry-run` 不上传 Cloudinary、不写数据库、不创建运行记录；本地图片在 dry-run 中保留原始路径。
 

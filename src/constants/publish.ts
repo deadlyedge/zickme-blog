@@ -1,4 +1,4 @@
-export const PUBLISH_SCOPES = ['posts', 'galleries', 'all'] as const
+export const PUBLISH_SCOPES = ['posts', 'galleries', 'site', 'all'] as const
 
 export const PUBLISH_STATUSES = [
 	'QUEUED',

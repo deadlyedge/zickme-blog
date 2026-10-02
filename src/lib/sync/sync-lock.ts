@@ -21,10 +21,15 @@ export async function acquireSyncLock(input: {
 }): Promise<() => Promise<void>> {
 	await expireStaleSyncRuns()
 	const lockKey = syncLockKey(input.scope)
-	const conflictKeys =
+	const conflictScopes: SyncScope[] =
 		input.scope === 'ALL'
-			? [lockKey, syncLockKey('POSTS'), syncLockKey('GALLERIES')]
-			: [lockKey, syncLockKey('ALL')]
+			? ['ALL', 'POSTS', 'GALLERIES', 'SITE']
+			: input.scope === 'SITE'
+				? ['SITE', 'POSTS', 'ALL']
+				: input.scope === 'POSTS'
+					? ['POSTS', 'SITE', 'ALL']
+					: ['GALLERIES', 'ALL']
+	const conflictKeys = conflictScopes.map(syncLockKey)
 	const lockExpiresAt = new Date(input.startedAt.getTime() + SYNC_LOCK_TTL_MS)
 	try {
 		const active = await findActiveSyncRunForScopes(conflictKeys)
