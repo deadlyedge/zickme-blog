@@ -1,6 +1,6 @@
 # 下一阶段开发计划:本地内容工作台与 Dashboard 收敛
 
-> 状态:待实施计划(尚未开始代码实现)
+> 状态:阶段 0 已完成(结论见 [`architecture/adr-local-content-workbench.md`](architecture/adr-local-content-workbench.md),待你确认其中第 8 节决策后进入阶段 1);阶段 1 及之后尚未开始代码实现
 > 目标:让**所有会被 Publish 覆盖的内容**都只在本地(Git)编辑;线上 Dashboard 收敛为运行时只读观察与运维工具;本地工作台提供可视化的编辑、检查、发布和评论查看。
 > 前置架构:Git 是唯一人工内容源;PostgreSQL 与 Cloudinary 是可重建的运行时副本;Publish 保持单向。
 > 相关文档:[`next-stage-discuss.md`](next-stage-discuss.md)、[`architecture/current-code-structure-summary.md`](architecture/current-code-structure-summary.md)。

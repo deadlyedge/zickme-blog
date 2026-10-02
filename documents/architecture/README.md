@@ -10,6 +10,7 @@
 - [`current-code-structure-summary.md`](current-code-structure-summary.md)：当前代码结构、已完成清理、兼容边界和后续优化方向。
 - [`readability-refactor-plan.md`](readability-refactor-plan.md)：Dashboard 文章页、Publish 服务及内容检查脚本的可读性重构计划。
 - [`stage12-environment-inventory.md`](stage12-environment-inventory.md)：个人 Blog 单库状态和 reset/publish 操作边界。
+- [`adr-local-content-workbench.md`](adr-local-content-workbench.md)：本地内容工作台与站点设置入 Git 的阶段 0 架构决策记录（运行形态、威胁清单、Publish 契约、站点 YAML/Zod 契约、待确认决策）。
 
 ## 当前实施计划
 
